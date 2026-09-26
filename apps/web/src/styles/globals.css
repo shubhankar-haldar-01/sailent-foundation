@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+
+/* -----------------------------------------------------------------------
+   MONOREPO SOURCE SCANNING — the Tailwind v4 trap in this setup.
+
+   Tailwind scans source files as plain text and, by default, only looks
+   within the project it is invoked from. The design system lives in
+   packages/ui, so without this directive every class used by a shared
+   component silently produces NO CSS: the components render unstyled and
+   nothing reports an error.
+
+   Path is relative to THIS file.
+   ----------------------------------------------------------------------- */
+@source "../../../../packages/ui/src";
+
+/* Design tokens, themes, base layer and project utilities. */
+@import '@sailent/ui/styles/tokens.css';

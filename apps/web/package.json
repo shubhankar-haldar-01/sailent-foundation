@@ -1,0 +1,50 @@
+{
+  "name": "@sailent/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev --port 3000",
+    "start": "next start --port 3000",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --max-warnings 0",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "clean": "rm -rf .next .turbo coverage playwright-report test-results *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@sailent/config": "workspace:*",
+    "@sailent/types": "workspace:*",
+    "@sailent/ui": "workspace:*",
+    "@sailent/validation": "workspace:*",
+    "@tanstack/react-query": "^5.64.1",
+    "lucide-react": "^0.469.0",
+    "next": "^15.1.4",
+    "next-themes": "^0.4.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "^1.49.1",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@tanstack/react-query-devtools": "^5.64.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^22.10.5",
+    "@types/pg": "^8.11.10",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "eslint": "^9.18.0",
+    "jsdom": "^25.0.1",
+    "pg": "^8.13.1",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "argon2": "^0.45.1",
+    "ioredis": "^5.4.2"
+  }
+}

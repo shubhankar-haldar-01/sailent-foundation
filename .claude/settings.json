@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm db:migrate)",
+      "Bash(set -e)",
+      "Bash(pnpm --filter @sailent/config --filter @sailent/database build)",
+      "Bash(pnpm db:seed)",
+      "Bash(psql -d sailent_dev -c \"SELECT key, category, is_public FROM settings ORDER BY key;\")",
+      "Bash(tail -20 /tmp/api.log | sed 's/\\\\x1b\\\\[[0-9;]*m//g')",
+      "Read(//private/tmp/**)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm exec playwright test --project=desktop --reporter=list -g \"public shell › has no detectable\")",
+      "Bash(cp /tmp/axe-probe.mjs ./axe-probe.mjs)",
+      "Bash(node ./axe-probe.mjs)",
+      "Bash(pnpm build *)",
+      "Bash(pnpm --filter @sailent/config build)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm exec playwright test --reporter=list)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm format *)",
+      "Bash(pnpm format:check)",
+      "Bash(python3 -)"
+    ]
+  }
+}

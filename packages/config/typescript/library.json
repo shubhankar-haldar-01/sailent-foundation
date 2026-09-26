@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Sailent Library",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  }
+}

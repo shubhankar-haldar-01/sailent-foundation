@@ -1,0 +1,94 @@
+import { describe, expect, it } from 'vitest';
+
+import { apiEnvSchema, loadEnv } from '@sailent/config';
+
+import { AppConfig } from './app.config.js';
+
+/**
+ * The flag that decides whether donor sign-in codes reach the log.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * THIS EXISTS BECAUSE THE OBVIOUS VERSION WAS WRONG IN PRODUCTION.
+ *
+ * `auth.service.ts` used to gate its development-only OTP log on
+ * `process.env.FEATURE_MOCK_DATA !== 'false'`. That reads as "only when mock
+ * data is on", and it is not: the schema accepts `0` as well as `false`, and
+ * `'0' !== 'false'`. A production deployment configured with
+ * `FEATURE_MOCK_DATA=0` passed validation, booted, and then logged every
+ * donor's plaintext sign-in code.
+ *
+ * So the test is specifically about the spelling `0`, not about the happy path.
+ * ══════════════════════════════════════════════════════════════════════════
+ */
+
+/** An AppConfig around a given env, without touching the real process env. */
+function configWith(env: Record<string, unknown>): AppConfig {
+  const config = Object.create(AppConfig.prototype) as AppConfig;
+  Object.defineProperty(config, 'env', { value: env, enumerable: true });
+  return config;
+}
+
+describe('AppConfig.mockDataEnabled', () => {
+  it('is false for FEATURE_MOCK_DATA=0, the spelling that used to slip through', () => {
+    const parsed = loadEnv(apiEnvSchema, 'api', {
+      ...baseEnv,
+      APP_ENV: 'production',
+      FEATURE_MOCK_DATA: '0',
+    });
+
+    // The schema's job: `0` is false, not "not the string false".
+    expect(parsed.FEATURE_MOCK_DATA).toBe(false);
+    expect(configWith(parsed).mockDataEnabled).toBe(false);
+  });
+
+  it('is false in production even if the flag somehow says otherwise', () => {
+    // Belt and braces. The schema refuses to boot production with this on, so
+    // the two floors cannot disagree today — this pins that a change to one
+    // does not quietly unlock the other.
+    expect(configWith({ APP_ENV: 'production', FEATURE_MOCK_DATA: true }).mockDataEnabled).toBe(
+      false,
+    );
+  });
+
+  it('is true in development, where the flow has to be testable', () => {
+    expect(configWith({ APP_ENV: 'development', FEATURE_MOCK_DATA: true }).mockDataEnabled).toBe(
+      true,
+    );
+  });
+
+  it('refuses to validate a production environment with mock data enabled', () => {
+    expect(() =>
+      loadEnv(apiEnvSchema, 'api', {
+        ...baseEnv,
+        APP_ENV: 'production',
+        FEATURE_MOCK_DATA: 'true',
+      }),
+    ).toThrow();
+  });
+});
+
+/** The minimum a production API environment must declare to validate. */
+const baseEnv: Record<string, string> = {
+  NODE_ENV: 'production',
+  DATABASE_URL: 'postgres://user:pass@db.example.test:5432/sailent',
+  REDIS_URL: 'redis://redis.example.test:6379',
+  JWT_ACCESS_SECRET: 'a'.repeat(48),
+  JWT_REFRESH_SECRET: 'b'.repeat(48),
+  APP_PUBLIC_URL: 'https://sailent.example',
+  API_PUBLIC_URL: 'https://api.sailent.example',
+  // Production insists on these, which is itself worth knowing: the payment
+  // provider cannot be left unconfigured on a box that takes donations.
+  RAZORPAY_KEY_ID: 'rzp_live_example',
+  RAZORPAY_KEY_SECRET: 'c'.repeat(32),
+  RAZORPAY_WEBHOOK_SECRET: 'd'.repeat(32),
+  /*
+    Same reasoning as Razorpay above: a box that accepts uploads cannot be left
+    with nowhere to put them. These are obviously-fake fixture values — the
+    schema only checks presence and shape, never that they authenticate.
+  */
+  R2_ACCOUNT_ID: 'e'.repeat(32),
+  R2_ACCESS_KEY_ID: 'f'.repeat(32),
+  R2_SECRET_ACCESS_KEY: 'g'.repeat(64),
+  R2_PUBLIC_BASE_URL: 'https://media.sailent.example',
+  SWAGGER_ENABLED: 'false',
+};

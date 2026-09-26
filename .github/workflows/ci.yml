@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # CI runs against the real toolchain but never real credentials.
+  NODE_VERSION: '22'
+  APP_ENV: test
+  NODE_ENV: test
+
+jobs:
+  quality:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: sailent
+          POSTGRES_PASSWORD: sailent
+          POSTGRES_DB: sailent_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U sailent"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # The integration suites run against the REAL Postgres and Redis, so the
+      # schema and reference data have to exist before they do. Running the
+      # migrations here also means CI fails when a migration is broken — which
+      # is the only place that failure is cheap.
+      - name: Apply migrations
+        run: pnpm --filter @sailent/database build && pnpm db:migrate
+        env:
+          DATABASE_URL: postgresql://sailent:sailent@localhost:5432/sailent_test
+
+      - name: Seed reference and development data
+        run: pnpm db:seed
+        env:
+          DATABASE_URL: postgresql://sailent:sailent@localhost:5432/sailent_test
+          # Explicitly NOT production: the seed refuses to write demo content
+          # when APP_ENV or NODE_ENV says production, and that guard is one of
+          # the things this step exercises.
+          APP_ENV: test
+          NODE_ENV: test
+
+      - name: Unit and integration tests
+        run: pnpm test
+        env:
+          DATABASE_URL: postgresql://sailent:sailent@localhost:5432/sailent_test
+          REDIS_URL: redis://localhost:6379
+          APP_ENV: test
+
+      - name: Build
+        run: pnpm build
+        env:
+          DATABASE_URL: postgresql://sailent:sailent@localhost:5432/sailent_test
+          REDIS_URL: redis://localhost:6379
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          API_URL: http://localhost:4000
+
+      - name: Format check
+        run: pnpm format:check
+
+  security:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # High and critical advisories fail the build; lower ones are reported.
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high
+
+      # A committed credential is treated as burned, so catching it at the PR
+      # is the difference between a rotation and an incident.
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

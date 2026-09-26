@@ -1,0 +1,50 @@
+# Local development infrastructure ONLY.
+#
+# Postgres and Redis run in containers; the three applications run on the host
+# with hot reload. Containerising the apps during development would trade fast
+# feedback for an isolation nobody needs locally (docs/architecture.md).
+#
+#   pnpm infra:up     start
+#   pnpm infra:down   stop
+#   pnpm infra:logs   follow
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: sailent-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sailent
+      POSTGRES_PASSWORD: sailent
+      POSTGRES_DB: sailent_dev
+      # C collation keeps local ordering consistent with most managed providers.
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8'
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sailent -d sailent_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: sailent-redis
+    restart: unless-stopped
+    # appendonly so queued jobs survive a container restart during development.
+    command: redis-server --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_data:

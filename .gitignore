@@ -1,0 +1,41 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# turbo
+.turbo/
+
+# env — never commit real values
+.env
+.env.*
+!.env.example
+
+# testing
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editors / OS
+.DS_Store
+.idea/
+*.swp
+
+# misc
+.vercel
+.sentryclirc
+# Playwright CLI output (may contain credentials)
+.playwright-cli/

@@ -1,0 +1,12 @@
+node_modules
+dist
+.next
+.turbo
+coverage
+pnpm-lock.yaml
+*.md
+
+# Playwright storage state — generated on every run, never hand-edited.
+apps/web/e2e/.auth
+test-results
+playwright-report

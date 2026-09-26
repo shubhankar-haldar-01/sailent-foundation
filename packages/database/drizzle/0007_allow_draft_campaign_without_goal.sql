@@ -1,0 +1,2 @@
+ALTER TABLE "campaigns" DROP CONSTRAINT "campaigns_goal_positive";--> statement-breakpoint
+ALTER TABLE "campaigns" ADD CONSTRAINT "campaigns_goal_positive_when_public" CHECK (status = 'draft' OR fundraising_goal > 0);

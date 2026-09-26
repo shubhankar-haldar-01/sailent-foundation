@@ -1,0 +1,335 @@
+import { createServer } from 'node:http';
+
+import { Queue, Worker, type Job } from 'bullmq';
+import IORedis from 'ioredis';
+
+import { loadEnv, workerEnvSchema } from '@sailent/config';
+import { loadRootEnvFile } from '@sailent/config/dotenv';
+
+import { createLogger } from './lib/logger.js';
+import { DEFAULT_JOB_OPTIONS, QUEUE_NAMES } from './queues/index.js';
+import {
+  processExampleJob,
+  type ExampleJobData,
+  type ExampleJobResult,
+} from './processors/example.processor.js';
+import {
+  processDonationConfirmation,
+  type DonationConfirmationJob,
+} from './processors/donation-confirmation.processor.js';
+import {
+  processDonorLoginCode,
+  type DonorLoginCodeJob,
+} from './processors/donor-login-code.processor.js';
+import {
+  processEventCancelled,
+  processEventRegistrationConfirmed,
+  type EventCancelledJob,
+  type EventRegistrationConfirmedJob,
+} from './processors/event-notifications.processor.js';
+import {
+  processVolunteerApplication,
+  processVolunteerAssigned,
+  processVolunteerCertificate,
+  processVolunteerDecision,
+  type VolunteerApplicationJob,
+  type VolunteerAssignedJob,
+  type VolunteerCertificateJob,
+  type VolunteerDecisionJob,
+} from './processors/volunteer-notifications.processor.js';
+import {
+  announceConnection,
+  assertRuntimeDatabaseTarget,
+  createDatabaseClient,
+  describeRuntimeTarget,
+} from '@sailent/database';
+
+/**
+ * Worker bootstrap.
+ *
+ * Runs as a separate process from the API deliberately (docs/architecture.md §2):
+ * receipt rendering is CPU-heavy, email depends on a third party that will
+ * occasionally be slow, and reconciliation scans thousands of rows. If any of
+ * those shared a process with the donation endpoint, a Brevo outage or a large
+ * PDF would degrade the one path that must never degrade.
+ */
+
+// In production the platform injects environment variables and this is a no-op.
+loadRootEnvFile();
+
+const env = loadEnv(workerEnvSchema, 'worker');
+const logger = createLogger(env);
+
+// BullMQ requires this setting on its blocking connection.
+const connection = new IORedis(env.REDIS_URL, {
+  maxRetriesPerRequest: null,
+  retryStrategy: (attempt) => Math.min(attempt * 200, 3000),
+});
+
+connection.on('error', (error: Error) => {
+  logger.error({ err: error.message }, 'Redis connection error');
+});
+
+/**
+ * The worker's own database connection.
+ *
+ * Small on purpose. This process reads a donation and writes a notification —
+ * it is not the API, and a generous pool here competes with the one that
+ * serves donors for the same Postgres connection slots.
+ */
+/*
+  The same `APP_ENV` / `DATABASE_URL` agreement check the API makes, for the
+  same reason and before the same kind of pool. The worker WRITES — receipts,
+  notifications, reconciliation — so a worker pointed at the wrong database is
+  not a read that shows stale data, it is rows created in the wrong place.
+*/
+const target = assertRuntimeDatabaseTarget({
+  appEnv: env.APP_ENV,
+  connectionString: env.DATABASE_URL,
+});
+logger.info({ target: describeRuntimeTarget(target, env.APP_ENV) }, 'database target checked');
+
+const database = createDatabaseClient({ connectionString: env.DATABASE_URL, maxConnections: 4 });
+
+/*
+  The worker logged NOTHING about its database, which made a misconfigured one
+  look like "jobs are not running" rather than "the worker cannot reach
+  Postgres". Same report the API prints, same reasoning — see `announce.ts`.
+*/
+void announceConnection(database, {
+  info: (message) => logger.info(message),
+  warn: (message) => logger.warn(message),
+  error: (message) => logger.error(message),
+});
+
+const brevo = {
+  apiKey: env.BREVO_API_KEY,
+  senderEmail: env.BREVO_SENDER_EMAIL,
+  senderName: env.BREVO_SENDER_NAME,
+};
+
+const exampleQueue = new Queue<ExampleJobData, ExampleJobResult>(QUEUE_NAMES.EXAMPLE, {
+  connection,
+  defaultJobOptions: DEFAULT_JOB_OPTIONS,
+});
+
+const exampleWorker = new Worker<ExampleJobData, ExampleJobResult>(
+  QUEUE_NAMES.EXAMPLE,
+  (job: Job<ExampleJobData, ExampleJobResult>) => processExampleJob(job, logger),
+  { connection, concurrency: env.WORKER_CONCURRENCY },
+);
+
+exampleWorker.on('completed', (job) => {
+  logger.debug({ jobId: job.id, queue: QUEUE_NAMES.EXAMPLE }, 'Job completed');
+});
+
+exampleWorker.on('failed', (job, error) => {
+  // A job that has exhausted its attempts is an operational event, not noise:
+  // in later phases this is where a dead-lettered webhook raises an alert.
+  const exhausted = job ? job.attemptsMade >= (job.opts.attempts ?? 1) : false;
+  logger[exhausted ? 'error' : 'warn'](
+    { jobId: job?.id, queue: QUEUE_NAMES.EXAMPLE, attempt: job?.attemptsMade, err: error.message },
+    exhausted ? 'Job failed permanently — dead-lettered' : 'Job failed, will retry',
+  );
+});
+
+/**
+ * The EMAIL queue.
+ *
+ * One worker, one job type for now: the donor's confirmation. Concurrency is
+ * deliberately lower than the general setting — Brevo rate-limits, and a burst
+ * of parallel sends after a busy hour achieves nothing but 429s and retries.
+ *
+ * Every job here is SAFE TO REPEAT. The capture enqueues with the receipt
+ * number as the job id, so a retried capture cannot create a second thank-you,
+ * and the processor re-checks the donation status before sending anything.
+ */
+const emailWorker = new Worker<
+  | DonationConfirmationJob
+  | DonorLoginCodeJob
+  | EventRegistrationConfirmedJob
+  | EventCancelledJob
+  | VolunteerApplicationJob
+  | VolunteerDecisionJob
+  | VolunteerAssignedJob
+  | VolunteerCertificateJob
+>(
+  QUEUE_NAMES.EMAIL,
+  (job) => {
+    /*
+      Dispatched BY JOB NAME, not by inspecting the payload.
+
+      The queue carries more than one kind of message now, and guessing from the
+      shape of the data would mean a job with an unexpected payload silently
+      running the wrong handler. An unknown name is an error the queue will
+      retry and then surface, which is the failure we want.
+    */
+    switch (job.name) {
+      case 'donation.confirmation':
+        return processDonationConfirmation(
+          job as Job<DonationConfirmationJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+        );
+      case 'donor.login_code':
+        return processDonorLoginCode(
+          job as Job<DonorLoginCodeJob>,
+          { brevo, appUrl: env.APP_PUBLIC_URL, database },
+          logger,
+        );
+      case 'event.registration.confirmed':
+        return processEventRegistrationConfirmed(
+          job as Job<EventRegistrationConfirmedJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+        );
+      case 'event.cancelled':
+        return processEventCancelled(
+          job as Job<EventCancelledJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+        );
+      case 'volunteer.application.received':
+        return processVolunteerApplication(
+          job as Job<VolunteerApplicationJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+        );
+      /*
+        Approval and rejection share a processor and differ by one argument.
+        The alternative — two near-identical functions — is two places for the
+        "re-read the state before sending" guard to drift out of step.
+      */
+      case 'volunteer.approved':
+        return processVolunteerDecision(
+          job as Job<VolunteerDecisionJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+          'approved',
+        );
+      case 'volunteer.rejected':
+        return processVolunteerDecision(
+          job as Job<VolunteerDecisionJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+          'rejected',
+        );
+      case 'volunteer.assigned':
+        return processVolunteerAssigned(
+          job as Job<VolunteerAssignedJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+        );
+      case 'volunteer.certificate.issued':
+        return processVolunteerCertificate(
+          job as Job<VolunteerCertificateJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+        );
+      default:
+        throw new Error(`Unknown email job: ${job.name}`);
+    }
+  },
+  { connection, concurrency: Math.min(env.WORKER_CONCURRENCY, 4) },
+);
+
+emailWorker.on('completed', (job) => {
+  logger.debug({ jobId: job.id, queue: QUEUE_NAMES.EMAIL }, 'Job completed');
+});
+
+emailWorker.on('failed', (job, error) => {
+  const exhausted = job ? job.attemptsMade >= (job.opts.attempts ?? 1) : false;
+  // Named by job, because the queue now carries more than one kind and
+  // "donation confirmation failed" on a sign-in code would send whoever reads
+  // this log looking in the wrong place.
+  logger[exhausted ? 'error' : 'warn'](
+    {
+      jobId: job?.id,
+      jobName: job?.name,
+      queue: QUEUE_NAMES.EMAIL,
+      attempt: job?.attemptsMade,
+      err: error.message,
+    },
+    exhausted
+      ? `Email job ${job?.name ?? 'unknown'} failed permanently — somebody is waiting for it`
+      : `Email job ${job?.name ?? 'unknown'} failed, will retry`,
+  );
+});
+
+/**
+ * Health endpoint.
+ *
+ * A worker with no HTTP surface is invisible to a platform health check and
+ * gets restarted on a schedule instead of on a signal. This is the minimum
+ * needed for Render/Railway to know the process is alive.
+ */
+const server = createServer((req, res) => {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(
+      JSON.stringify({
+        status: 'ok',
+        service: 'sailent-worker',
+        environment: env.APP_ENV,
+        uptimeSeconds: Math.floor(process.uptime()),
+        queues: Object.values(QUEUE_NAMES),
+      }),
+    );
+    return;
+  }
+  res.writeHead(404, { 'content-type': 'application/json' });
+  res.end(JSON.stringify({ error: 'Not found' }));
+});
+
+server.listen(env.WORKER_PORT, () => {
+  logger.info(
+    {
+      port: env.WORKER_PORT,
+      concurrency: env.WORKER_CONCURRENCY,
+      queues: Object.values(QUEUE_NAMES),
+    },
+    'Worker started',
+  );
+});
+
+/**
+ * Graceful shutdown.
+ *
+ * `worker.close()` waits for in-flight jobs to finish rather than killing them
+ * mid-execution. Once real jobs exist, a job killed halfway is a receipt that
+ * was never sent or a webhook that was never applied — so getting this right
+ * now costs nothing and matters later.
+ */
+async function shutdown(signal: string): Promise<void> {
+  logger.info({ signal }, 'Shutting down…');
+
+  const timeout = setTimeout(() => {
+    logger.error('Shutdown timed out after 30s, forcing exit');
+    process.exit(1);
+  }, 30_000);
+
+  try {
+    server.close();
+    await emailWorker.close();
+    await exampleWorker.close();
+    await exampleQueue.close();
+    await database.close();
+    await connection.quit();
+    clearTimeout(timeout);
+    logger.info('Shutdown complete');
+    process.exit(0);
+  } catch (error) {
+    clearTimeout(timeout);
+    logger.error({ err: error instanceof Error ? error.message : error }, 'Shutdown failed');
+    process.exit(1);
+  }
+}
+
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
+
+process.on('unhandledRejection', (reason) => {
+  logger.error({ err: reason instanceof Error ? reason.message : reason }, 'Unhandled rejection');
+});
+
+export { exampleQueue };

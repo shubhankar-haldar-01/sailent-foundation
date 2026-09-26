@@ -1,0 +1,38 @@
+{
+  "name": "sailent-foundation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Digital platform for Sailent Foundation — public site, fundraising, donor and volunteer management, and admin.",
+  "engines": {
+    "node": ">=20.9.0",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "db:generate": "pnpm --filter @sailent/database db:generate",
+    "db:migrate": "pnpm --filter @sailent/database db:migrate",
+    "db:push": "pnpm --filter @sailent/database db:push",
+    "db:studio": "pnpm --filter @sailent/database db:studio",
+    "db:seed": "pnpm --filter @sailent/database db:seed",
+    "infra:up": "docker compose -f infrastructure/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infrastructure/docker-compose.yml down",
+    "infra:logs": "docker compose -f infrastructure/docker-compose.yml logs -f",
+    "audit": "pnpm audit --prod --audit-level high"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.6.9",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3"
+  }
+}

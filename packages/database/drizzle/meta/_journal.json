@@ -1,0 +1,167 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789824292000,
+      "tag": "0000_reflective_morg",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789824898302,
+      "tag": "0001_add_session_reauth",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789825508671,
+      "tag": "0002_team_slug_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789825570157,
+      "tag": "0003_editorial_content_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789827654928,
+      "tag": "0004_lock_down_data_api",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789829468871,
+      "tag": "0005_phase4_taxonomy",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789829471506,
+      "tag": "0006_phase4_normalise_campaign_content",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789829995484,
+      "tag": "0007_allow_draft_campaign_without_goal",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789855011162,
+      "tag": "0008_phase5_product_catalogue",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789896286242,
+      "tag": "0009_phase6_receipts_and_one_time_only",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789920597616,
+      "tag": "0010_phase7_donor_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789927031766,
+      "tag": "0011_phase7_email_login",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789937937752,
+      "tag": "0012_phase9_team_events_impact",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789938110670,
+      "tag": "0013_phase9_impact_event_parent",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789989053045,
+      "tag": "0014_phase8_single_admin_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1789989283742,
+      "tag": "0015_phase8_volunteer_management",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1789990145417,
+      "tag": "0016_phase8_volunteer_sequence_backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790102365674,
+      "tag": "0017_phase8_volunteer_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790102365675,
+      "tag": "0018_phase8_volunteer_email_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790102365676,
+      "tag": "0019_phase10_7_blog",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790102365677,
+      "tag": "0020_phase10_9_pages",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790102366677,
+      "tag": "0021_phase10_10_documents",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790102367677,
+      "tag": "0022_phase10_11_notifications",
+      "breakpoints": true
+    }
+  ]
+}

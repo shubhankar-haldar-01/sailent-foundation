@@ -1,0 +1,962 @@
+/* =============================================================================
+   Sailent Foundation — design tokens
+   Implements decision A11 (docs/phase-0-decisions.md, docs/design-system.md).
+
+   Deep forest green, set from the approved design reference.
+   Because every colour derives from the four BRAND INPUTS at the top of
+   :root, changing the palette is a change to those four values — not a
+   component refactor.
+
+   Colour space is OKLCH throughout. It is perceptually uniform, so a
+   lightness step produces the same visual step at every hue and generated
+   scales stay even. Hex does not do this.
+
+   ONE token set, TWO themes:
+     • public — warm neutrals, generous rhythm   (default)
+     • admin  — cool neutrals, dense rhythm      ([data-surface="admin"])
+   The difference is density and warmth, not identity.
+   ============================================================================= */
+
+/* Dark mode is class-driven so it can be toggled and server-rendered.
+   `:where()` keeps specificity at zero so utilities still win. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* ---------------------------------------------------------------------
+     BRAND INPUTS — the approved palette.
+
+     THREE colours, each with a job:
+       navy    identity and text        #102A43
+       blue    trust and information    #1976D2   Learn more · Explore · Read
+       orange  action                   #C2410C   Donate · Volunteer · Register
+
+     Orange is scarce on purpose. It means "do this", and a page where three
+     things are orange is a page where nothing is.
+     --------------------------------------------------------------------- */
+  --brand-hue: 250; /* blue — drives the accent scale below */
+  --brand-chroma: 0.14;
+  --neutral-hue: 250; /* cool neutrals, matching the navy */
+  --neutral-chroma: 0.008;
+
+  /* ---------------------------------------------------------------------
+     Generated blue scale. Every value derives from the inputs above.
+     --------------------------------------------------------------------- */
+  --accent-50: oklch(0.975 0.012 var(--brand-hue));
+  --accent-100: oklch(0.945 0.03 var(--brand-hue));
+  --accent-200: oklch(0.89 0.06 var(--brand-hue));
+  --accent-300: oklch(0.81 0.095 var(--brand-hue));
+  --accent-400: oklch(0.7 0.13 var(--brand-hue));
+  --accent-500: oklch(0.61 var(--brand-chroma) var(--brand-hue));
+  /* #1976D2 — 4.60:1 with white, so it may carry button text. */
+  --accent-600: oklch(0.545 0.152 var(--brand-hue));
+  --accent-700: oklch(0.47 0.14 var(--brand-hue));
+  --accent-800: oklch(0.39 0.11 var(--brand-hue));
+  --accent-900: oklch(0.31 0.08 var(--brand-hue));
+  /* #102A43 — the navy. 14.6:1 on white. */
+  --accent-950: oklch(0.255 0.045 var(--brand-hue));
+
+  /* ---------------------------------------------------------------------
+     ORANGE — action only.
+
+     MEASURED, not picked by eye. White on the reference #FF8A00 is 2.36:1,
+     which fails WCAG AA badly, and the Donate button is the single most
+     important control on this site. So the scale splits by job:
+
+       --cta         #C2410C   5.18:1 with white — button fills
+       --cta-bright  #E36209   3.49:1 with white — large display text only
+       --cta-glow    #FF8A00   decoration only: underline rules, icon washes,
+                               and anything with no text on it
+
+     The result is a deeper orange than the reference at button size. That is
+     a deliberate, measured change: the alternative is a call to action a
+     significant number of people cannot read.
+     --------------------------------------------------------------------- */
+  --cta-50: oklch(0.965 0.025 55);
+  --cta-100: oklch(0.93 0.05 55);
+  --cta-200: oklch(0.87 0.09 55);
+  --cta-300: oklch(0.8 0.13 55);
+  --cta-glow: oklch(0.755 0.175 58);
+  --cta-bright: oklch(0.63 0.175 48);
+  /*
+     THE CTA ORANGE SERVES TWO ROLES, AND THE DARKER ONE SETS THE VALUE.
+
+     As a BACKGROUND it carries white text on the Donate button. As TEXT it is
+     the eyebrow above a page title and the label on a nav control, sitting on
+     off-white grounds like #F0F5F9. Both need 4.5:1, and the text role is the
+     harder of the two because the ground is lighter than the button's white
+     label is dark.
+
+     The approved design's orange is around #F5821F. With white text that
+     measures 2.59:1 — a Donate button nobody with low vision can read, on the
+     one control the whole page exists to get pressed.
+
+     Brightening this to oklch(0.58) to close some of that gap was tried and
+     reverted: the button reached 4.59:1, but the eyebrow text fell to 4.18:1
+     and a nav button to 4.4:1, breaking the contrast check on every page
+     including the admin shell. The half-step was not worth a second token and
+     a site-wide regression when it still would not have matched the reference.
+
+     #BA4503, 5.33:1 on white. If the reference's exact orange is wanted, the
+     button label has to go near-black (about 6.6:1 on #F5821F) rather than
+     white — that is a real option, and it is a decision, not a tweak.
+  */
+  --cta: oklch(0.545 0.163 42);
+  --cta-hover: oklch(0.475 0.15 40);
+  --cta-active: oklch(0.42 0.135 38);
+
+  --neutral-0: oklch(1 0 0);
+  --neutral-50: oklch(0.985 var(--neutral-chroma) var(--neutral-hue));
+  --neutral-100: oklch(0.967 var(--neutral-chroma) var(--neutral-hue));
+  --neutral-200: oklch(0.922 var(--neutral-chroma) var(--neutral-hue));
+  --neutral-300: oklch(0.87 var(--neutral-chroma) var(--neutral-hue));
+  --neutral-400: oklch(0.708 var(--neutral-chroma) var(--neutral-hue));
+  --neutral-500: oklch(0.556 var(--neutral-chroma) var(--neutral-hue));
+  --neutral-600: oklch(0.439 var(--neutral-chroma) var(--neutral-hue));
+  --neutral-700: oklch(0.371 var(--neutral-chroma) var(--neutral-hue));
+  --neutral-800: oklch(0.269 var(--neutral-chroma) var(--neutral-hue));
+  --neutral-900: oklch(0.205 var(--neutral-chroma) var(--neutral-hue));
+  --neutral-950: oklch(0.145 var(--neutral-chroma) var(--neutral-hue));
+
+  /* ---------------------------------------------------------------------
+     SEMANTIC TOKENS — what components actually reference.
+     No component ever contains a raw colour value.
+     --------------------------------------------------------------------- */
+  /* Off-white page, navy ink. */
+  --background: var(--neutral-50);
+  --foreground: var(--accent-950);
+  /* The warm cream behind the hero and the impact strip. */
+  --surface-warm: oklch(0.982 0.016 72);
+  /* The light blue band behind "Who we are". Distinct from `--background`,
+     which is near-white — in the reference these two are clearly different
+     bands, and at 0.008 chroma they were not. */
+  --surface-tint: oklch(0.968 0.018 250);
+
+  --surface: var(--neutral-0);
+  --surface-foreground: var(--neutral-900);
+  --surface-raised: var(--neutral-0);
+  --surface-sunken: var(--neutral-100);
+
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--neutral-600);
+  /**
+   * Body copy that sits OVER A PHOTOGRAPH.
+   *
+   * `--muted-foreground` is measured against a flat surface. Over a picture the
+   * background is whatever the picture is, and the wash holding it legible has
+   * to be thick enough to cover the darkest pixel under the text — which on the
+   * homepage hero meant most of the photograph disappearing.
+   *
+   * Two steps darker buys that wash back. It is still visibly a grey against
+   * the navy heading above it, so the hierarchy the design sets survives.
+   */
+  --muted-foreground-strong: var(--neutral-800);
+
+  --border: var(--neutral-200);
+  --border-strong: var(--neutral-300);
+  --input: var(--neutral-200);
+
+  /**
+   * PRIMARY IS ORANGE, because primary means "donate".
+   *
+   * `--cta` measures 5.18:1 against white, so button labels are legible at
+   * ordinary size. See the ORANGE block above for why this is deeper than the
+   * reference's #FF8A00.
+   */
+  --primary: var(--cta);
+  --primary-foreground: var(--neutral-0);
+  --primary-hover: var(--cta-hover);
+  --primary-active: var(--cta-active);
+
+  /* Blue: trust and information. 4.60:1 with white. */
+  --info-action: var(--accent-600);
+  --info-action-foreground: var(--neutral-0);
+  --info-action-hover: var(--accent-700);
+
+  /* Orange for LARGE display text and decorative rules. Never small text. */
+  --accent-emphasis: var(--cta-bright);
+  --accent-rule: var(--cta-glow);
+
+  --secondary: var(--neutral-0);
+  --secondary-foreground: var(--accent-950);
+
+  --accent: var(--accent-50);
+  --accent-foreground: var(--accent-800);
+
+  /* Pastel washes behind the focus-area and stat icons. Decorative only —
+     an icon sits on them, never text. */
+  --wash-blue: oklch(0.945 0.035 250);
+  --wash-rose: oklch(0.945 0.035 15);
+  --wash-amber: oklch(0.95 0.045 70);
+  --wash-violet: oklch(0.945 0.04 300);
+  --wash-pink: oklch(0.945 0.04 345);
+  --wash-mint: oklch(0.945 0.04 160);
+  /* Marks drawn ON a wash. Measured against their own background — above the
+     3:1 floor for a meaningful graphic, even though these particular ones are
+     decorative and labelled.
+
+     LIGHTNESS IS THE WHOLE DESIGN PROBLEM HERE. The approved strip's icons are
+     vivid, and vivid means light, and light against a near-white wash is what
+     drops the contrast. Each of these is about as bright as its hue can be
+     while still clearing 3:1 on the wash it sits on — pushed further and the
+     icon starts dissolving into its own circle at a glance, which is exactly
+     the failure the ratio exists to catch. */
+  --wash-violet-ink: oklch(0.5 0.17 300);
+  --wash-pink-ink: oklch(0.52 0.18 350);
+  --wash-amber-ink: oklch(0.56 0.17 45);
+  --wash-gold-ink: oklch(0.56 0.14 75);
+  --wash-blue-ink: oklch(0.54 0.18 255);
+  --wash-mint-ink: oklch(0.52 0.15 155);
+  --wash-rose-ink: oklch(0.53 0.19 18);
+  /**
+   * The one wash ink that carries TEXT rather than a mark.
+   *
+   * The band heading's "View All Campaigns" pill is green type on `--wash-mint`,
+   * and the inks above are measured for a 3:1 graphic floor, not a 4.5:1 text
+   * one — `--wash-mint-ink` on `--wash-mint` is 4.33:1 and fails as a label.
+   * Two steps darker is 5.08:1 on the wash and 5.64:1 on the page, so the same
+   * token works whether the pill is filled or not.
+   */
+  --wash-mint-ink-strong: oklch(0.48 0.15 155);
+
+  /* Status colours are semantic only, never decorative.
+     Colour never carries meaning alone — every status pairs with an icon
+     and a label (docs/design-system.md §3). */
+  /*
+     Lightness on these is set by the HARDEST case they must pass: the status
+     colour used as TEXT on its own subtle background (a badge, an inline
+     alert). At L 0.55 the success badge measured 4.11:1 — below the 4.5:1 AA
+     floor for normal text — so each is darkened until that pairing clears it.
+     White text on the filled variant stays well above 4.5:1 at these values,
+     so the darker step costs nothing.
+     Caught by the automated axe check; see docs/phase-2.md. */
+  --success: oklch(0.47 0.13 150);
+  --success-foreground: oklch(0.99 0 0);
+  --success-subtle: oklch(0.96 0.03 150);
+
+  --warning: oklch(0.72 0.15 75);
+  --warning-foreground: oklch(0.2 0.03 75);
+  --warning-subtle: oklch(0.96 0.04 75);
+
+  --destructive: oklch(0.48 0.19 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --destructive-subtle: oklch(0.96 0.03 27);
+
+  --info: oklch(0.48 0.14 250);
+  --info-foreground: oklch(0.99 0 0);
+  --info-subtle: oklch(0.96 0.03 250);
+
+  --ring: var(--accent-600);
+
+  /* Radius. Public defaults to `lg`. Nothing larger than 2xl —
+     the pill-shaped-everything look is the template aesthetic we avoid. */
+  --radius: 0.5rem;
+}
+
+/* -----------------------------------------------------------------------
+   ADMIN SURFACE
+   Cool neutrals and a tighter radius. Note that only the NEUTRAL HUE and
+   the radius change — the accent, the type family and the component
+   primitives are identical. That single variable is the whole difference
+   in temperature between the two experiences.
+   ----------------------------------------------------------------------- */
+[data-surface='admin'] {
+  --neutral-hue: 255;
+  --neutral-chroma: 0.008;
+  --radius: 0.375rem;
+  --background: var(--neutral-100);
+  --surface: var(--neutral-0);
+}
+
+/* -----------------------------------------------------------------------
+   DARK THEME
+   Only the semantic tokens are redefined. Because they are defined here
+   too — not solely inside a media query — the class toggle wins in both
+   directions.
+   ----------------------------------------------------------------------- */
+.dark {
+  --background: var(--neutral-950);
+  --foreground: var(--neutral-100);
+
+  --surface: var(--neutral-900);
+  --surface-foreground: var(--neutral-100);
+  --surface-raised: var(--neutral-800);
+  --surface-sunken: var(--neutral-950);
+
+  --muted: var(--neutral-800);
+  --muted-foreground: var(--neutral-400);
+  /* Inverted: on a dark ground the strong variant is LIGHTER, not darker. */
+  --muted-foreground-strong: var(--neutral-200);
+
+  --border: oklch(1 0 0 / 12%);
+  --border-strong: oklch(1 0 0 / 20%);
+  --input: oklch(1 0 0 / 15%);
+
+  /* Orange still means action in dark mode, lifted so it reads on a dark
+     ground — contrast is measured against the surface behind it, not chosen
+     once and reused. */
+  --primary: var(--cta-glow);
+  --primary-foreground: var(--accent-950);
+  --primary-hover: var(--cta-300);
+  --primary-active: var(--cta-200);
+
+  --info-action: var(--accent-400);
+  --info-action-foreground: var(--neutral-950);
+  --info-action-hover: var(--accent-300);
+
+  --accent-emphasis: var(--cta-300);
+  --accent-rule: var(--cta-glow);
+  --surface-warm: var(--neutral-900);
+  --surface-tint: var(--neutral-900);
+
+  --wash-blue: oklch(0.32 0.04 250);
+  --wash-rose: oklch(0.32 0.04 15);
+  --wash-amber: oklch(0.32 0.045 70);
+  --wash-violet: oklch(0.32 0.04 300);
+  --wash-pink: oklch(0.32 0.04 345);
+  --wash-mint: oklch(0.32 0.04 160);
+  --wash-violet-ink: oklch(0.82 0.11 300);
+  --wash-pink-ink: oklch(0.82 0.12 350);
+  /* Mirrored for the dark theme: the washes above invert to dark circles, so
+     a dark ink would be a dark mark on a dark ground. */
+  --wash-amber-ink: oklch(0.82 0.13 45);
+  --wash-gold-ink: oklch(0.84 0.12 75);
+  --wash-blue-ink: oklch(0.82 0.12 255);
+  --wash-mint-ink: oklch(0.82 0.12 155);
+  --wash-rose-ink: oklch(0.82 0.13 18);
+  /* Already 7.48:1 on the dark wash, so the strong variant is the same value
+     here — it exists for the light theme's text floor, not for this one. */
+  --wash-mint-ink-strong: oklch(0.82 0.12 155);
+
+  --secondary: var(--neutral-800);
+  --secondary-foreground: var(--neutral-100);
+
+  --accent: var(--neutral-800);
+  --accent-foreground: var(--accent-200);
+
+  --success: oklch(0.7 0.14 150);
+  --success-foreground: oklch(0.15 0.02 150);
+  --success-subtle: oklch(0.28 0.05 150);
+
+  --warning: oklch(0.8 0.14 75);
+  --warning-foreground: oklch(0.18 0.03 75);
+  --warning-subtle: oklch(0.3 0.06 75);
+
+  --destructive: oklch(0.65 0.19 27);
+  --destructive-foreground: oklch(0.15 0.02 27);
+  --destructive-subtle: oklch(0.28 0.07 27);
+
+  --info: oklch(0.68 0.13 250);
+  --info-foreground: oklch(0.15 0.02 250);
+  --info-subtle: oklch(0.28 0.05 250);
+
+  --ring: var(--accent-400);
+}
+
+/* =============================================================================
+   TAILWIND THEME
+   `inline` makes utilities reference the CSS variable rather than copying its
+   value, which is what allows the theme and surface switches above to work at
+   runtime without regenerating utilities.
+   ============================================================================= */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted-foreground-strong: var(--muted-foreground-strong);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-emphasis: var(--accent-emphasis);
+
+  /**
+   * The raw scale steps, exposed as utilities.
+   *
+   * Semantic tokens cover almost everything, but a few places need a specific
+   * step: the navy footer ground, and the scrim over the community photograph.
+   * Without these mapped, `bg-accent-950` silently generates nothing — which
+   * is exactly what happened, leaving white text on a white footer.
+   */
+  --color-accent-50: var(--accent-50);
+  --color-accent-100: var(--accent-100);
+  --color-accent-200: var(--accent-200);
+  --color-accent-300: var(--accent-300);
+  --color-accent-400: var(--accent-400);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+  --color-accent-700: var(--accent-700);
+  --color-accent-800: var(--accent-800);
+  --color-accent-900: var(--accent-900);
+  --color-accent-950: var(--accent-950);
+  --color-cta: var(--cta);
+  --color-cta-bright: var(--cta-bright);
+  --color-accent-rule: var(--accent-rule);
+  --color-surface-warm: var(--surface-warm);
+  --color-surface-tint: var(--surface-tint);
+  --color-info-action: var(--info-action);
+  --color-info-action-foreground: var(--info-action-foreground);
+  --color-info-action-hover: var(--info-action-hover);
+  --color-primary-active: var(--primary-active);
+  --color-cta-glow: var(--cta-glow);
+  --color-wash-blue: var(--wash-blue);
+  --color-wash-rose: var(--wash-rose);
+  --color-wash-amber: var(--wash-amber);
+  --color-wash-violet: var(--wash-violet);
+  --color-wash-pink: var(--wash-pink);
+  --color-wash-mint: var(--wash-mint);
+  --color-wash-violet-ink: var(--wash-violet-ink);
+  --color-wash-pink-ink: var(--wash-pink-ink);
+  --color-wash-amber-ink: var(--wash-amber-ink);
+  --color-wash-gold-ink: var(--wash-gold-ink);
+  --color-wash-blue-ink: var(--wash-blue-ink);
+  --color-wash-mint-ink: var(--wash-mint-ink);
+  --color-wash-mint-ink-strong: var(--wash-mint-ink-strong);
+  --color-wash-rose-ink: var(--wash-rose-ink);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-subtle: var(--destructive-subtle);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-subtle: var(--info-subtle);
+  --color-ring: var(--ring);
+
+  /* Type families. Loaded by the web app via next/font and bound to these vars.
+     Both stacks must carry a Devanagari companion — retrofitting Hindi onto a
+     Latin-only stack later is far more expensive than choosing well now. */
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display:
+    var(--font-heading), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  /* Decorative only — see the note in apps/web/src/app/layout.tsx. */
+  --font-script: var(--font-script-family), ui-rounded, cursive;
+
+  /* Type scale — public (editorial). Clamped so a hero never overwhelms a 390px screen. */
+  --text-display-lg: clamp(2.5rem, 1.8rem + 3.5vw, 3.75rem);
+  --text-display-lg--line-height: 1.05;
+  --text-display-lg--letter-spacing: -0.02em;
+  /**
+   * The homepage hero headline.
+   *
+   * A notch below `display` because it sits in a THREE-COLUMN fold beside a
+   * photograph and the donation widget, not across a full-width page. At the
+   * display size "Empowering People," is about 470px wide in a 483px column,
+   * so it wraps and strands a word — this fits with room to spare and still
+   * reads as a display headline.
+   */
+  --text-display-hero: clamp(2rem, 1.4rem + 2.2vw, 3.125rem);
+  --text-display-hero--line-height: 1.08;
+  --text-display-hero--letter-spacing: -0.022em;
+  --text-display: clamp(2rem, 1.5rem + 2.5vw, 3rem);
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.02em;
+  --text-h1: clamp(1.75rem, 1.4rem + 1.75vw, 2.375rem);
+  --text-h1--line-height: 1.15;
+  --text-h1--letter-spacing: -0.015em;
+  /**
+   * BAND HEADING — the homepage section titles.
+   *
+   * Measured off the approved design, not chosen from the scale: "Featured
+   * Campaigns" is 238px wide there at a 1440 viewport, which is a 26px face.
+   * `--text-h1` renders it at 38px and swamps the cards underneath; `--text-h2`
+   * at 30px is still a third too big.
+   *
+   * It is a separate token rather than a shrunken h1 because the h1 scale is
+   * what every other page's title uses, and those are correct as they are.
+   */
+  --text-section: clamp(1.375rem, 1.15rem + 0.85vw, 1.625rem);
+  --text-section--line-height: 1.2;
+  --text-section--letter-spacing: -0.015em;
+  --text-h2: clamp(1.5rem, 1.3rem + 1vw, 1.875rem);
+  --text-h2--line-height: 1.2;
+  --text-h3: 1.5rem;
+  --text-h3--line-height: 1.3;
+  --text-h4: 1.25rem;
+  --text-h4--line-height: 1.4;
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.65;
+  --text-body: 1rem;
+  --text-body--line-height: 1.65;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.6;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.5;
+  --text-overline: 0.75rem;
+  --text-overline--line-height: 1.4;
+  --text-overline--letter-spacing: 0.08em;
+
+  /* Radius scale */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  /* Elevation. Cards at rest have a BORDER, not a shadow — a grid of shadowed
+     cards is the single strongest signal of a template. */
+  --shadow-sm: 0 1px 2px 0 oklch(0 0 0 / 0.04);
+  --shadow-md: 0 4px 12px -2px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.04);
+  --shadow-lg: 0 12px 32px -8px oklch(0 0 0 / 0.12), 0 4px 8px -4px oklch(0 0 0 / 0.06);
+
+  /* Breakpoints — mirrored in @sailent/config so JS and CSS agree. */
+  --breakpoint-xs: 20rem; /* 320 */
+  --breakpoint-sm: 30rem; /* 480 */
+  --breakpoint-md: 48rem; /* 768 */
+  --breakpoint-lg: 64rem; /* 1024 */
+  --breakpoint-xl: 80rem; /* 1280 */
+  --breakpoint-2xl: 96rem; /* 1536 */
+
+  /* Container widths. Large screens CAP the container and add whitespace —
+     text stretched to 1920px is unreadable. */
+  --container-content: 45rem; /* long-form prose */
+  /**
+   * 1440px.
+   *
+   * The approved design runs its content to about 93% of the viewport. At the
+   * old 1200px cap a 1400px screen lost 152px to each side — a fifth of the
+   * window — and the campaign cards, the stat row and the hero all had to be
+   * squeezed to fit what was left.
+   *
+   * It is still a cap rather than a percentage: past 1440 the gutters grow
+   * again, because a card row that keeps widening stops being a row of cards
+   * and becomes a row of billboards.
+   */
+  --container-page: 90rem;
+  --container-wide: 82.5rem; /* 1320px at 2xl */
+
+  /* Motion. Public is considered; admin is immediate. */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+}
+
+/* =============================================================================
+   BASE
+   ============================================================================= */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* Anchored headings must clear the sticky header — WCAG 2.2 requires that
+       focus is never obscured by sticky content. */
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  /* Visible focus everywhere. `outline: none` without a replacement is a
+     WCAG failure and makes the product unusable by keyboard. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Tabular figures wherever numbers align — proportional digits make
+     currency and table columns jitter. */
+  table,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Honour the setting. Vestibular disorders are real and common. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* =============================================================================
+   PROJECT UTILITIES
+   Low-level and composable, per the abstraction ladder. Not semantic wrappers.
+   ============================================================================= */
+
+/** Standard page gutter + max width. Side padding never collapses. */
+@utility container-page {
+  width: 100%;
+  max-width: var(--container-page);
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 1.5rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
+/** Long-form measure: 60–75 characters. Does more for readability than any
+    other single rule, so it is a utility rather than a repeated arbitrary value. */
+@utility prose-measure {
+  max-width: 68ch;
+}
+
+/** Public section rhythm: 96–128px. The admin equivalent is 16–24px, which is
+    ordinary spacing and needs no utility. */
+@utility section-y {
+  padding-block: 4rem;
+
+  @media (width >= 48rem) {
+    padding-block: 6rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-block: 8rem;
+  }
+}
+
+/**
+ * Homepage band rhythm: 40–64px.
+ *
+ * Deliberately HALF of `section-y`. The homepage stacks eleven bands, and at
+ * the 96–128px rhythm the interior pages use it runs to twice the height of
+ * the approved design — a visitor scrolls past whitespace between every pair
+ * of sections. Interior pages have three or four bands and want the air.
+ */
+@utility band-y {
+  padding-block: 2rem;
+
+  @media (width >= 48rem) {
+    padding-block: 2.5rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-block: 2.75rem;
+  }
+}
+
+/**
+ * Skip link: visually hidden until focused.
+ *
+ * Uses `:focus`, NOT `:focus-visible`. The focus-visible heuristic does not
+ * reliably fire on touch devices or for programmatic focus, which left the
+ * link stranded off-screen for anyone using a keyboard with a tablet — the
+ * exact user it exists to serve. A skip link is only ever reached by keyboard,
+ * so the broader selector has no downside.
+ */
+/**
+ * Hover lift for a card.
+ *
+ * ONE definition, used by every card on the site. What makes hover feel cheap
+ * is a page where four surfaces each move at a different speed on a different
+ * curve; what makes it feel considered is that they all move together.
+ *
+ * 2px and 200ms on the soft ease. Far enough to register, not far enough to
+ * read as the card jumping at you.
+ *
+ * Two guards, and both matter:
+ *
+ *   • `@media (hover: hover)` — a touch device has no hover, so without this
+ *     the lift STICKS after a tap and the card sits raised until something
+ *     else is tapped. It is the single most common way a hover effect goes
+ *     wrong on a phone.
+ *   • `prefers-reduced-motion` removes the transform outright rather than
+ *     leaving it to the global rule, which only shortens the duration — that
+ *     turns a smooth lift into an instant jump, which is worse than either.
+ */
+@utility hover-lift {
+  transition:
+    transform var(--duration-base) var(--ease-out-soft),
+    box-shadow var(--duration-base) var(--ease-out-soft);
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: box-shadow var(--duration-fast) linear;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+/**
+ * A horizontally scrolling row with NO VISIBLE SCROLLBAR.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * The element still scrolls, by every means it did before — swipe, trackpad,
+ * shift-wheel, arrow keys, and programmatically. Only the BAR is hidden.
+ *
+ * That distinction is the whole point, and it is why this is not
+ * `overflow: hidden`. Hiding the overflow would take the content away from
+ * keyboard and screen-reader users entirely; hiding the scrollbar takes away a
+ * grey rectangle that, on a three-card row inside a page that already scrolls,
+ * reads as a rendering artefact rather than as a control.
+ *
+ * The affordance has to come from somewhere else, and every caller supplies it:
+ * the cards are cut off mid-edge so there is visibly more, and there are arrow
+ * buttons. A row with no scrollbar AND no other cue is a row whose extra
+ * content nobody finds.
+ *
+ * Two declarations because no single one is universal: `scrollbar-width` is the
+ * standard (Firefox, and Chromium from 121), and the `::-webkit-scrollbar`
+ * pseudo-element covers older WebKit and Blink. Safari on macOS usually
+ * overlays its scrollbar anyway, so there is often nothing to hide there.
+ *
+ * NOT applied globally. A long page, a table and a code block all need their
+ * scrollbar — it is the only thing saying the content continues.
+ * ══════════════════════════════════════════════════════════════════════════
+ */
+@utility rail {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/**
+ * A logo strip that scrolls itself, forever.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * A CSS ANIMATION, NOT A TIMER. It runs on the compositor: no interval, no
+ * layout read per frame, no work at all on the main thread. A JavaScript
+ * marquee on a band that is on screen the whole time someone reads the page is
+ * a battery cost for a decorative effect.
+ *
+ * TWO IDENTICAL GROUPS, both animating `-100%`. Group A starts at the left
+ * edge, group B immediately after it. When A has slid exactly its own width
+ * off the left, B is sitting where A began — so the restart is invisible and
+ * the strip never shows a seam or a gap. The keyframe subtracts the gap too,
+ * or B lands one gap short and the row stutters once per cycle.
+ *
+ * `min-width: 100%` with `space-around` is what stops a SHORT list from
+ * leaving a hole. Eight logos overflow a phone but not a wide desktop; without
+ * this, the strip would scroll a cluster of marks followed by empty space.
+ * Each group is a flex child of the strip, so the 100% resolves against the
+ * strip's width and each group is always at least a full screen wide.
+ *
+ * The caller marks the SECOND group `aria-hidden`. It is the same eight names
+ * again, and a screen reader reading every partner twice is worse than the
+ * animation it exists to smooth over.
+ *
+ * PAUSING IS CSS-FIRST, on purpose. Hover and focus-within pause it with no
+ * script at all, so the mechanism survives a failed bundle — and focus-within
+ * means tabbing to a partner link stops the row rather than dragging the link
+ * out from under the cursor. `data-paused` is the scripted control on top.
+ *
+ * WCAG 2.2.2 (Pause, Stop, Hide) is Level A and applies here: this starts on
+ * its own, runs far longer than five seconds, and sits beside other content.
+ * A caller that renders this WITHOUT a pause control fails at Level A.
+ *
+ * Under `prefers-reduced-motion` there is no animation and no marquee: the
+ * duplicate is dropped and the single remaining group wraps onto as many lines
+ * as it needs. That matters more than it looks — a paused marquee still has
+ * `overflow: hidden`, so anyone who asked for less motion would lose every
+ * logo past the right edge. They get the plain wrapping row instead, which is
+ * what this band was before it moved.
+ * ══════════════════════════════════════════════════════════════════════════
+ */
+@utility marquee {
+  display: flex;
+  overflow: hidden;
+  gap: var(--marquee-gap);
+
+  & > * {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-around;
+    min-width: 100%;
+    gap: var(--marquee-gap);
+    animation: marquee-scroll var(--marquee-duration) linear infinite;
+  }
+
+  &:hover > *,
+  &:focus-within > *,
+  &[data-paused='true'] > * {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    overflow: visible;
+
+    & > * {
+      animation: none;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      /*
+        BOTH of these, or the row does not wrap and the page grows sideways.
+
+        `flex-wrap: wrap` only does something once the container is narrower
+        than its contents — and the marquee's own `min-width: 100%` and
+        `flex-shrink: 0` are there precisely to stop that happening. Left in
+        place, the group keeps its max-content width (eight logos, ~700px)
+        inside a 288px strip, every logo past the third hangs off the right,
+        and the document is 392px wider than the screen at 320px.
+
+        It is invisible on a desktop, where 700px fits, which is why it needs
+        a test at a phone width rather than an eye.
+      */
+      flex-shrink: 1;
+      min-width: 0;
+    }
+
+    /* The seam copy has no purpose once nothing is moving. */
+    & > [aria-hidden='true'] {
+      display: none;
+    }
+  }
+}
+
+@keyframes marquee-scroll {
+  to {
+    /* The group's own width PLUS the gap between the two groups. */
+    transform: translateX(calc(-100% - var(--marquee-gap)));
+  }
+}
+
+/**
+ * The slow, small zoom on a photograph inside a hovered card.
+ *
+ * Goes on the IMAGE; `hover-lift` goes on the card. 500ms against the card's
+ * 200ms on purpose — the frame responds, the picture drifts, and the two
+ * moving at the same speed is what makes a card feel like it is lurching.
+ */
+@utility hover-zoom {
+  /*
+    `scale` AND `transform`.
+
+    Tailwind v4's `scale-*` sets the standalone `scale` property, not a
+    `transform: scale(...)`. Transitioning only `transform` therefore animates
+    nothing and the picture SNAPS to its zoomed size — which looks like a bug
+    rather than an effect, and is invisible in review because the end state is
+    correct. `transform` stays listed for any caller that animates one.
+  */
+  transition:
+    scale 500ms var(--ease-out-soft),
+    transform 500ms var(--ease-out-soft);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:is(:hover, .group:hover *) {
+      scale: 1;
+    }
+  }
+}
+
+/**
+ * The gentle swell on an icon badge when its row is hovered.
+ *
+ * Separate from `hover-zoom` because a 44px disc and a 440px photograph want
+ * different timings — the disc should answer almost at once, the photograph
+ * should drift.
+ *
+ * Transitions `scale`, not `transform`: Tailwind v4's `scale-*` sets the
+ * standalone property, so a `transition-transform` here animates nothing and
+ * the badge snaps.
+ */
+@utility hover-pop {
+  transition: scale var(--duration-base) var(--ease-out-soft);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    scale: 1;
+  }
+}
+
+/**
+ * Reveal-on-scroll.
+ *
+ * The element is VISIBLE BY DEFAULT and only hidden once JavaScript has marked
+ * it pending. That ordering is the whole point: if the script never runs — a
+ * bundle that fails, an extension, a slow network giving up — the content is
+ * simply there, rather than a band of invisible statistics nobody can read.
+ * The reverse ordering is a common way to lose content permanently.
+ *
+ * Reduced motion opts out completely, in CSS, so it does not depend on the
+ * script either.
+ */
+@utility reveal {
+  &[data-reveal='pending'] {
+    opacity: 0;
+    translate: 0 10px;
+  }
+
+  &[data-reveal='in'] {
+    opacity: 1;
+    translate: none;
+    transition:
+      opacity var(--duration-slow) var(--ease-out-soft),
+      translate var(--duration-slow) var(--ease-out-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &[data-reveal] {
+      opacity: 1;
+      translate: none;
+      transition: none;
+    }
+  }
+}
+
+@utility skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  transition: transform var(--duration-fast) var(--ease-out-soft);
+
+  &:focus {
+    transform: translateY(0);
+  }
+}
