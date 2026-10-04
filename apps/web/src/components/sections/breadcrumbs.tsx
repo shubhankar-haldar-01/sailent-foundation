@@ -6,6 +6,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
+  cn,
 } from '@sailent/ui';
 
 import { breadcrumbSchema, jsonLd, type BreadcrumbEntry } from '@/lib/seo/structured-data';
@@ -22,10 +23,16 @@ import { breadcrumbSchema, jsonLd, type BreadcrumbEntry } from '@/lib/seo/struct
  * carrying breadcrumbs. It cost a while to find because the symptom (a minified
  * React #418) looks nothing like the cause.
  */
-export function Breadcrumbs({ entries }: { entries: BreadcrumbEntry[] }) {
+export function Breadcrumbs({
+  entries,
+  className,
+}: {
+  entries: BreadcrumbEntry[];
+  className?: string;
+}) {
   return (
     <>
-      <Breadcrumb className="mb-6">
+      <Breadcrumb className={cn('mb-6', className)}>
         <BreadcrumbList>
           {entries.map((entry, index) => {
             const isLast = index === entries.length - 1;

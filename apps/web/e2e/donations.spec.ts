@@ -44,6 +44,9 @@ const CAMPAIGN = '/campaigns/school-kits-jharkhand';
  * control that layout does not show.
  * ══════════════════════════════════════════════════════════════════════════
  */
+/** The donation card's main button: "Donate", or "Donate ₹1,800" once something is chosen. */
+const DONATE_CTA = /^(Donate( ₹[\d,.]+)?|Proceed to Donate|Continue)$/;
+
 function usesSheetLayout(page: Page): boolean {
   return (page.viewportSize()?.width ?? 1280) < 1024;
 }
@@ -92,14 +95,12 @@ async function continueButton(page: Page) {
     `display: none` button below `lg` that never becomes actionable.
   */
   /*
-    The label is "Proceed to Donate" since the campaign redesign. "Continue" is
-    kept in the pattern so this helper still resolves if an older surface is
-    reached — matching both costs nothing and matching neither costs a timeout.
+    The label is "Donate ₹1,800" since the second campaign redesign — the
+    amount is in the button — and plain "Donate" with nothing chosen. The older
+    labels are kept in the pattern so this helper still resolves if an older
+    surface is reached; matching them costs nothing, missing costs a timeout.
   */
-  const control = page
-    .getByRole('button', { name: /^(Proceed to Donate|Continue)$/ })
-    .locator('visible=true')
-    .first();
+  const control = page.getByRole('button', { name: DONATE_CTA }).locator('visible=true').first();
 
   if (!usesSheetLayout(page)) {
     return control;
@@ -190,9 +191,16 @@ test.describe('donation flow', () => {
     await add.click();
     await expect(await continueButton(page)).toBeEnabled();
 
-    // Plus ₹500 on top — a hybrid donation. The field is labelled
-    // "Custom donation amount in rupees" since the campaign redesign.
-    await page.getByLabel(/custom donation amount/i).fill('500');
+    // Plus ₹500 on top — a hybrid donation. The smallest preset is chosen on
+    // arrival, so it is already there; on a phone the card is the sheet
+    // `continueButton` has just opened.
+    await expect(
+      page
+        .getByRole('group', { name: 'Add an Amount' })
+        .filter({ visible: true })
+        .first()
+        .getByRole('button', { name: '₹500', exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
     await expect(visibleAmount(page, '₹2,300')).toBeVisible();
   });
 
@@ -200,53 +208,53 @@ test.describe('donation flow', () => {
    * You cannot proceed with an empty basket, and the interface says so.
    *
    * ══════════════════════════════════════════════════════════════════════════
-   * ASSERTED DIFFERENTLY PER LAYOUT, BECAUSE THE LAYOUTS DIFFER.
+   * THE BASKET HAS TO BE EMPTIED FIRST.
    *
-   * On a desktop the summary is a sticky rail: Continue is on screen, disabled,
-   * with the reason beneath it. On a phone or tablet it is a collapsed bar
-   * showing "₹0 · Nothing selected", and Continue lives behind a Review toggle
-   * — a full summary panel on a narrow screen would push the products
-   * themselves off the page.
+   * The campaign page opens with the smallest amount preset chosen, so an empty
+   * basket is something a donor reaches by taking that amount off — in the
+   * rail on a desktop, in the bottom sheet on a phone or tablet.
    *
-   * An earlier version opened that sheet to reach the same button everywhere.
-   * It raced hydration: the bar is server-rendered and clickable before React
-   * attaches, React then REPLAYS the clicks it captured while hydrating, and
-   * the sheet could be shut again a moment after the test had opened it. It
-   * failed on tablet roughly a third of the time and no amount of re-checking
-   * removed the race, because the stray click can land at any point.
+   * Opening the sheet once raced hydration: the bar is server-rendered and
+   * clickable before React attaches, and React REPLAYS clicks it captured while
+   * hydrating, which could shut the sheet again. `continueButton` waits for the
+   * network to settle and re-checks the sheet is still open before handing the
+   * control back, which is why this test goes through it rather than clicking
+   * the toggle itself.
    *
-   * So each layout is checked on what it actually presents. The requirement is
-   * the same and is fully covered: nothing offers a way forward, and the reason
-   * is visible without hunting for it.
+   * The requirement is unchanged: with nothing chosen nothing offers a way
+   * forward, and the reason is visible without hunting for it.
    * ══════════════════════════════════════════════════════════════════════════
    */
   test('will not continue with nothing chosen, and says why', async ({ page }) => {
     await page.goto(CAMPAIGN);
 
-    const toggle = page.getByRole('button', { name: /(Review|Hide)$/ });
+    /*
+      The page opens with the smallest amount chosen, so "nothing chosen"
+      means taking it off. `continueButton` opens the sheet on a phone — with
+      the hydration-safe retry described there — and returns the Donate
+      control, which is enabled until the amount goes.
+    */
+    const cont = await continueButton(page);
+    await expect(cont).toBeEnabled();
 
-    if (usesSheetLayout(page)) {
-      // The collapsed bar is the summary at this width, and it states the
-      // total and that nothing has been chosen — no interaction needed.
-      await expect(toggle.first()).toContainText(/Nothing selected/i);
-      await expect(toggle.first()).toContainText('₹0');
-    } else {
-      const cont = page
-        .getByRole('button', { name: /^(Proceed to Donate|Continue)$/ })
+    await page
+      .getByRole('group', { name: 'Add an Amount' })
+      .filter({ visible: true })
+      .first()
+      .getByRole('button', { name: '₹500', exact: true })
+      .click();
+
+    await expect(cont).toBeDisabled();
+    // The card says what to do, not just that the button is off.
+    await expect(
+      page
+        .getByText(/Choose an item above, or pick an amount below/i)
         .locator('visible=true')
-        .first();
-      await expect(cont).toBeDisabled();
-      // The rail says what to do, not just that the button is off.
-      await expect(
-        page
-          .getByText(/Choose an item above, or enter any amount you like/i)
-          .locator('visible=true')
-          .first(),
-      ).toBeVisible();
-    }
+        .first(),
+    ).toBeVisible();
 
     // Whatever the layout, there is no enabled way forward.
-    const enabled = page.getByRole('button', { name: /^Continue$/ }).and(page.locator(':enabled'));
+    const enabled = page.getByRole('button', { name: DONATE_CTA }).and(page.locator(':enabled'));
     await expect(enabled).toHaveCount(0);
   });
 
@@ -280,8 +288,9 @@ test.describe('donation flow', () => {
     await expect(page.getByLabel(/^Email/i)).toBeVisible();
     await expect(page.getByLabel(/Mobile number/i)).toBeVisible();
 
+    // One kit (₹900) on top of the ₹500 the page opens with.
     const pay = page.getByRole('button', { name: /^Pay ₹/ });
-    await expect(pay).toHaveText(/Pay ₹900/);
+    await expect(pay).toHaveText(/Pay ₹1,400/);
 
     await pay.click();
     await expect(page.getByText(/Enter your name/i)).toBeVisible();
@@ -323,15 +332,16 @@ test.describe('donation flow', () => {
     await add.click();
     await add.click();
 
+    // Two kits (₹1,800) on top of the ₹500 the page opens with.
     await (await continueButton(page)).click();
-    await expect(page.getByRole('button', { name: /^Pay ₹1,800/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Pay ₹2,300/ })).toBeVisible();
 
     await page.getByRole('button', { name: /Back to your donation/i }).click();
 
-    // The two kits are still chosen. Losing a basket on a back press is how a
-    // donor gives up.
+    // The two kits and the amount are still chosen. Losing a basket on a back
+    // press is how a donor gives up.
     await expect(await continueButton(page)).toBeEnabled();
-    await expect(visibleAmount(page, '₹1,800')).toBeVisible();
+    await expect(visibleAmount(page, '₹2,300')).toBeVisible();
   });
 });
 
@@ -372,9 +382,7 @@ test.describe('campaigns that are not taking money', () => {
     await page.goto('/campaigns/tailoring-training-centre');
 
     await expect(page.getByText(/complete/i).first()).toBeVisible();
-    await expect(page.getByRole('button', { name: /^(Proceed to Donate|Continue)$/ })).toHaveCount(
-      0,
-    );
+    await expect(page.getByRole('button', { name: DONATE_CTA })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /(Review|Hide)$/ })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /^Pay ₹/ })).toHaveCount(0);
   });

@@ -2,12 +2,19 @@
 
 import * as React from 'react';
 import { ChevronUp, Gift, Info } from 'lucide-react';
-import { Card, Input, cn, formatCurrency } from '@sailent/ui';
+import { Card, Input, cn, formatCurrency, percentOf } from '@sailent/ui';
 import { summariseDonation, type DonationSummary } from '@sailent/validation';
 
-import { CampaignDonationSummary } from '@/components/donations/campaign-donation-summary';
+import {
+  CampaignDonationSummary,
+  CampaignProgressBlock,
+  PRESET_AMOUNTS,
+  type CampaignProgressFigures,
+} from '@/components/donations/campaign-donation-summary';
 import { CampaignProductCard } from '@/components/donations/campaign-product-card';
 import { DonationCheckout } from '@/components/donations/donation-checkout';
+import { donationColumns } from '@/components/donations/donation-layout';
+import { StickyRail } from '@/components/donations/sticky-rail';
 import type { Campaign } from '@/lib/mock/types';
 
 /**
@@ -47,12 +54,11 @@ import type { Campaign } from '@/lib/mock/types';
  */
 
 /*
-  NO PRESET AMOUNT BUTTONS.
+  PRESET AMOUNTS LIVE IN THE DONATION CARD.
 
-  There were four (₹500 / ₹1,000 / ₹2,500 / ₹5,000). The approved design gives
-  the custom amount a single field beside the products, and presets on a page
-  whose whole proposition is "buy a specific thing" compete with the products
-  for the same decision. Somebody who wants to give a round number types one.
+  ₹500 to ₹10,000, as toggle buttons beside the total (see
+  `CampaignDonationSummary`). A typed field remains only in the optional panel
+  under the products, which /donate shows and the campaign page does not.
 */
 const MINIMUM_AMOUNT = 1_000; // ₹10
 
@@ -61,25 +67,67 @@ export interface DonationBuilderProps {
   /** Renders the sticky rail; off when embedded somewhere that supplies its own. */
   showSummary?: boolean;
   /**
-   * The "Save Campaign" control, rendered by the SERVER and passed in.
+   * What sits ABOVE the products in the main column — on a campaign page, the
+   * photograph, the title and the section links.
    *
-   * It has to know whether this visitor is a signed-in donor and whether they
-   * have already saved this campaign — both of which are session state the
-   * server holds. Passing the finished element down keeps that decision on the
-   * server and keeps this client component from needing a session of its own.
+   * ══════════════════════════════════════════════════════════════════════════
+   * WHY THE PAGE HANDS ITS CONTENT TO THE BUILDER.
+   *
+   * The donation card has to stay beside the whole page, from the photograph
+   * down to the FAQs, and it has to share one basket with the product grid. A
+   * sticky element only travels inside its own grid row, so the card, the
+   * grid and everything around them have to be in the same two-column layout —
+   * and the basket is client state, so that layout lives here. The page's own
+   * sections stay server-rendered; they arrive as already-rendered slots.
+   *
+   * All three slots are optional. The /donate page passes none of them and
+   * gets the builder on its own, as before.
+   * ══════════════════════════════════════════════════════════════════════════
    */
-  saveSlot?: React.ReactNode;
+  lead?: React.ReactNode;
+  /** What follows the ways of giving in the main column. */
+  children?: React.ReactNode;
+  /**
+   * The assurances (80G, secure payments, trusted). On a desktop they sit at
+   * the foot of the donation card, so the side column is one card; on a phone,
+   * where that card is the bottom sheet, they close the page in a small card of
+   * their own.
+   */
+  assurances?: React.ReactNode;
+  /**
+   * The custom-amount panel under the products ("Other Ways to Support").
+   *
+   * On by default, because on /donate a campaign without products has no
+   * other field in the main column. The campaign page turns it off: there the
+   * donation card's own Custom Amount field is always beside the products,
+   * and a second field for the same amount was one panel too many.
+   */
+  showCustomAmountSection?: boolean;
+  /**
+   * Start with the smallest amount preset already chosen, so the card opens
+   * on "Donate ₹500" rather than on a disabled button. The campaign page turns
+   * it on; /donate, where somebody has just picked a campaign and may well
+   * want only products, leaves it off. Never applied to a campaign that is not
+   * taking donations.
+   */
+  preselectSmallestAmount?: boolean;
   className?: string;
 }
 
 export function DonationBuilder({
   campaign,
   showSummary = true,
-  saveSlot,
+  lead,
+  children,
+  assurances,
+  showCustomAmountSection = true,
+  preselectSmallestAmount = false,
   className,
 }: DonationBuilderProps) {
   const [quantities, setQuantities] = React.useState<Record<string, number>>({});
-  const [customAmount, setCustomAmount] = React.useState('');
+  const [customAmount, setCustomAmount] = React.useState(() =>
+    preselectSmallestAmount && campaign.status === 'active' ? String(PRESET_AMOUNTS[0]) : '',
+  );
   /**
    * The builder and the checkout are ONE component with two stages, not two
    * routes. Navigating away and back would lose the basket — and the basket is
@@ -108,6 +156,10 @@ export function DonationBuilder({
   const [mode, setMode] = React.useState<'amount' | 'products'>('amount');
   const customInputId = React.useId();
   const productsRef = React.useRef<HTMLElement>(null);
+  // The donation card renders twice — the desktop rail and the phone sheet —
+  // so the first amount preset in each copy gets its own ref.
+  const railAmountRef = React.useRef<HTMLButtonElement>(null);
+  const sheetAmountRef = React.useRef<HTMLButtonElement>(null);
 
   const chooseMode = (next: 'amount' | 'products') => {
     setMode(next);
@@ -117,8 +169,24 @@ export function DonationBuilder({
       return;
     }
 
-    const field = document.getElementById(customInputId);
-    field?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    /*
+      The panel's field when there is one; otherwise the first amount preset
+      in whichever copy of the card is on screen. `offsetParent` is null for the copy inside a
+      `display: none` rail, which is how the phone and desktop copies are told
+      apart without asking for the viewport width.
+    */
+    const field = showCustomAmountSection
+      ? document.getElementById(customInputId)
+      : ([railAmountRef.current, sheetAmountRef.current].find(
+          (preset) => preset !== null && preset.offsetParent !== null,
+        ) ?? null);
+
+    // `nearest` for the card's presets: they are already beside the reader, and
+    // centring it would scroll the page away from what they were reading.
+    field?.scrollIntoView({
+      behavior: 'smooth',
+      block: showCustomAmountSection ? 'center' : 'nearest',
+    });
     // Focused after the scroll, so the browser does not fight its own animation.
     window.setTimeout(() => field?.focus(), 350);
   };
@@ -127,8 +195,46 @@ export function DonationBuilder({
   const isClosed = campaign.status === 'completed' || campaign.status === 'archived';
 
   const setQuantity = (productId: string, quantity: number) => {
-    setQuantities((current) => ({ ...current, [productId]: quantity }));
+    setQuantities((current) => ({ ...current, [productId]: Math.max(0, quantity) }));
   };
+
+  /**
+   * Raised, goal and donors, straight from the API's own computation when it
+   * sent one, derived from the same two figures when it did not (the fixture
+   * fallback carries no `progress`).
+   */
+  const progress: CampaignProgressFigures = React.useMemo(() => {
+    const goal = campaign.progress?.goal ?? campaign.goalAmount;
+    const raised = campaign.progress?.raised ?? campaign.amountRaised;
+    return {
+      goal,
+      raised,
+      percent: campaign.progress?.rawPercent ?? percentOf(raised, goal),
+      donorCount: campaign.donorCount,
+    };
+  }, [campaign.progress, campaign.goalAmount, campaign.amountRaised, campaign.donorCount]);
+
+  /**
+   * MOVE TO THE CHECKOUT WHEN IT OPENS, and back to the products on return.
+   *
+   * The Donate button is in a rail that follows the reader down the page, so it
+   * can be pressed from beside the FAQs. Without this the form would open far
+   * above, off screen, and the press would appear to do nothing. Focus goes to
+   * the form's container so a screen reader starts from the right place too.
+   */
+  const checkoutRef = React.useRef<HTMLDivElement>(null);
+  const previousStage = React.useRef(stage);
+  React.useEffect(() => {
+    if (previousStage.current === stage) return;
+    previousStage.current = stage;
+
+    if (stage === 'checkout') {
+      checkoutRef.current?.scrollIntoView({ block: 'start' });
+      checkoutRef.current?.focus({ preventScroll: true });
+    } else {
+      productsRef.current?.scrollIntoView({ block: 'start' });
+    }
+  }, [stage]);
 
   const customPaise = React.useMemo(() => {
     const parsed = Number.parseFloat(customAmount);
@@ -190,40 +296,54 @@ export function DonationBuilder({
     [campaign.slug, campaign.title, productLines, customPaise, total],
   );
 
-  const summary = (
+  const renderSummary = (withProgress: boolean) => (
     <CampaignDonationSummary
+      amountRef={withProgress ? railAmountRef : sheetAmountRef}
       productLines={productLines}
       customPaise={customPaise}
-      subtotal={summaryTotals.productTotal}
+      onCustomAmountChange={setCustomAmount}
+      customDisabled={isPaused || isClosed}
       total={total}
       minimum={MINIMUM_AMOUNT}
       belowMinimum={belowMinimum}
       canContinue={canContinue}
       onContinue={() => setStage('checkout')}
+      onQuantityChange={setQuantity}
       onRemoveProduct={(id) => setQuantity(id, 0)}
       onClearAll={() => {
         setQuantities({});
         setCustomAmount('');
       }}
-      saveSlot={saveSlot}
       mode={mode}
       {...(campaign.products.length > 0 ? { onModeChange: chooseMode } : {})}
+      {...(withProgress ? { progress, assurances } : {})}
     />
   );
 
   if (stage === 'checkout') {
     return (
-      <div className={className} id="give">
-        <DonationCheckout selection={checkoutSelection} onBack={() => setStage('build')} />
+      <div className={className}>
+        {lead}
+        <div
+          id="give"
+          ref={checkoutRef}
+          tabIndex={-1}
+          className={cn('scroll-mt-24 focus:outline-none', lead ? 'mt-8' : null)}
+        >
+          <DonationCheckout selection={checkoutSelection} onBack={() => setStage('build')} />
+        </div>
+        {children}
       </div>
     );
   }
 
   return (
-    <div className={cn('grid gap-6 lg:grid-cols-[1fr_21rem] lg:items-start', className)}>
+    <div className={cn(donationColumns, className)}>
       <div className="min-w-0">
+        {lead}
+
         {isPaused ? (
-          <Card className="border-warning/30 bg-warning-subtle mb-6 flex gap-3 p-4">
+          <Card className="border-warning/30 bg-warning-subtle mt-6 flex gap-3 p-4 first:mt-0">
             <Info className="text-warning-foreground mt-0.5 size-5 shrink-0" aria-hidden="true" />
             <div>
               <p className="text-body-sm font-semibold">Donations are paused for this campaign</p>
@@ -236,7 +356,7 @@ export function DonationBuilder({
         ) : null}
 
         {isClosed ? (
-          <Card className="bg-surface-sunken mb-6 flex gap-3 p-4">
+          <Card className="bg-surface-sunken mt-6 flex gap-3 p-4 first:mt-0">
             <Info className="text-muted-foreground mt-0.5 size-5 shrink-0" aria-hidden="true" />
             <div>
               <p className="text-body-sm font-semibold">This campaign has finished</p>
@@ -249,16 +369,33 @@ export function DonationBuilder({
         ) : null}
 
         {campaign.products.length > 0 ? (
-          <section ref={productsRef} aria-labelledby="choose-products" className="scroll-mt-24">
-            <h2 id="choose-products" className="text-h1 font-bold">
-              Choose Products to Donate
+          /*
+            `id="give"` IS THE PAGE'S DONATE ANCHOR. Campaign cards, programme
+            pages and receipts all link to `/campaigns/…#give`, and this is
+            where they should land — on the things to give.
+          */
+          <section
+            id="give"
+            ref={productsRef}
+            aria-labelledby="choose-products"
+            className="mt-6 scroll-mt-24 first:mt-0"
+          >
+            <h2 id="choose-products" className="text-h2 font-bold">
+              Choose How You Want to Help
             </h2>
             <p className="text-body-sm text-muted-foreground mt-1">
               Select the items you want to support. Your contribution will help us provide immediate
-              relief to families in need.
+              relief to those in need.
             </p>
 
-            <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+            {/*
+              Two across only where two FIT. Each card lays its picture beside
+              its facts, so it needs about 400px; beside the rail at `lg` the
+              column is about 600px, and two cards there would crush the price
+              into the stepper. Full width at `md`, with no rail, has room for
+              two again.
+            */}
+            <ul className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {campaign.products.map((product, index) => (
                 <li key={product.id}>
                   <CampaignProductCard
@@ -280,104 +417,131 @@ export function DonationBuilder({
           </section>
         ) : null}
 
-        {/* Custom amount -------------------------------------------------- */}
-        <section
-          aria-labelledby="custom-amount"
-          className={cn(
-            'bg-wash-mint/40 border-wash-mint rounded-lg border p-4',
-            campaign.products.length > 0 ? 'mt-5' : 'mt-0',
-          )}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex min-w-0 items-start gap-3">
-              <Gift className="text-wash-mint-ink mt-0.5 size-5 shrink-0" aria-hidden="true" />
-              <div className="min-w-0">
-                <h2 id="custom-amount" className="text-body-sm font-bold">
-                  {campaign.products.length > 0
-                    ? 'Want to contribute a custom amount?'
-                    : 'Choose an amount'}
-                </h2>
-                <p className="text-caption text-muted-foreground mt-0.5">
-                  You can also make a general donation to support this campaign.
-                </p>
+        {/* Other ways to support --------------------------------------------- */}
+        {showCustomAmountSection ? (
+          <section
+            aria-labelledby="custom-amount"
+            className="bg-surface-warm border-wash-amber mt-6 rounded-xl border p-4 first:mt-0 md:p-5"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex min-w-0 flex-1 items-start gap-3">
+                <span
+                  aria-hidden="true"
+                  className="bg-wash-amber text-wash-amber-ink grid size-10 shrink-0 place-items-center rounded-full"
+                >
+                  <Gift className="size-5" />
+                </span>
+                <div className="min-w-0">
+                  <h2 id="custom-amount" className="text-body font-bold">
+                    {campaign.products.length > 0 ? 'Other Ways to Support' : 'Choose an amount'}
+                  </h2>
+                  <p className="text-body-sm text-muted-foreground mt-0.5">
+                    {campaign.products.length > 0
+                      ? 'Can’t find what you need? Give any amount you choose and we’ll use it where it’s needed most.'
+                      : 'Give any amount you choose to support this campaign.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative w-full sm:w-64">
+                <label htmlFor={customInputId} className="sr-only">
+                  Custom donation amount in rupees
+                </label>
+                <span
+                  aria-hidden="true"
+                  className="text-body-sm text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex w-9 items-center justify-center"
+                >
+                  ₹
+                </span>
+                <Input
+                  id={customInputId}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  placeholder={
+                    campaign.products.length > 0 ? 'Enter amount (optional)' : 'Enter amount'
+                  }
+                  value={customAmount}
+                  disabled={isPaused || isClosed}
+                  onChange={(event) => setCustomAmount(event.target.value)}
+                  className="bg-surface rounded-lg pl-9"
+                  data-numeric=""
+                />
               </div>
             </div>
+          </section>
+        ) : null}
 
-            <div className="relative w-full sm:w-44">
-              <label htmlFor={customInputId} className="sr-only">
-                Custom donation amount in rupees
-              </label>
-              <span
-                aria-hidden="true"
-                className="text-body-sm text-muted-foreground border-border pointer-events-none absolute inset-y-0 left-0 flex w-9 items-center justify-center border-r"
-              >
-                ₹
-              </span>
-              <Input
-                id={customInputId}
-                type="number"
-                inputMode="numeric"
-                min={0}
-                step={1}
-                placeholder="Enter amount"
-                value={customAmount}
-                disabled={isPaused || isClosed}
-                onChange={(event) => setCustomAmount(event.target.value)}
-                className="bg-surface pl-11"
-                data-numeric=""
-              />
-            </div>
-          </div>
-        </section>
+        {children}
       </div>
 
-      {showSummary ? (
-        <>
-          {/* Desktop: sticky rail. */}
-          <div className="hidden lg:sticky lg:top-24 lg:block">{summary}</div>
+      {showSummary || assurances ? (
+        <StickyRail>
+          {/* Desktop: the card, sticky with everything in this column. */}
+          {showSummary ? <div className="hidden lg:block">{renderSummary(true)}</div> : null}
 
-          {/* Mobile: collapsed bar that expands into the full itemisation, so a
-              donor can edit any line without scrolling back up. */}
-          <div className="lg:hidden">
-            <div
-              className={cn(
-                'border-border bg-surface fixed inset-x-0 bottom-0 z-40 border-t shadow-lg',
-                'pb-[env(safe-area-inset-bottom,0px)]',
-              )}
-            >
-              {isSheetOpen ? (
-                <div className="max-h-[60dvh] overflow-y-auto p-4">{summary}</div>
-              ) : null}
-
-              <button
-                type="button"
-                onClick={() => setIsSheetOpen((open) => !open)}
-                aria-expanded={isSheetOpen}
-                className="focus-visible:outline-ring flex min-h-14 w-full items-center justify-between gap-3 px-4 text-left focus-visible:outline-2 focus-visible:-outline-offset-2"
-              >
-                <span>
-                  <span data-numeric="" className="text-h4 font-semibold tabular-nums">
-                    {formatCurrency(total)}
-                  </span>
-                  <span className="text-body-sm text-muted-foreground ml-2">
-                    {itemCount === 0
-                      ? 'Nothing selected'
-                      : `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
-                  </span>
-                </span>
-                <span className="text-body-sm text-primary flex items-center gap-2 font-medium">
-                  {isSheetOpen ? 'Hide' : 'Review'}
-                  <ChevronUp
-                    aria-hidden="true"
-                    className={cn('size-4 transition-transform', isSheetOpen && 'rotate-180')}
-                  />
-                </span>
-              </button>
+          {/*
+            Below `lg` there is no rail: the card lives in the bottom sheet, and
+            the campaign's progress — which the sheet leaves out to stay short —
+            closes the page here, after the FAQs, with the assurances under it.
+          */}
+          {showSummary ? (
+            <div className="border-border bg-surface rounded-xl border p-5 shadow-sm lg:hidden">
+              <CampaignProgressBlock figures={progress} />
             </div>
-            {/* Spacer so the sticky bar never covers page content. */}
-            <div aria-hidden="true" className="h-16" />
+          ) : null}
+
+          {assurances ? (
+            <div className="border-border bg-surface rounded-xl border p-4 shadow-sm lg:hidden">
+              {assurances}
+            </div>
+          ) : null}
+        </StickyRail>
+      ) : null}
+
+      {showSummary ? (
+        /* Mobile: collapsed bar that expands into the full itemisation, so a
+           donor can edit any line without scrolling back up. */
+        <div className="lg:hidden">
+          <div
+            className={cn(
+              'border-border bg-surface fixed inset-x-0 bottom-0 z-40 border-t shadow-lg',
+              'pb-[env(safe-area-inset-bottom,0px)]',
+            )}
+          >
+            {isSheetOpen ? (
+              <div className="max-h-[60dvh] overflow-y-auto p-4">{renderSummary(false)}</div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={() => setIsSheetOpen((open) => !open)}
+              aria-expanded={isSheetOpen}
+              className="focus-visible:outline-ring flex min-h-14 w-full items-center justify-between gap-3 px-4 text-left focus-visible:outline-2 focus-visible:-outline-offset-2"
+            >
+              <span>
+                <span data-numeric="" className="text-h4 font-semibold tabular-nums">
+                  {formatCurrency(total)}
+                </span>
+                <span className="text-body-sm text-muted-foreground ml-2">
+                  {itemCount === 0
+                    ? 'Nothing selected'
+                    : `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
+                </span>
+              </span>
+              <span className="text-body-sm text-primary flex items-center gap-2 font-medium">
+                {isSheetOpen ? 'Hide' : 'Review'}
+                <ChevronUp
+                  aria-hidden="true"
+                  className={cn('size-4 transition-transform', isSheetOpen && 'rotate-180')}
+                />
+              </span>
+            </button>
           </div>
-        </>
+          {/* Spacer so the sticky bar never covers page content. */}
+          <div aria-hidden="true" className="h-16" />
+        </div>
       ) : null}
     </div>
   );

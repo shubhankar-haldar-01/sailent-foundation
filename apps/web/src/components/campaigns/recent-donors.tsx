@@ -92,14 +92,18 @@ export function RecentDonors({ donors }: { donors: CampaignDonor[] }) {
   if (donors.length === 0) return null;
 
   return (
-    <section aria-labelledby="donors-heading" className="mt-14">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <section
+      id="campaign-supporters"
+      aria-labelledby="donors-heading"
+      className="mt-12 scroll-mt-24"
+    >
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
         <div>
-          <h2 id="donors-heading" className="text-h1 font-bold">
-            Recent Donors
+          <h2 id="donors-heading" className="text-h2 font-bold">
+            Recent Supporters
           </h2>
           <p className="text-body-sm text-muted-foreground mt-1">
-            People Who Recently Supported This Campaign
+            People who recently supported this campaign.
           </p>
         </div>
 
@@ -108,7 +112,11 @@ export function RecentDonors({ donors }: { donors: CampaignDonor[] }) {
           one list, and `aria-pressed` on a pair of toggles announces two
           independent switches — one of which is always on.
         */}
-        <div role="radiogroup" aria-label="Sort donors" className="bg-muted flex rounded-lg p-1">
+        <div
+          role="radiogroup"
+          aria-label="Sort supporters"
+          className="border-border bg-surface flex rounded-lg border p-0.5"
+        >
           {(
             [
               ['recent', 'Recent'],
@@ -122,9 +130,9 @@ export function RecentDonors({ donors }: { donors: CampaignDonor[] }) {
               aria-checked={view === value}
               onClick={() => setView(value)}
               className={cn(
-                'text-body-sm focus-visible:outline-ring min-h-9 rounded-md px-4 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
+                'text-caption focus-visible:outline-ring min-h-8 rounded-md px-3 font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
                 view === value
-                  ? 'bg-wash-violet-ink text-white shadow-sm'
+                  ? 'bg-wash-mint text-wash-mint-ink-strong'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -134,36 +142,48 @@ export function RecentDonors({ donors }: { donors: CampaignDonor[] }) {
         </div>
       </div>
 
-      <ul className="border-border divide-border mt-5 divide-y rounded-lg border">
+      {/*
+        ONE VERTICAL LIST, FULL WIDTH. Who, when and how much, in three columns
+        on anything wider than a phone; on a phone the time tucks under the
+        name so the amount keeps its own column and never wraps.
+      */}
+      <ul className="border-border bg-surface divide-border mt-4 divide-y overflow-hidden rounded-xl border">
         {rows.map((donor, index) => (
           <li
             key={`${donor.name}-${donor.donatedAt ?? index}`}
-            className="flex items-center gap-4 px-4 py-3"
+            className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_8rem_6.5rem]"
           >
             <span
               aria-hidden="true"
               className={cn(
-                'text-caption text-foreground grid size-10 shrink-0 place-items-center rounded-full font-semibold',
+                'text-caption text-foreground grid size-8 shrink-0 place-items-center rounded-md font-semibold',
                 AVATAR_TONES[index % AVATAR_TONES.length],
               )}
             >
               {initialsOf(donor.name)}
             </span>
 
-            <span className="min-w-0 flex-1">
+            <span className="min-w-0">
               <span className="text-body-sm block truncate font-semibold">{donor.name}</span>
               {donor.donatedAt ? (
                 <time
                   dateTime={donor.donatedAt}
-                  className="text-caption text-muted-foreground block"
+                  className="text-caption text-muted-foreground block sm:hidden"
                 >
                   {relativeTime(donor.donatedAt)}
                 </time>
               ) : null}
             </span>
 
-            <span data-numeric="" className="text-body-sm shrink-0 font-semibold tabular-nums">
-              {formatCurrency(donor.amount, { decimals: true })}
+            <span className="text-caption text-muted-foreground hidden sm:block">
+              {donor.donatedAt ? (
+                <time dateTime={donor.donatedAt}>{relativeTime(donor.donatedAt)}</time>
+              ) : null}
+            </span>
+
+            <span data-numeric="" className="text-body-sm text-right font-bold tabular-nums">
+              {/* Paise only when there are any: "₹500", but "₹319.50". */}
+              {formatCurrency(donor.amount)}
             </span>
           </li>
         ))}

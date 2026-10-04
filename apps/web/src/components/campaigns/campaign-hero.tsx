@@ -1,26 +1,37 @@
 import { CalendarDays, MapPin, Users } from 'lucide-react';
 
-import { StatusBadge, formatDate, formatNumber } from '@sailent/ui';
+import { StatusBadge, cn, formatNumber } from '@sailent/ui';
 
 import { MediaFrame } from '@/components/media/media-frame';
-import { PageShell } from '@/components/layout/page-shell';
-import { ScriptAccent } from '@/components/sections/script-accent';
 import type { Campaign } from '@/lib/mock/types';
 
 /**
- * The campaign hero.
+ * "01 Jun 2026" — the approved design's form. `formatDate`'s short style is
+ * "01/06/26", which reads as a reference number and is ambiguous to anybody
+ * used to month-first dates.
+ */
+const periodDate = new Intl.DateTimeFormat('en-IN', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'Asia/Kolkata',
+});
+
+/**
+ * The campaign header: the photograph, then what the campaign is.
  *
  * ══════════════════════════════════════════════════════════════════════════
- * THE PHOTOGRAPH IS THE RIGHT HALF OF THE BAND, NOT A PANEL INSIDE IT.
+ * NOTHING IS WRITTEN ON THE PHOTOGRAPH.
  *
- * It runs to the edge of the viewport and bleeds under the text column, which
- * is what the approved design does and what stops the band reading as a card.
- * Achieved with a full-bleed absolute image and a `PageShell` laid over it, so
- * the text still sits on the page grid and lines up with everything below.
+ * It used to carry a script slogan over a dark scrim. Whatever is set over a
+ * picture is only as legible as the picture allows, it hides part of the one
+ * thing a campaign team chose to show, and the title said it better anyway. The
+ * photograph is now just the photograph, and every word sits below it on the
+ * page's own background.
  *
- * The text column gets its own opaque backing at small sizes, where the two
- * halves stack and words would otherwise land on the photograph. Above `lg` the
- * backing becomes a gradient that fades into the image.
+ * It is `aria-hidden` with an empty alt for the same reason as before: the
+ * title says what this is, and a second description of the same subject is an
+ * interruption rather than an aid.
  * ══════════════════════════════════════════════════════════════════════════
  *
  * THREE FACTS, AND ONLY ONES THE RECORD HOLDS. Location, people in need and the
@@ -28,167 +39,127 @@ import type { Campaign } from '@/lib/mock/types';
  * an empty "0 people in need" is worse than a shorter row (decision A14).
  */
 export function CampaignHero({ campaign }: { campaign: Campaign }) {
-  const period = [
-    campaign.startsAt ? formatDate(campaign.startsAt, 'short') : null,
-    campaign.endsAt ? formatDate(campaign.endsAt, 'short') : null,
-  ].filter(Boolean);
+  const period = [campaign.startsAt, campaign.endsAt]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => periodDate.format(new Date(value)));
+
+  // "Ranchi, Jharkhand" is set as the design sets it: the place on the first
+  // line and the state under it, so it matches the value-over-label rhythm of
+  // the other two facts.
+  const [place, ...region] = (campaign.location ?? '')
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
 
   return (
-    <section aria-labelledby="campaign-title" className="border-border relative border-b">
+    <section aria-labelledby="campaign-title">
       {/*
-        The photograph. `aria-hidden` and empty alt: the campaign title says
-        what this is, and a second description of the same subject is an
-        interruption rather than an aid.
+        1000:567 at every width — the square the campaign team asked for, cut
+        to 70% of its height and then by 10% twice more, so it is 56.7% as
+        tall as it is wide. `aspect-[1000/567]` overrides the frame's square
+        ratio (`cn` merges the two, and the later one wins). `object-cover` in
+        the frame crops the photo to fit rather than letterboxing it.
       */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[52%] lg:block">
+      <MediaFrame
+        media={{ ...campaign.cover, alt: '' }}
+        aspect="square"
+        priority
+        className="aspect-[1000/567] rounded-xl"
+        sizes="(max-width: 1024px) 100vw, 1000px"
+      />
+
+      <div className="mt-5 flex flex-wrap items-center gap-2">
         {/*
-          `aspect-auto h-full` OVERRIDES the frame's own ratio.
-
-          `MediaFrame` sizes itself by aspect ratio, which is right everywhere
-          else and wrong here — this one has to fill a column whose height is
-          set by the text beside it. The image inside is already `fill` +
-          `object-cover`, so removing the ratio is all that is needed.
+          `-ink-strong`, not `-ink`. The ordinary mint ink on the mint wash
+          measures 4.31:1 against a 4.5:1 floor for 13px text — the kind of
+          near-miss that passes an eye and fails WCAG 1.4.3.
         */}
-        <MediaFrame
-          media={{ ...campaign.cover, alt: '' }}
-          aspect="hero"
-          rounded={false}
-          priority
-          className="aspect-auto h-full w-full"
-          sizes="52vw"
-        />
-
-        {/*
-          A NARROW seam, not a wash over the whole picture.
-
-          This ran the full width and bleached the left third of every
-          photograph. It only has to soften the join with the text column, so it
-          is now a third of the width and stops there.
-        */}
-        <div
-          aria-hidden="true"
-          className="from-surface absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r to-transparent"
-        />
+        <span className="text-caption bg-wash-mint text-wash-mint-ink-strong inline-flex items-center rounded-md px-2.5 py-1 font-semibold">
+          {campaign.category}
+        </span>
 
         {/*
-          A scrim under the script, and it is not decoration.
-
-          The words are white and the photograph behind them is whatever the
-          campaign team uploaded — a bright sky puts white on near-white and the
-          line disappears. A gradient from the right edge guarantees the
-          contrast whatever the picture, which a text-shadow cannot.
+          THE STATUS, BUT ONLY WHEN IT IS NOT THE ORDINARY ONE. An active
+          campaign says nothing; paused, completed and archived all say so,
+          because somebody who finds the steppers disabled and no explanation
+          assumes the page is broken rather than that the campaign has finished.
         */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-l from-black/55 via-black/15 to-transparent"
-        />
-
-        <ScriptAccent
-          size="lg"
-          heart
-          className="absolute right-8 top-1/2 max-w-[13rem] -translate-y-1/2 text-right text-white xl:right-14"
-        >
-          Together for a Safer Tomorrow
-        </ScriptAccent>
+        {campaign.status !== 'active' ? <StatusBadge status={campaign.status} /> : null}
       </div>
 
-      <PageShell className="relative py-8 md:py-10">
-        <div className="lg:max-w-[46%]">
-          <div className="flex flex-wrap items-center gap-2">
-            {/*
-              THE MINT PILL, not the category's own colour.
+      <h1 id="campaign-title" className="text-h1 mt-3 text-balance font-bold leading-tight">
+        {campaign.title}
+      </h1>
 
-              The listing cards tint each category differently, and that stays —
-              it is what lets somebody scan a row of cards. The hero badge is a
-              different job: there is one campaign on this page and nothing to
-              tell apart, so it takes the brand's own tint and reads the same on
-              every campaign, which is what the approved design shows.
-            */}
-            {/*
-              `-ink-strong`, not `-ink`. The ordinary mint ink on the mint wash
-              measures 4.31:1 against a 4.5:1 floor for 13px text — the kind of
-              near-miss that passes an eye and fails WCAG 1.4.3.
-            */}
-            <span className="text-caption bg-wash-mint text-wash-mint-ink-strong inline-flex items-center rounded-full px-3 py-1 font-semibold">
-              {campaign.category}
-            </span>
+      <p className="text-body text-muted-foreground mt-2 max-w-3xl leading-relaxed md:text-[1.0625rem]">
+        {campaign.shortDescription}
+      </p>
 
-            {/*
-              THE STATUS, BUT ONLY WHEN IT IS NOT THE ORDINARY ONE.
+      <ul className="mt-5 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 xl:gap-x-0">
+        {place ? (
+          <Fact
+            icon={MapPin}
+            tone="bg-wash-mint text-wash-mint-ink-strong"
+            value={region.length > 0 ? `${place},` : place}
+            label={region.length > 0 ? region.join(', ') : 'Location'}
+          />
+        ) : null}
 
-              An active campaign says nothing — a badge reading "Active" beside
-              every live appeal is noise. Paused, completed and archived all say
-              so, because somebody who finds the quantity steppers disabled and
-              no explanation assumes the page is broken rather than that the
-              campaign has finished.
+        {campaign.beneficiaryTarget ? (
+          <Fact
+            icon={Users}
+            tone="bg-wash-blue text-wash-blue-ink"
+            value={`${formatNumber(campaign.beneficiaryTarget)}+`}
+            label="People in need"
+          />
+        ) : null}
 
-              This is the one thing the approved design does not show, and it
-              does not show it because the campaign in the design is open.
-            */}
-            {campaign.status !== 'active' ? <StatusBadge status={campaign.status} /> : null}
-          </div>
-
-          <h1
-            id="campaign-title"
-            className="text-display mt-3 text-balance font-bold leading-[1.1]"
-          >
-            {campaign.title}
-          </h1>
-
-          <p className="text-body text-muted-foreground mt-3 max-w-prose leading-relaxed">
-            {campaign.shortDescription}
-          </p>
-
-          <ul className="mt-6 flex flex-wrap items-start gap-x-8 gap-y-4">
-            {campaign.location ? <Fact icon={MapPin} value={campaign.location} /> : null}
-
-            {campaign.beneficiaryTarget ? (
-              <Fact
-                icon={Users}
-                value={`${formatNumber(campaign.beneficiaryTarget)}+`}
-                label="People in need"
-              />
-            ) : null}
-
-            {period.length > 0 ? (
-              <Fact icon={CalendarDays} value={period.join(' – ')} label="Campaign period" />
-            ) : null}
-          </ul>
-        </div>
-      </PageShell>
-
-      {/* Below `lg` the photograph sits under the text rather than beside it. */}
-      <div className="lg:hidden">
-        <MediaFrame media={{ ...campaign.cover, alt: '' }} aspect="landscape" rounded={false} />
-      </div>
+        {period.length > 0 ? (
+          <Fact
+            icon={CalendarDays}
+            tone="bg-wash-mint text-wash-mint-ink-strong"
+            value={period.join(' – ')}
+            label="Campaign period"
+          />
+        ) : null}
+      </ul>
     </section>
   );
 }
 
 /**
- * One fact, icon beside value.
+ * One fact: a tinted disc, then the value over its label.
  *
- * The value is the larger, bolder line and the label sits under it — the number
- * is what somebody scanning the band is looking for, and putting the caption
- * first buries it.
+ * The value is the bolder line — the number is what somebody scanning the row
+ * is looking for. The rule between facts is a border on every fact but the
+ * first, so a campaign missing one of the three does not leave a stray divider.
+ * It appears only at `xl`, the first width where all three always fit on one
+ * line; narrower, the row wraps, and a rule would start the second line.
  */
 function Fact({
   icon: Icon,
+  tone,
   value,
   label,
 }: {
   icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
+  tone: string;
   value: string;
-  label?: string;
+  label: string;
 }) {
   return (
-    <li className="flex items-center gap-2.5">
-      <Icon className="text-success size-5 shrink-0" aria-hidden={true} />
+    <li className="xl:border-border flex items-center gap-3 xl:pr-8 xl:[&:not(:first-child)]:border-l xl:[&:not(:first-child)]:pl-8">
+      <span
+        aria-hidden="true"
+        className={cn('grid size-11 shrink-0 place-items-center rounded-full', tone)}
+      >
+        <Icon className="size-5" aria-hidden={true} />
+      </span>
       <span className="min-w-0">
-        <span data-numeric="" className="text-body-sm block font-semibold">
+        <span data-numeric="" className="text-body-sm block font-bold">
           {value}
         </span>
-        {label ? <span className="text-caption text-muted-foreground block">{label}</span> : null}
+        <span className="text-caption text-muted-foreground block">{label}</span>
       </span>
     </li>
   );

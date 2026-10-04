@@ -90,16 +90,22 @@ test.describe('journey: homepage → campaign', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
     /*
-      PROGRESS IS PER PRODUCT NOW, not one bar for the campaign.
+      PROGRESS PER PRODUCT, AND FOR THE CAMPAIGN.
 
-      The redesigned page drops the campaign-level "₹X raised of ₹Y" panel and
-      states progress on each item instead — "354 / 500 Donated, 71%" — which is
-      the figure that decides whether somebody buys that item. Both counts are
+      Each item states its own — "354 / 500 Donated, 71%" — which is the
+      figure that decides whether somebody buys that item. Both counts are
       asserted, not just the percentage: 1% of 500 and 1% of 5 are very
-      different asks, and a bare percentage hides which one this is.
+      different asks, and a bare percentage hides which one this is. The
+      donation card adds the campaign's own "46% Complete" against its goal.
     */
-    await expect(page.getByText(/\d+ \/ \d+ Donated/).first()).toBeVisible();
+    await expect(page.getByText(/^[\d,]+ \/ [\d,]+ Donated$/).first()).toBeVisible();
     await expect(page.getByText(/^\d+%$/).first()).toBeVisible();
+    await expect(
+      page
+        .getByText(/^\d+% Complete$/)
+        .filter({ visible: true })
+        .first(),
+    ).toBeVisible();
   });
 });
 
@@ -423,11 +429,11 @@ test.describe('journey: campaign → donation UI', () => {
     await page.goto('/campaigns/school-kits-jharkhand');
 
     /*
-      The products are the FIRST thing on the page now, so there is no in-page
-      "Donate now" anchor to follow — the redesign opens on the Products tab
-      rather than asking somebody to scroll to a builder further down.
+      The products come straight after the campaign's facts, so there is no
+      in-page "Donate now" anchor to follow — the ask is the first section
+      rather than a builder somebody has to scroll down to find.
     */
-    await expect(page.getByRole('heading', { name: 'Choose Products to Donate' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Choose How You Want to Help' })).toBeVisible();
     await settle(page);
 
     // Add one School Kit and confirm the summary reflects it.
@@ -454,13 +460,22 @@ test.describe('journey: campaign → donation UI', () => {
       .first()
       .click();
     /*
-      TYPED, not picked from a preset.
+      PICKED FROM A PRESET — and the smallest is chosen on arrival.
 
-      The four preset amount buttons are gone: on a page whose proposition is
-      "buy a specific thing", a row of round numbers competes with the products
-      for the same decision. Somebody who wants to add ₹500 types it.
+      The donation card offers round amounts as buttons beside the total, and
+      opens with ₹500 already pressed, so the products are added on top of it.
+      On a phone the card is the bottom sheet, opened first.
     */
-    await page.getByLabel(/custom donation amount/i).fill('500');
+    if ((page.viewportSize()?.width ?? 0) < 1024) {
+      await page.getByRole('button', { name: /review/i }).click();
+    }
+    await expect(
+      page
+        .getByRole('group', { name: 'Add an Amount' })
+        .filter({ visible: true })
+        .first()
+        .getByRole('button', { name: '₹500', exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
 
     // 2 × ₹900 + ₹500 = ₹2,300, shown with Indian digit grouping.
     await expectAmountVisible(page, '₹2,300');
@@ -472,21 +487,32 @@ test.describe('journey: campaign → donation UI', () => {
     await page.goto('/campaigns/school-kits-jharkhand#give');
     await settle(page);
 
+    /*
+      The card opens with ₹500 chosen, so "nothing selected" means taking it
+      off first. On a phone the card is the bottom sheet, opened first.
+    */
     const isDesktop = (page.viewportSize()?.width ?? 0) >= 1024;
+    if (!isDesktop) {
+      await page.getByRole('button', { name: /review/i }).click();
+    }
+    await page
+      .getByRole('group', { name: 'Add an Amount' })
+      .filter({ visible: true })
+      .first()
+      .getByRole('button', { name: '₹500', exact: true })
+      .click();
+
     if (isDesktop) {
-      // The rail says what to do rather than only greying the button out, and
+      // The card says what to do rather than only greying the button out, and
       // the action itself is unavailable until there is something to give.
       await expect(
-        page.getByText('Choose an item above, or enter any amount you like.'),
+        page.getByText('Choose an item above, or pick an amount below.').filter({ visible: true }),
       ).toBeVisible();
-      await expect(page.getByRole('button', { name: /proceed to donate/i })).toBeDisabled();
+      await expect(
+        page.getByRole('button', { name: /^Donate( ₹[\d,.]+)?$/ }).filter({ visible: true }),
+      ).toBeDisabled();
     } else {
-      /*
-        On a phone the summary — and with it the Proceed button — sits inside a
-        COLLAPSED sheet, so there is no visible button to check. The bar states
-        the same thing in the space it has, which is what a donor actually sees
-        before opening it.
-      */
+      // The bar under the sheet states it in the space it has.
       await expect(page.getByText('Nothing selected')).toBeVisible();
     }
   });

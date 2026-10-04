@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Quote } from 'lucide-react';
 
 import { cn } from '@sailent/ui';
 
@@ -10,46 +10,45 @@ import { MediaFrame } from '@/components/media/media-frame';
 import type { Story } from '@/lib/mock/types';
 
 /**
- * Stories from the ground — a photograph carousel over three story cards.
+ * Story-card columns by how many stories there are, keyed to the SECTION's
+ * width (container queries), not the screen's: beside the donation rail at
+ * 1024px the column is narrower than a tablet's full width. Written out in
+ * full so Tailwind can see every class it needs to generate.
+ */
+const PICKER_COLUMNS: Record<number, string> = {
+  2: '@xl:grid-cols-2',
+  3: '@2xl:grid-cols-3',
+  4: '@xl:grid-cols-2 @4xl:grid-cols-4',
+};
+
+/**
+ * Stories from the ground — one story told large, and the others to pick from.
  *
  * ══════════════════════════════════════════════════════════════════════════
- * THE CAROUSEL IS A SCROLL CONTAINER, NOT A TRANSFORM.
+ * ONE CARD, THEN A ROW OF CHOICES.
  *
- * Slides sit in a `scroll-snap` row, so the arrows only call `scrollTo` and the
- * browser does the animation, the momentum and the inertia on a touchscreen.
- * The alternative — translating a track by a computed offset — reimplements all
- * of that badly and breaks the moment a slide is a different width.
+ * The featured story is a single card in the page's own card style — the
+ * photograph on one side, the story on a white-to-soft-blue panel on the other
+ * — so picture and words read as one thing. Under it, every story is a small
+ * card with its thumbnail and title. Pressing one shows it above; the current
+ * one is outlined in green, as chosen things are elsewhere on the page.
  *
- * It also means this WORKS WITHOUT JAVASCRIPT. The row is scrollable by touch
- * and by trackpad before React arrives; the arrows and dots are the enhancement.
+ * THE PHOTOGRAPH IS A SCROLL CONTAINER, NOT A TRANSFORM. Slides sit in a
+ * `scroll-snap` row, so swiping works before JavaScript arrives and the
+ * browser does the animation. The arrows, the counter and the story cards all
+ * move the same row, and the story shown is read back from its position — so
+ * a swipe, an arrow and a card can never disagree about which story is open.
  *
- * NO AUTOPLAY. The featured-campaign rail on the homepage advances on its own
- * because it is a list of things to choose between. This is three photographs
- * of people, and moving them under a reader is the behaviour WCAG 2.2.2 exists
- * to restrain. Nothing moves unless somebody asks it to, so there is no pause
- * control to provide either.
+ * NO AUTOPLAY. These are photographs of people; moving them under a reader is
+ * what WCAG 2.2.2 exists to restrain, and nothing here moves unless asked.
  * ══════════════════════════════════════════════════════════════════════════
  */
-const CARD_TONES = [
-  { bar: 'bg-wash-violet-ink', heading: 'text-wash-violet-ink' },
-  { bar: 'bg-wash-blue-ink', heading: 'text-wash-blue-ink' },
-  { bar: 'bg-wash-amber-ink', heading: 'text-wash-amber-ink' },
-] as const;
-
 export function StoriesStrip({ stories }: { stories: Story[] }) {
   const railRef = React.useRef<HTMLUListElement>(null);
   const [active, setActive] = React.useState(0);
 
-  const slides = stories.slice(0, 3);
-  const cards = stories.slice(0, 3);
+  const slides = stories.slice(0, 4);
 
-  /**
-   * Which slide is showing, read from the scroll position.
-   *
-   * Derived rather than tracked: the row can be scrolled by touch, trackpad or
-   * keyboard without the arrows being involved at all, and a counter the
-   * buttons incremented would drift out of step the first time somebody swiped.
-   */
   const onScroll = React.useCallback(() => {
     const rail = railRef.current;
     if (!rail) return;
@@ -57,23 +56,33 @@ export function StoriesStrip({ stories }: { stories: Story[] }) {
     setActive(Math.min(Math.max(index, 0), Math.max(slides.length - 1, 0)));
   }, [slides.length]);
 
-  const scrollTo = (index: number) => {
+  const show = (index: number) => {
     const rail = railRef.current;
     if (!rail) return;
     rail.scrollTo({ left: index * rail.clientWidth, behavior: 'smooth' });
+    // Set at once as well, so the panel and the cards answer the press
+    // immediately rather than at the end of the scroll animation.
+    setActive(index);
   };
 
   if (slides.length === 0) return null;
 
+  const story = slides[active] ?? slides[0]!;
+  const hasMany = slides.length > 1;
+
   return (
-    <section aria-labelledby="stories-heading" className="mt-14">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <section
+      id="campaign-stories"
+      aria-labelledby="stories-heading"
+      className="@container mt-12 scroll-mt-24"
+    >
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
         <div>
-          <h2 id="stories-heading" className="text-h1 font-bold">
+          <h2 id="stories-heading" className="text-h2 font-bold">
             Stories from the Ground
           </h2>
           <p className="text-body-sm text-muted-foreground mt-1">
-            Real stories from the communities we are supporting.
+            Real stories from the people and communities we are supporting.
           </p>
         </div>
 
@@ -86,140 +95,168 @@ export function StoriesStrip({ stories }: { stories: Story[] }) {
         </Link>
       </div>
 
-      {/* Carousel ---------------------------------------------------------- */}
-      <div className="relative mt-5">
-        <ul
-          ref={railRef}
-          onScroll={onScroll}
-          // `rail` hides the scrollbar without disabling the scrolling.
-          className="rail flex snap-x snap-mandatory overflow-x-auto rounded-xl"
-        >
-          {slides.map((story) => (
-            <li key={story.slug} className="w-full shrink-0 snap-start">
-              {/*
-                `relative` IS LOAD-BEARING.
-
-                The `sr-only` label below is absolutely positioned. Without a
-                positioned ancestor inside the scroll container it resolves
-                against the wrapper OUTSIDE it, lands at the third slide's
-                static offset, escapes the container's clipping and drags the
-                whole document to twice the viewport width — a horizontal
-                scrollbar on every page view, caused by a one-pixel span nobody
-                can see.
-              */}
-              <Link
-                href={`/stories/${story.slug}`}
-                className="focus-visible:outline-ring relative block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2"
-              >
+      {/* The featured story --------------------------------------------------- */}
+      <article
+        aria-labelledby="featured-story-title"
+        className="border-border/70 bg-surface @2xl:grid @2xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] mt-4 overflow-hidden rounded-2xl border shadow-sm"
+      >
+        <div className="@lg:aspect-[2/1] @2xl:aspect-auto @2xl:min-h-72 relative aspect-[16/10]">
+          <ul
+            ref={railRef}
+            onScroll={onScroll}
+            // `rail` hides the scrollbar without disabling the scrolling.
+            className="rail absolute inset-0 flex snap-x snap-mandatory overflow-x-auto"
+          >
+            {slides.map((item) => (
+              <li key={item.slug} className="h-full w-full shrink-0 basis-full snap-start">
                 {/*
-                  A BAND, not a portrait. At the content width an 8:5 crop is
-                  750px tall and pushes everything below it off the first
-                  screen; the approved design runs these as a wide strip. It
-                  steps down to 21:9 on a phone, where 15:4 would be a letterbox
-                  a face cannot survive.
+                  `relative` IS LOAD-BEARING: the `sr-only` title is absolutely
+                  positioned, and without a positioned ancestor inside the
+                  scroll container it escapes it and widens the whole page.
+                  The links stay focusable — axe requires a keyboard way into
+                  any region that scrolls, and focusing one scrolls it in.
                 */}
-                <MediaFrame
-                  media={story.cover}
-                  aspect="wide"
-                  rounded={false}
-                  className="md:aspect-[15/4]"
-                  sizes="(max-width: 1024px) 100vw, 1200px"
-                />
-                <span className="sr-only">{story.title}</span>
-              </Link>
-            </li>
-          ))}
+                <Link
+                  href={`/stories/${item.slug}`}
+                  className="focus-visible:outline-ring relative block h-full focus-visible:outline-2 focus-visible:-outline-offset-4"
+                >
+                  <MediaFrame
+                    media={item.cover}
+                    aspect="wide"
+                    rounded={false}
+                    className="aspect-auto h-full"
+                    sizes="(max-width: 768px) 100vw, 600px"
+                  />
+                  <span className="sr-only">{item.title}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          {/* A soft shade under the controls, so they read on any photograph. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent"
+          />
+
+          {hasMany ? (
+            <>
+              {/* One arrow on each side of the photograph, halfway down. */}
+              <Arrow
+                side="left"
+                label="Previous story"
+                disabled={active === 0}
+                onClick={() => show(active - 1)}
+              />
+              <Arrow
+                side="right"
+                label="Next story"
+                disabled={active === slides.length - 1}
+                onClick={() => show(active + 1)}
+              />
+
+              <span
+                data-numeric=""
+                className="text-caption absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 font-semibold text-white"
+              >
+                <span className="sr-only">Story </span>
+                {active + 1} / {slides.length}
+              </span>
+            </>
+          ) : null}
+        </div>
+
+        {/* The story itself */}
+        <div className="from-surface to-surface-tint @2xl:p-8 flex flex-col justify-center bg-gradient-to-br p-6">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            {story.programName ? (
+              <span className="text-caption bg-wash-mint text-wash-mint-ink-strong rounded-md px-2.5 py-1 font-semibold">
+                {story.programName}
+              </span>
+            ) : null}
+            {story.location ? (
+              <span className="text-caption text-muted-foreground inline-flex items-center gap-1">
+                <MapPin className="size-3.5" aria-hidden="true" />
+                {story.location}
+              </span>
+            ) : null}
+          </div>
+
+          <h3 id="featured-story-title" className="text-h3 mt-3 font-bold leading-snug">
+            {story.title}
+          </h3>
+
+          <div className="mt-3 flex gap-2.5">
+            <Quote
+              className="text-wash-gold-ink/70 mt-0.5 size-5 shrink-0 -scale-x-100"
+              aria-hidden="true"
+            />
+            <p className="text-body text-muted-foreground-strong line-clamp-4 leading-relaxed">
+              {story.summary}
+            </p>
+          </div>
+
+          {story.subjectName ? (
+            <p className="text-body-sm mt-2 pl-7 font-semibold">— {story.subjectName}</p>
+          ) : null}
+
+          <Link
+            href={`/stories/${story.slug}`}
+            className="border-border bg-surface text-body-sm hover:border-foreground/30 hover:bg-muted/60 focus-visible:outline-ring mt-5 inline-flex h-10 items-center gap-2 self-start rounded-lg border px-4 font-semibold shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            Read Full Story
+            <span className="sr-only">: {story.title}</span>
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        </div>
+      </article>
+
+      {/* Every story, to choose from ------------------------------------------ */}
+      {hasMany ? (
+        <ul
+          aria-label="Choose a story"
+          className={cn('mt-3 grid gap-3', PICKER_COLUMNS[slides.length])}
+        >
+          {slides.map((item, index) => {
+            const isActive = index === active;
+            return (
+              <li key={item.slug}>
+                <button
+                  type="button"
+                  onClick={() => show(index)}
+                  aria-pressed={isActive}
+                  className={cn(
+                    'focus-visible:outline-ring flex w-full items-center gap-3 rounded-xl border p-2.5 text-left shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
+                    isActive
+                      ? 'border-success bg-wash-mint/40 ring-success/15 ring-2'
+                      : 'border-border/70 bg-surface hover:border-foreground/25',
+                  )}
+                >
+                  <span className="size-14 shrink-0 overflow-hidden rounded-lg">
+                    <MediaFrame
+                      media={{ ...item.cover, alt: '' }}
+                      aspect="square"
+                      rounded={false}
+                      sizes="56px"
+                    />
+                  </span>
+                  <span className="min-w-0">
+                    {item.programName ? (
+                      <span className="text-caption text-muted-foreground block truncate">
+                        {item.programName}
+                      </span>
+                    ) : null}
+                    <span className="text-body-sm line-clamp-2 font-semibold leading-snug">
+                      <span className="sr-only">Show story: </span>
+                      {item.title}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
-
-        {slides.length > 1 ? (
-          <>
-            <Arrow
-              side="left"
-              label="Previous story"
-              disabled={active === 0}
-              onClick={() => scrollTo(active - 1)}
-            />
-            <Arrow
-              side="right"
-              label="Next story"
-              disabled={active === slides.length - 1}
-              onClick={() => scrollTo(active + 1)}
-            />
-
-            {/*
-              Dots are BUTTONS, not decoration — each jumps to its slide, and
-              each carries the slide's name so the control is usable when the
-              shape on screen means nothing.
-            */}
-            <ul className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
-              {slides.map((story, index) => (
-                <li key={story.slug}>
-                  <button
-                    type="button"
-                    onClick={() => scrollTo(index)}
-                    aria-current={index === active}
-                    className="focus-visible:outline-ring grid size-6 place-items-center rounded-full focus-visible:outline-2"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        'block h-1.5 rounded-full transition-all',
-                        index === active ? 'bg-success w-5' : 'w-1.5 bg-white/70',
-                      )}
-                    />
-                    <span className="sr-only">Show {story.title}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : null}
-      </div>
-
-      {/* The three cards --------------------------------------------------- */}
-      <ul className="mt-5 grid gap-4 md:grid-cols-3">
-        {cards.map((story, index) => {
-          const tone = CARD_TONES[index % CARD_TONES.length]!;
-
-          return (
-            <li key={story.slug} className="relative">
-              <article className="border-border bg-surface h-full overflow-hidden rounded-lg border pl-4">
-                {/* The coloured spine. Decorative — the heading carries the
-                    same hue, and neither is the only signal. */}
-                <span
-                  aria-hidden="true"
-                  className={cn('absolute inset-y-0 left-0 w-1', tone.bar)}
-                />
-
-                <div className="p-4 pl-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className={cn('text-body-sm font-bold', tone.heading)}>
-                      <Link
-                        href={`/stories/${story.slug}`}
-                        className="focus-visible:outline-ring rounded-sm hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
-                      >
-                        {story.title}
-                      </Link>
-                    </h3>
-                    <Sparkles
-                      className="text-wash-gold-ink mt-0.5 size-4 shrink-0"
-                      aria-hidden="true"
-                    />
-                  </div>
-
-                  <p className="text-body-sm text-muted-foreground mt-2 leading-relaxed">
-                    {story.summary}
-                  </p>
-
-                  {story.subjectName ? (
-                    <p className="text-body-sm mt-3 font-semibold">— {story.subjectName}</p>
-                  ) : null}
-                </div>
-              </article>
-            </li>
-          );
-        })}
-      </ul>
+      ) : null}
     </section>
   );
 }
@@ -244,13 +281,11 @@ function Arrow({
       disabled={disabled}
       aria-label={label}
       className={cn(
-        // 44px, the WCAG 2.5.8 enhanced target — these sit over a photograph
-        // and are pressed on a phone.
-        'bg-surface/90 text-foreground focus-visible:outline-ring absolute top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full shadow-md backdrop-blur transition-opacity',
+        // 36px over a photograph — above the 24px WCAG 2.5.8 floor.
+        'bg-surface/95 text-foreground focus-visible:outline-ring absolute top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full shadow-md transition-opacity',
         'hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2',
-        // Dimmed at the ends, never removed — an arrow that vanishes makes the
-        // control jump around and leaves the reader unsure it was ever there.
-        'disabled:pointer-events-none disabled:opacity-40',
+        // Dimmed at the ends, never removed, so the control never jumps.
+        'disabled:pointer-events-none disabled:opacity-50',
         side === 'left' ? 'left-3' : 'right-3',
       )}
     >

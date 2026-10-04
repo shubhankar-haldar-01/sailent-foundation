@@ -61,6 +61,12 @@ export interface MediaFrameProps {
    * and the picture is soft, too large and a phone downloads a desktop image.
    */
   sizes?: string;
+  /**
+   * How a real photograph fills the frame. `cover` (the default) crops to the
+   * frame's shape; `contain` shows the whole picture — for product shots on a
+   * plain background, where cropping cuts the product itself.
+   */
+  fit?: 'cover' | 'contain';
 }
 
 /** Small deterministic hash, so a seed always renders the same picture. */
@@ -92,6 +98,7 @@ export function MediaFrame({
   rounded = true,
   priority = false,
   sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
+  fit = 'cover',
 }: MediaFrameProps) {
   const seed = hash(media.seed);
   const scene = sceneFor(media.seed);
@@ -126,7 +133,7 @@ export function MediaFrame({
           alt={media.alt}
           fill
           sizes={sizes}
-          className="object-cover"
+          className={fit === 'contain' ? 'object-contain' : 'object-cover'}
           {...(priority ? { priority: true } : {})}
         />
       ) : (

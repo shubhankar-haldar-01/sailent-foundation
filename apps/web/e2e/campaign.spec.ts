@@ -21,9 +21,85 @@ test.describe('campaign page', () => {
     await page.goto(CAMPAIGN);
 
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    // Products is the default tab: the campaign is asking for specific things.
-    await expect(page.getByRole('tab', { name: 'Products', selected: true })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Choose Products to Donate' })).toBeVisible();
+
+    /*
+      The section links are links, not tabs: every section is on the page, so
+      there are no panels to switch. Products is the current one on arrival —
+      the campaign is asking for specific things, and the ask comes first.
+    */
+    const sections = page.getByRole('navigation', { name: 'Campaign sections' });
+    await expect(sections.getByRole('link', { name: 'Products' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+    await expect(page.getByRole('heading', { name: 'Choose How You Want to Help' })).toBeVisible();
+  });
+
+  /**
+   * The page reads in the approved order, top to bottom, whatever the width.
+   * Asserted on the headings' positions rather than on the DOM, because the
+   * order a reader meets them in is the requirement.
+   */
+  test('lays the sections out in the approved order', async ({ page }) => {
+    await page.goto(CAMPAIGN);
+
+    const order = [
+      'Choose How You Want to Help',
+      'About This Campaign',
+      'Stories from the Ground',
+      'Recent Supporters',
+      'The Difference Your Support Can Make',
+      'FAQs',
+    ];
+
+    const tops: number[] = [];
+    for (const name of order) {
+      const heading = page.getByRole('heading', { name, exact: true });
+      await expect(heading).toBeVisible();
+      tops.push((await heading.boundingBox())!.y);
+    }
+
+    expect(tops, `headings out of order: ${order.join(' → ')}`).toEqual(
+      [...tops].sort((a, b) => a - b),
+    );
+
+    // The separate custom-amount panel was removed; the card's field replaces it.
+    await expect(page.getByRole('heading', { name: 'Other Ways to Support' })).toHaveCount(0);
+  });
+
+  /**
+   * The side column on a desktop: whole on arrival, then pinned by its bottom.
+   *
+   * The donation card — assurances included — fits a laptop window, so it is
+   * whole on arrival and stays whole while the page scrolls: title, Donate
+   * button and the 80G line all on screen. Near the end the Donate button is
+   * still there. Below `lg` there is no rail, so this is desktop-only.
+   */
+  test('keeps the donation card in view while the page scrolls', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 1280) < 1024, 'the rail exists only at lg and up');
+
+    await page.goto(CAMPAIGN);
+    const title = page.getByRole('heading', { name: 'Your Donation' }).locator('visible=true');
+    const donate = page
+      .getByRole('button', { name: /^Donate( ₹[\d,.]+)?$/ })
+      .locator('visible=true');
+    const assurances = page.getByText('80G Tax Benefit').filter({ visible: true });
+
+    // Arrival: the whole donation card, top to Donate button.
+    await expect(title).toBeInViewport({ ratio: 1 });
+    await expect(donate).toBeInViewport({ ratio: 1 });
+
+    // Arrival, continued: the assurances at the foot of the same card.
+    await expect(assurances).toBeInViewport({ ratio: 1 });
+
+    // Mid-page: the whole card is still on screen.
+    await page.getByRole('heading', { name: 'Stories from the Ground' }).scrollIntoViewIfNeeded();
+    await expect(title).toBeInViewport({ ratio: 1 });
+    await expect(donate).toBeInViewport({ ratio: 1 });
+    await expect(assurances).toBeInViewport({ ratio: 1 });
+
+    await page.getByRole('heading', { name: 'FAQs', exact: true }).scrollIntoViewIfNeeded();
+    await expect(donate).toBeInViewport();
   });
 
   /**
@@ -53,17 +129,23 @@ test.describe('campaign page', () => {
       'true',
     );
 
-    // NEITHER panel is hidden by the selection. Both ways of giving stay on the
-    // page whichever segment is lit.
-    await expect(page.getByRole('heading', { name: 'Choose Products to Donate' })).toBeVisible();
-    await expect(page.getByLabel(/custom donation amount/i)).toBeVisible();
+    // NEITHER way of giving is hidden by the selection: the products stay on
+    // the page and the card's amount presets stay in the card.
+    const presets = page.getByRole('group', { name: 'Add an Amount' }).filter({ visible: true });
+    const firstPreset = presets.first().getByRole('button').first();
+    await expect(page.getByRole('heading', { name: 'Choose How You Want to Help' })).toBeVisible();
+    await expect(presets.first()).toBeVisible();
 
     await page.getByRole('radio', { name: 'Support with Products' }).click();
     await expect(page.getByRole('radio', { name: 'Support with Products' })).toHaveAttribute(
       'aria-checked',
       'true',
     );
-    await expect(page.getByRole('heading', { name: 'Choose Products to Donate' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Choose How You Want to Help' })).toBeVisible();
+
+    // And back: "One-Time Donation" moves focus to the card's first amount.
+    await page.getByRole('radio', { name: 'One-Time Donation' }).click();
+    await expect(firstPreset).toBeFocused();
   });
 
   /** Products and an amount in one donation — the hybrid the toggle must not block. */
@@ -71,29 +153,80 @@ test.describe('campaign page', () => {
     await page.goto(CAMPAIGN);
     await page.waitForLoadState('networkidle');
 
+    // Whatever the first item costs — read from its card, not assumed.
+    const priceText = await page
+      .getByRole('article')
+      .first()
+      .getByText(/^₹[\d,]+$/)
+      .first()
+      .textContent();
+    const price = Number(priceText!.replace(/[₹,]/g, ''));
+
     await page
       .getByRole('button', { name: /^Add one / })
       .first()
       .click();
-    await page.getByLabel(/custom donation amount/i).fill('500');
 
+    // The amount is a preset in the donation card, and the smallest one is
+    // already chosen on arrival — on a phone the card is the bottom sheet, so
+    // it is opened first.
     if ((page.viewportSize()?.width ?? 1280) < 1024) {
       await page.getByRole('button', { name: /review/i }).click();
     }
+    const preset = page
+      .getByRole('group', { name: 'Add an Amount' })
+      .filter({ visible: true })
+      .first()
+      .getByRole('button', { name: '₹500', exact: true });
+    await expect(preset).toHaveAttribute('aria-pressed', 'true');
 
     const visible = (text: string | RegExp) =>
-      page.getByText(text).filter({ visible: true }).first();
+      page.getByText(text, { exact: true }).filter({ visible: true }).first();
 
-    await expect(visible('Subtotal')).toBeVisible();
-    await expect(visible('Custom Amount')).toBeVisible();
+    // The total is the item plus the amount.
+    await expect(visible(`₹${(price + 500).toLocaleString('en-IN')}`)).toBeVisible();
+
+    // Pressing the same amount again takes it back off.
+    await preset.click();
+    await expect(preset).toHaveAttribute('aria-pressed', 'false');
+    await expect(visible(`₹${price.toLocaleString('en-IN')}`)).toBeVisible();
+  });
+
+  /**
+   * The card opens on the smallest preset, so the Donate button is ready
+   * before anything is touched. On a phone the card is a collapsed bar, which
+   * states the running total without being opened.
+   */
+  test('starts with the smallest amount already chosen', async ({ page }) => {
+    await page.goto(CAMPAIGN);
+
+    if ((page.viewportSize()?.width ?? 1280) < 1024) {
+      await expect(page.getByRole('button', { name: /(Review|Hide)$/ }).first()).toContainText(
+        '₹500',
+      );
+      return;
+    }
+
+    const presets = page.getByRole('group', { name: 'Add an Amount' }).filter({ visible: true });
+    await expect(presets.first().getByRole('button').first()).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(
+      page.getByRole('button', { name: 'Donate ₹500' }).filter({ visible: true }),
+    ).toBeEnabled();
   });
 
   test('shows what each item costs and how much is still needed', async ({ page }) => {
     await page.goto(CAMPAIGN);
 
     const card = page.getByRole('article').first();
-    await expect(card.getByText(/\d+ \/ \d+ Donated/)).toBeVisible();
+    // "354 / 500 Donated" — both counts, so the scale of the ask shows — and
+    // the price under its PRICE label.
+    await expect(card.getByText(/^[\d,]+ \/ [\d,]+ Donated$/)).toBeVisible();
     await expect(card.getByText('Price', { exact: true })).toBeVisible();
+    await expect(card.getByText(/^₹[\d,]+$/)).toBeVisible();
+    await expect(card.getByRole('img', { name: /^[\d,]+ of [\d,]+ funded$/ })).toBeVisible();
   });
 
   test('adds an item to the summary and totals it', async ({ page }) => {
@@ -132,8 +265,13 @@ test.describe('campaign page', () => {
 
     await expect(visible(/Selected Items/)).toBeVisible();
     await expect(visible('Total Amount')).toBeVisible();
-    // Two of the first product, whatever it costs — the line must say so.
-    await expect(visible('× 2')).toBeVisible();
+    // Two of the first product, whatever it costs — the line's own stepper
+    // in the summary must say so.
+    const line = page
+      .getByRole('group', { name: /^Quantity of .+ in your donation$/ })
+      .filter({ visible: true })
+      .first();
+    await expect(line).toHaveText('2');
   });
 
   /**
@@ -173,7 +311,7 @@ test.describe('campaign page', () => {
       the test failed reporting a school kit's price — which looks like a
       sorting bug and is a locator that was never looking at the right list.
     */
-    const donorList = page.getByRole('region', { name: 'Recent Donors' }).getByRole('listitem');
+    const donorList = page.getByRole('region', { name: 'Recent Supporters' }).getByRole('listitem');
     await expect(donorList.first()).toContainText('1,500');
   });
 
