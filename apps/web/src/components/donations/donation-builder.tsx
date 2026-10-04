@@ -15,6 +15,7 @@ import { CampaignProductCard } from '@/components/donations/campaign-product-car
 import { DonationCheckout } from '@/components/donations/donation-checkout';
 import { donationColumns } from '@/components/donations/donation-layout';
 import { StickyRail } from '@/components/donations/sticky-rail';
+import { SectionHeading } from '@/components/sections/section-heading';
 import type { Campaign } from '@/lib/mock/types';
 
 /**
@@ -328,7 +329,7 @@ export function DonationBuilder({
           id="give"
           ref={checkoutRef}
           tabIndex={-1}
-          className={cn('scroll-mt-24 focus:outline-none', lead ? 'mt-8' : null)}
+          className={cn('scroll-mt-32 focus:outline-none', lead ? 'mt-8' : null)}
         >
           <DonationCheckout selection={checkoutSelection} onBack={() => setStage('build')} />
         </div>
@@ -378,15 +379,14 @@ export function DonationBuilder({
             id="give"
             ref={productsRef}
             aria-labelledby="choose-products"
-            className="mt-6 scroll-mt-24 first:mt-0"
+            className="mt-6 scroll-mt-32 first:mt-0"
           >
-            <h2 id="choose-products" className="text-h2 font-bold">
-              Choose How You Want to Help
-            </h2>
-            <p className="text-body-sm text-muted-foreground mt-1">
-              Select the items you want to support. Your contribution will help us provide immediate
-              relief to those in need.
-            </p>
+            <SectionHeading
+              id="choose-products"
+              size="md"
+              title="Choose How You Want to Help"
+              lead="Select the items you want to support. Your contribution will help us provide immediate relief to those in need."
+            />
 
             {/*
               Two across only where two FIT. Each card lays its picture beside

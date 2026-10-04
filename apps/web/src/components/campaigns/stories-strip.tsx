@@ -7,6 +7,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Quote } from 'lucide-rea
 import { cn } from '@sailent/ui';
 
 import { MediaFrame } from '@/components/media/media-frame';
+import { SectionHeading } from '@/components/sections/section-heading';
 import type { Story } from '@/lib/mock/types';
 
 /**
@@ -74,26 +75,15 @@ export function StoriesStrip({ stories }: { stories: Story[] }) {
     <section
       id="campaign-stories"
       aria-labelledby="stories-heading"
-      className="@container mt-12 scroll-mt-24"
+      className="@container mt-12 scroll-mt-32"
     >
-      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
-        <div>
-          <h2 id="stories-heading" className="text-h2 font-bold">
-            Stories from the Ground
-          </h2>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            Real stories from the people and communities we are supporting.
-          </p>
-        </div>
-
-        <Link
-          href="/stories"
-          className="text-body-sm text-info-action focus-visible:outline-ring inline-flex items-center gap-1.5 rounded-sm font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          View All Stories
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </Link>
-      </div>
+      <SectionHeading
+        id="stories-heading"
+        size="md"
+        title="Stories from the Ground"
+        lead="Real stories from the people and communities we are supporting."
+        viewAll={{ href: '/stories', label: 'View All Stories' }}
+      />
 
       {/* The featured story --------------------------------------------------- */}
       <article

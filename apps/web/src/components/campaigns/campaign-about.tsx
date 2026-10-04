@@ -1,8 +1,19 @@
-import { FileText, Sparkle } from 'lucide-react';
+import {
+  CalendarDays,
+  CircleCheck,
+  FileText,
+  HeartHandshake,
+  Lightbulb,
+  PackageCheck,
+  Target,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
 
-import { formatCurrency, formatNumber } from '@sailent/ui';
+import { cn, formatCurrency, formatNumber } from '@sailent/ui';
 
 import { CampaignGallery } from '@/components/campaigns/campaign-gallery';
+import { SectionHeading } from '@/components/sections/section-heading';
 import type { Campaign } from '@/lib/mock/types';
 
 const goalDate = new Intl.DateTimeFormat('en-IN', {
@@ -13,7 +24,8 @@ const goalDate = new Intl.DateTimeFormat('en-IN', {
 });
 
 /**
- * About this campaign — four short blocks of text and nothing else.
+ * About this campaign — the photographs, then four cards that each answer one
+ * question.
  *
  * ══════════════════════════════════════════════════════════════════════════
  * EVERY WORD UNDER A HEADING COMES FROM THE CAMPAIGN'S OWN RECORD.
@@ -23,139 +35,201 @@ const goalDate = new Intl.DateTimeFormat('en-IN', {
  * question:
  *
  *   Why This Campaign?              the campaign narrative, as written
- *   What Will Your Support Provide? the products and what each one is
+ *   What Will Your Support Provide? the products, what each is and costs
  *   Our Goal                        the target, the end date, the people
- *   Your Impact                     who it reaches, and how many so far
+ *   Your Impact                     how many reached so far, and who
  *
- * A block whose field is empty is left out rather than filled with something
+ * A card whose field is empty is left out rather than filled with something
  * plausible (decision A14). A page that says less is better than one that says
  * something nobody on the campaign team wrote.
  * ══════════════════════════════════════════════════════════════════════════
+ *
+ * EACH CARD IS SHAPED BY WHAT IT HOLDS, in the page's own language — an icon
+ * on a tinted tile, an extra-bold heading, left-aligned text:
+ *
+ *   - the narrative is a full-width story card, its first paragraph a lead;
+ *   - what support provides is a checklist, each item with its price;
+ *   - the goal and the impact are figure cards side by side, the number large,
+ *     the facts around it as small chips or a progress bar.
  *
  * THE CAMPAIGN'S PHOTOGRAPHS LEAD IT. When the campaign has a gallery, one
  * photo at a time sits under the heading, with arrows to step through the
  * rest, so the reader sees the work before reading about it.
  */
 export function CampaignAbout({ campaign }: { campaign: Campaign }) {
-  const blocks: { key: string; heading: string; body: React.ReactNode }[] = [];
-
-  if (campaign.story.length > 0) {
-    blocks.push({
-      key: 'why',
-      heading: 'Why This Campaign?',
-      body: campaign.story.map((paragraph, index) => <p key={index}>{paragraph}</p>),
-    });
-  }
-
   const products = campaign.products.filter((product) => product.status !== 'inactive');
-  if (products.length > 0) {
-    blocks.push({
-      key: 'provide',
-      heading: 'What Will Your Support Provide?',
-      body: (
-        <ul className="space-y-1.5">
-          {products.map((product) => (
-            <li key={product.id}>
-              <strong className="text-foreground font-semibold">{product.name}</strong>
-              {product.description ? <> — {product.description}</> : null}
-            </li>
-          ))}
-        </ul>
-      ),
-    });
-  }
-
-  if (campaign.goalAmount > 0) {
-    blocks.push({
-      key: 'goal',
-      heading: 'Our Goal',
-      body: (
-        <p>
-          To raise <Strong>{formatCurrency(campaign.goalAmount)}</Strong>
-          {campaign.endsAt ? (
-            <>
-              {' '}
-              by <Strong>{goalDate.format(new Date(campaign.endsAt))}</Strong>
-            </>
-          ) : null}
-          {campaign.beneficiaryTarget ? (
-            <>
-              {' '}
-              and reach <Strong>{formatNumber(campaign.beneficiaryTarget)}</Strong> people in need
-            </>
-          ) : null}
-          .
-        </p>
-      ),
-    });
-  }
-
   const context = campaign.beneficiaryContext.trim();
-  if (context || campaign.beneficiariesReached > 0) {
-    blocks.push({
-      key: 'impact',
-      heading: 'Your Impact',
-      body: (
-        <>
-          {context ? <p>{context}</p> : null}
-          {campaign.beneficiariesReached > 0 ? (
-            <p>
-              <Strong>{formatNumber(campaign.beneficiariesReached)}</Strong> people have been
-              reached so far.
-            </p>
-          ) : null}
-        </>
-      ),
-    });
-  }
+  const reached = campaign.beneficiariesReached;
+  const target = campaign.beneficiaryTarget;
+  const reachedPercent =
+    target && target > 0 ? Math.min(100, Math.round((reached / target) * 100)) : null;
+  const showGoal = campaign.goalAmount > 0;
+  const showImpact = context.length > 0 || reached > 0;
 
   const documents = campaign.documents.filter((document) => document.fileUrl);
 
   if (!hasAboutContent(campaign)) return null;
 
   return (
-    <section id="campaign-about" aria-labelledby="about-heading" className="mt-12 scroll-mt-24">
-      <h2 id="about-heading" className="text-h2 font-bold">
-        About This Campaign
-      </h2>
+    <section id="campaign-about" aria-labelledby="about-heading" className="mt-12 scroll-mt-32">
+      <SectionHeading id="about-heading" size="md" title="About This Campaign" />
 
       <CampaignGallery images={campaign.gallery} title={campaign.title} />
 
-      {/*
-        ══════════════════════════════════════════════════════════════════════
-        STORY CARDS, ALL ALIKE.
-
-        Each block is the same card: white easing into the page's own soft
-        blue at its right edge, a hairline border, centred text and a small
-        gold sparkle in the corner — so the four read as one continuous account
-        told in parts, rather than four differently coloured notices.
-
-        The text is held to a readable measure inside the full-width card;
-        centred lines as wide as the column would be hard to follow back to
-        their start. The sparkle is decoration and hidden from assistive tech.
-        ══════════════════════════════════════════════════════════════════════
-      */}
-      <div className="mt-4 space-y-3">
-        {blocks.map((block) => (
-          <article
-            key={block.key}
-            aria-labelledby={`about-${block.key}`}
-            className="border-border/70 from-surface via-surface to-surface-tint relative overflow-hidden rounded-2xl border bg-gradient-to-r px-6 pb-6 pt-8 text-center shadow-sm sm:px-10 sm:pt-6"
-          >
-            <Sparkle
-              aria-hidden="true"
-              className="text-wash-gold-ink/60 absolute right-4 top-4 size-4 fill-current"
-            />
-            <div className="mx-auto max-w-3xl">
-              <h3 id={`about-${block.key}`} className="text-body-lg font-bold">
-                {block.heading}
-              </h3>
-              <div className="text-body text-foreground mt-1.5 space-y-1 leading-relaxed">
-                {block.body}
+      <div className="@container mt-4">
+        <div className="@2xl:grid-cols-2 grid gap-3">
+          {/* Why — the narrative, full width ---------------------------------- */}
+          {campaign.story.length > 0 ? (
+            <AboutCard
+              id="about-why"
+              icon={Lightbulb}
+              tone="bg-wash-blue text-wash-blue-ink"
+              title="Why This Campaign?"
+              className="@2xl:col-span-2"
+            >
+              {/* Held to a reading measure: lines across the full card are hard to
+                  follow back to their start. */}
+              <div className="max-w-[68ch] space-y-2.5">
+                {campaign.story.map((paragraph, index) => (
+                  <p
+                    key={index}
+                    className={
+                      index === 0
+                        ? 'text-body-lg text-foreground font-medium leading-relaxed'
+                        : 'text-body text-muted-foreground-strong leading-relaxed'
+                    }
+                  >
+                    {paragraph}
+                  </p>
+                ))}
               </div>
-            </div>
-          </article>
-        ))}
+            </AboutCard>
+          ) : null}
+
+          {/* What support provides — a checklist with prices -------------------- */}
+          {products.length > 0 ? (
+            <AboutCard
+              id="about-provide"
+              icon={PackageCheck}
+              tone="bg-wash-mint text-wash-mint-ink-strong"
+              title="What Will Your Support Provide?"
+              className="@2xl:col-span-2"
+            >
+              <ul className="divide-border/70 divide-y">
+                {products.map((product) => (
+                  <li
+                    key={product.id}
+                    className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
+                  >
+                    <CircleCheck
+                      className="text-success mt-0.5 size-5 shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="text-body text-foreground block font-bold">
+                        {product.name}
+                      </span>
+                      {product.description ? (
+                        <span className="text-body-sm text-muted-foreground-strong mt-0.5 block leading-relaxed">
+                          {product.description}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span
+                      data-numeric=""
+                      className="text-body-sm bg-wash-mint text-wash-mint-ink-strong shrink-0 rounded-full px-2.5 py-0.5 font-bold tabular-nums"
+                    >
+                      {formatCurrency(product.unitAmount)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </AboutCard>
+          ) : null}
+
+          {/* Our goal — the target, large ----------------------------------------- */}
+          {showGoal ? (
+            <AboutCard
+              id="about-goal"
+              icon={Target}
+              tone="bg-wash-amber text-wash-amber-ink"
+              title="Our Goal"
+              className={showImpact ? null : '@2xl:col-span-2'}
+            >
+              <p className="text-muted-foreground text-body-sm">To raise</p>
+              <p
+                data-numeric=""
+                className="text-h2 text-foreground font-extrabold tabular-nums leading-tight tracking-tight"
+              >
+                {formatCurrency(campaign.goalAmount)}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {campaign.endsAt ? (
+                  <Chip icon={CalendarDays}>by {goalDate.format(new Date(campaign.endsAt))}</Chip>
+                ) : null}
+                {target ? <Chip icon={Users}>{formatNumber(target)} people in need</Chip> : null}
+              </div>
+            </AboutCard>
+          ) : null}
+
+          {/* Your impact — reached so far ----------------------------------------- */}
+          {showImpact ? (
+            <AboutCard
+              id="about-impact"
+              icon={HeartHandshake}
+              tone="bg-wash-violet text-wash-violet-ink"
+              title="Your Impact"
+              className={showGoal ? null : '@2xl:col-span-2'}
+            >
+              {reached > 0 ? (
+                <>
+                  <p className="text-muted-foreground text-body-sm">Reached so far</p>
+                  <p className="leading-tight">
+                    <span
+                      data-numeric=""
+                      className="text-h2 text-wash-violet-ink font-extrabold tabular-nums tracking-tight"
+                    >
+                      {formatNumber(reached)}
+                    </span>{' '}
+                    <span className="text-body text-foreground font-semibold">people</span>
+                  </p>
+                  {reachedPercent !== null && target ? (
+                    <>
+                      <div
+                        role="img"
+                        aria-label={`${formatNumber(reached)} of ${formatNumber(target)} people reached`}
+                        className="bg-muted mt-3 h-2 overflow-hidden rounded-full"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="bg-wash-violet-ink block h-full rounded-full"
+                          style={{ width: `${Math.max(reachedPercent, 2)}%` }}
+                        />
+                      </div>
+                      <p
+                        data-numeric=""
+                        aria-hidden="true"
+                        className="text-caption text-muted-foreground mt-1.5"
+                      >
+                        {reachedPercent}% of {formatNumber(target)} people
+                      </p>
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+              {context ? (
+                <p
+                  className={cn(
+                    'text-body text-muted-foreground-strong leading-relaxed',
+                    reached > 0 ? 'mt-3' : null,
+                  )}
+                >
+                  {context}
+                </p>
+              ) : null}
+            </AboutCard>
+          ) : null}
+        </div>
       </div>
 
       {/*
@@ -230,11 +304,56 @@ export function hasAboutContent(campaign: Campaign): boolean {
   );
 }
 
-/** The few figures worth stopping on — never whole sentences. */
-function Strong({ children }: { children: React.ReactNode }) {
+/**
+ * One About card: an icon on a tinted tile beside an extra-bold heading, then
+ * whatever the card holds. White easing into the page's soft blue, a hairline
+ * border and the light shadow every card on the page shares.
+ */
+function AboutCard({
+  id,
+  icon: Icon,
+  tone,
+  title,
+  className,
+  children,
+}: {
+  id: string;
+  icon: LucideIcon;
+  tone: string;
+  title: string;
+  className?: string | null;
+  children: React.ReactNode;
+}) {
   return (
-    <strong data-numeric="" className="text-foreground font-semibold">
-      {children}
-    </strong>
+    <article
+      aria-labelledby={id}
+      className={cn(
+        'border-border/70 from-surface via-surface to-surface-tint rounded-2xl border bg-gradient-to-br p-5 shadow-sm sm:p-6',
+        className,
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden="true"
+          className={cn('grid size-10 shrink-0 place-items-center rounded-xl', tone)}
+        >
+          <Icon className="size-5" />
+        </span>
+        <h3 id={id} className="text-h4 font-extrabold leading-tight tracking-tight">
+          {title}
+        </h3>
+      </div>
+      <div className="mt-4">{children}</div>
+    </article>
+  );
+}
+
+/** A small fact beside a figure: an icon and a few words, on a pale chip. */
+function Chip({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+  return (
+    <span className="border-border/70 bg-surface text-body-sm text-foreground inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-semibold">
+      <Icon className="text-muted-foreground size-4" aria-hidden="true" />
+      <span data-numeric="">{children}</span>
+    </span>
   );
 }

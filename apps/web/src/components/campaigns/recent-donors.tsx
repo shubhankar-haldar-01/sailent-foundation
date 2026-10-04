@@ -4,6 +4,8 @@ import * as React from 'react';
 
 import { cn, formatCurrency } from '@sailent/ui';
 
+import { SectionHeading } from '@/components/sections/section-heading';
+
 export interface CampaignDonor {
   name: string;
   anonymous: boolean;
@@ -91,97 +93,94 @@ export function RecentDonors({ donors }: { donors: CampaignDonor[] }) {
 
   if (donors.length === 0) return null;
 
+  /*
+    A radio group, not two buttons. These are mutually exclusive views of one
+    list, and `aria-pressed` on a pair of toggles announces two independent
+    switches — one of which is always on.
+  */
+  const sortControl = (
+    <div
+      role="radiogroup"
+      aria-label="Sort supporters"
+      className="border-border bg-surface flex rounded-lg border p-0.5"
+    >
+      {(
+        [
+          ['recent', 'Recent'],
+          ['generous', 'Most Generous'],
+        ] as const
+      ).map(([value, label]) => (
+        <button
+          key={value}
+          type="button"
+          role="radio"
+          aria-checked={view === value}
+          onClick={() => setView(value)}
+          className={cn(
+            'text-caption focus-visible:outline-ring min-h-8 rounded-md px-3 font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
+            view === value
+              ? 'bg-wash-mint text-wash-mint-ink-strong'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <section
       id="campaign-supporters"
       aria-labelledby="donors-heading"
-      className="mt-12 scroll-mt-24"
+      className="mt-12 scroll-mt-32"
     >
-      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
-        <div>
-          <h2 id="donors-heading" className="text-h2 font-bold">
-            Recent Supporters
-          </h2>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            People who recently supported this campaign.
-          </p>
-        </div>
-
-        {/*
-          A radio group, not two buttons. These are mutually exclusive views of
-          one list, and `aria-pressed` on a pair of toggles announces two
-          independent switches — one of which is always on.
-        */}
-        <div
-          role="radiogroup"
-          aria-label="Sort supporters"
-          className="border-border bg-surface flex rounded-lg border p-0.5"
-        >
-          {(
-            [
-              ['recent', 'Recent'],
-              ['generous', 'Most Generous'],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={view === value}
-              onClick={() => setView(value)}
-              className={cn(
-                'text-caption focus-visible:outline-ring min-h-8 rounded-md px-3 font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
-                view === value
-                  ? 'bg-wash-mint text-wash-mint-ink-strong'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <SectionHeading
+        id="donors-heading"
+        size="md"
+        title="Recent Supporters"
+        lead="People who recently supported this campaign."
+        action={sortControl}
+      />
 
       {/*
-        ONE VERTICAL LIST, FULL WIDTH. Who, when and how much, in three columns
-        on anything wider than a phone; on a phone the time tucks under the
-        name so the amount keeps its own column and never wraps.
+        WHO AND WHEN TOGETHER, HOW MUCH AT THE END. The time sits under the
+        name rather than in a column of its own halfway across the row, so the
+        eye reads one person's line without travelling; the amount is set in
+        the page's green, the colour it gives to money given.
       */}
-      <ul className="border-border bg-surface divide-border mt-4 divide-y overflow-hidden rounded-xl border">
+      <ul className="border-border bg-surface divide-border mt-4 divide-y overflow-hidden rounded-xl border shadow-sm">
         {rows.map((donor, index) => (
           <li
             key={`${donor.name}-${donor.donatedAt ?? index}`}
-            className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_8rem_6.5rem]"
+            className="flex items-center gap-3 px-4 py-3"
           >
             <span
               aria-hidden="true"
               className={cn(
-                'text-caption text-foreground grid size-8 shrink-0 place-items-center rounded-md font-semibold',
+                'text-caption text-foreground grid size-10 shrink-0 place-items-center rounded-full font-bold',
                 AVATAR_TONES[index % AVATAR_TONES.length],
               )}
             >
               {initialsOf(donor.name)}
             </span>
 
-            <span className="min-w-0">
-              <span className="text-body-sm block truncate font-semibold">{donor.name}</span>
+            <span className="min-w-0 flex-1">
+              <span className="text-body block truncate font-semibold">{donor.name}</span>
               {donor.donatedAt ? (
                 <time
                   dateTime={donor.donatedAt}
-                  className="text-caption text-muted-foreground block sm:hidden"
+                  className="text-caption text-muted-foreground block"
                 >
                   {relativeTime(donor.donatedAt)}
                 </time>
               ) : null}
             </span>
 
-            <span className="text-caption text-muted-foreground hidden sm:block">
-              {donor.donatedAt ? (
-                <time dateTime={donor.donatedAt}>{relativeTime(donor.donatedAt)}</time>
-              ) : null}
-            </span>
-
-            <span data-numeric="" className="text-body-sm text-right font-bold tabular-nums">
+            <span
+              data-numeric=""
+              className="text-body text-success shrink-0 font-extrabold tabular-nums"
+            >
               {/* Paise only when there are any: "₹500", but "₹319.50". */}
               {formatCurrency(donor.amount)}
             </span>

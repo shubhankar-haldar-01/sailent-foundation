@@ -22,6 +22,11 @@ export interface CampaignSectionLink {
  * no reason. These are ordinary in-page links in a labelled `nav`: Tab moves
  * between them, Enter jumps, and the browser's own history works.
  *
+ * IT STAYS IN REACH. The row sticks under the site header while the main
+ * column scrolls, so the reader can jump from the FAQs back to the products
+ * without scrolling the whole page; sections carry `scroll-mt-32` so a jump
+ * lands below the header and this row, not under them.
+ *
  * THE UNDERLINE FOLLOWS THE READER. An IntersectionObserver marks whichever
  * section is in the upper part of the screen, so the row tells somebody where
  * they are as well as where they can go. It is set with `aria-current`, which
@@ -51,12 +56,14 @@ export function CampaignSectionNav({
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) showing.set(entry.target.id, entry.isIntersecting);
-        const current = ids.find((id) => showing.get(id));
+        // The LOWEST section in the reading band: when two are in it, the upper
+        // one is just ending and the lower one is what is being read.
+        const current = [...ids].reverse().find((id) => showing.get(id));
         if (current) setActive(current);
       },
       // The band between the sticky header and a little under halfway down:
       // a section counts as "here" once it has reached where people read.
-      { rootMargin: '-96px 0px -55% 0px' },
+      { rootMargin: '-136px 0px -55% 0px' },
     );
 
     for (const target of targets) observer.observe(target);
@@ -66,7 +73,17 @@ export function CampaignSectionNav({
   if (sections.length === 0) return null;
 
   return (
-    <nav aria-label="Campaign sections" className={cn('border-border border-b', className)}>
+    <nav
+      aria-label="Campaign sections"
+      className={cn(
+        // STICKY under the header (64px, 72px from `md`) for the length of the
+        // main column, so any section is one press away however far down the
+        // page somebody has read. A solid page-coloured backing keeps the text
+        // beneath from showing through.
+        'border-border bg-background md:top-18 sticky top-16 z-30 border-b',
+        className,
+      )}
+    >
       {/* Scrolls sideways inside itself on a narrow phone rather than pushing
           the page wider than the screen. */}
       <ul className="rail -mb-px flex gap-2 overflow-x-auto sm:gap-4">

@@ -11,6 +11,7 @@ import {
 import { cn, formatCurrency, formatNumber } from '@sailent/ui';
 
 import type { Campaign } from '@/lib/mock/types';
+import { SectionHeading } from '@/components/sections/section-heading';
 
 /**
  * The difference your support can make — the campaign's own figures, then its
@@ -58,13 +59,13 @@ export function CampaignImpact({ campaign }: { campaign: Campaign }) {
   }
 
   return (
-    <section id="campaign-impact" aria-labelledby="impact-heading" className="mt-12 scroll-mt-24">
-      <h2 id="impact-heading" className="text-h2 font-bold">
-        The Difference Your Support Can Make
-      </h2>
-      <p className="text-body-sm text-muted-foreground mt-1">
-        Your contribution can create real and lasting change for the people this campaign serves.
-      </p>
+    <section id="campaign-impact" aria-labelledby="impact-heading" className="mt-12 scroll-mt-32">
+      <SectionHeading
+        id="impact-heading"
+        size="md"
+        title="The Difference Your Support Can Make"
+        lead="Your contribution can create real and lasting change for the people this campaign serves."
+      />
 
       {cards.length > 0 ? (
         <ul className="mt-4 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 xl:grid-cols-4">
@@ -87,7 +88,10 @@ export function CampaignImpact({ campaign }: { campaign: Campaign }) {
                   <card.icon className="size-5" />
                 </span>
                 <span className="min-w-0">
-                  <span data-numeric="" className="text-h4 block font-bold leading-tight">
+                  <span
+                    data-numeric=""
+                    className="text-h3 block font-extrabold leading-tight tracking-tight"
+                  >
                     {card.value}
                     {card.unit ? (
                       <span className="text-body-sm text-muted-foreground ml-1 font-normal">
