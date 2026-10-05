@@ -7,20 +7,24 @@ import { ArrowRight, SearchX } from 'lucide-react';
 import { cn } from '@sailent/ui';
 
 import { PageShell } from '@/components/layout/page-shell';
-import { HomeCampaignCard } from '@/components/home/campaign-card';
+import { CampaignCard } from '@/components/campaigns/campaign-card';
+import { RailPauseToggle } from '@/components/motion/rail-pause-toggle';
+import { useAutoplayRail } from '@/components/motion/use-autoplay-rail';
 import { matchesCategory } from '@/lib/categories';
 import { focusAreas } from '@/lib/mock/home';
+import type { DonorViewer } from '@/lib/donor/viewer';
 import type { Campaign } from '@/lib/mock/types';
 
 /**
- * How many cards the band shows at once.
+ * How many cards the band carries.
  *
- * FOUR, because the approved design is a four-up grid and the fourth column is
- * what the card widths are drawn against. The band is a teaser, not an index —
- * everything past the fourth is reached through "View All Campaigns", which
- * queries the server rather than shipping a longer list to the browser.
+ * FOUR ON SCREEN at desktop — the approved four-up width the cards are drawn
+ * against — and up to twelve in the rail behind them, which it moves through
+ * on its own. The band is still a teaser, not an index: everything else is
+ * reached through "View All Campaigns", which queries the server rather than
+ * shipping a longer list to the browser.
  */
-const VISIBLE_CARDS = 4;
+const VISIBLE_CARDS = 12;
 
 /**
  * Featured campaigns.
@@ -29,27 +33,37 @@ const VISIBLE_CARDS = 4;
  * important band is an admission, and absence is quieter and more honest.
  *
  * ══════════════════════════════════════════════════════════════════════════
- * A STATIC GRID, NOT A CAROUSEL.
+ * A RAIL THAT ADVANCES ON ITS OWN — AT THE CLIENT'S REQUEST — AND CARRIES
+ * EVERYTHING THAT OBLIGES.
  *
- * This was a scrolling rail that advanced on its own, which meant it also had
- * to carry a pause button to clear WCAG 2.2.2 (Level A) — a mechanism to stop
- * anything moving for more than five seconds. The approved design shows four
- * cards standing still, so the movement is gone and the obligation goes with
- * it: there is nothing to pause, no arrows to mis-aim, and the row works
- * identically with scripting off.
+ * It was a static grid because a moving row has to clear WCAG 2.2.2 (Level A):
+ * anything that moves by itself for more than five seconds needs a way to stop
+ * it. It moves again now, so the obligation is met in full, by
+ * `useAutoplayRail`:
+ *   • a pause/play control for keyboard and screen-reader users, which shows
+ *     itself when tabbed to (the visible pause button and the previous/next
+ *     arrows were taken off at the client's request);
+ *   • hover, or focus anywhere in a card, holds it still;
+ *   • swiping or scrolling it yourself stops it for good;
+ *   • `prefers-reduced-motion` means it never starts;
+ *   • it waits while the tab is hidden or the band is off screen.
  *
- * It is still a `<ul>` with an accessible name. The focus-area strip finds the
- * band by that name, and a list of campaigns is a list whether it scrolls or
- * not.
+ * It is a real horizontally scrolling list underneath, so with scripting off
+ * it still scrolls by hand — it just does not move on its own. And it is still
+ * a `<ul>` with an accessible name: a list of campaigns is a list whether it
+ * scrolls or not.
  * ══════════════════════════════════════════════════════════════════════════
  */
 export function FeaturedCampaigns({
   campaigns,
   activeCategory = null,
+  viewer,
 }: {
   campaigns: Campaign[];
   /** A focus-area slug narrowing the grid, or null for everything. */
   activeCategory?: string | null;
+  /** Signed in, and what was saved — for the cards' save hearts. */
+  viewer?: DonorViewer;
 }) {
   const area = activeCategory
     ? (focusAreas.find((entry) => entry.slug === activeCategory) ?? null)
@@ -68,6 +82,7 @@ export function FeaturedCampaigns({
   );
 
   const visible = matching.slice(0, VISIBLE_CARDS);
+  const rail = useAutoplayRail(visible.length);
 
   if (campaigns.length === 0) return null;
 
@@ -105,19 +120,37 @@ export function FeaturedCampaigns({
             Make a Real Difference
           </h2>
 
-          <Link
-            href={viewAllHref}
-            className={cn(
-              'bg-wash-mint text-wash-mint-ink-strong text-body-sm group inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-bold',
-              'focus-visible:outline-ring hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2',
-            )}
-          >
-            {viewAllLabel}
-            <ArrowRight
-              className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none"
-              aria-hidden="true"
-            />
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            {/*
+              The rail's only control: pause/play, hidden until it is tabbed to
+              (see RailPauseToggle for why it must exist). It is the stop just
+              before "View All Campaigns" and appears above it when focused.
+            */}
+            {rail.canPlay ? (
+              // Full row height, so "above" means above the pill, not over it.
+              <div className="relative self-stretch">
+                <RailPauseToggle
+                  rail={rail}
+                  label="featured campaigns"
+                  className="focus-visible:bottom-full focus-visible:left-0 focus-visible:mb-2"
+                />
+              </div>
+            ) : null}
+
+            <Link
+              href={viewAllHref}
+              className={cn(
+                'bg-wash-mint text-wash-mint-ink-strong text-body-sm group inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-bold',
+                'focus-visible:outline-ring hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2',
+              )}
+            >
+              {viewAllLabel}
+              <ArrowRight
+                className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none"
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
         </div>
 
         {/* `max-w-3xl` so the sentence sits on ONE line at desktop, as the
@@ -179,22 +212,45 @@ export function FeaturedCampaigns({
         ) : null}
 
         {/*
-          Four equal columns at `lg`, and `items-stretch` so every card is the
-          height of the tallest in the row — the Donate buttons line up across
-          the band however many lines each title and description take.
+          THE SAME CARD AS THE CAMPAIGNS PAGE — one component, so the homepage
+          and the listing cannot drift apart. Rail items stretch to the tallest
+          card, so the Donate buttons line up across whatever is on screen.
 
-          Two columns from `sm` rather than four: a quarter of a tablet is
-          narrower than the card's own content, and the meta row wraps onto a
-          second line before the picture is even legible.
+          Two on screen until `xl`, then four: the card sets donors, raised and
+          goal side by side, and a quarter of a 1024px screen is too narrow for
+          those three figures. A phone shows one with the next peeking in, so
+          the row reads as one that moves.
+
+          Vertical padding, cancelled by negative margin, gives a hovered card
+          room to lift and cast its shadow: a scrolling row clips everything
+          outside its own box. No horizontal padding — the rail measures each
+          card's position from its edge to know where the next one starts.
         */}
         <ul
+          ref={rail.ref}
           hidden={visible.length === 0}
           aria-label="Featured campaigns"
-          className="mt-6 grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4"
+          className="rail -mb-8 mt-2 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-8 pt-4"
         >
-          {visible.map((campaign) => (
-            <li key={campaign.slug} className="flex">
-              <HomeCampaignCard campaign={campaign} className="w-full" />
+          {visible.map((campaign, index) => (
+            <li
+              key={campaign.slug}
+              className="rise-in flex shrink-0 basis-[85%] snap-start sm:basis-[calc((100%-1.25rem)/2)] xl:basis-[calc((100%-3.75rem)/4)]"
+              style={{ '--rise-delay': `${Math.min(index, 3) * 70}ms` } as React.CSSProperties}
+            >
+              <CampaignCard
+                campaign={campaign}
+                className="w-full"
+                {...(viewer
+                  ? {
+                      save: {
+                        signedIn: viewer.signedIn,
+                        saved: viewer.savedIds.includes(campaign.id),
+                        returnTo: '/',
+                      },
+                    }
+                  : {})}
+              />
             </li>
           ))}
         </ul>

@@ -67,7 +67,10 @@ export const primaryNav: NavEntry[] = [
   { label: 'About', href: '/about' },
   { label: 'Programs', href: '/programs' },
   { label: 'Campaigns', href: '/campaigns' },
-  { label: 'Impact', href: '/impact' },
+  /*
+    No "Impact" item: taken out of the bar, and out of the footer, at the
+    client's request. The /impact page itself still exists.
+  */
   { label: 'Stories', href: '/stories' },
   {
     label: 'Get Involved',
@@ -112,7 +115,8 @@ export const footerNav: NavGroup[] = [
     items: [
       { label: 'Our Mission', href: '/about' },
       { label: 'Our Team', href: '/team' },
-      { label: 'Our Impact', href: '/impact' },
+      // No "Our Impact": removed from the footer, as from the header, at the
+      // client's request. The /impact page itself is unchanged.
     ],
   },
   {

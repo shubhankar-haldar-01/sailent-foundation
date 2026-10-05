@@ -88,19 +88,32 @@ export const SelectLabel = React.forwardRef<
 
 export const SelectItem = React.forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(function SelectItem({ className, children, ...props }, ref) {
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item> & {
+    /**
+     * Where the selected tick sits. `start` (the default) suits plain text
+     * options; `end` suits rich options that lead with an icon of their own,
+     * where a tick on the left would crowd it.
+     */
+    indicatorSide?: 'start' | 'end';
+  }
+>(function SelectItem({ className, children, indicatorSide = 'start', ...props }, ref) {
   return (
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        'text-body-sm relative flex w-full cursor-default select-none items-center rounded-md py-2 pl-8 pr-2 outline-none',
+        'text-body-sm relative flex w-full cursor-default select-none items-center rounded-md py-2 outline-none',
+        indicatorSide === 'start' ? 'pl-8 pr-2' : 'pl-2 pr-8',
         'focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}
       {...props}
     >
-      <span className="absolute left-2 flex size-4 items-center justify-center">
+      <span
+        className={cn(
+          'absolute flex size-4 items-center justify-center',
+          indicatorSide === 'start' ? 'left-2' : 'right-2',
+        )}
+      >
         <SelectPrimitive.ItemIndicator>
           <Check className="size-4" aria-hidden="true" />
         </SelectPrimitive.ItemIndicator>

@@ -1,29 +1,36 @@
-import { Skeleton } from '@sailent/ui';
+import { PageShell } from '@/components/layout/page-shell';
+import { CampaignsHero } from '@/components/campaigns/campaigns-hero';
+import {
+  CampaignListingSkeleton,
+  CampaignSearchBarSkeleton,
+} from '@/components/campaigns/listing-skeleton';
 
-import { PageShell, Section } from '@/components/layout/page-shell';
-
+/**
+ * Arriving at /campaigns from another page.
+ *
+ * The hero is static, so it is drawn for real rather than as grey blocks — the
+ * page appears at once and only the parts that wait on the API show as
+ * loading. Same structure and spacing as `page.tsx`, so nothing moves when the
+ * real page replaces this.
+ */
 export default function LoadingCampaigns() {
   return (
-    <Section>
-      <PageShell>
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
-        <Skeleton className="mt-8 h-16 w-full" />
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="border-border overflow-hidden rounded-lg border">
-              <Skeleton className="aspect-video w-full rounded-none" />
-              <div className="space-y-3 p-5">
-                <Skeleton className="h-3 w-32" />
-                <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-4 w-4/5" />
-                <Skeleton className="h-2.5 w-full" />
-                <Skeleton className="h-9 w-32" />
-              </div>
-            </div>
-          ))}
+    <>
+      <CampaignsHero />
+
+      <PageShell className="relative z-10 -mt-7">
+        <div className="mx-auto max-w-4xl">
+          <CampaignSearchBarSkeleton />
         </div>
       </PageShell>
-    </Section>
+
+      <div className="pb-16 pt-8 md:pb-20">
+        <PageShell>
+          <div className="max-w-(--container-wide) mx-auto">
+            <CampaignListingSkeleton />
+          </div>
+        </PageShell>
+      </div>
+    </>
   );
 }

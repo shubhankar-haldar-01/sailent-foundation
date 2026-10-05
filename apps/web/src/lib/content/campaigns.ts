@@ -279,6 +279,76 @@ export async function getCampaigns(query: CampaignQuery = {}): Promise<Campaign[
   });
 }
 
+/** One screen of the public listing, and whether the API holds more behind it. */
+export interface CampaignListing {
+  items: Campaign[];
+  /** Every campaign matching the query, not just the ones returned. */
+  total: number;
+  hasMore: boolean;
+}
+
+/**
+ * The public campaign listing — searched, filtered and paginated BY THE API.
+ *
+ * `getCampaigns` fetches everything and drops the pagination envelope, which
+ * suits the pages that want a whole set. The listing page needs the envelope:
+ * "View More Campaigns" appears only when the API says there is more, rather
+ * than when a client-side slice happens to be shorter than the array it came
+ * from.
+ *
+ * `q` is the API's own free-text search over title and short description, and
+ * `category` its exact match on the category's display name. Nothing here
+ * re-implements either.
+ *
+ * The fixture fallback applies the same three filters locally, so a
+ * development machine without the API still shows a search that searches.
+ */
+export async function getCampaignListing(query: {
+  q?: string;
+  category?: string;
+  /** The API's own names. `active` is its default: active and paused together. */
+  status?: 'active' | 'paused' | 'completed' | 'all';
+  limit: number;
+}): Promise<CampaignListing> {
+  return loadContent({
+    label: 'campaigns',
+    fromApi: async (api) => {
+      const page = await api.get<Paginated<ApiCampaignSummary>>('campaigns', {
+        query: { page: 1, ...query },
+        ...publicCache('campaigns'),
+      });
+      return {
+        items: page.items.map(toCampaign),
+        total: page.pagination.total,
+        hasMore: page.pagination.hasNext,
+      };
+    },
+    fallback: () => {
+      const needle = query.q?.toLowerCase();
+      const matching = campaignFixtures.filter((campaign) => {
+        const status = query.status ?? 'active';
+        if (status === 'completed' && campaign.status !== 'completed') return false;
+        if (status === 'paused' && campaign.status !== 'paused') return false;
+        if (status === 'active' && campaign.status === 'completed') return false;
+        if (query.category && campaign.category !== query.category) return false;
+        if (
+          needle &&
+          !campaign.title.toLowerCase().includes(needle) &&
+          !campaign.shortDescription.toLowerCase().includes(needle)
+        ) {
+          return false;
+        }
+        return true;
+      });
+      return {
+        items: matching.slice(0, query.limit),
+        total: matching.length,
+        hasMore: matching.length > query.limit,
+      };
+    },
+  });
+}
+
 /** One row of the public donor list. Exactly what the API returns, no more. */
 export interface CampaignDonor {
   name: string;

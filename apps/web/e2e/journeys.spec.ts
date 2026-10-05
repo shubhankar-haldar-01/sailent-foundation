@@ -15,6 +15,26 @@ import { E2E_POST } from './global-setup';
  */
 
 async function expectNoAxeViolations(page: Page) {
+  /*
+    AUDIT THE PAGE PEOPLE READ, NOT A FRAME OF ITS ENTRANCE.
+
+    Cards fade and rise in, and their progress bars fill, over the first second
+    or so. Axe measures contrast from computed colours, so a scan taken mid-fade
+    reads every card's text at partial opacity and reports it as low contrast —
+    the Donate button measured #c25e26 instead of its real #ba4503. Waiting for
+    every FINITE animation to finish first means the same WCAG checks run
+    against the settled page. Looping ones (a loading skeleton's pulse) never
+    finish and are left out, or this would wait forever.
+  */
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+        .map((animation) => animation.finished.catch(() => undefined)),
+    ),
+  );
+
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze();
@@ -80,11 +100,16 @@ test.describe('journey: homepage → campaign', () => {
 
     await navigateTo(page, 'Campaigns', '/campaigns');
     await expect(
-      page.getByRole('heading', { level: 1, name: /fund something specific/i }),
+      page.getByRole('heading', { level: 1, name: /support causes that create real change/i }),
     ).toBeVisible();
 
-    // Follow the first campaign through to its detail page.
-    await page.getByRole('link', { name: 'View campaign' }).first().click();
+    // Follow the first campaign through to its detail page, by its title.
+    await page
+      .getByRole('list', { name: 'Campaigns' })
+      .getByRole('heading')
+      .first()
+      .getByRole('link')
+      .click();
     await page.waitForURL('**/campaigns/**');
 
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -110,117 +135,205 @@ test.describe('journey: homepage → campaign', () => {
 });
 
 /**
- * The focus-area strip filters the campaigns band in place.
+ * The featured band moves on its own, so it must still be stoppable.
  *
- * Two halves that have to stay joined: pressing a tile narrows the row without
- * a page load, and "View all" carries that choice through to the full listing.
- * Either half can break on its own and the other still looks fine.
+ * Its visible pause button was removed at the client's request; WCAG 2.2.2
+ * (Level A) still needs a way to stop it that works without a pointer. This
+ * holds that line: the control is present, out of sight until it is tabbed to,
+ * and it pauses the rail.
  */
-test.describe('focus-area filtering', () => {
-  const cards = (page: Page) =>
-    page.getByRole('list', { name: /Featured campaigns/i }).locator('article h3');
-
-  const viewAll = (page: Page) => page.getByRole('link', { name: /View All .*Campaigns/i }).first();
-
-  const tile = (page: Page, name: string) =>
-    page.getByRole('button', { name: new RegExp(`^${name}`, 'i') }).first();
-
-  /**
-   * Wait for a card before counting anything.
-   *
-   * `locator.count()` is a one-shot read with no retry, so calling it straight
-   * after `goto` returns whatever has rendered by that instant — which was 0 on
-   * the tablet project, where the band paints later. The tests then compared
-   * against a baseline of zero and failed on a page that was working. Every
-   * count below is taken after this.
-   */
-  async function ready(page: Page) {
+test.describe('featured campaigns rail', () => {
+  test('keyboard users can still pause it', async ({ page }) => {
     await page.goto('/');
-    await expect(cards(page).first()).toBeVisible();
-  }
+    const pause = page.getByRole('button', { name: 'Pause featured campaigns' });
+    await expect(pause).toHaveCount(1);
 
-  test('narrows the campaigns without leaving the page', async ({ page }) => {
-    await ready(page);
-    const before = await cards(page).count();
-    expect(before).toBeGreaterThan(1);
+    // Nothing for a pointer to see…
+    expect(await pause.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
 
-    const before_url = page.url();
+    // …until it is reached from the keyboard, as the stop before "View All".
+    await page.getByRole('link', { name: 'View All Campaigns' }).focus();
+    await page.keyboard.press('Shift+Tab');
+    await expect(pause).toBeFocused();
+    expect(await pause.evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(40);
 
-    const education = tile(page, 'Education');
-    // Settled before clicking: at tablet the strip scrolls horizontally, and a
-    // click issued while it is still moving can land on whatever slides under
-    // the pointer — including a campaign card's link, which then navigates and
-    // fails this test for the opposite of the reason it exists.
-    await education.scrollIntoViewIfNeeded();
-    await expect(education).toBeVisible();
-    await education.click();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Play featured campaigns' })).toHaveCount(1);
+  });
+});
 
-    await expect(cards(page)).toHaveCount(1);
-    await expect(cards(page).first()).toHaveText(/Educate Rural Children/i);
+/**
+ * The testimonials move on their own too, with the same obligation: their
+ * arrows were removed at the client's request, so the keyboard pause is what
+ * keeps the band stoppable (WCAG 2.2.2).
+ */
+test.describe('testimonials rail', () => {
+  test('has no arrows, and keyboard users can pause it', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('list', { name: 'Testimonials, scrollable' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /(Previous|Next) testimonials/ })).toHaveCount(0);
 
-    /*
-      THE URL IS UNCHANGED — which is what "don't open any page" actually means.
+    const pause = page.getByRole('button', { name: 'Pause testimonials' });
+    await expect(pause).toHaveCount(1);
+    expect(await pause.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
 
-      This used to count `framenavigated` events, which also fire for
-      `history.pushState`. Next's router and its link prefetching both use it,
-      so the assertion could fail on router bookkeeping that never moved the
-      donor anywhere. The address bar is the thing the requirement is about.
-    */
-    expect(page.url()).toBe(before_url);
+    await pause.focus();
+    expect(await pause.evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(40);
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Play testimonials' })).toHaveCount(1);
+  });
+});
+
+/**
+ * The campaigns page's grid, added to the homepage before "Who we are".
+ *
+ * It sits BESIDE the featured band rather than replacing it, so both have to
+ * be on the page — and its tiles must narrow only its own cards.
+ */
+test.describe('homepage campaigns grid', () => {
+  const grid = (page: Page) => page.getByRole('list', { name: 'Campaigns by cause' });
+  const tiles = (page: Page) => page.getByRole('group', { name: 'Filter campaigns by cause' });
+
+  test('sits beside the featured band, before "Who we are"', async ({ page }) => {
+    await page.goto('/');
+    await expect(grid(page).getByRole('listitem').first()).toBeVisible();
+
+    // The featured band is still there; the focus-area strip under the hero
+    // was removed at the client's request.
+    await expect(page.getByRole('heading', { name: /What we work on/i })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Make a Real Difference' })).toBeVisible();
+    await expect(page.getByRole('list', { name: /Featured campaigns/i })).toBeVisible();
+
+    // Two rows of four at most, and it comes before "Who we are".
+    expect(await grid(page).getByRole('listitem').count()).toBeLessThanOrEqual(8);
+    const gridBox = await grid(page).boundingBox();
+    const aboutBox = await page.getByRole('heading', { name: 'Who We Are' }).boundingBox();
+    expect(gridBox?.y ?? Infinity).toBeLessThan(aboutBox?.y ?? -Infinity);
   });
 
-  test('is a toggle, so there is a way back to every campaign', async ({ page }) => {
-    await ready(page);
-    const all = await cards(page).count();
+  test('its tiles are toggles, and each change is announced', async ({ page }) => {
+    await page.goto('/');
+    const cards = grid(page).getByRole('listitem');
+    await expect(cards.first()).toBeVisible();
+    const all = await cards.count();
+    const live = page.locator(
+      'section[aria-labelledby="campaign-showcase-title"] [aria-live="polite"]',
+    );
 
-    const education = tile(page, 'Education');
+    const education = tiles(page).getByRole('button', { name: /^Education/ });
     await education.click();
     await expect(education).toHaveAttribute('aria-pressed', 'true');
-    await expect(cards(page)).not.toHaveCount(all);
-
-    await education.click();
-    await expect(education).toHaveAttribute('aria-pressed', 'false');
-    await expect(cards(page)).toHaveCount(all);
-  });
-
-  test('announces the change, and says so when an area has nothing running', async ({ page }) => {
-    await ready(page);
-    const live = page.locator('[aria-live="polite"].sr-only').first();
-
-    await tile(page, 'Education').click();
+    await expect(cards).toHaveCount(1);
     await expect(live).toHaveText(/Showing 1 Education campaign\./);
 
-    // An area with no live campaign is an ordinary state, not an error.
-    await tile(page, 'Animal Welfare').click();
-    await expect(cards(page)).toHaveCount(0);
-    await expect(page.getByText(/No animal welfare campaign is running/i)).toBeVisible();
-    await expect(live).toHaveText(/Showing 0 Animal Welfare campaigns\./);
+    // Pressing it again is the way back to every campaign.
+    await education.click();
+    await expect(education).toHaveAttribute('aria-pressed', 'false');
+    await expect(cards).toHaveCount(all);
   });
 
-  test('carries the chosen area through to the full listing', async ({ page }) => {
-    await ready(page);
-    await tile(page, 'Women Empowerment').click();
+  test('its tiles narrow its own cards, and View More carries the cause', async ({ page }) => {
+    await page.goto('/');
+    const featured = page.getByRole('list', { name: /Featured campaigns/i }).getByRole('listitem');
+    await expect(featured.first()).toBeVisible();
+    const featuredBefore = await featured.count();
 
-    await expect(viewAll(page)).toHaveAttribute('href', '/campaigns?category=women-empowerment');
-    await viewAll(page).click();
-    await page.waitForURL(/\/campaigns\?category=women-empowerment/);
+    await tiles(page)
+      .getByRole('button', { name: /^Women Empowerment/ })
+      .click();
+    await expect(grid(page).getByRole('listitem')).toHaveCount(1);
+    // The band above keeps its own selection.
+    await expect(featured).toHaveCount(featuredBefore);
 
-    // The listing must actually honour it — this link pointed at an unfiltered
-    // page for a long time and nothing reported it.
-    const titles = page.locator('h3');
-    await expect(titles).toHaveCount(1);
-    await expect(titles.first()).toHaveText(/Skills for a Brighter Future/i);
+    const more = page.getByRole('link', { name: /View More Women Empowerment Campaigns/ });
+    await expect(more).toHaveAttribute('href', '/campaigns?category=women-empowerment');
+  });
+});
 
-    // The hand-picked "Featured" promotion ignores filters, so it stands down
-    // rather than putting an unrelated campaign above the ones asked for.
-    await expect(page.getByText('Featured', { exact: true })).toHaveCount(0);
+/**
+ * The campaign listing: search, causes and the cards themselves.
+ *
+ * Every filter is a URL the server renders, so these assert on the address as
+ * well as on what is drawn — a filter that changed the grid but not the URL
+ * would not survive a refresh or a shared link.
+ */
+test.describe('campaign listing', () => {
+  const grid = (page: Page) => page.getByRole('list', { name: 'Campaigns' }).getByRole('listitem');
+  const cause = (page: Page, name: string | RegExp) =>
+    page.getByRole('navigation', { name: 'Filter campaigns by cause' }).getByRole('link', { name });
+
+  test('searches through the API, and says so when nothing matches', async ({ page }) => {
+    await page.goto('/campaigns');
+    await page.getByRole('searchbox', { name: 'Search campaigns' }).fill('school');
+    await page.getByRole('searchbox', { name: 'Search campaigns' }).press('Enter');
+
+    await page.waitForURL(/\/campaigns\?q=school$/);
+    await expect(grid(page)).toHaveCount(1);
+    await expect(grid(page).first()).toContainText(/Educate Rural Children/i);
+
+    // The search travels with a cause, and an empty result is a state, not a blank.
+    await cause(page, /Healthcare/).click();
+    await page.waitForURL(/q=school&category=healthcare/);
+    await expect(page.getByText('No campaigns found')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'View All Campaigns' })).toHaveAttribute(
+      'href',
+      '/campaigns',
+    );
   });
 
-  test('an unknown category shows the page rather than blanking it', async ({ page }) => {
-    await page.goto('/campaigns?category=not-a-real-category');
-    // A stale or hand-typed URL should degrade to the full listing.
-    await expect(page.locator('h3').first()).toBeVisible();
-    await expect(page.getByText('Featured', { exact: true }).first()).toBeVisible();
+  test('each card states its figures and offers one way to give', async ({ page }) => {
+    await page.goto('/campaigns');
+    const card = grid(page).first();
+
+    for (const term of ['Donors', 'Raised', 'Goal']) {
+      await expect(card.getByRole('term').filter({ hasText: term })).toBeVisible();
+    }
+    await expect(card.getByRole('img', { name: /% of the ₹[\d,]+ goal raised/ })).toBeVisible();
+    await expect(card.getByRole('link', { name: /Donate Now/ })).toHaveAttribute(
+      'href',
+      /^\/campaigns\/[a-z0-9-]+#give$/,
+    );
+  });
+
+  test('the status menu offers closed campaigns, and filters to them', async ({ page }) => {
+    await page.goto('/campaigns');
+    const menu = page.getByRole('combobox', { name: 'Show campaigns' });
+    await expect(menu).toContainText('Active Campaigns');
+
+    await menu.click();
+    await expect(page.getByRole('option')).toHaveText([
+      /Active Campaigns/,
+      /Closed Campaigns/,
+      /Completed Campaigns/,
+      /All Campaigns/,
+    ]);
+    await page.getByRole('option', { name: /Closed Campaigns/ }).click();
+
+    await page.waitForURL(/\/campaigns\?status=closed$/);
+    await expect(menu).toContainText('Closed Campaigns');
+  });
+
+  test('every card says which state it is in, in every view', async ({ page }) => {
+    await page.goto('/campaigns?status=all');
+    await expect(grid(page).filter({ hasText: 'Status: Completed' })).toHaveCount(1);
+    await expect(grid(page).filter({ hasText: 'Status: Active' }).first()).toBeVisible();
+
+    // The default Active view badges its cards too, not only the mixed one.
+    await page.goto('/campaigns');
+    const cards = grid(page);
+    await expect(cards.first()).toBeVisible();
+    await expect(cards.filter({ hasText: 'Status: Active' })).toHaveCount(await cards.count());
+
+    await page.goto('/campaigns?status=completed');
+    await expect(grid(page).filter({ hasText: 'Status: Completed' }).first()).toBeVisible();
+  });
+
+  test('the save heart is shown signed out, and leads to sign-in', async ({ page }) => {
+    await page.goto('/campaigns');
+    const heart = grid(page)
+      .first()
+      .getByRole('link', { name: /^Sign in to save / });
+    await expect(heart).toHaveAttribute('href', /^\/sign-in\?next=%2Fcampaigns/);
   });
 });
 

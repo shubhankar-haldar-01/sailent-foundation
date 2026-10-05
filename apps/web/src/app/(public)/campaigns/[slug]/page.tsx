@@ -77,7 +77,12 @@ export default async function CampaignDetailPage({
 
   const [allStories, siblings, donors] = await Promise.all([
     getStories(),
-    getCampaigns({ programSlug: campaign.programSlug }),
+    /*
+      Only when the campaign belongs to a programme. An empty slug is no filter
+      at all, so a stand-alone campaign would list every campaign under a
+      "More in" heading with no programme name in it.
+    */
+    campaign.programSlug ? getCampaigns({ programSlug: campaign.programSlug }) : [],
     getCampaignDonors(campaign.slug, { limit: 5 }),
   ]);
 

@@ -575,6 +575,32 @@ async function seedDemoContent(db: Database): Promise<void> {
       status: 'published' as const,
       displayOrder: 50,
     },
+    /*
+      The two programmes the approved campaigns grid needs. Every campaign
+      belongs to a programme — "time-bound fundraising under a programme", as
+      docs/database-architecture.md §5 defines it — and "Support Animal
+      Welfare" and "Greener Communities" had none.
+    */
+    {
+      title: 'Animal Welfare',
+      slug: 'animal-welfare',
+      tagline: 'Care for the animals no one else is looking after',
+      shortDescription:
+        'Food, shelter and veterinary care for abandoned and injured animals in our communities.',
+      category: 'Animal Welfare',
+      status: 'published' as const,
+      displayOrder: 60,
+    },
+    {
+      title: 'Environment',
+      slug: 'environment',
+      tagline: 'Greener, cleaner neighbourhoods, planted and kept by the people who live there',
+      shortDescription:
+        'Tree planting, clean-up drives and sustainable practices led with local communities.',
+      category: 'Environment',
+      status: 'published' as const,
+      displayOrder: 70,
+    },
   ];
 
   /**
@@ -714,6 +740,60 @@ async function seedDemoContent(db: Database): Promise<void> {
         },
       ],
     },
+    'animal-welfare': {
+      accentIcon: 'paw',
+      problem:
+        'Demo content. Stray and abandoned animals go without food or treatment, and an injured animal on the street often has nowhere to be taken.',
+      approach:
+        'Demo content. Feeding points, partner veterinary care, and a small shelter for animals that cannot yet go back to the street.',
+      activities: [
+        {
+          title: 'Feeding and first aid',
+          description: 'Demo activity. Daily feeding points and first aid by trained volunteers.',
+        },
+        {
+          title: 'Treatment and shelter',
+          description: 'Demo activity. Veterinary care and recovery space through partner clinics.',
+        },
+      ],
+      metrics: [
+        {
+          label: 'Animals treated',
+          value: 96,
+        },
+        {
+          label: 'Feeding points',
+          value: 12,
+        },
+      ],
+    },
+    environment: {
+      accentIcon: 'leaf',
+      problem:
+        'Demo content. Fast-growing neighbourhoods are losing tree cover and open space, and waste collects where no one owns the problem.',
+      approach:
+        'Demo content. Community-led tree planting with a plan for after the planting, regular clean-up drives, and simple habits that last.',
+      activities: [
+        {
+          title: 'Tree planting',
+          description: 'Demo activity. Saplings planted and cared for by resident groups.',
+        },
+        {
+          title: 'Clean-up drives',
+          description: 'Demo activity. Monthly drives with schools and resident associations.',
+        },
+      ],
+      metrics: [
+        {
+          label: 'Saplings planted',
+          value: 540,
+        },
+        {
+          label: 'Clean-up drives',
+          value: 18,
+        },
+      ],
+    },
   };
 
   /** Where each demo program operates. Drives the computed geographic reach. */
@@ -735,6 +815,8 @@ async function seedDemoContent(db: Database): Promise<void> {
       { district: 'Ranchi', state: 'Jharkhand' },
       { district: 'Kalahandi', state: 'Odisha' },
     ],
+    'animal-welfare': [{ district: 'Pune', state: 'Maharashtra' }],
+    environment: [{ district: 'Bhopal', state: 'Madhya Pradesh' }],
   };
 
   /**
@@ -761,8 +843,14 @@ async function seedDemoContent(db: Database): Promise<void> {
     'mobile-health-clinic-bastar': 'HEALTHCARE',
     'tailoring-training-centre': 'WOMEN_EMPOWERMENT',
     'disaster-relief': 'DISASTER_RELIEF',
+    'animal-welfare': 'ANIMAL_WELFARE',
+    environment: 'ENVIRONMENT',
     'flood-relief-balasore': 'DISASTER_RELIEF',
     'skills-training-second-cohort': 'WOMEN_EMPOWERMENT',
+    'animal-care-pune': 'ANIMAL_WELFARE',
+    'child-nutrition-gaya': 'CHILD_WELFARE',
+    'women-livelihoods-ranchi': 'LIVELIHOOD',
+    'greener-communities-bhopal': 'ENVIRONMENT',
   };
 
   const programIds = new Map<string, string>();
@@ -834,6 +922,10 @@ async function seedDemoContent(db: Database): Promise<void> {
     'skills-training-second-cohort': 3,
     'mobile-health-clinic-bastar': 4,
     'tailoring-training-centre': 5,
+    'animal-care-pune': 6,
+    'child-nutrition-gaya': 7,
+    'women-livelihoods-ranchi': 8,
+    'greener-communities-bhopal': 9,
   };
 
   /**
@@ -1092,15 +1184,114 @@ async function seedDemoContent(db: Database): Promise<void> {
       endDate: new Date('2026-08-31T00:00:00+05:30'),
       products: [],
     },
+    /*
+      The four the approved campaigns grid adds, so the listing shows the two
+      full rows it was designed around. Titles, copy and figures are the
+      design's own. Each sits under the programme whose work it funds.
+    */
+    {
+      slug: 'animal-care-pune',
+      programSlug: 'animal-welfare',
+      title: 'Support Animal Welfare',
+      shortDescription: 'Provide food, shelter and medical care for abandoned and injured animals.',
+      category: 'Animal Welfare',
+      location: 'Pune, Maharashtra',
+      state: 'Maharashtra',
+      city: 'Pune',
+      fundraisingGoal: rupees(250_000),
+      amountRaised: rupees(79_005),
+      donorCount: 79,
+      beneficiaryTarget: 300,
+      beneficiariesReached: 96,
+      status: 'active' as const,
+      isFeatured: false,
+      endDate: inDays(30),
+      products: [],
+    },
+    {
+      slug: 'child-nutrition-gaya',
+      programSlug: 'child-welfare',
+      title: 'Nutrition for Underprivileged Children',
+      shortDescription:
+        'Provide nutritious meals and essential care to children from underprivileged families.',
+      category: 'Child Welfare',
+      location: 'Gaya, Bihar',
+      state: 'Bihar',
+      city: 'Gaya',
+      fundraisingGoal: rupees(700_000),
+      amountRaised: rupees(312_900),
+      donorCount: 410,
+      beneficiaryTarget: 700,
+      beneficiariesReached: 313,
+      status: 'active' as const,
+      isFeatured: false,
+      endDate: inDays(35),
+      products: [],
+    },
+    {
+      slug: 'women-livelihoods-ranchi',
+      programSlug: 'women-empowerment',
+      title: 'Empower Women Livelihoods',
+      shortDescription:
+        'Support skill development and livelihood programs for women and help them build independence.',
+      category: 'Livelihood',
+      location: 'Ranchi, Jharkhand',
+      state: 'Jharkhand',
+      city: 'Ranchi',
+      fundraisingGoal: rupees(350_000),
+      amountRaised: rupees(105_320),
+      donorCount: 220,
+      beneficiaryTarget: 150,
+      beneficiariesReached: 45,
+      status: 'active' as const,
+      isFeatured: false,
+      endDate: inDays(40),
+      products: [],
+    },
+    {
+      slug: 'greener-communities-bhopal',
+      programSlug: 'environment',
+      title: 'Greener Communities',
+      shortDescription:
+        'Support tree plantation, clean environment initiatives and sustainable community programs.',
+      category: 'Environment',
+      location: 'Bhopal, Madhya Pradesh',
+      state: 'Madhya Pradesh',
+      city: 'Bhopal',
+      fundraisingGoal: rupees(200_000),
+      amountRaised: rupees(89_640),
+      donorCount: 185,
+      beneficiaryTarget: 1200,
+      beneficiariesReached: 540,
+      status: 'active' as const,
+      isFeatured: false,
+      endDate: inDays(45),
+      products: [],
+    },
   ];
 
   const campaignIds = new Map<string, string>();
   for (const { products, programSlug, ...campaign } of campaignSeeds) {
+    /*
+      EVERY CAMPAIGN BELONGS TO A PROGRAMME. A campaign is time-bound
+      fundraising for part of a programme's work, and the programme is where
+      its reporting, its surplus and its "More in …" listing all live. A seed
+      entry naming a programme that does not exist is a mistake to fail on,
+      not a campaign to file under nothing.
+    */
+    const programId = programIds.get(programSlug);
+    if (!programId) {
+      throw new Error(
+        `Campaign “${campaign.slug}” names programme “${programSlug}”, which is not seeded. ` +
+          'Every campaign belongs to a programme.',
+      );
+    }
+
     const [row] = await db
       .insert(campaigns)
       .values({
         ...campaign,
-        programId: programIds.get(programSlug) ?? null,
+        programId,
         categoryId: categoryIds.get(CATEGORY_BY_SLUG[campaign.slug] ?? '') ?? null,
         description:
           'Demo campaign narrative. Replaced with real copy before launch.\n\n' +
@@ -1136,6 +1327,8 @@ async function seedDemoContent(db: Database): Promise<void> {
         target: campaigns.slug,
         set: {
           title: campaign.title,
+          // So a re-seed files an existing campaign under its programme too.
+          programId,
           shortDescription: campaign.shortDescription,
           status: campaign.status,
           categoryId: categoryIds.get(CATEGORY_BY_SLUG[campaign.slug] ?? '') ?? null,

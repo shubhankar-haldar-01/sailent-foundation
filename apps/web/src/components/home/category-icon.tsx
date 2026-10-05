@@ -64,6 +64,12 @@ function normalise(category: string): string {
 interface CategoryTone {
   /** Chip text and icon. Measured on white. */
   ink: string;
+  /**
+   * The ink as a SOLID fill — the listing's progress bars, drawn in the same
+   * colour as the category label above them. A non-text graphic, so its floor
+   * is 3:1 against the track; every ink clears that with room to spare.
+   */
+  fill: string;
   /** Progress fill. A gradient, as the approved bars are. */
   bar: string;
   /**
@@ -78,81 +84,116 @@ interface CategoryTone {
    * Disaster Relief is.
    */
   chip: string;
+  /**
+   * The same wash at full strength, for a SELECTED state.
+   *
+   * The listing's cause tiles sit on `chip` and step up to this when chosen,
+   * so a selected tile is the same hue, just firmer — not a new colour.
+   */
+  wash: string;
 }
 
 const TONES: Record<string, CategoryTone> = {
   education: {
     ink: 'text-wash-blue-ink',
+    fill: 'bg-wash-blue-ink',
     bar: 'from-wash-blue-ink to-wash-blue-ink',
     chip: 'bg-wash-blue/60 text-wash-blue-ink',
+    wash: 'bg-wash-blue',
   },
   healthcare: {
     ink: 'text-wash-rose-ink',
+    fill: 'bg-wash-rose-ink',
     bar: 'from-wash-blue-ink to-wash-rose-ink',
     chip: 'bg-wash-rose/60 text-wash-rose-ink',
+    wash: 'bg-wash-rose',
   },
   health: {
     ink: 'text-wash-rose-ink',
+    fill: 'bg-wash-rose-ink',
     bar: 'from-wash-blue-ink to-wash-rose-ink',
     chip: 'bg-wash-rose/60 text-wash-rose-ink',
+    wash: 'bg-wash-rose',
   },
   foodsecurity: {
     ink: 'text-wash-gold-ink',
+    fill: 'bg-wash-gold-ink',
     bar: 'from-wash-blue-ink to-wash-gold-ink',
     chip: 'bg-wash-amber/60 text-wash-gold-ink',
+    wash: 'bg-wash-amber',
   },
   foodsupport: {
     ink: 'text-wash-gold-ink',
+    fill: 'bg-wash-gold-ink',
     bar: 'from-wash-blue-ink to-wash-gold-ink',
     chip: 'bg-wash-amber/60 text-wash-gold-ink',
+    wash: 'bg-wash-amber',
   },
   disasterrelief: {
     ink: 'text-wash-violet-ink',
+    fill: 'bg-wash-violet-ink',
     bar: 'from-wash-blue-ink to-wash-violet-ink',
     chip: 'bg-wash-violet/60 text-wash-violet-ink',
+    wash: 'bg-wash-violet',
   },
   womenempowerment: {
     ink: 'text-wash-pink-ink',
+    fill: 'bg-wash-pink-ink',
     bar: 'from-wash-blue-ink to-wash-pink-ink',
     chip: 'bg-wash-pink/60 text-wash-pink-ink',
+    wash: 'bg-wash-pink',
   },
   childwelfare: {
     ink: 'text-wash-violet-ink',
+    fill: 'bg-wash-violet-ink',
     bar: 'from-wash-blue-ink to-wash-violet-ink',
     chip: 'bg-wash-violet/60 text-wash-violet-ink',
+    wash: 'bg-wash-violet',
   },
   livelihood: {
     ink: 'text-wash-mint-ink',
+    fill: 'bg-wash-mint-ink',
     bar: 'from-wash-blue-ink to-wash-mint-ink',
     chip: 'bg-wash-mint/60 text-wash-mint-ink',
+    wash: 'bg-wash-mint',
   },
   environment: {
     ink: 'text-wash-mint-ink',
+    fill: 'bg-wash-mint-ink',
     bar: 'from-wash-blue-ink to-wash-mint-ink',
     chip: 'bg-wash-mint/60 text-wash-mint-ink',
+    wash: 'bg-wash-mint',
   },
   animalwelfare: {
     ink: 'text-wash-amber-ink',
+    fill: 'bg-wash-amber-ink',
     bar: 'from-wash-blue-ink to-wash-amber-ink',
     chip: 'bg-wash-amber/60 text-wash-amber-ink',
+    wash: 'bg-wash-amber',
   },
   clothing: {
     ink: 'text-wash-gold-ink',
+    fill: 'bg-wash-gold-ink',
     bar: 'from-wash-blue-ink to-wash-gold-ink',
     chip: 'bg-wash-amber/60 text-wash-gold-ink',
+    wash: 'bg-wash-amber',
   },
   communitydevelopment: {
     ink: 'text-wash-blue-ink',
+    fill: 'bg-wash-blue-ink',
     bar: 'from-wash-blue-ink to-wash-blue-ink',
     chip: 'bg-wash-blue/60 text-wash-blue-ink',
+    wash: 'bg-wash-blue',
   },
 };
 
 /** Blue on both stops, so an unmapped category is plain rather than odd. */
 const NEUTRAL_TONE: CategoryTone = {
   ink: 'text-wash-blue-ink',
+  fill: 'bg-wash-blue-ink',
   bar: 'from-wash-blue-ink to-wash-blue-ink',
   chip: 'bg-wash-blue/60 text-wash-blue-ink',
+  wash: 'bg-wash-blue',
 };
 
 export function categoryTone(category: string | null | undefined): CategoryTone {

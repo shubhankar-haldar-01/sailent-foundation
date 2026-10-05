@@ -914,6 +914,79 @@
 }
 
 /**
+ * Rise into place — once, when the element first renders.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * A CSS ANIMATION ON MOUNT, NOT A SCROLL OBSERVER, and that is the point.
+ *
+ * It runs from the very first paint of server-rendered HTML, so nothing is
+ * shown and then hidden again while scripts load — the flicker an observer-
+ * driven reveal has on content that is already on screen. It also replays
+ * exactly when content is NEW: a filtered list remounts and rises in, while
+ * cards already on screen stay put when more are appended after them.
+ * ══════════════════════════════════════════════════════════════════════════
+ *
+ * Stagger a group with `--rise-delay` on each item. Under reduced motion there
+ * is no animation at all; the element is simply there.
+ */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+}
+
+@utility rise-in {
+  animation: rise-in 560ms var(--ease-out-soft) both;
+  animation-delay: var(--rise-delay, 0ms);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/**
+ * A progress fill that grows from empty to its value, once, on render.
+ *
+ * Scales the bar rather than animating its width, so it costs no layout. It
+ * starts a beat after its card's own `--rise-delay`, so the bar fills once the
+ * card has landed rather than while it is still moving.
+ */
+@keyframes fill-in {
+  from {
+    scale: 0 1;
+  }
+}
+
+@utility fill-in {
+  transform-origin: left center;
+  animation: fill-in 1100ms var(--ease-out-soft) both;
+  animation-delay: calc(var(--rise-delay, 0ms) + 250ms);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/** One beat of a heart, for the moment something is saved. */
+@keyframes heart-pop {
+  35% {
+    scale: 1.32;
+  }
+  60% {
+    scale: 0.92;
+  }
+}
+
+@utility heart-pop {
+  animation: heart-pop 460ms var(--ease-out-soft);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/**
  * Reveal-on-scroll.
  *
  * The element is VISIBLE BY DEFAULT and only hidden once JavaScript has marked

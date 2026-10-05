@@ -1,95 +1,53 @@
 'use client';
 
-import * as React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-import { cn } from '@sailent/ui';
-
 import { MediaFrame } from '@/components/media/media-frame';
+import { RailPauseToggle } from '@/components/motion/rail-pause-toggle';
+import { useAutoplayRail } from '@/components/motion/use-autoplay-rail';
 import { PageShell } from '@/components/layout/page-shell';
 import { HeadingRule } from '@/components/home/section-head';
 import { testimonials } from '@/lib/mock/home';
 
 /**
+ * How long each testimonial is held before the row moves on. Longer than the
+ * campaigns rail's five seconds: these are sentences to read, not cards to
+ * glance at.
+ */
+const TESTIMONIAL_INTERVAL_MS = 6500;
+
+/**
  * Testimonials.
  *
  * ══════════════════════════════════════════════════════════════════════════
- * A SCROLLER, NOT AN AUTOPLAYING CAROUSEL.
+ * A SCROLLER THAT ALSO MOVES ON ITS OWN — AT THE CLIENT'S REQUEST.
  *
  * The list is a real horizontally-scrolling list with snap points: it works by
- * swipe, by trackpad, by keyboard tabbing (the browser scrolls focus into
- * view on its own), and with JavaScript off. The arrow buttons nudge
- * `scrollBy` — they are an addition to native scrolling, not a replacement
- * for it.
- *
- * Nothing moves on its own. Content that slides away while somebody is
- * reading it is the most reliably disliked pattern on the web, and it is
- * actively hostile to anyone who reads slowly.
+ * swipe, by trackpad, by keyboard (the list itself is focusable), and with
+ * JavaScript off. `useAutoplayRail` advances it one testimonial at a time on
+ * top of that, and carries what content moving under a reader obliges:
+ *   • hover, or focus in the list, holds it still — nothing slides away
+ *     mid-sentence;
+ *   • swiping, scrolling or arrowing through it yourself stops it for good;
+ *   • `prefers-reduced-motion` means it never starts;
+ *   • it waits while the tab is hidden or the band is off screen;
+ *   • a pause/play control for keyboard and screen-reader users, shown when
+ *     tabbed to — WCAG 2.2.2 (Level A). The visible previous/next arrows were
+ *     taken off at the client's request.
  * ══════════════════════════════════════════════════════════════════════════
  *
  * The heading shares the row with the cards at `lg`, as approved, and stacks
  * above them below it.
  */
 export function Testimonials() {
-  const scroller = React.useRef<HTMLUListElement>(null);
-  const [atStart, setAtStart] = React.useState(true);
-  const [atEnd, setAtEnd] = React.useState(false);
-
-  const sync = React.useCallback(() => {
-    const element = scroller.current;
-    if (!element) return;
-    setAtStart(element.scrollLeft <= 4);
-    setAtEnd(element.scrollLeft + element.clientWidth >= element.scrollWidth - 4);
-  }, []);
-
-  React.useEffect(() => {
-    sync();
-    const element = scroller.current;
-    if (!element) return;
-    element.addEventListener('scroll', sync, { passive: true });
-    window.addEventListener('resize', sync);
-    return () => {
-      element.removeEventListener('scroll', sync);
-      window.removeEventListener('resize', sync);
-    };
-  }, [sync]);
-
-  function nudge(direction: -1 | 1) {
-    const element = scroller.current;
-    if (!element) return;
-    element.scrollBy({
-      left: direction * Math.min(element.clientWidth * 0.8, 420),
-      // Honours the OS setting: `smooth` becomes an instant jump for anyone
-      // who has asked for reduced motion.
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-    });
-  }
+  const rail = useAutoplayRail(testimonials.length, { intervalMs: TESTIMONIAL_INTERVAL_MS });
 
   if (testimonials.length === 0) return null;
-
-  const arrow = (direction: -1 | 1, label: string, Icon: typeof ChevronLeft, disabled: boolean) => (
-    <button
-      type="button"
-      onClick={() => nudge(direction)}
-      disabled={disabled}
-      aria-label={label}
-      className={cn(
-        'border-border bg-surface hidden size-8 shrink-0 place-items-center rounded-full border shadow-sm transition-colors lg:grid',
-        'hover:bg-muted focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
-        // Dimmed and inert, not hidden: `display:none` collapses the slot
-        // and the whole row jumps 32px sideways the moment you reach an end.
-        'disabled:pointer-events-none disabled:opacity-35',
-      )}
-    >
-      <Icon className="size-4" aria-hidden="true" />
-    </button>
-  );
 
   return (
     <section aria-labelledby="testimonials-title" className="bg-surface border-border border-b">
       <PageShell className="band-y">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-4">
-          <div className="flex shrink-0 items-center gap-3">
+          {/* `relative` anchors the pause control, which appears under the heading when tabbed to. */}
+          <div className="relative flex shrink-0 items-center gap-3">
             <h2
               id="testimonials-title"
               className="font-display text-section tracking-(--text-section--letter-spacing) font-bold"
@@ -97,10 +55,15 @@ export function Testimonials() {
               What People Say
             </h2>
             <HeadingRule />
+            <RailPauseToggle
+              rail={rail}
+              label="testimonials"
+              className="focus-visible:left-0 focus-visible:top-full focus-visible:mt-2"
+            />
           </div>
 
           <ul
-            ref={scroller}
+            ref={rail.ref}
             /*
              * Focusable and named.
              *
@@ -154,23 +117,6 @@ export function Testimonials() {
               </li>
             ))}
           </ul>
-
-          {/*
-            BOTH ARROWS TOGETHER, AT THE END OF THE ROW.
-
-            "Previous" used to sit between the heading and the rail, which put
-            the two halves of one control a full rail apart — about a thousand
-            pixels on a wide screen — and crowded the heading besides. A pair
-            of controls that act on the same thing has to read as a pair.
-
-            They follow the rail in the DOM as well as on screen, which is the
-            order they are announced in: the region first, then the controls
-            that move it.
-          */}
-          <div className="hidden shrink-0 items-center gap-2 lg:flex">
-            {arrow(-1, 'Previous testimonials', ChevronLeft, atStart)}
-            {arrow(1, 'Next testimonials', ChevronRight, atEnd)}
-          </div>
         </div>
       </PageShell>
     </section>

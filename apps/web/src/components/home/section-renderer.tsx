@@ -11,6 +11,7 @@ import { Testimonials } from '@/components/home/testimonials';
 import { WhoWeAre } from '@/components/home/who-we-are';
 import type { Campaign, SailentEvent, Story } from '@/lib/mock/types';
 import type { ImpactMetric } from '@/lib/content';
+import type { DonorViewer } from '@/lib/donor/viewer';
 
 /**
  * Render a composed page's sections, in the order an editor put them.
@@ -40,6 +41,8 @@ export interface SectionData {
   campaigns: Campaign[];
   stories: Story[];
   events: SailentEvent[];
+  /** For the campaign cards' save hearts; absent, the hearts are not drawn. */
+  viewer?: DonorViewer;
 }
 
 export function renderSection(section: PageSection, data: SectionData, key: string) {
@@ -63,6 +66,7 @@ export function renderSection(section: PageSection, data: SectionData, key: stri
         <CampaignBrowser
           key={key}
           campaigns={data.campaigns.slice(0, limit ?? data.campaigns.length)}
+          {...(data.viewer ? { viewer: data.viewer } : {})}
         />
       );
 

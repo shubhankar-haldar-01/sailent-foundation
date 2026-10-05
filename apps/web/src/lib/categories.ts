@@ -36,3 +36,19 @@ export function matchesCategory(
   const key = categoryKey(campaignCategory);
   return key !== '' && key === categoryKey(focusSlug);
 }
+
+/**
+ * A URL slug for a category's display name — "Women Empowerment" becomes
+ * `women-empowerment`.
+ *
+ * Built so that `categoryKey(categorySlug(name)) === categoryKey(name)` for
+ * every name: it only ever replaces runs of non-alphanumerics with a hyphen,
+ * which `categoryKey` then drops again. That is what lets the listing's cause
+ * links round-trip through the same matcher the homepage's links already use.
+ */
+export function categorySlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}

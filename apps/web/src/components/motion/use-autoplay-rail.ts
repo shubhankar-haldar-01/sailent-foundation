@@ -44,6 +44,11 @@ export interface AutoplayRail {
   isPlaying: boolean;
   /** False when nothing overflows, or when reduced motion is asked for. */
   canPlay: boolean;
+  /**
+   * Whether there is anything to scroll to, reduced motion or not — so a
+   * caller can keep previous/next for moving by hand when autoplay is off.
+   */
+  canScroll: boolean;
   /** The user-facing pause/play control. */
   toggle: () => void;
   /** Move one card, looping at the end. Exposed so the arrows reuse it. */
@@ -64,6 +69,7 @@ export function useAutoplayRail(
   // all three agree, which keeps "why isn't it moving" answerable.
   const [wanted, setWanted] = React.useState(true);
   const [canPlay, setCanPlay] = React.useState(false);
+  const [canScroll, setCanScroll] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
   const [isVisible, setIsVisible] = React.useState(true);
 
@@ -119,7 +125,9 @@ export function useAutoplayRail(
       // A one-pixel allowance: a row that fits exactly can report a scrollWidth
       // a fraction over its clientWidth, and would otherwise autoplay by
       // scrolling nowhere.
-      setCanPlay(!motion.matches && element.scrollWidth - element.clientWidth > 1);
+      const overflows = element.scrollWidth - element.clientWidth > 1;
+      setCanScroll(overflows);
+      setCanPlay(!motion.matches && overflows);
     };
 
     measure();
@@ -214,6 +222,7 @@ export function useAutoplayRail(
     // being clicked.
     isPlaying: wanted && canPlay,
     canPlay,
+    canScroll,
     toggle: () => setWanted((playing) => !playing),
     advance,
     surrender: () => setWanted(false),

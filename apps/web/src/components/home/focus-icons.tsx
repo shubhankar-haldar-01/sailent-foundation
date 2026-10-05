@@ -167,6 +167,36 @@ export function PinSolid(props: IconProps) {
   );
 }
 
+/** Money raised — a stack of coins, seen from the side. */
+export function CoinsSolid(props: IconProps) {
+  return (
+    <svg {...BASE} {...props}>
+      <ellipse cx="12" cy="5.6" rx="8" ry="3.1" />
+      <path d="M4 8.9c1.6 1.6 4.6 2.5 8 2.5s6.4-.9 8-2.5v3.4c0 1.7-3.6 3-8 3s-8-1.3-8-3Z" />
+      <path d="M4 14.3c1.6 1.6 4.6 2.5 8 2.5s6.4-.9 8-2.5v3.4c0 1.7-3.6 3-8 3s-8-1.3-8-3Z" />
+    </svg>
+  );
+}
+
+/**
+ * A goal — a target with an arrow in it.
+ *
+ * The rings are broken where the arrow crosses them by a knockout drawn in
+ * `--surface`, the card's own white, so this mark belongs on a white ground.
+ */
+export function TargetSolid(props: IconProps) {
+  return (
+    <svg {...BASE} {...props}>
+      <circle cx="11" cy="13" r="8.3" fill="none" stroke="currentColor" strokeWidth="2.5" />
+      <circle cx="11" cy="13" r="4.3" fill="none" stroke="currentColor" strokeWidth="2.3" />
+      <circle cx="11" cy="13" r="1.5" />
+      <path d="M11 13 18.2 5.8" stroke="var(--surface)" strokeWidth="5" strokeLinecap="round" />
+      <path d="M11 13 18.2 5.8" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" />
+      <path d="M16.2 7.8V3.9l3.2-3.2v3.4h3.4l-3.2 3.2Z" />
+    </svg>
+  );
+}
+
 /**
  * A small hand-drawn heart, scattered around the collage.
  *

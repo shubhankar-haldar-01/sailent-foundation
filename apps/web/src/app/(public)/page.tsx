@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { CampaignBrowser } from '@/components/home/campaign-browser';
+import { CampaignShowcase } from '@/components/home/campaign-showcase';
 import { CommunityCta } from '@/components/home/community-cta';
 import { HeroSection } from '@/components/home/hero-section';
 import { ImpactStats } from '@/components/home/impact-stats';
@@ -18,6 +19,7 @@ import {
   getHeadlineMetrics,
   getStories,
 } from '@/lib/content';
+import { readDonorViewer } from '@/lib/donor/viewer';
 
 export const metadata: Metadata = buildMetadata({
   /**
@@ -54,9 +56,10 @@ export default async function HomePage() {
   // Five independent reads, issued together. Awaited one after another this
   // page would be as slow as their sum, and the homepage is the one nobody
   // waits for.
-  const [headlineMetrics, featuredCampaigns, stories, events, composed] = await Promise.all([
-    getHeadlineMetrics(),
-    /*
+  const [headlineMetrics, featuredCampaigns, stories, events, composed, viewer] = await Promise.all(
+    [
+      getHeadlineMetrics(),
+      /*
       Twenty-four, not six.
 
       The row still shows three at a time, but the focus-area strip now filters
@@ -66,17 +69,22 @@ export default async function HomePage() {
       because the band is a teaser: past two dozen, "View all campaigns" is the
       honest answer and it queries the server.
     */
-    getCampaigns({ status: 'active', sort: 'createdAt', limit: 24 }),
-    getStories(),
-    getEvents('upcoming'),
-    getComposedPage('home'),
-  ]);
+      getCampaigns({ status: 'active', sort: 'createdAt', limit: 24 }),
+      getStories(),
+      getEvents('upcoming'),
+      getComposedPage('home'),
+      // Signed in, and what they saved — so the campaign cards' save hearts
+      // draw themselves correctly, as they do on the campaigns listing.
+      readDonorViewer(),
+    ],
+  );
 
   const data = {
     metrics: headlineMetrics,
     campaigns: featuredCampaigns,
     stories,
     events,
+    viewer,
   };
 
   /*
@@ -105,18 +113,22 @@ export default async function HomePage() {
           is a validation warning and no benefit. */}
       <HeroSection metrics={headlineMetrics} />
       {/*
-        The focus-area strip and the campaigns band are ONE unit: pressing an
-        area narrows the campaigns under it without leaving the page. They are
-        rendered by a wrapper that owns that selection and nothing else — both
-        are still full-width sections in the document.
+        The featured campaigns band, straight after the hero. The focus-area
+        strip that sat between them was removed at the client's request.
 
         Campaigns come BEFORE "Who we are", swapped with it. The two kept their
         own band colours rather than trading those as well, so each section
         still looks like itself, and the tinted impact strip still separates
         the two halves.
       */}
-      <CampaignBrowser campaigns={featuredCampaigns} />
+      <CampaignBrowser campaigns={featuredCampaigns} viewer={viewer} />
       <ImpactStats metrics={headlineMetrics} />
+      {/*
+        The campaigns page's grid — cause tiles, two rows of cards and "View
+        More Campaigns" — directly before "Who we are". An ADDITION to the
+        featured band above, with its own cause selection.
+      */}
+      <CampaignShowcase campaigns={featuredCampaigns} viewer={viewer} />
       <WhoWeAre />
       <StoriesAndEvents stories={stories.slice(0, 3)} events={events.slice(0, 3)} />
       <Testimonials />
