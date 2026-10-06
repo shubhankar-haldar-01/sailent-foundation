@@ -10,7 +10,18 @@ Newest first.
 
 ---
 
-## 2026-10-06 — Programme campaign counts (UNCOMMITTED as of 2026-10-06)
+## 2026-10-07 — Razorpay webhook hardening, payment audit C1 + L1 (UNCOMMITTED as of 2026-10-07)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| Webhook events stored `pending` or `failed` are processed again when Razorpay redelivers them; only `processed`, `ignored` and `needs_review` are terminal duplicates. Event-id uniqueness unchanged | A transient failure was marked `failed` and answered 200, and a redelivery was treated as a duplicate, so a captured payment could stay `pending` | Crashed or failed events recover on redelivery | none |
+| Transient processing failures (Razorpay re-fetch, database) answer **503**; an amount mismatch becomes `needs_review` (200) | Razorpay only retries non-2xx; a mismatch cannot be fixed by retrying | Razorpay retries what can succeed | none |
+| Invalid webhook signature answers **401** (was 200) | The controller's stated intent; a forged delivery should be refused | Nothing stored, as before | — |
+| Tests: 6 webhook-redelivery tests; forged-webhook test expects 401 and no stored row | Cover retry, crash recovery and exactly-once capture | Tests only | — |
+
+Exactly-once capture is unchanged (the `status <> 'successful'` gate in the capture transaction). Still open from the payment audit: reconciliation and pending expiry, checkout retry handling, throttling, and the other findings in `DEVELOPMENT_STATUS.md` §5.5.
+
+## 2026-10-06 — `f9816be` Programme campaign counts (pushed 2026-10-07)
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|

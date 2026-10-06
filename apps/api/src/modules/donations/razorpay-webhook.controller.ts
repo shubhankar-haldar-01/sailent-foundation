@@ -6,6 +6,7 @@ import type { Request } from 'express';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { RawResponse } from '../../common/decorators/raw-response.decorator.js';
 import { PaymentVerificationService } from './payment-verification.service.js';
+import { ServiceUnavailableException, UnauthenticatedException } from '../../common/exceptions.js';
 
 /**
  * The Razorpay webhook.
@@ -24,10 +25,13 @@ import { PaymentVerificationService } from './payment-verification.service.js';
  * recoverable backlog into lost captures. The unique event id is what protects
  * against repetition, and it protects against it properly.
  *
- * ALWAYS 200, except on a bad signature. Razorpay retries anything else, and
- * retrying an event we have stored and decided about achieves nothing. A
- * handler bug returns 200 with the event on disk and replayable — the failure
- * is visible in `payment_webhooks.processing_status`, not in a retry storm.
+ * WHAT IT ANSWERS:
+ *   - 401 on a bad signature: misconfiguration or probing. Nothing is stored.
+ *   - 503 when processing failed in a way a later delivery may fix (provider
+ *     unreachable, database error). The event is stored `failed` — not
+ *     terminal — and Razorpay's retry processes it again.
+ *   - 200 for everything that is finished: processed, ignored, flagged for a
+ *     human, or a duplicate of a finished event.
  * ══════════════════════════════════════════════════════════════════════════
  */
 @ApiTags('webhooks')
@@ -80,10 +84,17 @@ export class RazorpayWebhookController {
       },
     });
 
-    // A bad signature is the one case worth refusing: it is either a
-    // misconfiguration or someone probing, and both deserve a non-2xx.
+    // A bad signature: either a misconfiguration or someone probing. 401, and
+    // nothing was stored. (`@HttpCode(200)` only sets the SUCCESS status; a
+    // thrown exception carries its own.)
     if (!outcome.accepted) {
-      return { status: 'rejected' };
+      throw new UnauthenticatedException('The webhook signature did not verify.');
+    }
+
+    // Not finished, and worth another try: a non-2xx is what makes Razorpay
+    // deliver the event again.
+    if (outcome.retry) {
+      throw new ServiceUnavailableException('The event could not be processed yet. Please retry.');
     }
 
     return { status: outcome.duplicate ? 'duplicate' : 'received' };

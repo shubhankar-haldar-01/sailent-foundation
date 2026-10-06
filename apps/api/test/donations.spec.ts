@@ -5,6 +5,7 @@ import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { DATABASE } from '../src/modules/database/database.module.js';
+import { ServiceUnavailableException } from '../src/common/exceptions.js';
 import type { RazorpayPayment } from '../src/modules/donations/razorpay.client.js';
 import {
   TEST_PASSWORD,
@@ -62,6 +63,9 @@ const COUNTED_CAMPAIGNS = ['school-kits-jharkhand', 'flood-relief-balasore'] as 
 function fakeRazorpay(overrides: Partial<Record<string, unknown>> = {}) {
   const payments = new Map<string, RazorpayPayment>();
   let counter = 0;
+  // How many upcoming `fetchPayment` calls fail the way the real client does
+  // when Razorpay cannot be reached.
+  let failingFetches = 0;
 
   const client = {
     isConfigured: true,
@@ -91,6 +95,12 @@ function fakeRazorpay(overrides: Partial<Record<string, unknown>> = {}) {
     },
 
     async fetchPayment(paymentId: string): Promise<RazorpayPayment> {
+      if (failingFetches > 0) {
+        failingFetches -= 1;
+        throw new ServiceUnavailableException(
+          'We could not reach the payment provider. Please try again in a moment.',
+        );
+      }
       for (const payment of payments.values()) {
         if (payment.id === paymentId) return payment;
       }
@@ -116,6 +126,10 @@ function fakeRazorpay(overrides: Partial<Record<string, unknown>> = {}) {
     },
     __paymentForOrder(orderId: string) {
       return payments.get(orderId)!;
+    },
+    /** Test hook: the next `count` fetches fail as if Razorpay were unreachable. */
+    __failNextFetches(count: number) {
+      failingFetches = count;
     },
     ...overrides,
   };
@@ -556,8 +570,16 @@ describe('Donations (integration)', () => {
         .set('Content-Type', 'application/json')
         .send(webhookBody);
 
-      expect(response.status).toBe(200);
-      expect(response.body.status).toBe('rejected');
+      // 401, not 200: a forged or misconfigured delivery is refused outright.
+      expect(response.status).toBe(401);
+
+      const database = app.get<{
+        db: { execute(q: unknown): Promise<{ rows: unknown[] }> };
+      }>(DATABASE);
+      const stored = await database.db.execute(
+        sql`SELECT 1 FROM payment_webhooks WHERE provider_event_id = 'evt_TEST_forged'`,
+      );
+      expect(stored.rows).toHaveLength(0);
     });
 
     it('refuses a checkout signature that does not verify', async () => {
@@ -607,6 +629,242 @@ describe('Donations (integration)', () => {
         });
 
       expect(errorCode(response.body as Envelope)).toBe('CONFLICT');
+      expect(await campaignState()).toEqual(before);
+    });
+  });
+
+  // =========================================================================
+  /**
+   * Webhook REDELIVERY.
+   *
+   * An event that did not finish — a transient error, or a process that died
+   * mid-way — must be processed when Razorpay delivers it again; one that did
+   * finish must not be. Capture stays exactly-once throughout: a redelivery may
+   * re-run the work, but it can never capture, count, receipt or record a
+   * payment twice.
+   */
+  describe('webhook redelivery', () => {
+    type Db = { db: { execute(q: unknown): Promise<{ rows: Record<string, string>[] }> } };
+    const db = () => app.get<Db>(DATABASE).db;
+
+    /** A pending donation with its order, and the signed `payment.captured` body for it. */
+    async function pendingDonationWithEvent() {
+      const { body } = await startDonation({
+        campaignSlug: 'school-kits-jharkhand',
+        items: [],
+        customAmount: 50_000,
+        donor: DONOR,
+      });
+      const orderId = body.data!.razorpayOrderId as string;
+      const payment = razorpay.__paymentForOrder(orderId);
+      return {
+        donationId: body.data!.donationId as string,
+        reference: body.data!.reference as string,
+        amount: body.data!.amount as number,
+        orderId,
+        payment,
+        webhookBody: JSON.stringify({
+          event: 'payment.captured',
+          payload: { payment: { entity: payment } },
+        }),
+      };
+    }
+
+    const deliver = (webhookBody: string, eventId: string) =>
+      request(server)
+        .post(`${PREFIX}/payments/razorpay/webhook`)
+        .set('x-razorpay-signature', webhookSignature(webhookBody))
+        .set('x-razorpay-event-id', eventId)
+        .set('Content-Type', 'application/json')
+        .send(webhookBody);
+
+    async function webhookStatus(eventId: string) {
+      const result = await db().execute(
+        sql`SELECT processing_status, error FROM payment_webhooks WHERE provider_event_id = ${eventId}`,
+      );
+      return result.rows[0];
+    }
+
+    /** Everything a capture writes for one donation, counted. */
+    async function captureRecords(donationId: string) {
+      const result = await db().execute(sql`
+        SELECT
+          (SELECT status FROM donations WHERE id = ${donationId}::uuid) AS status,
+          (SELECT count(*) FROM receipts WHERE donation_id = ${donationId}::uuid)::int AS receipts,
+          (SELECT count(*) FROM payments WHERE donation_id = ${donationId}::uuid)::int AS payments,
+          (SELECT count(*) FROM payment_transactions t
+             JOIN payments p ON p.id = t.payment_id
+            WHERE p.donation_id = ${donationId}::uuid AND t.to_status = 'successful')::int
+            AS successful_transitions
+      `);
+      const row = result.rows[0]!;
+      return {
+        status: row.status,
+        receipts: Number(row.receipts),
+        payments: Number(row.payments),
+        successfulTransitions: Number(row.successful_transitions),
+      };
+    }
+
+    it('answers 503 on a transient failure and leaves the event to be retried', async () => {
+      const event = await pendingDonationWithEvent();
+      const eventId = `evt_TEST_${event.payment.id}_transient`;
+      const before = await campaignState();
+
+      razorpay.__failNextFetches(1);
+      const response = await deliver(event.webhookBody, eventId);
+
+      // Non-2xx, so Razorpay delivers it again.
+      expect(response.status).toBe(503);
+      // Stored as `failed` — retryable, not processed and not ignored.
+      expect((await webhookStatus(eventId))?.processing_status).toBe('failed');
+      expect((await captureRecords(event.donationId)).status).toBe('pending');
+      expect(await campaignState()).toEqual(before);
+    });
+
+    it('processes a redelivery of a failed event, capturing once, and then stops', async () => {
+      const event = await pendingDonationWithEvent();
+      const eventId = `evt_TEST_${event.payment.id}_retry`;
+      const before = await campaignState();
+
+      razorpay.__failNextFetches(1);
+      expect((await deliver(event.webhookBody, eventId)).status).toBe(503);
+
+      // Razorpay's retry.
+      const retried = await deliver(event.webhookBody, eventId);
+      expect(retried.status).toBe(200);
+      expect(retried.body.status).toBe('received');
+      expect((await webhookStatus(eventId))?.processing_status).toBe('processed');
+
+      const afterRetry = await campaignState();
+      expect(afterRetry.raised).toBe(before.raised + event.amount);
+      expect(await captureRecords(event.donationId)).toEqual({
+        status: 'successful',
+        receipts: 1,
+        payments: 1,
+        successfulTransitions: 1,
+      });
+
+      // Now finished: further deliveries are duplicates and change nothing.
+      const again = await deliver(event.webhookBody, eventId);
+      expect(again.status).toBe(200);
+      expect(again.body.status).toBe('duplicate');
+      expect(await campaignState()).toEqual(afterRetry);
+      expect((await captureRecords(event.donationId)).receipts).toBe(1);
+    });
+
+    it('never captures twice when the browser captured between the attempts', async () => {
+      const event = await pendingDonationWithEvent();
+      const eventId = `evt_TEST_${event.payment.id}_raced`;
+
+      razorpay.__failNextFetches(1);
+      expect((await deliver(event.webhookBody, eventId)).status).toBe(503);
+
+      // The donor's browser verifies in the meantime.
+      await request(server)
+        .post(`${PREFIX}/donations/${event.donationId}/verify-payment`)
+        .send({
+          razorpayOrderId: event.orderId,
+          razorpayPaymentId: event.payment.id,
+          razorpaySignature: checkoutSignature(event.orderId, event.payment.id),
+        })
+        .expect(200);
+      const afterBrowser = await campaignState();
+
+      // The retry finds it already captured: processed, and nothing added.
+      const retried = await deliver(event.webhookBody, eventId);
+      expect(retried.status).toBe(200);
+      expect((await webhookStatus(eventId))?.processing_status).toBe('processed');
+      expect(await campaignState()).toEqual(afterBrowser);
+      expect(await captureRecords(event.donationId)).toEqual({
+        status: 'successful',
+        receipts: 1,
+        payments: 1,
+        successfulTransitions: 1,
+      });
+    });
+
+    /**
+     * A CRASH, at the service level. The process stored the event and died
+     * before finishing it, so the row is `pending` with nothing done. Razorpay
+     * got no answer and delivers it again; that delivery must do the work.
+     */
+    it('processes a redelivery of an event a crash left pending', async () => {
+      const event = await pendingDonationWithEvent();
+      const eventId = `evt_TEST_${event.payment.id}_crashed`;
+      await db().execute(sql`
+        INSERT INTO payment_webhooks
+          (provider, provider_event_id, event_type, raw_body, signature, signature_valid,
+           processing_status)
+        VALUES ('razorpay', ${eventId}, 'payment.captured', ${event.webhookBody},
+                ${webhookSignature(event.webhookBody)}, true, 'pending')
+      `);
+      const before = await campaignState();
+
+      const redelivered = await deliver(event.webhookBody, eventId);
+      expect(redelivered.status).toBe(200);
+      expect(redelivered.body.status).toBe('received');
+      expect((await webhookStatus(eventId))?.processing_status).toBe('processed');
+      expect((await campaignState()).raised).toBe(before.raised + event.amount);
+      expect((await captureRecords(event.donationId)).receipts).toBe(1);
+    });
+
+    /**
+     * The other crash: the capture COMMITTED, then the process died before
+     * marking the event processed. The redelivery re-runs the work and the
+     * capture gate makes it a no-op.
+     */
+    it('adds nothing when a crash came after the capture committed', async () => {
+      const event = await pendingDonationWithEvent();
+      const eventId = `evt_TEST_${event.payment.id}_crashed_late`;
+
+      // The capture that committed before the crash.
+      await request(server)
+        .post(`${PREFIX}/donations/${event.donationId}/verify-payment`)
+        .send({
+          razorpayOrderId: event.orderId,
+          razorpayPaymentId: event.payment.id,
+          razorpaySignature: checkoutSignature(event.orderId, event.payment.id),
+        })
+        .expect(200);
+      await db().execute(sql`
+        INSERT INTO payment_webhooks
+          (provider, provider_event_id, event_type, raw_body, signature, signature_valid,
+           processing_status)
+        VALUES ('razorpay', ${eventId}, 'payment.captured', ${event.webhookBody},
+                ${webhookSignature(event.webhookBody)}, true, 'pending')
+      `);
+      const afterCapture = await campaignState();
+
+      const redelivered = await deliver(event.webhookBody, eventId);
+      expect(redelivered.status).toBe(200);
+      expect((await webhookStatus(eventId))?.processing_status).toBe('processed');
+      expect(await campaignState()).toEqual(afterCapture);
+      expect(await captureRecords(event.donationId)).toEqual({
+        status: 'successful',
+        receipts: 1,
+        payments: 1,
+        successfulTransitions: 1,
+      });
+    });
+
+    /**
+     * An amount mismatch is not retryable — no redelivery changes what was
+     * charged — so it goes to a human, answers 200, and stays finished.
+     */
+    it('sends an amount mismatch to review instead of retrying it', async () => {
+      const event = await pendingDonationWithEvent();
+      const eventId = `evt_TEST_${event.payment.id}_mismatch`;
+      razorpay.__setPayment(event.orderId, { amount: 100 });
+      const before = await campaignState();
+
+      const response = await deliver(event.webhookBody, eventId);
+      expect(response.status).toBe(200);
+      expect((await webhookStatus(eventId))?.processing_status).toBe('needs_review');
+      expect((await captureRecords(event.donationId)).status).toBe('pending');
+
+      const again = await deliver(event.webhookBody, eventId);
+      expect(again.body.status).toBe('duplicate');
       expect(await campaignState()).toEqual(before);
     });
   });

@@ -6,15 +6,15 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-10-06 (programme campaign counts, **uncommitted**, on top of `2fc5aa9`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
+**Last updated:** 2026-10-07 (Razorpay webhook hardening C1 + L1, **uncommitted**, on top of `f9816be`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
 
 | | |
 |---|---|
 | **Overall status** | Feature-rich build, **not deployed to any hosting.** Phases 0–10.12 are implemented in the API, admin and public site. |
-| **Current phase** | Post-10.12 polish (no phase number). Everything up to `2fc5aa9` (accurate donor count) is committed and pushed (§1). |
-| **Current feature** | **Programme campaign counts** (§1, item 9): the public programme APIs count open campaigns live instead of reading the unwritten `campaign_count` rollup. Implemented and validated; **not committed**. |
-| **Branch / HEAD** (as of 2026-10-06) | `main` @ `2fc5aa9` = `origin/main` (up to date). The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
-| **Working tree** (as of 2026-10-06) | The programme-count change (`content.service.ts`, `test/public-api.spec.ts`, web `lib/content/programs.ts`, `lib/mock/programs.ts`, new `lib/open-campaigns.ts` and its test, `e2e/journeys.spec.ts`) and this documentation update (`DEVELOPMENT_STATUS.md`, `CHANGELOG.md`, `DATABASE.md`), all **uncommitted**. Run `git status` for the live state. |
+| **Current phase** | Post-10.12 polish (no phase number). Everything up to `f9816be` (programme campaign counts) is committed and pushed (§1). |
+| **Current feature** | **Payment safety** (§1, item 10): retry-safe Razorpay webhooks (audit finding C1) and 401 on a bad webhook signature (L1). Implemented and validated; **not committed**. The other payment-audit findings remain open (§5.5). |
+| **Branch / HEAD** (as of 2026-10-07) | `main` @ `f9816be` = `origin/main` (up to date). The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
+| **Working tree** (as of 2026-10-07) | The webhook hardening (`payment-verification.service.ts`, `razorpay-webhook.controller.ts`, `test/donations.spec.ts`) and this documentation update (`DEVELOPMENT_STATUS.md`, `CHANGELOG.md`), all **uncommitted**. Run `git status` for the live state. |
 | **Production database** | The **production Supabase project** exists (owner confirmed, 2026-10-06). Its schema and data state were **not inspected** and are **unknown**. Agents must not access it (`AGENTS.md` §8). |
 | **Application hosting** | None. No Dockerfiles, IaC or deploy workflow exist. |
 | **Local databases** | `sailent_dev` and `sailent_e2e` have migrations `0000`–`0022` applied, **plus one migration that is not in the repository** (§5.1). The repository has no pending migration. |
@@ -35,7 +35,8 @@
 | `7fe6c25` | ci: pass test database and redis env through turbo (item 6; `turbo.json` only) | ✅ yes |
 | `ed69d41` | feat(campaigns): campaign public experience cleanup (item 7) | ✅ yes |
 | `2fc5aa9` | fix(donations): count distinct donors accurately (item 8) | ✅ yes |
-| — | Programme campaign counts (item 9) and this documentation update | ❌ **uncommitted** |
+| `f9816be` | fix(programs): count open campaigns accurately (item 9) | ✅ yes |
+| — | Razorpay webhook hardening C1 + L1 (item 10) and this documentation update | ❌ **uncommitted** |
 
 Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to `origin/main` with a fast-forward push; until then `origin/main` held only `2ba2b43`.
 
@@ -113,15 +114,29 @@ Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to
 - **Tests:** `apps/api/test/donations.spec.ts` gains a "donor count" block (repeat donor +0 with money added; different donor +1; same email differently written +0; same donor on another campaign +1 there; anonymous repeat +0; two racing captures by one new donor +1; `/impact` unchanged after a repeat gift). The webhook/browser race test now uses its own donor so "+1 once" still tests what it meant. The teardown now restores `amount_raised` and `donor_count` on the campaigns it spends (it already restored `provided_quantity`), so runs no longer leak counter increments into `sailent_dev`. `public-api.spec.ts` checks `/impact` equals the distinct count. Against the old capture code, 4 of the new tests fail (checked 2026-10-06).
 - **Pre-existing dev drift left alone:** `sailent_dev` `school-kits-jharkhand` reads 397 donors against a seed value of 320, from earlier test runs that never restored counters. Not reconciled (owner rule); a local re-seed would reset it.
 
-**9. Programme campaign counts (2026-10-06, UNCOMMITTED)**
+**9. Programme campaign counts (2026-10-06, `f9816be`, pushed)**
 - **Problem:** the public `GET /programs` and `GET /programs/:slug` returned `programs.campaign_count`, a rollup nothing writes, so every programme card read "Ongoing program" instead of "N active campaigns".
 - **API** (`apps/api/src/modules/content/content.service.ts`): a private `openCampaignCount()` correlated subquery (aliased raw SQL, as in `categories.service.ts`) counts campaigns with `program_id = programs.id`, not deleted, `status = 'active'`, and no end date or one `>= deadlineCutoff()` — the `status=open` rule. Used by `listPrograms` and `getProgramBySlug` (which now selects every column with the live count in place of the stale one). Field name `campaignCount` and the response shapes are unchanged. The admin programme count (all non-deleted campaigns) is unchanged. The `campaign_count` column stays in the schema, unused by public reads (`DATABASE.md` §2).
 - **Fixture fallback** (`apps/web/src/lib/content/programs.ts`): programme fixtures no longer carry hand-typed counts (they disagreed with the fixture campaigns); `countOpenCampaigns()` (`apps/web/src/lib/open-campaigns.ts`) derives them from the campaign fixtures with the same rule (`hasEnded`).
 - **Tests:** `public-api.spec.ts` "programme campaign counts" — a test programme with open-ongoing, open-with-deadline, expired, paused, completed, draft and deleted campaigns counts **2** on the list and the detail; every published programme's count equals the same rule in SQL. All three fail against the old query (checked 2026-10-06). Web unit test `open-campaigns.test.ts`. E2E: the programmes journey asserts the Education card reads "1 active campaign".
 
+**10. Razorpay webhook hardening — payment audit C1 + L1 (2026-10-07, UNCOMMITTED)**
+
+From the read-only payment audit of 2026-10-07. Only C1 (a transient webhook failure could lose a captured payment) and L1 (a bad signature answered 200) are fixed here.
+- **Retryable events** (`apps/api/src/modules/donations/payment-verification.service.ts`, `claim()`): the insert into `payment_webhooks` and its unique `provider_event_id` are unchanged. On a conflict, the stored status decides:
+  - **terminal** — `processed`, `ignored`, `needs_review` — a duplicate, answered 200, nothing runs;
+  - **`pending`** (processing never finished, e.g. a crash) or **`failed`** — the redelivery processes the same row again.
+- **Transient failures return 503** (`razorpay-webhook.controller.ts`): any processing error other than an amount mismatch (Razorpay re-fetch failure, database error) marks the row `failed` (best effort; if that write fails the row stays `pending`) and the controller answers **503**, so Razorpay redelivers. A transient failure is never recorded as `processed` or `ignored`. Previously it was `failed` + **200**, and Razorpay stopped delivering.
+- **Amount mismatch → `needs_review`** (terminal, 200): no redelivery can change what was charged. Detected with `AmountMismatchException` (a `ConflictException` subclass), so the browser's verify-payment answer is unchanged (409, same message). Previously `failed` + 200.
+- **Invalid signature → 401** (was 200 `{status:'rejected'}`); nothing is stored.
+- **Exactly-once capture is unchanged:** every capture still passes the `status <> 'successful'` gate inside the capture transaction, so a redelivery can never add a second capture, receipt, payment record, campaign amount or donor count. Signature checks, the Razorpay re-fetch, the amount check and the order-ownership check are unchanged.
+- **Tests** (`apps/api/test/donations.spec.ts`, "webhook redelivery", 6 new; the forged-webhook test now expects 401 and no stored row): transient re-fetch failure → 503 and `failed`; its redelivery → processed, captured once, then duplicates; browser capture between attempts → nothing added; a crash before the work (row `pending`) → captured on redelivery; a crash after the capture committed → nothing added; amount mismatch → `needs_review`. All 7 fail against the previous code (checked 2026-10-07). The fake Razorpay gained `__failNextFetches(n)`.
+- **Limits:** no lease column, so a `pending` row from a crash looks like one still in progress and two simultaneous deliveries may both run (capture stays exactly-once; a repeated `payment.failed` can add an extra history row). Recovery relies on Razorpay redelivering (a limited window, about 24 hours); after that, a `pending`/`failed` row needs reconciliation (H1) or a manual replay tool, neither of which exists.
+- **Still open from the payment audit (not started):** H1 reconciliation and pending expiry; H2 checkout failure/retry handling (double-payment risk); H3 throttling keyed on the real client IP; M1 receipt financial year in IST; M2 production live-key guard; M3 international payments (FCRA); M4 admin payment-exceptions view; M6 guest checkout overwriting donor details; L2–L5. See §5.5.
+
 ### What was being worked on
 
-The programme-count change (item 9) is implemented and validated (§2) and **awaits owner approval to commit**. CI is deferred by the owner.
+The webhook hardening (item 10) is implemented and validated (§2) and **awaits owner approval to commit**. CI is deferred by the owner.
 
 ### Reverted by the owner on 2026-10-06 (do not redo unless asked)
 
@@ -137,7 +152,15 @@ See **`AGENTS.md` §11**, the permanent list of owner-approved designs and decis
 
 ---
 
-## 2. LAST VALIDATION — snapshot as of 2026-10-06 (local only)
+## 2. LAST VALIDATION — snapshot as of 2026-10-07 (local only)
+
+**Webhook hardening C1 + L1 (item 10), 2026-10-07:**
+
+| Command | Result |
+|---|---|
+| `pnpm prettier --check .`, `pnpm typecheck`, `pnpm lint` | ✅ pass (13/13 tasks each) |
+| API `donations.spec.ts` + `public-api.spec.ts` + donations module unit tests | ✅ 103 passed |
+| `pnpm --filter @sailent/api test` (full) | ❌ 773 passed, **4 failed**, 9 skipped — the 4 `me.spec.ts` drift failures (§5.1) |
 
 **Programme campaign counts (item 9), 2026-10-06:**
 
@@ -298,7 +321,7 @@ This is for a **human** to verify and remediate through the approved process (`D
 - **No staff 2FA in effect.**
 - **Donor data:** PAN stored in plaintext; unverified donor email change; guest checkout can overwrite an existing donor's name and phone.
 - **Web defaults:** `FEATURE_MOCK_DATA` is treated as ON when unset; `webEnvSchema` is never loaded.
-- **Output and headers:** no CSP or HSTS on the web; a forged Razorpay webhook gets HTTP 200. (JSON-LD escaping is fixed in the uncommitted working tree, §1 item 7.)
+- **Output and headers:** no CSP or HSTS on the web. (A forged Razorpay webhook now gets HTTP 401 — §1 item 10, uncommitted. JSON-LD escaping: fixed in `ed69d41`.)
 
 ### 5.4 Infrastructure and tooling
 
@@ -318,7 +341,8 @@ This is for a **human** to verify and remediate through the approved process (`D
 - **Programme rollups are never written.** Public reads of the campaign count now compute it live (§1 item 9); `total_raised` and `beneficiaries_reached` remain unwritten and unrendered.
 - **Historical `donor_count` values are not recounted.** New captures count distinct donors (§1 item 8); values written before 2026-10-06 may be overstated where a donor gave more than once. Recount is a human-only runbook (`DATABASE.md` §12).
 - **Orphan pending donations without Razorpay keys** (`DEPLOYMENT.md` §6).
-- **No reconciliation job.**
+- **No reconciliation job** (payment audit H1). Since item 10, a webhook that failed transiently is retried by Razorpay, but only within its redelivery window; nothing recovers a `pending`/`failed` webhook row or a stuck `pending` donation after that, and nothing ever writes `cancelled`.
+- **Open payment-audit findings (2026-10-07):** H2 checkout failure/retry handling (a donor can pay twice); H3 throttling is site-wide; M1 receipt financial year uses server time, not IST; M2 no guard against Razorpay test keys in production; M3 international payments are kept (FCRA); M4 no admin view of webhook failures or amount mismatches; M6 guest checkout overwrites an existing donor's name and phone; L2–L5 (currency check, order-id check on the fetched payment, idempotency key/total cap, receipt PDF and superseding). Recommended order: H2, H1, H3, then the M1/M2/L2/L3 hardening batch, then M4.
 - **Soft 404s.**
 - **The web build needs the API** for some routes.
 - **`campaigns.program_id` is nullable.** A live campaign can be detached by PATCH.
@@ -354,7 +378,7 @@ This is for a **human** to verify and remediate through the approved process (`D
 1. ~~Commit the featured/deadline work~~ (done: `dd64d41`). ~~Fix the CI target flag~~ (done: `0e94632`). ~~Turborepo test env~~ (done: `7fe6c25`). All pushed.
 2. ~~Commit the campaign cleanup~~ (done: `ed69d41`, pushed). **Commit the donor-count change** (§1 item 8) with owner approval; push only with a separate approval.
 3. CI (deferred by the owner, 2026-10-06): observe the GitHub Actions run and, with approval, the dependency overrides for `pnpm audit` (§5.4).
-4. **Commit the programme campaign counts** (§1 item 9) with owner approval. Then soft 404s, then the admin dashboard home — the order recommended in the 2026-10-06 roadmap review.
+4. ~~Programme campaign counts~~ (done: `f9816be`, pushed). **Commit the webhook hardening** (§1 item 10) with owner approval. Then the remaining payment-audit fixes (§5.5), soft 404s and the admin dashboard home, in the order the owner chooses.
 5. Resolve the local drift / PAN encryption (§5.1).
 6. Fix the security items that need no product decisions: rate-limit keying and trusted client IP; the web `FEATURE_MOCK_DATA` default and `webEnvSchema`; webhook 401. (JSON-LD escaping: done in `ed69d41`.)
 7. Human-led production audit and hardening (§5.2).
@@ -412,7 +436,7 @@ These are recorded here and **not** silently resolved in the source documents.
 ## THE NEXT AI AGENT SHOULD START HERE
 
 1. Read `AGENTS.md` in full, especially §8 (production is off limits), §9 (work directly on `main`; owner approval before every commit and every push) and §11 (must not change). Then read this file, and `CLAUDE.md` if you are Claude Code.
-2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-06, `main` = `origin/main` = `2fc5aa9`, with the programme-count change and its documentation **uncommitted** (§1 item 9). Ask the owner before committing it, and separately before pushing.
+2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-07, `main` = `origin/main` = `f9816be`, with the webhook hardening and its documentation **uncommitted** (§1 item 10). Ask the owner before committing it, and separately before pushing.
 3. **CI (deferred by the owner on 2026-10-06; resume only when asked): watch CI.**
    - Observe the GitHub Actions run for the current `main` head (for example with `gh run list` / `gh run view`, or on GitHub). The `security` job is expected to fail at `pnpm audit` until the dependency fixes are approved (§5.4).
    - Report the `quality` and `security` job results with their failing step and log excerpt, if any.

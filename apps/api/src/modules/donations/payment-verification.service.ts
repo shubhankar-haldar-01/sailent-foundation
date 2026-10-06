@@ -30,12 +30,38 @@ const HANDLED_EVENTS = new Set(['payment.captured', 'payment.failed']);
  */
 const ALARM_EVENTS = new Set(['refund.created', 'refund.processed']);
 
+/**
+ * The stored states that END an event. A redelivery of one of these is a
+ * duplicate and does nothing.
+ *
+ * `pending` and `failed` are NOT terminal: `pending` is an event whose
+ * processing never finished (the process died, or is still running), and
+ * `failed` is one that hit an error worth retrying. Razorpay redelivers both,
+ * and both are processed again. Capture is exactly-once on its own (the
+ * `status <> 'successful'` gate), so processing an event twice can never
+ * capture, count or receipt a donation twice.
+ */
+const TERMINAL_STATUSES = new Set(['processed', 'ignored', 'needs_review']);
+
 export interface WebhookOutcome {
-  /** Always true unless the signature failed — a stored event is a handled event. */
+  /** False only when the signature failed. */
   accepted: boolean;
   duplicate: boolean;
+  /**
+   * True when processing failed in a way a later delivery may fix — the
+   * provider was unreachable, the database errored. The event is stored as
+   * `failed` and the controller answers non-2xx, so Razorpay delivers it again.
+   */
+  retry?: boolean;
   eventType?: string;
 }
+
+/**
+ * The provider's amount disagrees with ours. NOT retryable: no number of
+ * redeliveries changes what was charged. The browser path answers it like
+ * any other conflict; the webhook path sends it to a human (`needs_review`).
+ */
+export class AmountMismatchException extends ConflictException {}
 
 /**
  * Deciding whether a payment really happened.
@@ -144,18 +170,22 @@ export class PaymentVerificationService {
    * THE ORDER OF OPERATIONS IS THE DESIGN.
    *
    *   1. verify the HMAC over the RAW bytes — reject outright if it fails
-   *   2. INSERT into `payment_webhooks`, whose unique `provider_event_id` is
-   *      the entire deduplication strategy. A duplicate delivery becomes an
-   *      insert conflict and returns here as a no-op.
+   *   2. claim the event in `payment_webhooks`, whose unique
+   *      `provider_event_id` keeps one row per event. A redelivery of an event
+   *      in a terminal state (`processed`, `ignored`, `needs_review`) is a
+   *      no-op; one left `pending` or `failed` is processed again (`claim`).
    *   3. only then do the work
    *
-   * Storing before processing, rather than after, is what makes step 2 a lock
-   * rather than a record. It also means a delivery that crashes us mid-process
-   * is on disk with its raw body, and can be replayed.
+   * Storing before processing means a delivery that crashes us mid-process is
+   * on disk with its raw body, still `pending` — and the redelivery Razorpay
+   * makes after getting no answer processes it.
    *
-   * ALWAYS 200 unless the signature is bad. Razorpay retries non-2xx responses,
-   * and retrying an event we have stored and decided not to act on achieves
-   * nothing but noise. A bad signature is the one case worth refusing loudly.
+   * WHAT RAZORPAY IS TOLD:
+   *   - bad signature                → `accepted: false`; the controller 401s
+   *   - processed, ignored, flagged,
+   *     amount mismatch, duplicate   → 200; nothing more to do
+   *   - any other processing error   → `retry: true`; the controller answers
+   *                                    non-2xx so Razorpay delivers it again
    * ══════════════════════════════════════════════════════════════════════════
    */
   async handleWebhook(input: {
@@ -184,27 +214,13 @@ export class PaymentVerificationService {
      */
     const eventId = input.eventId ?? `${eventType}:${this.entityId(body) ?? crypto.randomUUID()}`;
 
-    const stored = await this.database.db
-      .insert(paymentWebhooks)
-      .values({
-        provider: 'razorpay',
-        providerEventId: eventId,
-        eventType,
-        rawBody: typeof input.rawBody === 'string' ? input.rawBody : input.rawBody.toString('utf8'),
-        signature: input.signature ?? null,
-        signatureValid: true,
-        headers: input.headers,
-        processingStatus: 'pending',
-      })
-      .onConflictDoNothing({ target: paymentWebhooks.providerEventId })
-      .returning({ id: paymentWebhooks.id });
-
-    if (stored.length === 0) {
-      this.logger.log(`Razorpay event ${eventId} already seen; ignoring the duplicate`);
+    const claim = await this.claim(eventId, eventType, input);
+    if (claim.kind === 'duplicate') {
+      this.logger.log(`Razorpay event ${eventId} already ${claim.status}; ignoring the duplicate`);
       return { accepted: true, duplicate: true, eventType };
     }
 
-    const webhookRowId = stored[0]!.id;
+    const webhookRowId = claim.id;
 
     try {
       if (ALARM_EVENTS.has(eventType)) {
@@ -234,12 +250,93 @@ export class PaymentVerificationService {
       return { accepted: true, duplicate: false, eventType };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown error';
-      this.logger.error(`Razorpay event ${eventId} (${eventType}) failed: ${message}`);
-      await this.finish(webhookRowId, 'failed', message);
-      // Still 200 to the caller: the event is on disk and replayable, and a
-      // retry storm does not help a bug in our own handler.
-      return { accepted: true, duplicate: false, eventType };
+
+      if (error instanceof AmountMismatchException) {
+        // Already logged loudly where it was detected. Final, and a human's.
+        await this.finish(webhookRowId, 'needs_review', message);
+        return { accepted: true, duplicate: false, eventType };
+      }
+
+      /**
+       * ANYTHING ELSE IS RETRIED, by Razorpay.
+       *
+       * Answering 200 here used to end the event: Razorpay stopped delivering
+       * it, and a payment whose re-fetch had timed out stayed `pending` with
+       * the donor charged. Now the row is `failed` — not terminal — and the
+       * controller answers non-2xx, so the next delivery processes it again.
+       *
+       * Recording `failed` is best effort: if the database is what failed, the
+       * row stays `pending`, which is just as retryable.
+       */
+      this.logger.error(`Razorpay event ${eventId} (${eventType}) failed, will retry: ${message}`);
+      await this.finish(webhookRowId, 'failed', message).catch((finishError: unknown) => {
+        this.logger.error(
+          `Could not record Razorpay event ${eventId} as failed: ${
+            finishError instanceof Error ? finishError.message : 'unknown'
+          }`,
+        );
+      });
+      return { accepted: true, duplicate: false, retry: true, eventType };
     }
+  }
+
+  /**
+   * Take an event for processing — the first delivery, or a redelivery of one
+   * that never finished.
+   *
+   * The INSERT is unchanged: the unique `provider_event_id` still means one row
+   * per event. What changed is the conflict: a stored event in a TERMINAL state
+   * is a duplicate; one still `pending` (processing died before it finished) or
+   * `failed` (a retryable error) is processed again on this delivery.
+   *
+   * Two deliveries of an unfinished event at the same moment may both process
+   * it. That is safe: capture is gated on `status <> 'successful'`, so only one
+   * of them can capture.
+   */
+  private async claim(
+    eventId: string,
+    eventType: string,
+    input: {
+      rawBody: Buffer | string;
+      signature: string | undefined;
+      headers: Record<string, unknown>;
+    },
+  ): Promise<{ kind: 'new' | 'retry'; id: string } | { kind: 'duplicate'; status: string }> {
+    const stored = await this.database.db
+      .insert(paymentWebhooks)
+      .values({
+        provider: 'razorpay',
+        providerEventId: eventId,
+        eventType,
+        rawBody: typeof input.rawBody === 'string' ? input.rawBody : input.rawBody.toString('utf8'),
+        signature: input.signature ?? null,
+        signatureValid: true,
+        headers: input.headers,
+        processingStatus: 'pending',
+      })
+      .onConflictDoNothing({ target: paymentWebhooks.providerEventId })
+      .returning({ id: paymentWebhooks.id });
+
+    if (stored[0]) return { kind: 'new', id: stored[0].id };
+
+    const [existing] = await this.database.db
+      .select({ id: paymentWebhooks.id, status: paymentWebhooks.processingStatus })
+      .from(paymentWebhooks)
+      .where(eq(paymentWebhooks.providerEventId, eventId))
+      .limit(1);
+
+    // Gone between the two statements — only possible if someone deleted it.
+    // Refusing as a duplicate is the conservative answer.
+    if (!existing) return { kind: 'duplicate', status: 'unknown' };
+
+    if (TERMINAL_STATUSES.has(existing.status)) {
+      return { kind: 'duplicate', status: existing.status };
+    }
+
+    this.logger.warn(
+      `Razorpay event ${eventId} was left ${existing.status}; processing the redelivery`,
+    );
+    return { kind: 'retry', id: existing.id };
   }
 
   // -------------------------------------------------------------------------
@@ -315,7 +412,7 @@ export class PaymentVerificationService {
       this.logger.error(
         `Amount mismatch on donation ${donation.reference}: provider says ${providerPayment.amount}, we expect ${donation.amount}`,
       );
-      throw new ConflictException(
+      throw new AmountMismatchException(
         'The amount paid does not match this donation. Our team has been alerted and will contact you.',
       );
     }
