@@ -16,3 +16,4 @@ export * from './domain/page-sections.js';
 export * from './domain/documents.js';
 export * from './domain/notification-templates.js';
 export * from './domain/reports.js';
+export * from './domain/communications.js';

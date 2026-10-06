@@ -15,6 +15,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { CategoriesService } from './categories.service.js';
 import { SlugService } from './slug.service.js';
 import type { AuditContext } from './programs.service.js';
+import { assertPublicMediaCover } from './cover-image.js';
 import {
   ConflictException,
   NotFoundException,
@@ -261,6 +262,7 @@ export class CampaignsService {
 
   async create(input: CampaignWriteInput, actor: AuthenticatedActor, context: AuditContext) {
     await this.assertProgramExists(input.programId);
+    await assertPublicMediaCover(this.database, input.coverImage);
     const category = await this.categories.resolveForWrite(input.categoryId, 'campaign');
     const slug = await this.slugs.allocate('campaign', { title: input.title, slug: input.slug });
 
@@ -306,6 +308,7 @@ export class CampaignsService {
     const before = await this.getById(id);
 
     if (input.programId !== undefined) await this.assertProgramExists(input.programId);
+    await assertPublicMediaCover(this.database, input.coverImage);
 
     const category =
       input.categoryId === undefined

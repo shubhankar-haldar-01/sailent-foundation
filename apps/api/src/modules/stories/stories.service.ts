@@ -10,6 +10,7 @@ import { SlugService } from '../catalog/slug.service.js';
 import type { AuditContext } from '../catalog/programs.service.js';
 import {
   ConflictException,
+  ForbiddenException,
   NotFoundException,
   ValidationException,
 } from '../../common/exceptions.js';
@@ -340,6 +341,27 @@ export class StoriesService {
 
     if (existing.status === input.status) {
       throw new ConflictException(`This story is already ${input.status}.`);
+    }
+
+    /*
+      ARCHIVING — AND UNARCHIVING — NEED `story.archive` (Phase 13).
+
+      The route carries `story.publish` as the floor for all three
+      transitions, because `@RequirePermission` is an AND over its arguments
+      and listing both would demand archive rights merely to unpublish. This
+      narrows it for the transitions into and out of the archive, the same way
+      the blog does for `blog.archive`. Until Phase 13, `story.archive` was
+      declared and enforced nowhere.
+    */
+    if (
+      (input.status === 'archived' || existing.status === 'archived') &&
+      !actor.permissions.includes('story.archive')
+    ) {
+      throw new ForbiddenException(
+        input.status === 'archived'
+          ? 'Archiving a story requires story.archive.'
+          : 'Restoring an archived story requires story.archive.',
+      );
     }
 
     if (input.status === 'published') {

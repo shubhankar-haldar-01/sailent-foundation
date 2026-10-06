@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Youtube } from 'lucide-react';
 
-import { demoOrg } from '@/lib/demo-org';
+import { getOrganisation } from '@/lib/content/organisation';
 import { footerNav, legalNav, siteConfig } from '@/lib/site-config';
 import { HeartDoodle } from '@/components/home/focus-icons';
 import { ScriptAccent } from '@/components/sections/script-accent';
@@ -11,7 +11,7 @@ import { BrandLockup } from './brand-mark';
 /**
  * Social icons, by label.
  *
- * A lookup rather than a field on `demoOrg`, because the icon is a property of
+ * A lookup rather than a field in the settings, because the icon is a property of
  * the network and the URL is a property of the organization — putting a
  * component reference in the data file would make that file un-serialisable
  * the day it comes from an API.
@@ -35,14 +35,19 @@ const SOCIAL_ICONS: Record<string, typeof Instagram> = {
  * card and the community panel. A sixth copy a few hundred pixels below the
  * fifth adds nothing and pushes the contact details further down.
  *
- * Contact details come from `@/lib/demo-org`, which holds DUMMY values so the
- * design can be reviewed complete. The statutory identifiers are NOT repeated
+ * Contact details and social links come from Admin → Settings (Phase 13,
+ * `getOrganisation`); a detail nobody has entered is left out rather than
+ * shown blank. The statutory identifiers are NOT repeated
  * here — they live on /about, and a table of DEMO-marked registration numbers
  * under every page of the site was the tallest thing in a footer the approved
  * design keeps to five columns.
  */
-export function SiteFooter() {
+export async function SiteFooter() {
   const year = new Date().getFullYear();
+  const organisation = await getOrganisation();
+  const { address } = organisation;
+  const addressFirst = address.line1;
+  const addressSecond = [address.city, address.state, address.country].filter(Boolean).join(', ');
 
   return (
     <footer className="bg-accent-950 mt-auto text-white/85">
@@ -53,7 +58,7 @@ export function SiteFooter() {
             <BrandLockup tone="inverse" href={null} />
 
             <ul className="flex flex-wrap gap-2">
-              {demoOrg.social.map((link) => {
+              {organisation.social.map((link) => {
                 const Icon = SOCIAL_ICONS[link.label];
                 return (
                   <li key={link.label}>
@@ -118,38 +123,57 @@ export function SiteFooter() {
                 {/* Two lines, as approved. The one-line form runs to five
                     lines in a column this width and makes the footer the
                     tallest thing on the page. */}
-                <span className="flex items-start gap-2">
-                  <MapPin className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-                  <span>
-                    {demoOrg.address.line1},
-                    <br />
-                    {demoOrg.address.city}, {demoOrg.address.state}, {demoOrg.address.country}
+                {addressFirst || addressSecond ? (
+                  <span className="flex items-start gap-2">
+                    <MapPin className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                    <span>
+                      {addressFirst}
+                      {addressFirst && addressSecond ? (
+                        <>
+                          ,
+                          <br />
+                        </>
+                      ) : null}
+                      {addressSecond}
+                    </span>
                   </span>
-                </span>
-                <a
-                  href={`tel:${demoOrg.phoneHref}`}
-                  className="focus-visible:outline-ring flex items-center gap-2 rounded-sm transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
-                >
-                  <Phone className="size-3.5 shrink-0" aria-hidden="true" />
-                  {demoOrg.phoneDisplay}
-                </a>
-                <a
-                  href={`mailto:${demoOrg.email}`}
-                  className="focus-visible:outline-ring flex items-start gap-2 rounded-sm transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
-                >
-                  <Mail className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-                  {/*
-                    `min-w-0` is what makes the wrap possible at all: a flex
-                    child defaults to `min-width: auto`, which floors it at the
-                    width of its longest unbreakable run, and no amount of
-                    `overflow-wrap` reduces that. Without it the address pushed
-                    the page 35px wide at 1024.
+                ) : null}
+                {organisation.phoneDisplay && organisation.phoneHref ? (
+                  <a
+                    href={`tel:${organisation.phoneHref}`}
+                    className="focus-visible:outline-ring flex items-center gap-2 rounded-sm transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
+                  >
+                    <Phone className="size-3.5 shrink-0" aria-hidden="true" />
+                    {organisation.phoneDisplay}
+                  </a>
+                ) : null}
+                {organisation.email ? (
+                  <a
+                    href={`mailto:${organisation.email}`}
+                    className="focus-visible:outline-ring flex items-start gap-2 rounded-sm transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
+                  >
+                    <Mail className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                    {/*
+                      `min-w-0` is what makes the wrap possible at all: a flex
+                      child defaults to `min-width: auto`, which floors it at
+                      the width of its longest unbreakable run, and no amount
+                      of `overflow-wrap` reduces that. Without it the address
+                      pushed the page 35px wide at 1024.
 
-                    `break-words`, not `break-all`, so it breaks at the @ or a
-                    dot rather than mid-domain.
-                  */}
-                  <span className="min-w-0 break-words">{demoOrg.email}</span>
-                </a>
+                      `break-words`, not `break-all`, so it breaks at the @ or
+                      a dot rather than mid-domain.
+                    */}
+                    <span className="min-w-0 break-words">{organisation.email}</span>
+                  </a>
+                ) : (
+                  <Link
+                    href="/contact"
+                    className="focus-visible:outline-ring flex items-center gap-2 rounded-sm transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
+                  >
+                    <Mail className="size-3.5 shrink-0" aria-hidden="true" />
+                    Send us a message
+                  </Link>
+                )}
               </address>
             </div>
 

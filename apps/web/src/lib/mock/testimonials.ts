@@ -12,9 +12,9 @@ export const testimonials: Testimonial[] = [
     id: 't1',
     kind: 'donor',
     quote:
-      'I have given to a lot of organizations and this is the first one that told me a program had not worked. That is the reason I set up a monthly donation.',
+      'I have given to a lot of organizations and this is the first one that told me a program had not worked. That is the reason I keep coming back to give.',
     authorName: 'Ananya R.',
-    authorRole: 'Monthly donor since 2024',
+    authorRole: 'Donor since 2024',
   },
   {
     id: 't2',

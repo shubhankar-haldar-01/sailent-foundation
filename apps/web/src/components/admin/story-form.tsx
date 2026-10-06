@@ -260,7 +260,18 @@ function BlockerNotice({ blockers, status }: { blockers: PublishBlocker[]; statu
  * permission, and because publishing is `@Sensitive()` — it asks for a
  * password again, and burying that inside a save button would be surprising.
  */
-export function StoryStatusControls({ story }: { story: AdminStory }) {
+/**
+ * `canArchive` (Phase 13): archiving, and bringing a story back out of the
+ * archive, need `story.archive`; the API enforces it, and the buttons are not
+ * offered to somebody who would only be refused.
+ */
+export function StoryStatusControls({
+  story,
+  canArchive,
+}: {
+  story: AdminStory;
+  canArchive: boolean;
+}) {
   const [state, action, pending] = React.useActionState<ActionState, FormData>(setStoryStatus, {});
   const [target, setTarget] = React.useState<string | null>(null);
   const router = useRouter();
@@ -279,7 +290,11 @@ export function StoryStatusControls({ story }: { story: AdminStory }) {
       <div className="space-y-3">
         <FormStatus state={state} />
         <div className="flex flex-wrap gap-2">
-          {story.status !== 'published' ? (
+          {story.status === 'archived' && !canArchive ? (
+            <p className="text-body-sm text-muted-foreground">
+              Archived. Restoring it needs the story.archive permission.
+            </p>
+          ) : story.status !== 'published' ? (
             <Button type="button" onClick={() => setTarget('published')} disabled={blocked}>
               Publish
             </Button>
@@ -288,7 +303,7 @@ export function StoryStatusControls({ story }: { story: AdminStory }) {
               Unpublish
             </Button>
           )}
-          {story.status !== 'archived' ? (
+          {!canArchive ? null : story.status !== 'archived' ? (
             <Button type="button" variant="destructive" onClick={() => setTarget('archived')}>
               Archive
             </Button>

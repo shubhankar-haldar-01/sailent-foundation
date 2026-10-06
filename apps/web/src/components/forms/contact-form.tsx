@@ -14,9 +14,20 @@ import {
   SelectValue,
   Textarea,
 } from '@sailent/ui';
-import { emailSchema } from '@sailent/validation';
+import { CONTACT_MESSAGE_MIN, emailSchema } from '@sailent/validation';
 
-/** Contact form — UI only. No message is sent; email lands in Phase 4. */
+import { submitContactMessage } from '@/lib/communications/actions';
+
+import { Honeypot } from './honeypot';
+
+/**
+ * The contact form (Phase 13: real).
+ *
+ * The message is STORED by the API before anything else and emailed to the
+ * organisation's contact address; staff see it in Admin → Messages until they
+ * mark it handled, so a provider outage cannot lose it. The browser checks the
+ * fields first for quick feedback; the API checks them again.
+ */
 export function ContactForm() {
   const ids = {
     name: React.useId(),
@@ -25,7 +36,9 @@ export function ContactForm() {
     message: React.useId(),
   };
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [formError, setFormError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState(false);
+  const [pending, startTransition] = React.useTransition();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -35,11 +48,22 @@ export function ContactForm() {
     if (!String(data.get('name') ?? '').trim()) next.name = 'Enter your name';
     const email = emailSchema.safeParse(data.get('email'));
     if (!email.success) next.email = email.error.issues[0]?.message ?? 'Enter a valid email';
-    if (String(data.get('message') ?? '').trim().length < 10)
+    if (String(data.get('message') ?? '').trim().length < CONTACT_MESSAGE_MIN)
       next.message = 'Please tell us a little more — at least a sentence';
 
     setErrors(next);
-    if (Object.keys(next).length === 0) setSubmitted(true);
+    setFormError(null);
+    if (Object.keys(next).length > 0) return;
+
+    startTransition(async () => {
+      const result = await submitContactMessage(data);
+      if (result.ok) {
+        setSubmitted(true);
+        return;
+      }
+      setErrors(result.fieldErrors ?? {});
+      setFormError(result.error ?? 'Your message was not sent. Try again.');
+    });
   };
 
   if (submitted) {
@@ -48,8 +72,8 @@ export function ContactForm() {
         <p role="status" className="text-body-sm flex items-start gap-2">
           <Check className="text-success mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>
-            <span className="font-semibold">Message captured.</span> In the finished platform we
-            would reply within three working days. Nothing has been sent in this preview.
+            <span className="font-semibold">Message sent.</span> Thank you — we aim to reply within
+            three working days, to the email address you gave.
           </span>
         </p>
       </Card>
@@ -59,7 +83,13 @@ export function ContactForm() {
   return (
     <Card className="p-6 md:p-8">
       <h2 className="text-h3 font-semibold">Send us a message</h2>
-      <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-5">
+      <form onSubmit={handleSubmit} noValidate className="relative mt-6 space-y-5">
+        <Honeypot />
+        {formError ? (
+          <p role="alert" className="text-body-sm text-destructive">
+            {formError}
+          </p>
+        ) : null}
         <div>
           <Label htmlFor={ids.name} required>
             Your name
@@ -143,11 +173,11 @@ export function ContactForm() {
           ) : null}
         </div>
 
-        <Button type="submit" size="lg">
-          Send message
+        <Button type="submit" size="lg" disabled={pending} aria-busy={pending}>
+          {pending ? 'Sending…' : 'Send message'}
         </Button>
         <p className="text-caption text-muted-foreground">
-          Preview only — no message is sent and nothing is stored.
+          We use your name and email only to reply to this message.
         </p>
       </form>
     </Card>

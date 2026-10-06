@@ -9,10 +9,12 @@ import {
   programs,
   receipts,
   type DatabaseClient,
+  settings,
 } from '@sailent/database';
 
 import { DATABASE } from '../database/database.module.js';
 import { NotFoundException } from '../../common/exceptions.js';
+import { registrationDetailsSchema } from '@sailent/validation';
 
 type Tx = Parameters<Parameters<DatabaseClient['db']['transaction']>[0]>[0];
 
@@ -154,13 +156,29 @@ export class ReceiptsService {
          * accountant.
          */
         eightyGEligible: null,
-        registrationNumber: null,
+        /**
+         * The organisation's registration number as it stands in Admin →
+         * Settings when the receipt is issued (Phase 13). Snapshotted like
+         * everything else here; null until it has been supplied.
+         */
+        registrationNumber: await this.registrationNumber(tx),
         issuedAt,
       })
       .returning({ id: receipts.id, receiptNumber: receipts.receiptNumber });
 
     if (!created) throw new Error('Receipt insert returned no row');
     return created;
+  }
+
+  /** `registration_details.registrationNumber`, or null if unset or unreadable. */
+  private async registrationNumber(tx: Tx): Promise<string | null> {
+    const [row] = await tx
+      .select({ value: settings.value })
+      .from(settings)
+      .where(eq(settings.key, 'registration_details'))
+      .limit(1);
+    const parsed = registrationDetailsSchema.safeParse(row?.value);
+    return parsed.success ? parsed.data.registrationNumber : null;
   }
 
   /**

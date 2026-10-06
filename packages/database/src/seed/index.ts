@@ -243,6 +243,58 @@ async function seedCategories(db: Database): Promise<void> {
   console.log(`  \u2713 ${CATEGORIES.length} categories`);
 }
 
+/** Demo general FAQs (`/faq`). Categories match `FAQ_CATEGORIES` in @sailent/validation. */
+const DEMO_GENERAL_FAQS: { category: string; question: string; answer: string }[] = [
+  {
+    category: 'donations',
+    question: 'Is my donation eligible for tax deduction under Section 80G?',
+    answer:
+      'Donations to organisations registered under Section 80G are eligible for deduction. The receipt you receive immediately after donating is a payment receipt; the 80G certificate (Form 10BE) is issued separately after the annual statement of donations is filed.',
+  },
+  {
+    category: 'donations',
+    question: 'What is the difference between choosing a product and giving an amount?',
+    answer:
+      'Choosing a product funds a specific, priced item — a school kit, a medicine kit. Giving an amount lets the programme team allocate it where it is most needed within that campaign. You can do both in the same donation.',
+  },
+  {
+    category: 'donations',
+    question: 'Can I set up a regular donation?',
+    answer:
+      'No. Every donation is a single, one-time payment; we do not take monthly or recurring payments. You are always welcome to give again.',
+  },
+  {
+    category: 'donations',
+    question: 'Can I donate from outside India?',
+    answer:
+      'Not at present. Accepting foreign contributions requires registration under the Foreign Contribution (Regulation) Act, which we do not hold. Donations are accepted in Indian rupees from Indian payment instruments only.',
+  },
+  {
+    category: 'campaigns',
+    question: 'How is campaign progress calculated?',
+    answer:
+      'The amount raised reflects payments confirmed by our payment provider, not payments that have been started. A donation appears in the total once it is verified on our server.',
+  },
+  {
+    category: 'volunteering',
+    question: 'What happens after I apply?',
+    answer:
+      'Your application is reviewed, usually within two weeks. If approved you receive a volunteer ID and an invitation to the next orientation session.',
+  },
+  {
+    category: 'events',
+    question: 'What happens if an event is full?',
+    answer:
+      'Registration closes when every place is taken. There is no waitlist; if a registrant cancels, their place becomes available again on the event page.',
+  },
+  {
+    category: 'general',
+    question: 'How do I contact someone directly?',
+    answer:
+      'Use the contact form, or the email and phone number listed on the contact page. We aim to respond within three working days.',
+  },
+];
+
 async function seedSettings(db: Database): Promise<void> {
   const baseSettings = [
     {
@@ -271,6 +323,12 @@ async function seedSettings(db: Database): Promise<void> {
         pan: null,
         section12A: null,
         section80G: null,
+        // Phase 13: the remaining identifiers the About page shows. Optional in
+        // the settings schema, so rows created before Phase 13 stay valid.
+        registeredAs: null,
+        trustDeedNumber: null,
+        registeredOn: null,
+        csr1: null,
       },
       category: 'compliance',
       description: 'Statutory registration identifiers. Must be supplied before launch.',
@@ -281,6 +339,40 @@ async function seedSettings(db: Database): Promise<void> {
       value: 1000,
       category: 'donations',
       description: 'Minimum accepted donation in paise (₹10).',
+      isPublic: true,
+    },
+    /*
+      Phase 13. Also inserted by migration 0023, EMPTY, so production gets the
+      rows by applying the migration. Real values are entered in Admin →
+      Settings; the web falls back to `lib/demo-org.ts` only while mock data is
+      on, never in production.
+    */
+    {
+      key: 'organization_contact',
+      value: {
+        email: null,
+        pressEmail: null,
+        phone: null,
+        officeHours: null,
+        address: {
+          line1: null,
+          line2: null,
+          city: null,
+          state: null,
+          postalCode: null,
+          country: null,
+        },
+      },
+      category: 'organization',
+      description:
+        'Public contact details: email, phone, office hours and postal address. Contact-form messages are sent to the email.',
+      isPublic: true,
+    },
+    {
+      key: 'organization_social',
+      value: [],
+      category: 'organization',
+      description: 'Public social media profiles shown in the footer and on the contact page.',
       isPublic: true,
     },
   ];
@@ -1409,6 +1501,28 @@ async function seedDemoContent(db: Database): Promise<void> {
   // public campaign page shows each FAQ twice.
   await db.delete(campaignGallery);
   await db.delete(faqs);
+
+  // General FAQs (Phase 13: `/faq` reads these, not fixtures). Demo wording,
+  // accurate to how the platform works — one-time donations only, no event
+  // waitlist.
+  await db.insert(faqs).values(
+    DEMO_GENERAL_FAQS.map((faq, index) => ({
+      ...faq,
+      contextType: 'general' as const,
+      contextId: null,
+      displayOrder: (index + 1) * 10,
+      isPublished: true,
+    })),
+  );
+  await db.insert(faqs).values({
+    question: 'Demo unpublished general question',
+    answer: 'This general FAQ is a draft and must NOT appear on /faq.',
+    category: 'general',
+    contextType: 'general' as const,
+    contextId: null,
+    displayOrder: 999,
+    isPublished: false,
+  });
 
   for (const [campaignSlug, campaignId] of campaignIds) {
     await db.insert(faqs).values([

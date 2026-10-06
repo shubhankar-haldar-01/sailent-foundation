@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { z } from 'zod';
 
-import { emailSchema } from '@sailent/validation';
+import { emailSchema, staffPasswordSchema, staffTokenSchema } from '@sailent/validation';
 
 /**
  * Auth request schemas.
@@ -97,3 +97,9 @@ export class SessionResponseDto {
   @ApiProperty({ example: { id: 'uuid', audience: 'staff', permissions: ['campaign.read'] } })
   actor!: { id: string; audience: string; permissions: string[] };
 }
+
+/** Phase 13 — staff invitation acceptance and password reset. */
+export const staffSetPasswordSchema = z
+  .object({ token: staffTokenSchema, password: staffPasswordSchema })
+  .strict();
+export const staffForgotPasswordSchema = z.object({ email: emailSchema }).strict();

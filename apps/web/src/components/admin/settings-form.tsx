@@ -7,12 +7,19 @@ import { Alert, Input } from '@sailent/ui';
 import { Field, FormStatus, SubmitButton } from '@/components/admin/form-shell';
 import { updateSettings, type ActionState } from '@/lib/admin/actions';
 import type { AdminSettings } from '@/lib/admin/api';
+import { SOCIAL_NETWORKS } from '@sailent/validation';
 
 /**
  * The organisation settings form.
  *
  * ══════════════════════════════════════════════════════════════════════════
- * TWO OF THESE FOUR SETTINGS CURRENTLY GOVERN NOTHING, AND THE FORM SAYS SO.
+ * WHAT EACH SECTION CHANGES (Phase 13). The organisation name, contact
+ * details, social links and registration identifiers are what the public site
+ * shows (footer, /contact, /about, structured data), and contact-form messages
+ * are emailed to the contact email. The registration number is printed on
+ * every receipt issued afterwards.
+ *
+ * TWO SETTINGS STILL GOVERN NOTHING, AND THE FORM SAYS SO.
  *
  * A settings screen carries an implicit promise: change this, and behaviour
  * changes. For `donation_minimum_paise` and `fcra_enabled` that promise would
@@ -35,6 +42,10 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
     if (state.ok) router.refresh();
   }, [state.ok, router]);
 
+  const contact = settings.organization_contact;
+  const registration = settings.registration_details;
+  const social = new Map(settings.organization_social.map((link) => [link.label, link.url]));
+
   return (
     <form action={action} className="max-w-2xl space-y-8">
       <FormStatus state={state} />
@@ -46,7 +57,7 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
           name="organization_name"
           required
           errors={state.fieldErrors}
-          hint="Appears on every receipt, in email, and in page metadata."
+          hint="Shown on the website: the footer, the About page and the site's structured data."
         >
           <Input
             id="organization_name"
@@ -58,6 +69,92 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
       </section>
 
       <section className="space-y-4">
+        <h2 className="text-h3 font-semibold">Public contact details</h2>
+        <p className="text-body-sm text-muted-foreground">
+          Shown in the footer of every page and on the contact page. Leave a field blank to leave it
+          off the site. Contact-form messages are emailed to the contact email.
+        </p>
+        <Field label="Contact email" name="contactEmail" errors={state.fieldErrors}>
+          <Input
+            id="contactEmail"
+            name="contactEmail"
+            type="email"
+            defaultValue={contact.email ?? ''}
+          />
+        </Field>
+        <Field label="Press email" name="pressEmail" errors={state.fieldErrors}>
+          <Input
+            id="pressEmail"
+            name="pressEmail"
+            type="email"
+            defaultValue={contact.pressEmail ?? ''}
+          />
+        </Field>
+        <Field
+          label="Phone"
+          name="phone"
+          errors={state.fieldErrors}
+          hint="As it should be displayed, e.g. +91 20 4000 1234."
+        >
+          <Input id="phone" name="phone" type="tel" defaultValue={contact.phone ?? ''} />
+        </Field>
+        <Field label="Office hours" name="officeHours" errors={state.fieldErrors}>
+          <Input id="officeHours" name="officeHours" defaultValue={contact.officeHours ?? ''} />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Address line 1" name="addressLine1" errors={state.fieldErrors}>
+            <Input
+              id="addressLine1"
+              name="addressLine1"
+              defaultValue={contact.address.line1 ?? ''}
+            />
+          </Field>
+          <Field label="Address line 2" name="addressLine2" errors={state.fieldErrors}>
+            <Input
+              id="addressLine2"
+              name="addressLine2"
+              defaultValue={contact.address.line2 ?? ''}
+            />
+          </Field>
+          <Field label="City" name="city" errors={state.fieldErrors}>
+            <Input id="city" name="city" defaultValue={contact.address.city ?? ''} />
+          </Field>
+          <Field label="PIN code" name="postalCode" errors={state.fieldErrors}>
+            <Input
+              id="postalCode"
+              name="postalCode"
+              inputMode="numeric"
+              defaultValue={contact.address.postalCode ?? ''}
+            />
+          </Field>
+          <Field label="State" name="state" errors={state.fieldErrors}>
+            <Input id="state" name="state" defaultValue={contact.address.state ?? ''} />
+          </Field>
+          <Field label="Country" name="country" errors={state.fieldErrors}>
+            <Input id="country" name="country" defaultValue={contact.address.country ?? ''} />
+          </Field>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-h3 font-semibold">Social media</h2>
+        <p className="text-body-sm text-muted-foreground">
+          Full https:// addresses. A blank field is left off the footer and the contact page.
+        </p>
+        {SOCIAL_NETWORKS.map((label) => (
+          <Field key={label} label={label} name={`social_${label}`} errors={state.fieldErrors}>
+            <Input
+              id={`social_${label}`}
+              name={`social_${label}`}
+              type="url"
+              placeholder="https://"
+              defaultValue={social.get(label) ?? ''}
+            />
+          </Field>
+        ))}
+      </section>
+
+      <section className="space-y-4">
         <h2 className="text-h3 font-semibold">Statutory registration</h2>
         {/*
           Not cosmetic. The 80G number is what a donor claims tax relief
@@ -65,10 +162,42 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
           rather than for us.
         */}
         <Alert>
-          These identifiers are printed on donation receipts. Leave a field blank if it has not been
-          issued yet — a blank reads as “not supplied”, which is accurate, while a placeholder would
-          read as real.
+          These identifiers are shown on the About page, and the registration number is printed on
+          every new donation receipt. Leave a field blank if it has not been issued yet — a blank
+          reads as “not supplied”, which is accurate, while a placeholder would read as real.
         </Alert>
+
+        <Field
+          label="Registered as"
+          name="registeredAs"
+          errors={state.fieldErrors}
+          hint="E.g. Public Charitable Trust."
+        >
+          <Input
+            id="registeredAs"
+            name="registeredAs"
+            defaultValue={registration.registeredAs ?? ''}
+          />
+        </Field>
+        <Field
+          label="Trust deed / registration certificate number"
+          name="trustDeedNumber"
+          errors={state.fieldErrors}
+        >
+          <Input
+            id="trustDeedNumber"
+            name="trustDeedNumber"
+            defaultValue={registration.trustDeedNumber ?? ''}
+          />
+        </Field>
+        <Field label="Date of registration" name="registeredOn" errors={state.fieldErrors}>
+          <Input
+            id="registeredOn"
+            name="registeredOn"
+            type="date"
+            defaultValue={registration.registeredOn ?? ''}
+          />
+        </Field>
 
         <Field label="Registration number" name="registrationNumber" errors={state.fieldErrors}>
           <Input
@@ -105,6 +234,9 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
             name="section80G"
             defaultValue={settings.registration_details.section80G ?? ''}
           />
+        </Field>
+        <Field label="CSR-1 registration" name="csr1" errors={state.fieldErrors}>
+          <Input id="csr1" name="csr1" defaultValue={registration.csr1 ?? ''} />
         </Field>
       </section>
 

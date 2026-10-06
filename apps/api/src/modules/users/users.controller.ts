@@ -125,6 +125,25 @@ export class UsersController {
     return this.users.invite(body, actor, this.context(request));
   }
 
+  @RequirePermission('user.invite')
+  @Sensitive()
+  @Post('users/:id/invitation')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Send a fresh invitation link',
+    description:
+      'Only for an account still `invited`. Earlier links stop working. Requires a re-authentication within the last five minutes.',
+  })
+  @ApiResponse({ status: 403, description: 'Missing user.invite, or REAUTH_REQUIRED' })
+  @ApiResponse({ status: 409, description: 'The account has already accepted its invitation' })
+  resendInvitation(
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
+    @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
+  ) {
+    return this.users.resendInvitation(params.id, actor, this.context(request));
+  }
+
   @RequirePermission('user.update')
   @Patch('users/:id')
   @ApiOperation({ summary: 'Edit a staff account profile' })

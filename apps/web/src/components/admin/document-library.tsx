@@ -9,6 +9,7 @@ import { Button, Input, cn } from '@sailent/ui';
 import { Field, FormStatus, SubmitButton } from '@/components/admin/form-shell';
 import {
   changeDocumentVisibility,
+  deleteDocument,
   getDocumentLink,
   updateDocument,
   uploadDocument,
@@ -381,6 +382,63 @@ export function VisibilityControls({ document }: { document: AdminDocument }) {
             </Button>
           </div>
         </form>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Delete a document and its stored file (Phase 13).
+ *
+ * Two steps, a reason, and a re-authentication on the API — the same shape as
+ * the visibility change, because deletion cannot be undone. The audit log
+ * keeps the title, type and visibility of what was deleted.
+ */
+export function DeleteDocumentControls({ document }: { document: AdminDocument }) {
+  const [state, action, pending] = React.useActionState<ActionState, FormData>(deleteDocument, {});
+  const [confirming, setConfirming] = React.useState(false);
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (state.redirectTo) router.push(state.redirectTo);
+  }, [state.redirectTo, router]);
+
+  return (
+    <div className="border-border space-y-4 rounded-lg border p-5">
+      <div>
+        <h2 className="text-h4 font-semibold">Delete</h2>
+        <p className="text-body-sm text-muted-foreground mt-1">
+          Removes the file from storage and this record from the library. To withdraw a document but
+          keep it, change its visibility instead.
+        </p>
+      </div>
+      <FormStatus state={state} />
+      {confirming ? (
+        <form action={action} className="space-y-4">
+          <input type="hidden" name="id" value={document.id} />
+          <p className="border-destructive/40 bg-destructive/5 text-body-sm rounded-lg border p-4 font-semibold">
+            Delete “{document.title}” permanently? This cannot be undone.
+          </p>
+          <Field
+            label="Why is it being deleted?"
+            name="reason"
+            required
+            errors={state.fieldErrors}
+            hint="Recorded on the audit log. At least ten characters."
+          >
+            <Input id="delete-reason" name="reason" required minLength={10} maxLength={500} />
+          </Field>
+          <div className="flex gap-2">
+            <SubmitButton pending={pending}>Delete permanently</SubmitButton>
+            <Button type="button" variant="ghost" onClick={() => setConfirming(false)}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <Button type="button" variant="destructive" onClick={() => setConfirming(true)}>
+          Delete this document
+        </Button>
       )}
     </div>
   );

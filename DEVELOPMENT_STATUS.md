@@ -6,18 +6,18 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-10-07 (Phase 12 — Accounts, Authentication & Security Hardening, **committed locally, not pushed**, as `feat(auth): complete account and security hardening` on top of `5170ce0`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
+**Last updated:** 2026-10-07 (Phase 13 — Admin, CMS & Communications Completeness, **committed locally, not pushed**, as `feat(admin): complete cms and communications workflows` on top of `3941ee7`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
 
 | | |
 |---|---|
 | **Overall status** | Feature-rich build, **not deployed to any hosting.** Phases 0–10.12 are implemented in the API, admin and public site. |
-| **Current phase** | **Phase 12 — Accounts, Authentication & Security Hardening** (§1, item 12), second phase of the 2026-10-07 roadmap (Phases 11–15). Implemented, validated and **committed locally** as `feat(auth): complete account and security hardening`; **not pushed**. Phase 11 (`5170ce0`) and everything before it is committed and pushed. |
-| **Current feature** | Volunteer sign-in; email normalisation; verified email change; no guest overwrite; HS256 pin; atomic refresh rotation; authentication audit events; trusted client IPs; PAN encryption and masking; CSP and HSTS; BFF Origin check; production fail-closed web environment. **Staff TOTP/2FA is not required (owner decision).** |
-| **Branch / HEAD** (as of 2026-10-07) | Local `main` is **1 commit ahead** of `origin/main` (`5170ce0`, Phase 11): the Phase 12 commit `feat(auth): complete account and security hardening`, **not pushed**. Run `git log --oneline -1` for its hash. The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
-| **Working tree** (as of 2026-10-07) | Clean: Phase 12 (API, worker, web, config, validation, tests) and its documentation are all in the Phase 12 commit. Run `git status` for the live state. |
+| **Current phase** | **Phase 13 — Admin, CMS & Communications Completeness** (§1, item 13), third phase of the 2026-10-07 roadmap (Phases 11–15). Implemented, validated and **committed locally** as `feat(admin): complete cms and communications workflows`; **not pushed**. Phase 12 (`3941ee7`) and everything before it is committed and pushed. |
+| **Current feature** | Campaign/programme covers, Campaign Gallery and progress-update admin; live admin dashboard; settings consumed by the public site and receipts; staff invitations and password reset; document deletion; `story.archive`; EXIF/GPS stripping; working notification retry and four new email processors; contact inbox; double-opt-in newsletter; database-backed FAQ and search; monthly-giving remnants removed. Migration `0023` (local only). **Staff TOTP/2FA is not required (owner decision).** |
+| **Branch / HEAD** (as of 2026-10-07) | Local `main` is **1 commit ahead** of `origin/main` (`3941ee7`, Phase 12): the Phase 13 commit `feat(admin): complete cms and communications workflows`, **not pushed**. Run `git log --oneline -1` for its hash. The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
+| **Working tree** (as of 2026-10-07) | Clean of project changes: Phase 13 (database, API, worker, web, config, validation, tests) and its documentation are all in the Phase 13 commit. Locally ignored via `.git/info/exclude` (never committed): the brag-slim skill install and its `brag-output/` (2026-10-07). Run `git status` for the live state. |
 | **Production database** | The **production Supabase project** exists (owner confirmed, 2026-10-06). Its schema and data state were **not inspected** and are **unknown**. Agents must not access it (`AGENTS.md` §8). |
 | **Application hosting** | None. No Dockerfiles, IaC or deploy workflow exist. |
-| **Local databases** | `sailent_dev` and `sailent_e2e` have migrations `0000`–`0022` applied, **plus one migration that is not in the repository** (§5.1); since Phase 12 it no longer causes test failures. The repository has no pending migration. |
+| **Local databases** | `sailent_dev` has `0000`–`0023` applied (`0023` on 2026-10-07); `sailent_e2e` gets `0023` from `db:prepare-e2e`. Both also carry **one migration that is not in the repository** (§5.1). |
 | **CI** | **Not passing as of the last observed run.** Run #4 (at `166b70c`): the `quality` job passed lint, typecheck, migrate and seed, then failed at tests (`EnvValidationError`: Turborepo strict env mode stripped `DATABASE_URL`/`REDIS_URL`); the `security` job failed at `pnpm audit` (30 vulnerabilities: 2 low, 13 moderate, 15 high), so gitleaks was skipped. `7fe6c25` (pushed) adds `passThroughEnv` for the test task; **its GitHub Actions run has not been observed**. The audit failure is **unresolved** (dependency upgrades not approved yet), so the `security` job is expected to keep failing (§5.4). Do not describe CI as passing until a passing run has been observed. The owner has **deferred CI work** for now (2026-10-06). |
 
 ---
@@ -38,7 +38,8 @@
 | `f9816be` | fix(programs): count open campaigns accurately (item 9) | ✅ yes |
 | `e87864b` | fix(payments): make razorpay webhooks retry-safe (item 10) | ✅ yes |
 | `5170ce0` | feat(payments): complete payment production readiness — Phase 11 (item 11), with its documentation | ✅ yes (pushed by the owner) |
-| `feat(auth): complete account and security hardening` | Phase 12 (item 12), with its documentation | ❌ **committed locally, not pushed** |
+| `3941ee7` | feat(auth): complete account and security hardening — Phase 12 (item 12) | ✅ yes (pushed by the owner) |
+| `feat(admin): complete cms and communications workflows` | Phase 13 (item 13), with its documentation | ❌ **committed locally, not pushed** |
 
 Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to `origin/main` with a fast-forward push; until then `origin/main` held only `2ba2b43`.
 
@@ -152,7 +153,7 @@ The payment-audit findings H1, H2, H3, M1, M2, M4, L2, L3 and L4 (idempotency), 
 - **Also updated:** `.env.example` (variable names only), the admin reconciliation page copy, `SECURITY.md`, `DATABASE.md` §6, `DEPLOYMENT.md` §6/§6a/§7.
 - **Not changed:** exactly-once capture, signatures, amount checks, distinct donor counts, campaign status/deadline/stop-at-goal checks, out-of-band refund flagging, schema.
 
-**12. Phase 12 — Accounts, Authentication & Security Hardening (2026-10-07, committed locally as `feat(auth): complete account and security hardening`, NOT pushed)**
+**12. Phase 12 — Accounts, Authentication & Security Hardening (2026-10-07, `3941ee7`, pushed)**
 
 **Owner decisions for this phase:**
 - Staff authenticate with email and password.
@@ -215,9 +216,52 @@ No password, code, token or PAN is written. An address with no account is record
 
 All in `DEPLOYMENT.md` §6b.
 
+**13. Phase 13 — Admin, CMS & Communications Completeness (2026-10-07, committed locally as `feat(admin): complete cms and communications workflows`, NOT pushed)**
+
+**Owner decisions for this phase (2026-10-07):**
+- Contact messages are **stored**, shown in an admin inbox and emailed to the organisation.
+- The newsletter is **double opt-in** (a new table), recording consent only — nothing sends newsletters.
+- **Settings drive the public site** (organisation contact and social rows added).
+- New permissions are inserted **by migration with their `SUPER_ADMIN` grant** (no reference reseed).
+- Standing decisions kept: SUPER_ADMIN only; staff email/password with **no TOTP/2FA**; Campaign Gallery kept, no standalone gallery page; no refunds or recurring giving; SEO deferred to Phase 15; Google Cloud Run is the intended host (Phase 14).
+
+**Migration `0023_phase13_cms_communications.sql`** (hand-written, additive, applied **locally only**): `contact_messages`, `newsletter_subscribers` (RLS on), empty `organization_contact` / `organization_social` settings rows, and six permissions granted to `SUPER_ADMIN`. Journal `when` 1790102369677 — the first choice collided with the unknown local row (§5.1).
+
+**A. Campaign and programme media.**
+- Cover image (campaign and programme): picked from the media library (`CoverImagePanel`); the API accepts only the URL of a public library image (`catalog/cover-image.ts`).
+- Campaign Gallery admin (`GalleryPanel`): add by `mediaId` (the raw-storage-key form is gone), remove, move up/down (`PUT …/gallery/order`), public/private. The public gallery on the campaign page is unchanged and shows public items in this order.
+- Progress updates admin (`CampaignUpdatesPanel`): draft, publish, unpublish, archive (`{ status }` on the publish route). Published updates appear under `/impact` (they were deliberately taken off the campaign page earlier; unchanged).
+- `next.config.ts` allows the media host from `MEDIA_PUBLIC_BASE_URL` (web, build time).
+
+**B. Dashboard.** `GET /admin/dashboard` (`modules/dashboard`): live counts per section, each only with its read permission; recent donations without donor names unless `donation.read_pii`; recent staff activity without audit values. `/admin` replaces the placeholder.
+
+**C. Settings.** `organization_contact`, `organization_social` and extended `registration_details`; `GET /settings/public` (only public keys AND `is_public` rows). Consumed by the footer, `/contact`, `/about`, root JSON-LD, the years-of-service figure (`lib/content/organisation.ts`) and receipts (registration number snapshot). DEMO values fill gaps only while mock data is on; the startup guard on `demo-org.ts` moved to the loader. `donation_minimum_paise` and `fcra_enabled` are still not consumed (Phase 11 behaviour kept).
+
+**D. Staff invitations and password reset** (`auth/staff-account.service.ts`): single-use 32-byte tokens (SHA-256 in `otp_codes`), link fragment, 7-day invitation / 1-hour reset, older tokens burned, reset revokes every session, identical answers for unknown addresses, 3 resets per account per hour, audited. Web: `/admin/accept-invite`, `/admin/forgot-password`, `/admin/reset-password` (open in the middleware), "Forgot your password?" on login, "Send a new invitation" on the staff page.
+
+**E. Documents.** `DELETE /admin/documents/:id` (`document.delete`, sensitive, reason); object first, then row; 404 for an unreadable document. Admin delete control with confirmation.
+
+**F. Stories.** `story.archive` required to archive and to restore; UI follows.
+
+**G. EXIF/GPS.** `storage/strip-metadata.ts` on media and image-document uploads (JPEG/PNG/WebP, byte-level, orientation kept). Earlier uploads unchanged (human, `DEPLOYMENT.md` §6c).
+
+**H. Notifications / worker.** Retry enqueues to `email` (was the unconsumed `notifications` queue); `contact.received` retryable; token-bearing jobs never retried. New processors `contact.received`, `newsletter.confirm`, `staff.invite`, `staff.password_reset` (`processors/communications.processor.ts`): state re-read, send log by id only, retry only `unreachable`, contact messages never emailed twice. The worker no longer logs recipient addresses.
+
+**I. Contact and newsletter.** `POST /contact`, `POST /newsletter/subscribe|confirm|unsubscribe` (rate-limited, honeypot, shared schemas); admin `/admin/messages` (new/handled/archived) and `/admin/newsletter` (read-only). Public pages `/newsletter/confirm` and `/newsletter/unsubscribe` act only on a click.
+
+**J. FAQ / testimonials / search.** General FAQs in the database (`modules/faqs`, `/admin/faqs`, `faq.read`/`faq.manage`); `/faq` reads `GET /faqs` (published only); demo seed has 8 published + 1 draft. `GET /search` over published content only; `/search` is a GET form rendered on the server. Testimonials stay static fixtures (no table; documented boundary).
+
+**K. One-time giving.** Deleted the dead "Once / Monthly" widget and its presets; corrected the "Monthly Donor" testimonial and the monthly-giving FAQ fixture (and the waitlist answer); regression test `one-time-giving.test.ts`.
+
+**L. Admin UX.** Every new screen loads through the API (which enforces permissions), shows loading/empty/error states, confirms destructive actions (document delete, gallery remove, FAQ delete), and exposes no secrets or payment details.
+
+**Tests:** `apps/api/test/cms-communications.spec.ts` (44), `strip-metadata.spec.ts` (7), worker `communications.processor.spec.ts` (12), validation `communications.test.ts` (11), web `organisation`, `middleware`, `one-time-giving` tests, E2E `admin-cms.spec.ts`. Two existing tests updated for the new contract (documents: delete now exists but needs re-authentication; settings: six keys) and `database.spec.ts` lists the two new tables.
+
+**Human-only follow-ups:** apply `0023` in production; enter the organisation details; set `MEDIA_PUBLIC_BASE_URL` at web build; optionally strip metadata from pre-Phase-13 images (`DEPLOYMENT.md` §6c).
+
 ### What was being worked on
 
-Phase 12 (item 12) is implemented, validated (§2) and committed locally as one commit, `feat(auth): complete account and security hardening`. It is **not pushed**; pushing needs the owner's approval. CI is deferred by the owner.
+Phase 13 (item 13) is implemented, validated (§2) and committed locally as one commit, `feat(admin): complete cms and communications workflows`. It is **not pushed**; pushing needs the owner's approval. CI is deferred by the owner.
 
 ### Reverted by the owner on 2026-10-06 (do not redo unless asked)
 
@@ -234,6 +278,18 @@ See **`AGENTS.md` §11**, the permanent list of owner-approved designs and decis
 ---
 
 ## 2. LAST VALIDATION — snapshot as of 2026-10-07 (local only)
+
+**Phase 13 (item 13), 2026-10-07:**
+
+| Command | Result |
+|---|---|
+| `pnpm prettier --check .`, `pnpm typecheck`, `pnpm lint` | ✅ pass (13/13 tasks each) |
+| `pnpm --filter @sailent/api test` (full) | ✅ **910 passed, 0 failed**, 9 skipped (rerun). The first full run had 3 failures, all in tests written or changed here: a receipt test that picked a donation already holding a receipt, a dashboard count raced by other suites, and `database.spec.ts`'s table list (47 → 49); fixed, then all green. `cms-communications.spec.ts` 44/44 including the EXIF upload test. |
+| `pnpm --filter @sailent/web test` / `@sailent/validation` / `@sailent/worker` / `@sailent/database` | ✅ 162 / 292 / 20 / 180 passed (before the EXIF upload test was added to the API suite) |
+| `pnpm build --force` (isolated copy) | ✅ 8/8 tasks |
+| Playwright, **full suite** × 4 projects (792 tests, isolated copy, `--workers=2`) | 594 passed, 6 failed, 192 skipped. 4 failures were locators in the new `admin-cms.spec.ts` (Next's route announcer is also `role=alert`; a click on a slow edit page) — fixed. The other 2 are the **pre-existing WebKit failures** (below). |
+| Playwright rerun: `admin-cms`, `dashboard`, `admin-documents`, `admin-stories`, `admin-staff`, `shell` × 4 projects | ✅ 225 passed, 67 skipped, 0 failed |
+| Mutation checks (18, all caught; files restored byte-identical) | Each protection removed in turn made its test fail: `contact.read` and `campaign_gallery.manage` guards; staff token single use, expiry and purpose; document-delete re-authentication; `story.archive`; FAQ published filter; search status filter; retry queue; EXIF stripping; cover-from-library; newsletter non-enumeration; worker retry on `unreachable`; worker no-double-send; the one-time-giving guard; demo data never without mock data; middleware open paths exact. (Removing the single-use check is not caught by the INVITATION test alone — acceptance also requires `status = invited` — so it was checked with the reset test.) |
 
 **Phase 12 (item 12), 2026-10-07:**
 
@@ -364,27 +420,28 @@ Statuses: COMPLETE · PARTIALLY COMPLETE · IN PROGRESS · NOT STARTED · BLOCKE
 | Feature | Status | Notes |
 |---|---|---|
 | Monorepo, design system, shells | COMPLETE | |
-| Public website | PARTIALLY COMPLETE | Mostly API-backed. Still fixture-backed: `/faq`, testimonials, `/volunteer` testimonials, donation-widget presets, `/search`. Organisation details are **DEMO** values (`lib/demo-org.ts`). |
+| Public website | PARTIALLY COMPLETE | API-backed, including `/faq`, `/search` and the organisation details (Admin → Settings) since Phase 13. Testimonials remain static fixtures by design. Organisation details still have to be entered (DEMO values show only in development). |
 | Programmes | PARTIALLY COMPLETE | Rollups `campaign_count`, `total_raised` and `beneficiaries_reached` are never written, yet the public listing reads `campaignCount`. |
 | Campaigns | COMPLETE | Lifecycle, FAQs, gallery, products, preview, admin-controlled featuring, and the optional end-date deadline (`dd64d41`). Public experience cleanup (open/closed filter, Other Ways to Support, in-page mobile card, own stories) implemented, **uncommitted** (§1, item 7). |
 | Products / campaign products | COMPLETE | |
 | One-time donations + Razorpay | COMPLETE IN CODE / NOT VERIFIED LIVE | Phase 11 added reconciliation and expiry, checkout retry, idempotency, per-client limits, currency/order checks (committed locally, not pushed). Tested with a mocked client only; never run against live or sandbox Razorpay. Missing: total cap, receipt PDF. Local behaviour without keys: `DEPLOYMENT.md` §6. |
-| Receipts | PARTIALLY COMPLETE | No PDF; 80G fields null. |
-| Donor accounts | PARTIALLY COMPLETE | PAN stored in plaintext; email change unverified. |
-| Staff authentication | PARTIALLY COMPLETE | No 2FA in effect; no invite acceptance or password reset (CLI only). |
-| RBAC | COMPLETE (mechanism) / NEEDS REVIEW (policy) | 112 permissions; one role (`SUPER_ADMIN`). |
+| Receipts | PARTIALLY COMPLETE | No PDF; 80G eligibility null; the registration number is snapshotted from settings since Phase 13. |
+| Donor accounts | COMPLETE | PAN encrypted and masked; verified email change (Phase 12). |
+| Staff authentication | COMPLETE | Email + password; invitations and password reset (Phase 13). Staff 2FA not required (owner decision). |
+| RBAC | COMPLETE (mechanism) / NEEDS REVIEW (policy) | 118 permissions; one role (`SUPER_ADMIN`). |
 | Volunteers | COMPLETE | Certificate PDF, uploads and self-service attendance are out of scope. |
 | Events, team, impact | COMPLETE | |
-| Stories | COMPLETE | `story.archive` not enforced. |
-| Media + R2 | COMPLETE | No re-encoding. The web `images.remotePatterns` is empty. |
+| Stories | COMPLETE | `story.archive` enforced (Phase 13). |
+| Media + R2 | COMPLETE | EXIF/GPS stripped from new uploads (no re-encode). Remote images allowed from `MEDIA_PUBLIC_BASE_URL` (set at web build). |
 | Blog | COMPLETE | |
 | Technical SEO | PARTIALLY COMPLETE | Soft 404s. JSON-LD escaping fixed in the uncommitted working tree (§1, item 7). |
 | Page composer | COMPLETE | Home only. |
-| Documents | COMPLETE | |
-| Notifications | PARTIALLY COMPLETE | Admin retry enqueues to a queue nothing consumes; newsletter is UI-only. |
+| Documents | COMPLETE | Deletion added in Phase 13. |
+| Notifications | COMPLETE | Retry works (Phase 13); contact, newsletter-confirmation and staff-account emails. No delivered/bounced status; no SMS. |
+| Contact and newsletter | COMPLETE (Phase 13) | Stored contact messages with an admin inbox; double-opt-in newsletter consent (no sending). |
 | Reports | COMPLETE | Form 10BD export deferred. |
-| Audit logging | PARTIALLY COMPLETE | No auth events; not tamper-proof. |
-| Admin dashboard home | NOT STARTED | `PhasePlaceholder`. |
+| Audit logging | PARTIALLY COMPLETE | Authentication events since Phase 12; not tamper-proof. |
+| Admin dashboard home | COMPLETE (Phase 13) | Live, permission-filtered counts and a needs-attention list. |
 | Scheduled jobs | NOT STARTED | |
 | Analytics / Sentry | NOT STARTED | |
 | Application hosting / deployment | NOT STARTED | |
@@ -397,10 +454,10 @@ Statuses: COMPLETE · PARTIALLY COMPLETE · IN PROGRESS · NOT STARTED · BLOCKE
 
 ### 5.1 Local database drift (no longer causes test failures, since Phase 12)
 
-**Unknown migration.** `drizzle.__drizzle_migrations` holds **24 rows** in both `sailent_dev` and `sailent_e2e`; the repository journal has **23**.
+**Unknown migration.** Before Phase 13, `drizzle.__drizzle_migrations` held **24 rows** in both `sailent_dev` and `sailent_e2e` against **23** journal entries (now 25 rows and 24 entries locally, after `0023`).
 - Row 24 matches no repository file. Its only effect is a CHECK constraint, `donors_tax_id_encrypted` (`tax_id_number IS NULL OR tax_id_number LIKE 'enc:%'`).
+- **New clue (2026-10-07):** its `created_at` is 1790102368677, exactly the next hand-assigned journal timestamp after `0022`. It was almost certainly an earlier `0023` whose file was later removed. Phase 13's `0023` first reused that timestamp and Drizzle skipped it silently ("up to date"); the journal now uses 1790102369677. Any future migration must also use a later `when`.
 - Since Phase 12 the API encrypts PANs (`enc:v1:…`), which satisfies the constraint, so `PATCH /me` with a tax ID works locally and the 4 `me.spec.ts` failures are resolved — **with no database change**.
-- The row itself is still unexplained, and the repository has no matching migration.
 
 **Edited migration.** Row 15 (`0014`) no longer matches its file; the file was edited after it was applied.
 
@@ -424,7 +481,8 @@ This is for a **human** to verify and remediate through the approved process (`D
 
 - **Rate limits and audit IPs.** Per real client since Phase 11, and audit/session IPs since Phase 12 — once the web server's `CLIENT_IP_HEADER` and `INTERNAL_API_SECRET` are configured; until then site-wide, as before (`DEPLOYMENT.md` §6a). `X-Forwarded-For` is no longer trusted anywhere in the API.
 - **Staff 2FA: not required, by owner decision** (2026-10-07). Not a gap.
-- **Staff invite and password reset** do not exist (Phase 13).
+- **Staff invite and password reset:** implemented in Phase 13; need Brevo in production to deliver links.
+- **Images uploaded before Phase 13** may carry EXIF/GPS until a human re-processes them (`DEPLOYMENT.md` §6c).
 - **PAN:** encrypted since Phase 12, but **production may hold plaintext PANs** written earlier; re-encrypting them, and generating and keeping `FIELD_ENCRYPTION_KEY`, are human-only (`DEPLOYMENT.md` §6b).
 - **CSP keeps `'unsafe-inline'` scripts** (accepted trade-off, `SECURITY.md`). HSTS needs `APP_ENV=production` on the web.
 - **Audit log** is not tamper-proof (no REVOKE, writes fail open).
@@ -445,7 +503,7 @@ This is for a **human** to verify and remediate through the approved process (`D
 
 ### 5.5 Functional
 
-- **Notification retry is a no-op.**
+- ~~Notification retry is a no-op~~ — fixed in Phase 13.
 - **Programme rollups are never written.** Public reads of the campaign count now compute it live (§1 item 9); `total_raised` and `beneficiaries_reached` remain unwritten and unrendered.
 - **Historical `donor_count` values are not recounted.** New captures count distinct donors (§1 item 8); values written before 2026-10-06 may be overstated where a donor gave more than once. Recount is a human-only runbook (`DATABASE.md` §12).
 - **Orphan pending donations without Razorpay keys** (`DEPLOYMENT.md` §6).
@@ -464,7 +522,10 @@ This is for a **human** to verify and remediate through the approved process (`D
 - **Intermittent API test failures in full parallel runs** (seen 2026-10-06): `rbac.spec.ts` "ignores an unknown sort field" compares two consecutive `/admin/users` responses while other suites sign users in; `blog.spec.ts` "stamps publishedAt once" failed once. Both pass alone. Not investigated.
 - **No E2E coverage for paused or past-deadline campaigns.** The E2E seed has none, so the `open`/`closed` split is covered by API integration tests only.
 - **Featured band** still requests `status=active` and filters with `acceptsDonationsNow()` in the web (edge case in §1 item 1); it does not use `status=open`.
-- **Campaign FAQs "View All FAQs"** links to `/faq`, which is fixture-backed.
+- **Campaign FAQs "View All FAQs"** links to `/faq`, which is database-backed since Phase 13.
+- **`must_change_password`** is cleared by the Phase 13 password flows but still not enforced at sign-in.
+- **Settings `donation_minimum_paise` and `fcra_enabled`** are still not read by anything (Phase 11 behaviour kept deliberately).
+- **Testimonials** remain static fixtures; there is no testimonial table or admin screen (Phase 13 boundary).
 
 ### 5.6 UI (known, not bugs)
 
@@ -478,9 +539,10 @@ This is for a **human** to verify and remediate through the approved process (`D
 
 | Blocker | Blocks | Owner action |
 |---|---|---|
-| No real registration data (PAN, 12A, 80G, address) | Go-live; 80G receipts | Supply the values |
+| No real registration data (PAN, 12A, 80G, address) | Go-live; 80G receipts | Enter them in Admin → Settings (Phase 13) |
+| Migration `0023` not applied in production | Contact, newsletter, new admin screens in production | A human applies it (`DEPLOYMENT.md` §6c, §9) |
 | No Razorpay keys in any environment | Live payment testing | Provide test-mode keys |
-| No application hosting chosen or configured | Deployment | Decide the platform. Cloud Run is not referenced in the repository. |
+| No application hosting configured | Deployment | Owner's choice is Google Cloud Run; deployment artefacts are Phase 14. |
 | `FIELD_ENCRYPTION_KEY` not generated for production; production PANs possibly plaintext | Storing PANs in production | Generate and store the key; re-encrypt existing PANs (`DEPLOYMENT.md` §6b) |
 | Unknown production database state | Any production work | A human verifies the production schema version and residue (§5.2) |
 | No refund/cancellation policy page (Razorpay requires one) | Razorpay activation | Supply the policy text |
@@ -492,16 +554,16 @@ This is for a **human** to verify and remediate through the approved process (`D
 1. ~~Commit the featured/deadline work~~ (done: `dd64d41`). ~~Fix the CI target flag~~ (done: `0e94632`). ~~Turborepo test env~~ (done: `7fe6c25`). All pushed.
 2. ~~Commit the campaign cleanup~~ (done: `ed69d41`, pushed). **Commit the donor-count change** (§1 item 8) with owner approval; push only with a separate approval.
 3. CI (deferred by the owner, 2026-10-06): observe the GitHub Actions run and, with approval, the dependency overrides for `pnpm audit` (§5.4).
-4. ~~Programme campaign counts~~ (`f9816be`), ~~webhook hardening~~ (`e87864b`) and ~~Phase 11~~ (`5170ce0`), pushed. Phase 12 committed locally (`feat(auth): complete account and security hardening`); **push it** with owner approval; then **Phase 13 — Admin, CMS & Communications** (2026-10-07 roadmap; includes staff invite and password reset).
+4. ~~Programme campaign counts~~ (`f9816be`), ~~webhook hardening~~ (`e87864b`), ~~Phase 11~~ (`5170ce0`) and ~~Phase 12~~ (`3941ee7`), pushed. Phase 13 committed locally (`feat(admin): complete cms and communications workflows`); **push it** with owner approval; then **Phase 14 — Infrastructure & Production Operations** (Google Cloud Run).
 5. Owner decision on the leftover local migration row (§5.1); no longer blocks tests.
 6. ~~Web `FEATURE_MOCK_DATA` default and `webEnvSchema`; spoofable audit IPs; PAN encryption; email verification; CSP and HSTS~~ (Phase 12). Staff 2FA: not required (owner decision).
 7. Human-led production audit and hardening (§5.2), including `FIELD_ENCRYPTION_KEY` and re-encrypting existing PANs (`DEPLOYMENT.md` §6b).
 8. Phase 14 (infrastructure and operations) and Phase 15 (final launch readiness, including SEO).
-9. Notification retry consumer; programme rollups. (Reconciliation and pending expiry: Phase 11.)
-10. Deployment artefacts and hosting.
-11. Replace the fixture content and the DEMO organisation data.
+9. Programme rollups. (Notification retry: Phase 13. Reconciliation and pending expiry: Phase 11.)
+10. Deployment artefacts and hosting on Google Cloud Run (Phase 14).
+11. Enter the real organisation details in Admin → Settings (Phase 13 made the site read them).
 12. Optional, owner-approved: rebuild the Drizzle snapshot baseline so `db:generate` becomes usable. **This is not required for hand-written migrations.**
-13. Soft-404 fix; R2 `remotePatterns`; receipt PDF.
+13. Soft-404 fix; receipt PDF. (R2 `remotePatterns`: `MEDIA_PUBLIC_BASE_URL`, Phase 13.)
 
 ---
 
@@ -534,7 +596,7 @@ These are recorded here and **not** silently resolved in the source documents.
 | 12 | `development-setup.md`, `database-development.md`: `pnpm db:migrate` with no `--target` | `--target` is required |
 | 13 | `docs/database-development.md` "Development credentials": five per-role accounts with a required second factor | The current seed creates two `SUPER_ADMIN` accounts (`admin@sailent.local`, `staff@sailent.local`); TOTP is not enforced for `SUPER_ADMIN`. Older local databases may still hold the earlier accounts. |
 | 14 | `content-layer.md` §8: blog is fixture-backed | Database-backed |
-| 15 | Worker queue comments: declared queues are consumed | Only `example` and `email` are consumed |
+| 15 | Worker queue comments: declared queues are consumed | `example`, `email` and `payments` are consumed; `notifications`, `reports`, `cleanup` are declared and unused (nothing enqueues to them since Phase 13) |
 | 16 | `.env.example`: `SMS_*`, `SENTRY_*`, `JWT_REFRESH_SECRET`, `FEATURE_FCRA_ENABLED` | Never read (`FIELD_ENCRYPTION_KEY` is read since Phase 12) |
 | 17 | `docs/environment.md`: blank values fall back via `\|\|` | Web code uses `??` for `API_URL` |
 | 18 | `docs/phase-8.md` §13.6, §16: the Supabase project is "development/staging" | The code guard treats that host as production; the owner confirmed (2026-10-06) that it is **production** |
@@ -542,7 +604,7 @@ These are recorded here and **not** silently resolved in the source documents.
 | 22 | Seed header comment (`packages/database/src/seed/index.ts`, near the top): `--reference` is "safe anywhere / safe in any environment" | It is **not** safe on production: it deletes and re-inserts the `SUPER_ADMIN` grants (a lockout window), prunes permissions and upserts category slugs. The seed's own `main()` comment says so, and so do `DATABASE.md` §10 and `DEPLOYMENT.md` §10. |
 | 23 | Seed `main()` comment: "five staff accounts with a known password" | The current seed creates **two** (`admin@sailent.local`, `staff@sailent.local`) |
 | 24 | `donations.service.ts` comment: a failed order leaves a pending donation "swept by the same reconciliation"; `razorpay.client.ts` comment: `isConfigured` is "checked by the donation endpoints" | Since Phase 11 reconciliation exists and cancels such a donation after 24 h (when the worker is configured). `isConfigured` is still checked only inside `RazorpayClient.call()`, after the donation has been committed (`DEPLOYMENT.md` §6). |
-| 20 | The audit task mentioned Cloud Run | No Cloud Run, GCP or Docker deployment configuration exists |
+| 20 | Owner decision: Google Cloud Run is the intended host | No Cloud Run, GCP or Docker deployment configuration exists yet (Phase 14). Older docs that named Vercel/Render were updated on 2026-10-07 |
 | 21 | Local databases | One applied migration is absent from the repo, and `0014` was edited after it was applied (§5.1) |
 
 ---
@@ -550,12 +612,12 @@ These are recorded here and **not** silently resolved in the source documents.
 ## THE NEXT AI AGENT SHOULD START HERE
 
 1. Read `AGENTS.md` in full, especially §8 (production is off limits), §9 (work directly on `main`; owner approval before every commit and every push) and §11 (must not change). Then read this file, and `CLAUDE.md` if you are Claude Code.
-2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-07, local `main` is 1 commit ahead of `origin/main` (`5170ce0`): the Phase 12 commit `feat(auth): complete account and security hardening`, **not pushed** (§1 item 12). Ask the owner before pushing it. Staff TOTP/2FA is **not required** (owner decision); do not add it.
+2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-07, local `main` is 1 commit ahead of `origin/main` (`3941ee7`): the Phase 13 commit `feat(admin): complete cms and communications workflows`, **not pushed** (§1 item 13). Ask the owner before pushing it. Staff TOTP/2FA is **not required** (owner decision); do not add it.
 3. **CI (deferred by the owner on 2026-10-06; resume only when asked): watch CI.**
    - Observe the GitHub Actions run for the current `main` head (for example with `gh run list` / `gh run view`, or on GitHub). The `security` job is expected to fail at `pnpm audit` until the dependency fixes are approved (§5.4).
    - Report the `quality` and `security` job results with their failing step and log excerpt, if any.
    - **Do not claim CI passes until that run has been observed.**
    - If a later step fails (build, tests, format, audit, gitleaks), report it and wait for the owner. Do not fix it unprompted.
-4. **Then:** Phase 13 (Admin, CMS & Communications) when the owner starts it. Recommend a **human-led** review of the production database (§5.2) and the Phase 12 human-only steps (`DEPLOYMENT.md` §6b). The §5.1 leftover migration row still needs an owner decision, but no longer blocks tests.
+4. **Then:** Phase 14 (Infrastructure & Production Operations, Google Cloud Run) when the owner starts it. Recommend a **human-led** review of the production database (§5.2) and the human-only steps of Phases 12 and 13 (`DEPLOYMENT.md` §6b, §6c — including applying migration `0023`). The §5.1 leftover migration row still needs an owner decision.
 
 Do not create feature branches or pull requests unless the owner explicitly asks (`AGENTS.md` §9).

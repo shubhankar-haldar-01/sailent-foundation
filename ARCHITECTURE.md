@@ -41,7 +41,11 @@ There are three deployables and one shared database. The packages are consumed a
 - **Donor data** goes through `src/lib/donor/*` (`donorFetch`, actions, `readDonorViewer`).
 - **BFF** `src/app/api/bff/[...path]/route.ts`: proxies browser calls to the API. It attaches the donor token for `me/*` paths and the staff token for everything else. Since Phase 12 it first refuses (403) any POST/PATCH/PUT/DELETE whose `Origin` is not this site, `NEXT_PUBLIC_APP_URL` or `TRUSTED_ORIGINS` — or, with no `Origin`, lacks `Sec-Fetch-Site: same-origin` (`src/lib/security/origin-check.ts`).
 - **Security headers** (`next.config.ts`): `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`, `Permissions-Policy`, a Content-Security-Policy (`src/lib/security/content-security-policy.ts`, Razorpay Checkout allowed) and, for `APP_ENV=production`, HSTS.
-- **Startup** (`src/instrumentation.ts`): validates `webEnvSchema` and refuses to start production with mock data, demo organisation data, or the internal secret / client-IP header missing.
+- **Startup** (`src/instrumentation.ts`): validates `webEnvSchema` and refuses to start production with mock data or the internal secret / client-IP header missing.
+- **Organisation details** (Phase 13, `src/lib/content/organisation.ts`): the footer, `/contact`, `/about`, the site-wide JSON-LD and the "years of service" figure read `GET /settings/public` (Admin → Settings). An unset detail is left out; `lib/demo-org.ts` fills gaps only while mock data is on, never in production. The loader never throws (it feeds every page's footer).
+- **Public forms** (Phase 13): the contact form and newsletter sign-up are server actions (`src/lib/communications/actions.ts`) forwarding the client address; newsletter links land on `/newsletter/confirm` and `/newsletter/unsubscribe`, which act only on a button press.
+- **Search and FAQ** (Phase 13): `/search` is a GET form whose results come from `GET /search` on the server (published content only); `/faq` reads `GET /faqs`. Fixtures are only the development fallback.
+- **Staff account pages** (Phase 13): `/admin/accept-invite`, `/admin/forgot-password`, `/admin/reset-password` are reachable without a session (the middleware's allow-list); the token is read from the link's `#` fragment in the browser.
 - **Middleware** `src/middleware.ts` checks only that the session cookie *exists* for `/admin/*` and `/dashboard/*`. This is for redirect UX; it is not authorization.
 - **Tokens:** `src/lib/auth/token-store.ts` keeps one httpOnly JSON cookie per audience: `{accessToken, refreshToken, expiresAt, actor}`. It refreshes 60s before expiry. There is a known risk: a refresh during a server-component render cannot set the cookie (see `SECURITY.md`).
 - **SEO:** `src/lib/seo/*` provides `buildMetadata`, canonical URLs, JSON-LD builders and the sitemap segments (route handlers `sitemap*.xml`).
@@ -50,7 +54,7 @@ There are three deployables and one shared database. The packages are consumed a
 
 ## 3. Backend — `apps/api`
 
-- NestJS. The global prefix is `api/v1` (`packages/config` `API_PREFIX`). There are 27 modules (`src/app.module.ts`): Database, Redis, Queue, Audit, Security (field encryption, Phase 12), Auth, Content, Users, Catalog, Products, Donations, Events, Team, Volunteers, Impact, Me, Donors, Settings, Stories, Blog, Pages, Storage, Media, Documents, Notifications, Reports and Health.
+- NestJS. The global prefix is `api/v1` (`packages/config` `API_PREFIX`). There are 31 modules (`src/app.module.ts`): Database, Redis, Queue, Audit, Security (field encryption, Phase 12), Auth, Content, Users, Catalog, Products, Donations, Events, Team, Volunteers, Impact, Me, Donors, Settings, Stories, Blog, Pages, Storage, Media, Documents, Notifications, Communications (contact + newsletter, Phase 13), Dashboard (Phase 13), Faqs (general FAQs, Phase 13), Search (Phase 13), Reports and Health.
 - **Request pipeline:**
   1. `RequestIdMiddleware` sets the request ID.
   2. helmet; HSTS is enabled in production only.
@@ -159,12 +163,13 @@ sequenceDiagram
 - **Producer:** the API's `QueueService` (BullMQ). Job IDs avoid colons (`jobKey()`).
 - **Worker** (`apps/worker/src/main.ts`) consumes:
   - `example`;
-  - `email`, with processors for donation confirmation, the donor login code, event registration and cancellation, and the volunteer messages (application received, approved, rejected, assigned; certificate issued).
-- **Declared but unconsumed:** `notifications`, `reports`, `payments`, `cleanup`. The admin "retry" enqueues to `notifications`, so it sends nothing.
-- **Job defaults:** 3 attempts with exponential backoff. A staff alert is sent on permanent failure.
+  - `email`, dispatched by job name: donation confirmation, the donor login code (and email-change code), event registration and cancellation, the volunteer messages (application received, approved, rejected, assigned; certificate issued), and since Phase 13 `contact.received` (to the organisation's contact email), `newsletter.confirm`, `staff.invite` and `staff.password_reset` (`processors/communications.processor.ts`);
+  - `payments` (reconciliation schedule, Phase 11).
+- **Declared but unconsumed:** `notifications`, `reports`, `cleanup`. Nothing enqueues to them: since Phase 13 the admin "retry" enqueues to `email` under the original job name (it used to go to `notifications` and send nothing). Retry is offered for `contact.received` and the Phase 10.11 set; never for jobs whose link held a token (`newsletter.confirm`, `staff.*`, `donor.login_code`).
+- **Job defaults:** 3 attempts with exponential backoff; only `unreachable` provider errors throw (and retry), permanent ones are recorded `failed` and raise the in-app staff alert. Every attempt writes a `notifications` row (ids only — no token, link, address or message body). A contact message already recorded as sent is not emailed again.
 - **Templates:** the `notification_templates` table, versioned, with HTML-escaped placeholders.
 - **Health:** the worker serves `/health` on `WORKER_PORT` (default 4001).
-- **PLANNED:** scheduled jobs (reconciliation, counter drift, cleanup, reminders), SMS, newsletter.
+- **PLANNED / out of scope:** scheduled jobs beyond reconciliation (counter drift, cleanup, reminders — Phase 14), SMS, and SENDING newsletters (the platform records double-opt-in consent only).
 
 ## 9. Caching
 
@@ -179,14 +184,8 @@ sequenceDiagram
   - local Postgres and Redis;
   - CI.
 - **Does not exist:** any staging environment; application hosting.
-- **Documented intent (PLANNED):**
-  - web on Vercel;
-  - api and worker on Render or Railway (persistent processes, decision A12);
-  - Supabase Postgres (session pooler on port 5432);
-  - Upstash Redis;
-  - R2;
-  - Cloudflare in front.
-- **Not in the repo:** Dockerfiles, IaC, deployment workflow. Cloud Run is not referenced anywhere.
+- **Intended hosting (owner decision): Google Cloud Run** for the web, API and worker (persistent processes, decision A12), with the Supabase Postgres database, Redis and R2. Earlier documents named Vercel and Render/Railway; those are superseded. Deployment work is Phase 14.
+- **Not in the repo yet:** Dockerfiles, IaC, a deployment workflow (Phase 14).
 - **Local development:** `infrastructure/docker-compose.yml` (Postgres 17 + Redis 7). See `DEPLOYMENT.md`.
 
 ## 11. Monitoring and logging

@@ -5,6 +5,7 @@ import { campaigns, categories, programs, type DatabaseClient } from '@sailent/d
 import { canTransitionProgram, type ProgramStatus } from '@sailent/validation';
 import type { AuthenticatedActor } from '@sailent/types';
 
+import { assertPublicMediaCover } from './cover-image.js';
 import { DATABASE } from '../database/database.module.js';
 import { AuditService } from '../audit/audit.service.js';
 import { CategoriesService } from './categories.service.js';
@@ -187,6 +188,7 @@ export class ProgramsService {
   // -------------------------------------------------------------------------
 
   async create(input: ProgramWriteInput, actor: AuthenticatedActor, context: AuditContext) {
+    await assertPublicMediaCover(this.database, input.coverImage);
     const category = await this.categories.resolveForWrite(input.categoryId, 'program');
     const slug = await this.slugs.allocate('program', { title: input.title, slug: input.slug });
 
@@ -225,6 +227,7 @@ export class ProgramsService {
     context: AuditContext,
   ) {
     const before = await this.getById(id);
+    await assertPublicMediaCover(this.database, input.coverImage);
 
     const category =
       input.categoryId === undefined

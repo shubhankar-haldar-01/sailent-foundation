@@ -123,7 +123,8 @@ export const testimonials: Testimonial[] = [
     id: 't4',
     quote: 'The reporting shows me exactly where each donation went.',
     name: 'Sanjay Iyer',
-    role: 'Monthly Donor',
+    // Phase 13: was "Monthly Donor". Donations are one-time only.
+    role: 'Donor',
     kind: 'donor',
     photoSeed: 'team-testimonial-4',
   },
@@ -165,9 +166,3 @@ export interface Partner {
  * ══════════════════════════════════════════════════════════════════════════
  */
 export const partners: Partner[] = [];
-
-/** Suggested donation amounts, in PAISE (decision A2). */
-export const donationPresets = {
-  once: [50_000, 100_000, 250_000, 500_000],
-  monthly: [30_000, 50_000, 100_000, 250_000],
-} as const;

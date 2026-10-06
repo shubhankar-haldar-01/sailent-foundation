@@ -3,6 +3,7 @@ import { Global, Module } from '@nestjs/common';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { PasswordService } from './password.service.js';
+import { StaffAccountService } from './staff-account.service.js';
 import { TokenService } from './token.service.js';
 import { TotpService } from './totp.service.js';
 
@@ -15,7 +16,7 @@ import { TotpService } from './totp.service.js';
 @Global()
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, PasswordService, TokenService, TotpService],
-  exports: [AuthService, PasswordService, TokenService, TotpService],
+  providers: [AuthService, PasswordService, StaffAccountService, TokenService, TotpService],
+  exports: [AuthService, PasswordService, StaffAccountService, TokenService, TotpService],
 })
 export class AuthModule {}

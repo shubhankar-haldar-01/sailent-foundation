@@ -7,7 +7,15 @@ import { ProgramForm } from '@/components/admin/program-form';
 import { StatusActions } from '@/components/admin/status-actions';
 import { StatusPill } from '@/components/admin/status-pill';
 import { changeProgramStatus } from '@/lib/admin/actions';
-import { AdminApiError, adminFetch, type AdminCategory } from '@/lib/admin/api';
+import { CoverImagePanel } from '@/components/admin/campaign-media';
+import { can, currentActor } from '@/lib/auth/session';
+import {
+  AdminApiError,
+  adminFetch,
+  listMedia,
+  type AdminCategory,
+  type AdminMedia,
+} from '@/lib/admin/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +23,7 @@ interface ProgramDetail {
   id: string;
   title: string;
   slug: string;
+  coverImage: string | null;
   shortDescription: string | null;
   description: string | null;
   problem: string | null;
@@ -54,6 +63,11 @@ export default async function EditProgramPage({ params }: { params: Promise<{ id
     if (error instanceof AdminApiError && error.status === 404) notFound();
     throw error;
   }
+
+  const actor = await currentActor();
+  const mediaOptions: AdminMedia[] = can(actor, 'media.read')
+    ? (await listMedia({ visibility: 'public', limit: 60 })).items
+    : [];
 
   return (
     <div className="space-y-8">
@@ -109,6 +123,23 @@ export default async function EditProgramPage({ params }: { params: Promise<{ id
         <h2 className="text-h4 mb-4 font-semibold">Details</h2>
         <ProgramForm categories={categories.items.filter((c) => c.isActive)} program={program} />
       </section>
+
+      {can(actor, 'program.update') ? (
+        <section>
+          <h2 className="text-h4 mb-1 font-semibold">Cover image</h2>
+          <p className="text-body-sm text-muted-foreground mb-4 max-w-prose">
+            Shown at the top of the programme page and on its card (Phase 13). Public images from
+            the media library only.
+          </p>
+          <CoverImagePanel
+            kind="program"
+            id={program.id}
+            slug={program.slug}
+            current={program.coverImage}
+            options={mediaOptions}
+          />
+        </section>
+      ) : null}
 
       {program.campaigns.length > 0 ? (
         <section>

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -33,12 +34,14 @@ import {
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { ValidationException } from '../../common/exceptions.js';
 import { DocumentsService } from './documents.service.js';
+import { requestClientIp } from '../../common/security/internal-request.js';
 import {
   ChangeDocumentVisibilityDto,
   MAX_DOCUMENT_UPLOAD_BYTES,
   UpdateDocumentDto,
   changeDocumentVisibilitySchema,
   createDocumentSchema,
+  deleteDocumentSchema,
   documentListQuerySchema,
   updateDocumentSchema,
 } from './dto/documents.dto.js';
@@ -59,13 +62,10 @@ import {
  * them to keep a re-auth window open, which is worse for security than not
  * asking.
  *
- * THERE IS NO DELETE ROUTE, AND NO `document.delete` PERMISSION EXISTS.
- *
- * The permission catalogue has four document permissions and destruction is
- * not among them. That is the same decision `success_stories` made: a document
- * here is an annual report, an audited statement or a policy, and the row is
- * the record that it existed. Withdrawal is a visibility change, which keeps
- * the history and the audit trail.
+ * DELETION (Phase 13) is `document.delete`, sensitive, with a reason. It
+ * removes the stored file and then the row; the audit entry keeps the title,
+ * type and visibility, so the record that the document existed survives it.
+ * Withdrawal without deletion is still a visibility change.
  * ══════════════════════════════════════════════════════════════════════════
  */
 @ApiTags('admin: documents')
@@ -77,7 +77,8 @@ export class AdminDocumentsController {
 
   private context(request: Request) {
     return {
-      ipAddress: request.ip,
+      // The trusted client address (Phase 12), as every other controller.
+      ipAddress: requestClientIp(request),
       userAgent: request.get('user-agent') ?? undefined,
       requestId: request.get('x-request-id') ?? undefined,
     };
@@ -243,5 +244,27 @@ export class AdminDocumentsController {
     @Req() request: Request,
   ) {
     return this.documents.issueDownload(id, actor, this.context(request));
+  }
+
+  @RequirePermission('document.delete')
+  @Sensitive()
+  @Delete('documents/:id')
+  @ApiOperation({
+    summary: 'Delete a document and its stored file',
+    description:
+      'Requires a re-authentication within the last five minutes and a reason. The file is ' +
+      'deleted first; if that fails the document is left unchanged (503). A private document ' +
+      'the caller cannot read answers 404.',
+  })
+  @ApiResponse({ status: 200, description: '`{ deleted: true }`' })
+  @ApiResponse({ status: 403, description: 'Missing document.delete, or REAUTH_REQUIRED' })
+  @ApiResponse({ status: 404, description: 'No such document, or not visible to this caller' })
+  delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(deleteDocumentSchema)) body: { reason: string },
+    @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
+  ) {
+    return this.documents.delete(id, body, actor, this.context(request));
   }
 }

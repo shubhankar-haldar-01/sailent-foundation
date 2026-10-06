@@ -222,26 +222,33 @@ export const updateFaqSchema = createFaqSchema
   .partial()
   .refine((value) => Object.keys(value).length > 0, 'Nothing to update');
 
-export const addGalleryItemSchema = z.object({
-  storageKey: z.string().trim().min(1).max(512),
-  url: z.string().url().max(1000).nullish(),
-  /** Required. An image with no alt text is invisible to a screen reader. */
-  altText: z.string().trim().min(1, 'Describe the image').max(300),
-  caption: z.string().trim().max(300).nullish(),
-  mimeType: z.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif'], {
-    errorMap: () => ({ message: 'Images must be JPEG, PNG, WebP or AVIF' }),
-  }),
-  /** 10 MB. Large enough for a photograph, small enough to stay servable. */
-  sizeBytes: z
-    .number()
-    .int()
-    .positive()
-    .max(10 * 1024 * 1024, 'Images must be under 10 MB'),
-  width: z.number().int().positive().max(20_000).nullish(),
-  height: z.number().int().positive().max(20_000).nullish(),
-  displayOrder: z.number().int().min(0).max(9999).optional(),
-  visibility: z.enum(['public', 'private']).optional(),
-});
+/**
+ * Add an image to a campaign gallery — FROM THE MEDIA LIBRARY (Phase 13).
+ *
+ * Until Phase 13 this took raw storage metadata (a key, a URL, a declared
+ * type and size), which let a caller register an object no upload had ever
+ * inspected. Now the image must already be a `media` row: uploaded through
+ * `POST /admin/media`, its type sniffed from its bytes and its EXIF/GPS
+ * removed. A public gallery item must use a public image.
+ */
+export const addGalleryItemSchema = z
+  .object({
+    mediaId: z.string().uuid('Choose an image from the media library'),
+    displayOrder: z.number().int().min(0).max(9999).optional(),
+    visibility: z.enum(['public', 'private']).optional(),
+  })
+  .strict();
+
+/** The whole gallery's order, first to last (Phase 13). */
+export const reorderGallerySchema = z
+  .object({
+    ids: z
+      .array(z.string().uuid())
+      .min(1)
+      .max(200)
+      .refine((ids) => new Set(ids).size === ids.length, 'Each image may appear once'),
+  })
+  .strict();
 
 export const updateGalleryItemSchema = z
   .object({
@@ -272,6 +279,18 @@ export const updateUpdateSchema = createUpdateSchema
   .refine((value) => Object.keys(value).length > 0, 'Nothing to update');
 
 export const publishFlagSchema = z.object({ published: z.boolean() });
+
+/**
+ * A progress update's status. `{ published }` is the original form; `{ status }`
+ * (Phase 13) adds `archived` — the model's way to take an update down for
+ * good, since updates are records and are not deleted.
+ */
+export const updateStatusSchema = z.union([
+  publishFlagSchema.strict().transform((value) => ({
+    status: value.published ? ('published' as const) : ('draft' as const),
+  })),
+  z.object({ status: z.enum(['draft', 'published', 'archived']) }).strict(),
+]);
 
 // ---------------------------------------------------------------------------
 // Swagger shapes

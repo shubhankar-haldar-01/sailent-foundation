@@ -5,12 +5,16 @@ import { ArrowRight, Check } from 'lucide-react';
 import { Button, Input, Label, cn } from '@sailent/ui';
 import { emailSchema } from '@sailent/validation';
 
+import { subscribeToNewsletter } from '@/lib/communications/actions';
+import { Honeypot } from '@/components/forms/honeypot';
+
 /**
- * Newsletter signup — UI only.
+ * Newsletter sign-up (Phase 13: real, double opt-in).
  *
- * Validates with the SAME shared Zod schema the API will use, so the client
- * and server cannot disagree about what a valid address is. No email service
- * is wired up; Brevo integration lands in Phase 4.
+ * Validates with the SAME shared Zod schema the API uses. Submitting stores a
+ * PENDING subscription and emails a confirmation link; only that link
+ * subscribes the address, so nobody can sign somebody else up. The answer is
+ * the same whether or not the address was already on the list.
  */
 export function NewsletterForm({
   className,
@@ -30,8 +34,9 @@ export function NewsletterForm({
   const [value, setValue] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState(false);
+  const [pending, startTransition] = React.useTransition();
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const result = emailSchema.safeParse(value);
     if (!result.success) {
@@ -39,7 +44,12 @@ export function NewsletterForm({
       return;
     }
     setError(null);
-    setSubmitted(true);
+    const data = new FormData(event.currentTarget);
+    startTransition(async () => {
+      const response = await subscribeToNewsletter(data);
+      if (response.ok) setSubmitted(true);
+      else setError(response.fieldErrors?.email ?? response.error ?? 'That did not go through.');
+    });
   };
 
   if (submitted) {
@@ -49,19 +59,21 @@ export function NewsletterForm({
         className={cn('text-body-sm text-success flex items-center gap-2', className)}
       >
         <Check className="size-4 shrink-0" aria-hidden="true" />
-        Thank you — you would be subscribed once the email service is connected.
+        Nearly done — check your inbox and confirm with the link we sent.
       </p>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className={cn('space-y-2', className)}>
+    <form onSubmit={handleSubmit} noValidate className={cn('relative space-y-2', className)}>
+      <Honeypot />
       <Label htmlFor={inputId} className={cn(compact && 'sr-only')}>
         Email address
       </Label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input
           id={inputId}
+          name="email"
           type="email"
           autoComplete="email"
           placeholder="you@example.com"
@@ -78,7 +90,13 @@ export function NewsletterForm({
           }}
           className="sm:flex-1"
         />
-        <Button type="submit" variant={tone === 'info' ? 'info' : 'primary'} className="shrink-0">
+        <Button
+          type="submit"
+          variant={tone === 'info' ? 'info' : 'primary'}
+          className="shrink-0"
+          disabled={pending}
+          aria-busy={pending}
+        >
           Subscribe
           {tone === 'info' ? <ArrowRight className="size-4" aria-hidden="true" /> : null}
         </Button>

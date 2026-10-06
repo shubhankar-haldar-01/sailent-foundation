@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Caveat, DM_Sans, Plus_Jakarta_Sans } from 'next/font/google';
 
 import { AppProviders } from '@/providers';
-import { demoOrg } from '@/lib/demo-org';
+import { getOrganisation } from '@/lib/content/organisation';
 import { jsonLd, organizationSchema } from '@/lib/seo/structured-data';
 import { siteConfig } from '@/lib/site-config';
 import { canonicalUrl } from '@/lib/seo/metadata';
@@ -70,7 +70,10 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Contact details from Admin → Settings (Phase 13). Never throws.
+  const organisation = await getOrganisation();
+
   return (
     <html
       lang="en-IN"
@@ -80,24 +83,30 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-dvh antialiased">
         {/*
           Organization schema, site-wide.
-          Note it emits contact and address but NOT the statutory registration
-          numbers: those are dummy values, and structured data asserting a
-          registration we cannot substantiate is exactly the misleading markup
-          docs/seo-strategy.md §5 rules out. They go in once they are real.
+          Note it emits contact and address (from Admin → Settings, Phase 13)
+          but NOT the statutory registration numbers: structured data asserting
+          a registration is exactly the misleading markup docs/seo-strategy.md
+          §5 rules out until it is verified. Adding them is SEO work (Phase 15).
         */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={jsonLd(
             organizationSchema({
-              email: demoOrg.email,
-              phone: demoOrg.phoneDisplay,
-              address: {
-                street: `${demoOrg.address.line1}, ${demoOrg.address.line2}`,
-                city: demoOrg.address.city,
-                state: demoOrg.address.state,
-                postalCode: demoOrg.address.postalCode,
-              },
-              socialProfiles: demoOrg.social.map((link) => link.url),
+              email: organisation.email ?? undefined,
+              phone: organisation.phoneDisplay ?? undefined,
+              ...(organisation.address.line1 || organisation.address.city
+                ? {
+                    address: {
+                      street: [organisation.address.line1, organisation.address.line2]
+                        .filter(Boolean)
+                        .join(', '),
+                      city: organisation.address.city ?? '',
+                      state: organisation.address.state ?? '',
+                      postalCode: organisation.address.postalCode ?? '',
+                    },
+                  }
+                : {}),
+              socialProfiles: organisation.social.map((link) => link.url),
             }),
           )}
         />

@@ -5,7 +5,12 @@ import { formatDate } from '@sailent/ui';
 
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
-import { EditUserForm, GrantRoleForm, UserStatusControls } from '@/components/admin/user-admin';
+import {
+  EditUserForm,
+  GrantRoleForm,
+  ResendInvitationForm,
+  UserStatusControls,
+} from '@/components/admin/user-admin';
 import { AdminApiError, getUser, type AdminUser } from '@/lib/admin/api';
 import { currentActor, can } from '@/lib/auth/session';
 
@@ -118,6 +123,13 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           )}
         </div>
       </section>
+
+      {user.status === 'invited' && can(actor, 'user.invite') ? (
+        <section className="space-y-3">
+          <h2 className="text-h3 font-semibold">Invitation</h2>
+          <ResendInvitationForm user={user} />
+        </section>
+      ) : null}
 
       {can(actor, 'user.suspend') ? (
         <section className="space-y-3">

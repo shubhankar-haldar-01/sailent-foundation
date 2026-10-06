@@ -44,6 +44,15 @@ import {
   type VolunteerDecisionJob,
 } from './processors/volunteer-notifications.processor.js';
 import {
+  processContactReceived,
+  processNewsletterConfirm,
+  processStaffInvite,
+  processStaffPasswordReset,
+  type ContactReceivedJob,
+  type NewsletterConfirmJob,
+  type StaffTokenJob,
+} from './processors/communications.processor.js';
+import {
   announceConnection,
   assertRuntimeDatabaseTarget,
   createDatabaseClient,
@@ -142,7 +151,7 @@ exampleWorker.on('failed', (job, error) => {
 /**
  * The EMAIL queue.
  *
- * One worker, one job type for now: the donor's confirmation. Concurrency is
+ * One worker for every transactional email, dispatched by job name. Concurrency is
  * deliberately lower than the general setting — Brevo rate-limits, and a burst
  * of parallel sends after a busy hour achieves nothing but 429s and retries.
  *
@@ -159,6 +168,9 @@ const emailWorker = new Worker<
   | VolunteerDecisionJob
   | VolunteerAssignedJob
   | VolunteerCertificateJob
+  | ContactReceivedJob
+  | NewsletterConfirmJob
+  | StaffTokenJob
 >(
   QUEUE_NAMES.EMAIL,
   (job) => {
@@ -229,6 +241,31 @@ const emailWorker = new Worker<
       case 'volunteer.certificate.issued':
         return processVolunteerCertificate(
           job as Job<VolunteerCertificateJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+        );
+      // Phase 13: contact messages, newsletter confirmation, staff accounts.
+      case 'contact.received':
+        return processContactReceived(
+          job as Job<ContactReceivedJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+        );
+      case 'newsletter.confirm':
+        return processNewsletterConfirm(
+          job as Job<NewsletterConfirmJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+        );
+      case 'staff.invite':
+        return processStaffInvite(
+          job as Job<StaffTokenJob>,
+          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          logger,
+        );
+      case 'staff.password_reset':
+        return processStaffPasswordReset(
+          job as Job<StaffTokenJob>,
           { database, brevo, appUrl: env.APP_PUBLIC_URL },
           logger,
         );

@@ -142,6 +142,17 @@ export const changeDocumentVisibilitySchema = z.object({
     .max(500, 'Keep the reason under 500 characters.'),
 });
 
+/** Deleting a document (Phase 13): a reason is required, as for a visibility change. */
+export const deleteDocumentSchema = z
+  .object({
+    reason: z
+      .string()
+      .trim()
+      .min(10, 'Say why this is being deleted, in at least ten characters.')
+      .max(500, 'Keep the reason under 500 characters.'),
+  })
+  .strict();
+
 export const documentListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),

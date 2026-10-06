@@ -73,7 +73,7 @@ export default async function AdminStoryPage({ params }: { params: Promise<{ id:
       {can(actor, 'story.publish') ? (
         <section className="space-y-3">
           <h2 className="text-h3 font-semibold">Publishing</h2>
-          <StoryStatusControls story={story} />
+          <StoryStatusControls story={story} canArchive={can(actor, 'story.archive')} />
         </section>
       ) : null}
 

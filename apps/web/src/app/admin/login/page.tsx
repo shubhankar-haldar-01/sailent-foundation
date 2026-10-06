@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 
 import { Alert, Button, Input, Label } from '@sailent/ui';
 
@@ -107,6 +108,12 @@ export default function AdminLoginPage() {
           <Button type="submit" fullWidth size="lg" disabled={pending}>
             {pending ? 'Signing in…' : 'Sign in'}
           </Button>
+          <Link
+            href="/admin/forgot-password"
+            className="text-body-sm text-primary block text-center underline underline-offset-4"
+          >
+            Forgot your password?
+          </Link>
         </form>
       </div>
     </main>

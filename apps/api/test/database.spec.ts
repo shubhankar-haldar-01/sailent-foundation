@@ -140,6 +140,12 @@ describe('Database (integration)', () => {
         */
         'notification_templates',
         'notification_template_revisions',
+        /*
+          Phase 13 (migration 0023): what the public contact form submits, and
+          double-opt-in newsletter consent.
+        */
+        'contact_messages',
+        'newsletter_subscribers',
       ];
 
       for (const table of expected) {

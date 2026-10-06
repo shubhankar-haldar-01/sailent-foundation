@@ -22,6 +22,7 @@ import {
 import { offsetFor, paginate } from '../../common/dto/pagination.dto.js';
 import { StorageService, type StorageBucket } from '../storage/storage.service.js';
 import { UnsupportedDocumentError, inspectDocument } from '../storage/document-inspection.js';
+import { stripImageMetadata } from '../storage/strip-metadata.js';
 import { DOCUMENT_SIGNED_URL_SECONDS, MAX_DOCUMENT_UPLOAD_BYTES } from './dto/documents.dto.js';
 
 interface CreateInput {
@@ -271,8 +272,14 @@ export class DocumentsService {
     const bucket = this.bucketFor(visibility);
     const key = this.storage.buildKey({ prefix: 'documents', mimeType: inspected.mimeType });
 
+    /*
+      A scanned image (JPEG/PNG/WebP) loses its EXIF, GPS and text metadata
+      before it is stored (Phase 13). A PDF passes through unchanged.
+    */
+    const bytes = stripImageMetadata(file.buffer, inspected.mimeType).bytes;
+
     // Object first. See the note at the top of this class.
-    await this.storage.put(bucket, key, file.buffer, inspected.mimeType);
+    await this.storage.put(bucket, key, bytes, inspected.mimeType);
 
     /*
       `published_at` is stamped IF AND ONLY IF this is public, because the
@@ -293,7 +300,7 @@ export class DocumentsService {
         fileUrl: visibility === 'public' ? this.storage.publicUrl(key) : null,
         fileName: this.safeFileName(file.originalname),
         mimeType: inspected.mimeType,
-        sizeBytes: file.buffer.byteLength,
+        sizeBytes: bytes.byteLength,
         financialYear: input.financialYear ?? null,
         relatedType: input.relatedType ?? null,
         relatedId: input.relatedId ?? null,
@@ -314,7 +321,7 @@ export class DocumentsService {
         title: input.title,
         documentType: input.documentType,
         visibility,
-        sizeBytes: file.buffer.byteLength,
+        sizeBytes: bytes.byteLength,
         mimeType: inspected.mimeType,
       },
       // A public upload is a disclosure the moment it happens.
@@ -589,6 +596,64 @@ export class DocumentsService {
    * visibility was at the time.
    * ══════════════════════════════════════════════════════════════════════════
    */
+  /**
+   * Delete a document: its stored file, then its row (Phase 13).
+   *
+   * ══════════════════════════════════════════════════════════════════════════
+   * ORDER MATTERS. The object is deleted FIRST. If that fails, nothing has
+   * changed — the row still exists, the file is still where it was, and the
+   * caller is told so (503). Deleting the row first and then failing on the
+   * object would leave a public file reachable by its URL with no record that
+   * it exists: a disclosure nobody could find.
+   *
+   * VISIBILITY IS CHECKED FIRST: `requireRow` answers 404 for a private or
+   * admin-only document the caller may not see, so a caller cannot delete —
+   * or learn of — what it cannot read. `document.delete` is sensitive and the
+   * route needs a fresh re-authentication. The audit row keeps the title,
+   * type and visibility, so the record that a document existed outlives it.
+   * ══════════════════════════════════════════════════════════════════════════
+   */
+  async delete(
+    id: string,
+    input: { reason: string },
+    actor: AuthenticatedActor,
+    context: AuditContext,
+  ): Promise<{ deleted: true }> {
+    this.assertStorageReady();
+    const existing = await this.requireRow(id, actor);
+
+    try {
+      await this.storage.delete(this.bucketFor(existing.visibility), existing.fileKey);
+    } catch {
+      throw new ServiceUnavailableException(
+        'The stored file could not be deleted, so the document was left exactly as it was. ' +
+          'Try again shortly.',
+      );
+    }
+
+    await this.db.delete(documents).where(eq(documents.id, id));
+
+    await this.audit.record({
+      actorType: 'user',
+      userId: actor.id,
+      action: 'document.delete',
+      entityType: 'document',
+      entityId: id,
+      oldValues: {
+        title: existing.title,
+        documentType: existing.documentType,
+        visibility: existing.visibility,
+        relatedType: existing.relatedType,
+        relatedId: existing.relatedId,
+      },
+      reason: input.reason,
+      severity: 'warning',
+      ...context,
+    });
+
+    return { deleted: true };
+  }
+
   async issueDownload(id: string, actor: AuthenticatedActor, context: AuditContext) {
     const row = await this.requireRow(id, actor);
 

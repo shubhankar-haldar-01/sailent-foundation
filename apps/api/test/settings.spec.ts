@@ -126,14 +126,17 @@ describe('Settings (integration)', () => {
 
   // =========================================================================
   describe('reading', () => {
-    it('returns all four settings and nothing else', async () => {
+    it('returns every known setting and nothing else', async () => {
       const response = await request(server).get(`${PREFIX}/admin/settings`).set(auth(staff));
       const data = (response.body as Envelope<Record<string, unknown>>).data!;
 
+      // Six since Phase 13 (migration 0023 added the two organisation rows).
       expect(Object.keys(data).sort()).toEqual([
         'donation_minimum_paise',
         'fcra_enabled',
+        'organization_contact',
         'organization_name',
+        'organization_social',
         'registration_details',
       ]);
     });

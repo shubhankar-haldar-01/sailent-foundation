@@ -10,26 +10,32 @@ import { StatBand } from '@/components/impact/stat-band';
 import { TeamMemberCard } from '@/components/team/team-member-card';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { getHeadlineMetrics, getImpact, getTeam } from '@/lib/content';
-import { demoAddressLine, demoOrg } from '@/lib/demo-org';
+import { formatRegisteredOn, getOrganisation, type Organisation } from '@/lib/content/organisation';
 
 /**
  * The statutory identifiers, verifiable against the public registers.
  *
- * Moved here when `/transparency` was removed. DUMMY values from
- * `@/lib/demo-org`, every one marked DEMO so it cannot be mistaken for a real
- * registration — which matters most on exactly this block.
+ * Moved here when `/transparency` was removed. From Admin → Settings since
+ * Phase 13 (`getOrganisation`); a field nobody has entered is left out. In
+ * development an empty field shows the DEMO value, marked so it cannot be
+ * mistaken for a real registration, and the note below the list says so.
  */
-const REGISTRATION_FIELDS = [
-  { label: 'Registered name', value: demoOrg.legalName },
-  { label: 'Registered as', value: demoOrg.registeredAs },
-  { label: 'Registration number', value: demoOrg.registration.trustDeedNumber },
-  { label: 'Date of registration', value: demoOrg.registration.registeredOn },
-  { label: 'Registered office', value: demoAddressLine },
-  { label: 'PAN', value: demoOrg.registration.pan },
-  { label: 'Section 12A registration', value: demoOrg.registration.section12A },
-  { label: 'Section 80G registration', value: demoOrg.registration.section80G },
-  { label: 'CSR-1 registration', value: demoOrg.registration.csr1 },
-];
+function registrationFields(organisation: Organisation) {
+  return [
+    { label: 'Registered name', value: organisation.name },
+    { label: 'Registered as', value: organisation.registeredAs },
+    { label: 'Registration number', value: organisation.registration.trustDeedNumber },
+    {
+      label: 'Date of registration',
+      value: formatRegisteredOn(organisation.registration.registeredOn),
+    },
+    { label: 'Registered office', value: organisation.addressLine },
+    { label: 'PAN', value: organisation.registration.pan },
+    { label: 'Section 12A registration', value: organisation.registration.section12A },
+    { label: 'Section 80G registration', value: organisation.registration.section80G },
+    { label: 'CSR-1 registration', value: organisation.registration.csr1 },
+  ].filter((field): field is { label: string; value: string } => Boolean(field.value));
+}
 
 export const metadata: Metadata = buildMetadata({
   title: 'About us',
@@ -58,11 +64,13 @@ const values = [
 ];
 
 export default async function AboutPage() {
-  const [team, headlineMetrics, impact] = await Promise.all([
+  const [team, headlineMetrics, impact, organisation] = await Promise.all([
     getTeam(),
     getHeadlineMetrics(),
     getImpact(),
+    getOrganisation(),
   ]);
+  const registration = registrationFields(organisation);
 
   const leadership = team.filter((member) => member.department === 'Leadership').slice(0, 3);
   const geographicReach = impact.reach.byState;
@@ -253,7 +261,7 @@ export default async function AboutPage() {
 
               <div className="lg:col-span-7">
                 <dl className="divide-border divide-y">
-                  {REGISTRATION_FIELDS.map((field) => (
+                  {registration.map((field) => (
                     <div
                       key={field.label}
                       className="flex flex-wrap justify-between gap-2 py-3 first:pt-0"
@@ -265,11 +273,13 @@ export default async function AboutPage() {
                     </div>
                   ))}
                 </dl>
-                <p className="bg-warning-subtle text-caption text-warning-foreground mt-4 rounded-md p-3">
-                  Development preview — every identifier above is a dummy value, marked{' '}
-                  <span className="font-semibold">DEMO</span> so it cannot be mistaken for a real
-                  registration. The organization&rsquo;s actual details replace them before launch.
-                </p>
+                {organisation.isDemo ? (
+                  <p className="bg-warning-subtle text-caption text-warning-foreground mt-4 rounded-md p-3">
+                    Development preview — identifiers not yet entered in Admin → Settings show a
+                    dummy value, marked <span className="font-semibold">DEMO</span> so it cannot be
+                    mistaken for a real registration.
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>

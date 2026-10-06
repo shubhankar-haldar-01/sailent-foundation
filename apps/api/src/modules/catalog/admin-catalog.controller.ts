@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -50,7 +51,8 @@ import {
   createUpdateSchema,
   optionalReasonSchema,
   programListQuerySchema,
-  publishFlagSchema,
+  reorderGallerySchema,
+  updateStatusSchema,
   reorderSchema,
   updateCampaignSchema,
   updateFaqSchema,
@@ -516,8 +518,9 @@ export class AdminCatalogController {
   @RequirePermission('campaign_gallery.manage')
   @Post('campaigns/:campaignId/gallery')
   @ApiOperation({
-    summary: 'Add an image',
-    description: 'Alt text is required. Accepts JPEG, PNG, WebP or AVIF up to 10 MB.',
+    summary: 'Add an image from the media library',
+    description:
+      'Takes a `mediaId`. The image keeps the alt text it has in the library. A public gallery item needs a public image.',
   })
   addGalleryItem(
     @Param(new ZodValidationPipe(campaignIdParam)) params: { campaignId: string },
@@ -526,6 +529,21 @@ export class AdminCatalogController {
     @Req() request: Request,
   ) {
     return this.content.addGalleryItem(params.campaignId, body, actor, this.context(request));
+  }
+
+  @RequirePermission('campaign_gallery.manage')
+  @Put('campaigns/:campaignId/gallery/order')
+  @ApiOperation({
+    summary: 'Reorder the whole gallery',
+    description: 'Every image of this campaign, exactly once, first to last.',
+  })
+  reorderGallery(
+    @Param(new ZodValidationPipe(campaignIdParam)) params: { campaignId: string },
+    @Body(new ZodValidationPipe(reorderGallerySchema)) body: { ids: string[] },
+    @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
+  ) {
+    return this.content.reorderGallery(params.campaignId, body.ids, actor, this.context(request));
   }
 
   @RequirePermission('campaign_gallery.manage')
@@ -614,22 +632,24 @@ export class AdminCatalogController {
   @Post('campaigns/:campaignId/updates/:childId/publish')
   @HttpCode(200)
   @ApiOperation({
-    summary: 'Publish or unpublish a progress update',
+    summary: 'Publish, unpublish or archive a progress update',
     description:
+      'Body `{ published: boolean }` or `{ status: "draft" | "published" | "archived" }`. ' +
       'An update reporting a figure must state how that figure was counted before it can be published (decision A14).',
   })
   @ApiResponse({ status: 422, description: 'A reported figure has no stated basis' })
   publishUpdate(
     @Param(new ZodValidationPipe(campaignChildParams))
     params: { campaignId: string; childId: string },
-    @Body(new ZodValidationPipe(publishFlagSchema)) body: { published: boolean },
+    @Body(new ZodValidationPipe(updateStatusSchema))
+    body: { status: 'draft' | 'published' | 'archived' },
     @CurrentActor() actor: AuthenticatedActor,
     @Req() request: Request,
   ) {
-    return this.content.setUpdatePublished(
+    return this.content.setUpdateStatus(
       params.campaignId,
       params.childId,
-      body.published,
+      body.status,
       actor,
       this.context(request),
     );

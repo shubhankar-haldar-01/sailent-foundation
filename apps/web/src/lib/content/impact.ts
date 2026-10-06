@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { demoOrg } from '@/lib/demo-org';
+import { formatRegisteredOn, getOrganisation } from './organisation';
 
 import { isNotFound } from './programs';
 import { loadContent, publicCache, toMedia } from './source';
@@ -181,7 +181,9 @@ export async function getImpactRecord(slug: string): Promise<ImpactRecord | null
  * — an unbuilt module should read as absent, not as a failure.
  */
 export async function getHeadlineMetrics(): Promise<ImpactMetric[]> {
-  const { totals, reach } = await getImpact();
+  const [{ totals, reach }, organisation] = await Promise.all([getImpact(), getOrganisation()]);
+  const registeredOn = organisation.registration.registeredOn;
+  const registeredOnText = formatRegisteredOn(registeredOn);
 
   /**
    * The five figures the approved homepage shows, in its order.
@@ -226,8 +228,8 @@ export async function getHeadlineMetrics(): Promise<ImpactMetric[]> {
     {
       id: 'years',
       label: 'Years of Service',
-      value: yearsOfService(),
-      derivation: `Whole years since registration on ${demoOrg.registration.registeredOn}.`,
+      value: yearsOfService(registeredOn),
+      derivation: `Whole years since registration on ${registeredOnText ?? 'the registration date'}.`,
     },
   ];
 
@@ -237,12 +239,13 @@ export async function getHeadlineMetrics(): Promise<ImpactMetric[]> {
 /**
  * Whole years since the organisation was registered.
  *
- * Derived, not typed in — it moves on its own every March. The date lives in
- * `demoOrg` with the rest of the statutory details, and while those are marked
- * DEMO this figure is demo too; replacing that one file makes it true.
+ * Derived, not typed in — it moves on its own every year. The date is
+ * `registration_details.registeredOn` in Admin → Settings (Phase 13); with no
+ * date the figure is 0 and the band leaves it out.
  */
-function yearsOfService(): number {
-  const registered = new Date(demoOrg.registration.registeredOn);
+function yearsOfService(registeredOn: string | null): number {
+  if (!registeredOn) return 0;
+  const registered = new Date(registeredOn);
   if (Number.isNaN(registered.getTime())) return 0;
   const now = new Date();
   let years = now.getFullYear() - registered.getFullYear();

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AdminSettingsController } from './admin-settings.controller.js';
+import { PublicSettingsController } from './public-settings.controller.js';
 import { SettingsService } from './settings.service.js';
 
 /**
@@ -12,7 +13,7 @@ import { SettingsService } from './settings.service.js';
  * invert the dependency, since those are what read settings.
  */
 @Module({
-  controllers: [AdminSettingsController],
+  controllers: [AdminSettingsController, PublicSettingsController],
   providers: [SettingsService],
   exports: [SettingsService],
 })

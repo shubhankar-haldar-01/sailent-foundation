@@ -280,7 +280,13 @@ export class NotificationsService {
       );
     }
 
-    await this.queue.enqueue(QUEUE_NAMES.NOTIFICATIONS, job.name, payload, {
+    /*
+      The EMAIL queue — the one the worker consumes, under the same job names
+      the original sends used. Until Phase 13 this went to the `notifications`
+      queue, which has no consumer: every retry sat in Redis and nothing was
+      sent.
+    */
+    await this.queue.enqueue(QUEUE_NAMES.EMAIL, job.name, payload, {
       // A fresh id per attempt: BullMQ ignores a duplicate, and reusing the
       // original would make the second retry a silent no-op.
       jobId: jobKey('retry', id, Date.now()),
@@ -581,6 +587,14 @@ const RETRYABLE_JOBS: Record<
     payload: (data) =>
       data && typeof data.certificateId === 'string' ? { certificateId: data.certificateId } : null,
   },
+  // Phase 13. The worker skips a message already recorded as sent.
+  'contact.received': {
+    name: 'contact.received',
+    payload: (data) =>
+      data && typeof data.contactMessageId === 'string'
+        ? { contactMessageId: data.contactMessageId }
+        : null,
+  },
 };
 
 /*
@@ -595,4 +609,8 @@ const RETRYABLE_JOBS: Record<
       transition is checked and audited.
     • `event.cancelled` — a fan-out to everybody holding a seat. Retrying one
       row would mean re-notifying all of them.
+    • `newsletter.confirm`, `staff.invite`, `staff.password_reset` (Phase 13)
+      — each link carries a token that exists only as a hash. The person asks
+      again (subscribe, "forgot password"), or an administrator sends a fresh
+      invitation from the staff account.
 */

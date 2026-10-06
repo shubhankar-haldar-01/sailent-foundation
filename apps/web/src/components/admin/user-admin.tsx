@@ -8,6 +8,7 @@ import { Field, FormStatus, SubmitButton } from '@/components/admin/form-shell';
 import {
   assignUserRoles,
   inviteUser,
+  resendInvitation,
   reactivateUser,
   suspendUser,
   updateUser,
@@ -64,14 +65,14 @@ export function InviteUserForm() {
       <FormStatus state={state} />
 
       {/*
-        Said plainly rather than discovered afterwards. The invite creates an
-        account with no usable password and there is no delivery or
-        password-set flow yet, so somebody has to finish this out of band.
+        Said plainly rather than discovered afterwards (Phase 13): the account
+        cannot be used until the invitee follows the emailed link and sets
+        their own password — nobody here ever knows it.
       */}
       <Alert>
-        This creates the account in an <strong>invited</strong> state with no usable password. There
-        is no invitation email yet — the account cannot sign in until its password is set with{' '}
-        <code>db:create-admin</code>.
+        We email them a link to choose their own password. It works once, for 7 days; until then the
+        account is <strong>invited</strong> and cannot sign in. You can send a fresh link from their
+        account page.
       </Alert>
 
       <Field label="Email" name="email" required errors={state.fieldErrors}>
@@ -91,6 +92,34 @@ export function InviteUserForm() {
           Cancel
         </Button>
       </div>
+    </form>
+  );
+}
+
+/**
+ * Send a fresh invitation link (Phase 13). Earlier links stop working.
+ * `@Sensitive()`: the API asks for the password again if needed.
+ */
+export function ResendInvitationForm({ user }: { user: AdminUser }) {
+  const [state, action, pending] = React.useActionState<ActionState, FormData>(
+    resendInvitation,
+    {},
+  );
+  useRefreshOnSuccess(state);
+
+  return (
+    <form action={action} className="space-y-3">
+      <input type="hidden" name="id" value={user.id} />
+      <FormStatus state={state} />
+      {state.ok ? (
+        <p role="status" className="text-body-sm text-success">
+          A new invitation is on its way to {user.email}. Earlier links no longer work.
+        </p>
+      ) : null}
+      <p className="text-body-sm text-muted-foreground">
+        {user.email} has not accepted their invitation yet. A new link replaces any earlier one.
+      </p>
+      <SubmitButton pending={pending}>Send a new invitation</SubmitButton>
     </form>
   );
 }

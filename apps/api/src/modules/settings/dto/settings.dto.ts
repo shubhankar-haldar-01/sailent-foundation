@@ -1,7 +1,13 @@
 import { z } from 'zod';
 
+import {
+  organizationContactSchema,
+  organizationSocialSchema,
+  registrationDetailsSchema,
+} from '@sailent/validation';
+
 /**
- * The four site settings, and what each is actually for.
+ * The site settings, and what each is actually for.
  *
  * ══════════════════════════════════════════════════════════════════════════
  * THE KEYS ARE A CLOSED SET.
@@ -22,30 +28,18 @@ export const SETTING_KEYS = [
   'registration_details',
   'donation_minimum_paise',
   'fcra_enabled',
+  // Phase 13 (migration 0023): what the public site shows.
+  'organization_contact',
+  'organization_social',
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
 
 /**
- * Statutory identifiers, exactly the four the seed defines.
- *
- * `.strict()` so a typo becomes an error rather than a fifth field nothing
- * reads. Null means "not supplied yet", which is the launch-blocking state the
- * seed describes — an empty string would read as "supplied, and blank".
+ * Statutory identifiers. Shared with the web (`@sailent/validation`), so the
+ * admin form and this route agree. `.strict()` so a typo becomes an error
+ * rather than a field nothing reads. Null means "not supplied yet".
  */
-const registrationDetailsSchema = z
-  .object({
-    registrationNumber: z.string().trim().max(120).nullable(),
-    pan: z
-      .string()
-      .trim()
-      .regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, 'A PAN looks like AAAAA9999A')
-      .nullable(),
-    section12A: z.string().trim().max(120).nullable(),
-    section80G: z.string().trim().max(120).nullable(),
-  })
-  .strict();
-
 export const settingValueSchemas = {
   organization_name: z
     .string()
@@ -57,6 +51,8 @@ export const settingValueSchemas = {
     .refine((value) => value.trim().length > 0, 'The organisation name cannot be empty'),
 
   registration_details: registrationDetailsSchema,
+  organization_contact: organizationContactSchema,
+  organization_social: organizationSocialSchema,
 
   /*
     Paise, as an integer (decision A2). Money is never a float anywhere in this
@@ -77,6 +73,8 @@ export const updateSettingsSchema = z
     registration_details: settingValueSchemas.registration_details.optional(),
     donation_minimum_paise: settingValueSchemas.donation_minimum_paise.optional(),
     fcra_enabled: settingValueSchemas.fcra_enabled.optional(),
+    organization_contact: settingValueSchemas.organization_contact.optional(),
+    organization_social: settingValueSchemas.organization_social.optional(),
     /** Recorded on the audit row. Who changed it is not the same as why. */
     reason: z.string().trim().min(3).max(500).optional(),
   })
@@ -84,3 +82,16 @@ export const updateSettingsSchema = z
   .refine((value) => SETTING_KEYS.some((key) => value[key] !== undefined), 'Nothing to update');
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
+
+/**
+ * The settings the public site may read (`GET /settings/public`). A closed
+ * list, checked against the row's `is_public` flag as well — both must agree.
+ * `fcra_enabled` is not here.
+ */
+export const PUBLIC_SETTING_KEYS = [
+  'organization_name',
+  'registration_details',
+  'organization_contact',
+  'organization_social',
+] as const satisfies readonly SettingKey[];
+export type PublicSettingKey = (typeof PUBLIC_SETTING_KEYS)[number];

@@ -217,18 +217,7 @@ export class CampaignContentService {
 
   async addGalleryItem(
     campaignId: string,
-    input: {
-      storageKey: string;
-      url?: string | null;
-      altText: string;
-      caption?: string | null;
-      mimeType: string;
-      sizeBytes: number;
-      width?: number | null;
-      height?: number | null;
-      displayOrder?: number;
-      visibility?: 'public' | 'private';
-    },
+    input: { mediaId: string; displayOrder?: number; visibility?: 'public' | 'private' },
     actor: AuthenticatedActor,
     context: AuditContext,
   ) {
@@ -236,61 +225,102 @@ export class CampaignContentService {
 
     const visibility = input.visibility ?? 'public';
 
-    const created = await this.database.db.transaction(async (tx) => {
-      // Reuse an existing media row when the same object is added twice —
-      // the storage key is the identity of the file, so uploading it again
-      // should not produce a second row pointing at the same bytes.
-      const [existing] = await tx
-        .select({ id: media.id })
-        .from(media)
-        .where(eq(media.storageKey, input.storageKey))
-        .limit(1);
+    const [image] = await this.database.db
+      .select({ id: media.id, visibility: media.visibility, storageKey: media.storageKey })
+      .from(media)
+      .where(eq(media.id, input.mediaId))
+      .limit(1);
+    if (!image) {
+      throw new ValidationException([
+        { field: 'mediaId', code: 'not_found', message: 'That image is not in the media library.' },
+      ]);
+    }
+    // A public gallery item is shown on the public page, so its image must have
+    // a public URL. A private image can only be a private gallery item.
+    if (visibility === 'public' && image.visibility !== 'public') {
+      throw new ValidationException([
+        {
+          field: 'mediaId',
+          code: 'private_image',
+          message: 'That image is private. Make it public in the media library first.',
+        },
+      ]);
+    }
 
-      const mediaId =
-        existing?.id ??
-        (
-          await tx
-            .insert(media)
-            .values({
-              storageKey: input.storageKey,
-              // A private object must never carry a public URL — the database
-              // enforces this too, with a CHECK.
-              url: visibility === 'public' ? (input.url ?? null) : null,
-              altText: input.altText,
-              caption: input.caption ?? null,
-              mimeType: input.mimeType,
-              sizeBytes: input.sizeBytes,
-              width: input.width ?? null,
-              height: input.height ?? null,
-              visibility,
-              uploadedBy: actor.id,
-            })
-            .returning({ id: media.id })
-        )[0]?.id;
+    // After the existing images unless an order is given.
+    const [last] = await this.database.db
+      .select({ value: sql<number>`coalesce(max(${campaignGallery.displayOrder}), 0)` })
+      .from(campaignGallery)
+      .where(eq(campaignGallery.campaignId, campaignId));
 
-      if (!mediaId) throw new ConflictException('Could not store the image.');
+    const [row] = await this.database.db
+      .insert(campaignGallery)
+      .values({
+        campaignId,
+        mediaId: image.id,
+        displayOrder: input.displayOrder ?? Math.min(Number(last?.value ?? 0) + 10, 9999),
+        visibility,
+      })
+      .onConflictDoNothing()
+      .returning({ id: campaignGallery.id });
 
-      const [row] = await tx
-        .insert(campaignGallery)
-        .values({
-          campaignId,
-          mediaId,
-          displayOrder: input.displayOrder ?? 100,
-          visibility,
-        })
-        .onConflictDoNothing()
-        .returning({ id: campaignGallery.id });
-
-      if (!row) throw new ConflictException('That image is already in this gallery.');
-      return row;
-    });
+    if (!row) throw new ConflictException('That image is already in this gallery.');
 
     await this.audit.record({
       action: 'campaign_gallery.add',
       entityType: 'campaign_gallery',
-      entityId: created.id,
+      entityId: row.id,
       userId: actor.id,
-      newValues: { campaignId, storageKey: input.storageKey, visibility },
+      newValues: { campaignId, mediaId: image.id, visibility },
+      ...context,
+    });
+
+    return this.listGallery(campaignId);
+  }
+
+  /**
+   * Put the gallery in the given order (Phase 13). `ids` must be exactly this
+   * campaign's gallery items — an id from another campaign is refused, never
+   * silently reordered.
+   */
+  async reorderGallery(
+    campaignId: string,
+    ids: string[],
+    actor: AuthenticatedActor,
+    context: AuditContext,
+  ) {
+    await this.assertCampaign(campaignId);
+
+    const current = await this.database.db
+      .select({ id: campaignGallery.id })
+      .from(campaignGallery)
+      .where(eq(campaignGallery.campaignId, campaignId));
+    const known = new Set(current.map((row) => row.id));
+    if (ids.length !== known.size || ids.some((id) => !known.has(id))) {
+      throw new ValidationException([
+        {
+          field: 'ids',
+          code: 'mismatch',
+          message: 'List every image in this gallery exactly once, and no others.',
+        },
+      ]);
+    }
+
+    await this.database.db.transaction(async (tx) => {
+      for (const [index, id] of ids.entries()) {
+        await tx
+          .update(campaignGallery)
+          .set({ displayOrder: (index + 1) * 10, updatedAt: new Date() })
+          .where(and(eq(campaignGallery.id, id), eq(campaignGallery.campaignId, campaignId)));
+      }
+    });
+
+    await this.audit.record({
+      action: 'campaign_gallery.reorder',
+      entityType: 'campaign',
+      entityId: campaignId,
+      userId: actor.id,
+      newValues: { order: ids },
       ...context,
     });
 
@@ -540,7 +570,25 @@ export class CampaignContentService {
     actor: AuthenticatedActor,
     context: AuditContext,
   ) {
+    return this.setUpdateStatus(
+      campaignId,
+      updateId,
+      published ? 'published' : 'draft',
+      actor,
+      context,
+    );
+  }
+
+  /** Draft, published or archived (Phase 13 adds archived). */
+  async setUpdateStatus(
+    campaignId: string,
+    updateId: string,
+    status: 'draft' | 'published' | 'archived',
+    actor: AuthenticatedActor,
+    context: AuditContext,
+  ) {
     const before = await this.getUpdate(campaignId, updateId);
+    const published = status === 'published';
 
     /**
      * Decision A14 in its narrowest form: an update carrying a figure must say
@@ -564,20 +612,23 @@ export class CampaignContentService {
     await this.database.db
       .update(impactUpdates)
       .set({
-        status: published ? 'published' : 'draft',
+        status,
+        // Only a published update is public; draft and archived are not.
         isPublic: published,
         publishedAt: published ? (before.publishedAt ?? new Date()) : before.publishedAt,
         updatedAt: new Date(),
       })
       .where(eq(impactUpdates.id, updateId));
 
+    const verb =
+      status === 'published' ? 'publish' : status === 'archived' ? 'archive' : 'unpublish';
     await this.audit.record({
-      action: `campaign_update.${published ? 'publish' : 'unpublish'}`,
+      action: `campaign_update.${verb}`,
       entityType: 'impact_update',
       entityId: updateId,
       userId: actor.id,
       oldValues: { status: before.status },
-      newValues: { status: published ? 'published' : 'draft' },
+      newValues: { status },
       severity: 'warning',
       ...context,
     });

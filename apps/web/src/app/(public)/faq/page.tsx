@@ -7,7 +7,7 @@ import { PageHero } from '@/components/sections/page-hero';
 import { Breadcrumbs } from '@/components/sections/breadcrumbs';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { jsonLd } from '@/lib/seo/structured-data';
-import { faqCategories, faqs, getFaqsByCategory } from '@/lib/mock';
+import { getGeneralFaqs } from '@/lib/content/faqs';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Frequently asked questions',
@@ -16,7 +16,11 @@ export const metadata: Metadata = buildMetadata({
   path: '/faq',
 });
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  // Published general FAQs from Admin → FAQs (Phase 13); no fixtures in production.
+  const groups = await getGeneralFaqs();
+  const all = groups.flatMap((group) => group.items);
+
   /**
    * FAQPage structured data is emitted only because every question below is
    * genuinely rendered on this page. Marking up questions that are not visible
@@ -25,7 +29,7 @@ export default function FaqPage() {
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: faqs.map((faq) => ({
+    mainEntity: all.map((faq) => ({
       '@type': 'Question',
       name: faq.question,
       acceptedAnswer: { '@type': 'Answer', text: faq.answer },
@@ -34,7 +38,9 @@ export default function FaqPage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(faqSchema)} />
+      {all.length > 0 ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(faqSchema)} />
+      ) : null}
 
       <PageHero
         eyebrow="FAQ"
@@ -60,7 +66,7 @@ export default function FaqPage() {
                 Categories
               </h2>
               <ul className="mt-3 space-y-1">
-                {faqCategories.map((category) => (
+                {groups.map((category) => (
                   <li key={category.id}>
                     <a
                       href={`#${category.id}`}
@@ -74,9 +80,14 @@ export default function FaqPage() {
             </nav>
 
             <div className="space-y-12 lg:col-span-9">
-              {faqCategories.map((category) => {
-                const entries = getFaqsByCategory(category.id);
-                if (entries.length === 0) return null;
+              {groups.length === 0 ? (
+                <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-8">
+                  Questions are being added. In the meantime, ask us directly — we answer within
+                  three working days.
+                </p>
+              ) : null}
+              {groups.map((category) => {
+                const entries = category.items;
 
                 return (
                   <section key={category.id} id={category.id} className="scroll-mt-24">

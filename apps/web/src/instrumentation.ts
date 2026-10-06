@@ -9,9 +9,14 @@
  * rate limits) or a localhost URL started without complaint. Next.js runs
  * `register()` once when the server starts; throwing here stops the start.
  *
- * In production it also refuses to start while the organisation's statutory
- * details are still the DEMO placeholders in `lib/demo-org.ts` — a live site
- * must not publish fake registration numbers (replaced in Phase 13).
+ * DEMO ORGANISATION DATA. Phase 12 also refused to start while
+ * `lib/demo-org.ts` held DEMO values. Since Phase 13 the organisation's
+ * details come from Admin → Settings, and `getOrganisation()` uses a demo
+ * value only while mock data is on — which the schema below refuses in
+ * production, and `mockDataEnabled()` never allows with APP_ENV=production.
+ * The guarantee ("no fake registration numbers on a live site") is therefore
+ * enforced where the values are read, and a missing detail is simply left
+ * out until staff enter it.
  * ══════════════════════════════════════════════════════════════════════════
  */
 export async function register(): Promise<void> {
@@ -19,14 +24,5 @@ export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
 
   const { loadEnv, webEnvSchema } = await import('@sailent/config');
-  const env = loadEnv(webEnvSchema, 'web');
-
-  if (env.APP_ENV === 'production') {
-    const { demoOrg } = await import('@/lib/demo-org');
-    if (demoOrg.isDemo) {
-      throw new Error(
-        'Refusing to start in production: the organisation details in lib/demo-org.ts are DEMO placeholders.',
-      );
-    }
-  }
+  loadEnv(webEnvSchema, 'web');
 }

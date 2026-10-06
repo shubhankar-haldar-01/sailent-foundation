@@ -258,6 +258,12 @@ export const PERMISSIONS: PermissionDefinition[] = [
   { key: 'document.read_private', description: 'View private documents', sensitive: true },
   { key: 'document.manage', description: 'Upload and edit documents' },
   { key: 'document.change_visibility', description: 'Change document visibility', sensitive: true },
+  /*
+    Phase 13. Also inserted, with its SUPER_ADMIN grant, by migration 0023, so
+    production receives it by applying the migration rather than through the
+    reference reseed and its lockout window.
+  */
+  { key: 'document.delete', description: 'Delete a document and its stored file', sensitive: true },
 
   // Reports
   { key: 'reports.read', description: 'View reports and dashboards' },
@@ -291,6 +297,16 @@ export const PERMISSIONS: PermissionDefinition[] = [
     key: 'notification.template.manage',
     description: 'Edit the wording of transactional emails',
   },
+
+  /*
+    Phase 13 — inbound communication and general FAQs. Inserted with their
+    SUPER_ADMIN grant by migration 0023 as well (see `document.delete`).
+  */
+  { key: 'contact.read', description: 'Read contact-form messages' },
+  { key: 'contact.manage', description: 'Mark contact-form messages handled or archived' },
+  { key: 'newsletter.read', description: 'View newsletter subscriptions' },
+  { key: 'faq.read', description: 'View general FAQs, including drafts' },
+  { key: 'faq.manage', description: 'Create, edit, publish and remove general FAQs' },
 ];
 
 export interface RoleDefinition {

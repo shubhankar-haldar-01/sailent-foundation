@@ -493,7 +493,7 @@ export function listAuditEntries(query: {
   });
 }
 
-/** The four organisation settings. Not to be confused with `/me/settings`. */
+/** The organisation settings. Not to be confused with `/me/settings`. */
 export interface AdminSettings {
   organization_name: string;
   registration_details: {
@@ -501,9 +501,30 @@ export interface AdminSettings {
     pan: string | null;
     section12A: string | null;
     section80G: string | null;
+    // Phase 13; absent on rows written before it.
+    registeredAs?: string | null;
+    trustDeedNumber?: string | null;
+    registeredOn?: string | null;
+    csr1?: string | null;
   };
   donation_minimum_paise: number;
   fcra_enabled: boolean;
+  /** Phase 13: what the footer, contact page and structured data show. */
+  organization_contact: {
+    email: string | null;
+    pressEmail: string | null;
+    phone: string | null;
+    officeHours: string | null;
+    address: {
+      line1: string | null;
+      line2: string | null;
+      city: string | null;
+      state: string | null;
+      postalCode: string | null;
+      country: string | null;
+    };
+  };
+  organization_social: { label: string; url: string }[];
 }
 
 export function getSettings() {
@@ -1086,4 +1107,156 @@ export function taxReadinessReport(financialYear?: number) {
   return adminFetch<TaxReadinessReport>('admin/reports/tax-readiness', {
     query: financialYear ? { financialYear } : {},
   });
+}
+
+// ---------------------------------------------------------------------------
+// Phase 13: dashboard, contact messages, newsletter, general FAQs, campaign
+// gallery and progress updates.
+// ---------------------------------------------------------------------------
+
+/** Each section is present only when the signed-in staff member may read it. */
+export interface AdminDashboard {
+  generatedAt: string;
+  campaigns?: {
+    open: number;
+    pastDeadline: number;
+    paused: number;
+    draft: number;
+    completed: number;
+  };
+  programs?: { published: number; draft: number };
+  donations?: {
+    thisMonth: { count: number; amountPaise: number };
+    pending: number;
+    recent: {
+      id: string;
+      amountPaise: number;
+      completedAt: string | null;
+      campaignTitle: string | null;
+      donorName: string | null;
+    }[];
+  };
+  payments?: {
+    failedWebhooks: number;
+    needsReview: number;
+    unfinishedWebhooks: number;
+    stuckDonations: number;
+    overdueDonations: number;
+    cancelledLast7Days: number;
+  };
+  donors?: { total: number; withDonations: number };
+  volunteers?: { pendingApplications: number };
+  events?: { upcoming: number };
+  messages?: { new: number };
+  newsletter?: { subscribed: number };
+  notifications?: { failedLast7Days: number };
+  activity?: {
+    id: string;
+    action: string;
+    entityType: string;
+    severity: string;
+    createdAt: string;
+    actor: string | null;
+  }[];
+}
+
+export function getDashboard() {
+  return adminFetch<AdminDashboard>('admin/dashboard');
+}
+
+export type ContactStatus = 'new' | 'handled' | 'archived';
+
+export interface AdminContactSummary {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  preview: string;
+  status: ContactStatus;
+  createdAt: string;
+  handledAt: string | null;
+}
+
+export interface AdminContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: ContactStatus;
+  handledBy: string | null;
+  handledAt: string | null;
+  createdAt: string;
+}
+
+export function listContactMessages(query: { status?: string; page?: string | number }) {
+  return adminFetch<
+    Paginated<AdminContactSummary> & { counts: Partial<Record<ContactStatus, number>> }
+  >('admin/contact-messages', { query });
+}
+
+export function getContactMessage(id: string) {
+  return adminFetch<AdminContactMessage>(`admin/contact-messages/${id}`);
+}
+
+export type NewsletterStatus = 'pending' | 'subscribed' | 'unsubscribed';
+
+export interface AdminNewsletterSubscriber {
+  id: string;
+  email: string;
+  status: NewsletterStatus;
+  createdAt: string;
+  confirmedAt: string | null;
+  unsubscribedAt: string | null;
+}
+
+export function listNewsletterSubscribers(query: { status?: string; page?: string | number }) {
+  return adminFetch<
+    Paginated<AdminNewsletterSubscriber> & { counts: Partial<Record<NewsletterStatus, number>> }
+  >('admin/newsletter/subscribers', { query });
+}
+
+export interface AdminGeneralFaq {
+  id: string;
+  question: string;
+  answer: string;
+  category: string | null;
+  displayOrder: number;
+  isPublished: boolean;
+  updatedAt: string;
+}
+
+export function listGeneralFaqs() {
+  return adminFetch<AdminGeneralFaq[]>('admin/faqs');
+}
+
+export interface AdminGalleryItem {
+  id: string;
+  displayOrder: number;
+  visibility: 'public' | 'private';
+  mediaId: string;
+  storageKey: string;
+  url: string | null;
+  altText: string;
+  caption: string | null;
+}
+
+export function listCampaignGallery(campaignId: string) {
+  return adminFetch<{ items: AdminGalleryItem[] }>(`admin/campaigns/${campaignId}/gallery`);
+}
+
+export interface AdminCampaignUpdate {
+  id: string;
+  title: string;
+  description: string;
+  impactDate: string;
+  status: 'draft' | 'published' | 'archived';
+  metricValue: number | null;
+  metricUnit: string | null;
+  verificationMethod: string | null;
+  publishedAt: string | null;
+}
+
+export function listCampaignUpdates(campaignId: string) {
+  return adminFetch<{ items: AdminCampaignUpdate[] }>(`admin/campaigns/${campaignId}/updates`);
 }

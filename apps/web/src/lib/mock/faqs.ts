@@ -27,9 +27,11 @@ export const faqs: FaqEntry[] = [
   {
     id: 'd3',
     category: 'donations',
-    question: 'Can I give monthly instead of once?',
+    question: 'Can I set up a regular donation?',
+    // Phase 13: this answer used to describe monthly giving, which the
+    // platform has never offered (one-time donations only).
     answer:
-      'Yes. Monthly giving can be set up during the donation flow and managed entirely from your account afterwards — pause, change or cancel, without contacting us.',
+      'No. Every donation is a single, one-time payment; we do not take monthly or recurring payments. You are always welcome to give again.',
   },
   {
     id: 'd4',
@@ -122,7 +124,7 @@ export const faqs: FaqEntry[] = [
     category: 'events',
     question: 'What happens if an event is full?',
     answer:
-      'You can join the waitlist. Places open up regularly, and waitlisted registrants are promoted automatically in order and notified.',
+      'Registration closes when every place is taken. There is no waitlist; if a registrant cancels, their place becomes available again on the event page.',
   },
   {
     id: 'e2',

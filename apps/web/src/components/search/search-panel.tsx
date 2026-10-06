@@ -5,20 +5,18 @@ import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { Badge, EmptyState, Input, Label, cn } from '@sailent/ui';
 
-import { searchContent } from '@/lib/mock';
-import type { SearchRecord } from '@/lib/mock/types';
+import type { SearchHit, SearchType } from '@/lib/content/search';
 
 /**
- * Site search — client-side over the mock index in Phase 2.
+ * Site search (Phase 13: real).
  *
- * The shape is what matters: a query string in, scored `SearchRecord`s out.
- * Phase 4 replaces `searchContent` with a Postgres full-text query behind the
- * API and this component is unchanged apart from becoming async.
+ * The query is a plain GET form (`/search?q=…`); the page asks the API on the
+ * server and passes the hits in. Only PUBLISHED content is ever returned. The
+ * type chips filter what came back, in the browser.
  *
- * Results are announced via aria-live so a screen reader user knows the list
- * changed as they type.
+ * The result count is announced via aria-live.
  */
-const TYPE_LABELS: Record<SearchRecord['type'], string> = {
+const TYPE_LABELS: Record<SearchType, string> = {
   campaign: 'Campaign',
   program: 'Program',
   story: 'Story',
@@ -26,12 +24,16 @@ const TYPE_LABELS: Record<SearchRecord['type'], string> = {
   event: 'Event',
 };
 
-export function SearchPanel() {
+export function SearchPanel({
+  query,
+  results: allResults,
+}: {
+  query: string;
+  results: SearchHit[];
+}) {
   const inputId = React.useId();
-  const [query, setQuery] = React.useState('');
-  const [typeFilter, setTypeFilter] = React.useState<SearchRecord['type'] | 'all'>('all');
+  const [typeFilter, setTypeFilter] = React.useState<SearchType | 'all'>('all');
 
-  const allResults = React.useMemo(() => searchContent(query), [query]);
   const results = React.useMemo(
     () =>
       typeFilter === 'all' ? allResults : allResults.filter((item) => item.type === typeFilter),
@@ -42,7 +44,7 @@ export function SearchPanel() {
 
   return (
     <div>
-      <div className="max-w-2xl">
+      <form action="/search" method="get" role="search" className="max-w-2xl">
         <Label htmlFor={inputId}>Search the site</Label>
         <div className="relative mt-2">
           <Search
@@ -51,18 +53,21 @@ export function SearchPanel() {
           />
           <Input
             id={inputId}
+            name="q"
             type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            defaultValue={query}
             placeholder="Campaigns, programs, stories, articles…"
             className="text-body h-12 pl-11"
             autoComplete="off"
+            minLength={2}
+            maxLength={100}
           />
         </div>
         <p className="text-caption text-muted-foreground mt-2">
-          Searches campaigns, programs, stories, articles and events.
+          Searches published campaigns, programs, stories, articles and events. Press Enter to
+          search.
         </p>
-      </div>
+      </form>
 
       {hasQuery ? (
         <>
@@ -70,7 +75,7 @@ export function SearchPanel() {
             <TypeChip active={typeFilter === 'all'} onClick={() => setTypeFilter('all')}>
               All ({allResults.length})
             </TypeChip>
-            {(Object.keys(TYPE_LABELS) as SearchRecord['type'][]).map((type) => {
+            {(Object.keys(TYPE_LABELS) as SearchType[]).map((type) => {
               const count = allResults.filter((item) => item.type === type).length;
               if (count === 0) return null;
               return (
@@ -100,7 +105,7 @@ export function SearchPanel() {
           ) : (
             <ul className="divide-border border-border mt-6 divide-y border-y">
               {results.map((result) => (
-                <li key={result.id}>
+                <li key={result.href}>
                   <Link
                     href={result.href}
                     className="focus-visible:outline-ring group block py-5 focus-visible:outline-2 focus-visible:-outline-offset-2"
@@ -109,7 +114,9 @@ export function SearchPanel() {
                     <h2 className="text-h4 group-hover:text-primary mt-2 font-semibold">
                       {result.title}
                     </h2>
-                    <p className="text-body-sm text-muted-foreground mt-1">{result.excerpt}</p>
+                    {result.excerpt ? (
+                      <p className="text-body-sm text-muted-foreground mt-1">{result.excerpt}</p>
+                    ) : null}
                   </Link>
                 </li>
               ))}

@@ -399,6 +399,12 @@ export const webEnvSchema = baseSchema
       unset.
     */
     TRUSTED_ORIGINS: optional(z.string()),
+    /*
+      Phase 13: the media library's public base URL — the SAME value as the
+      API's R2_PUBLIC_BASE_URL. Lets next/image render library covers and
+      gallery images (`next.config.ts`, read at build time).
+    */
+    MEDIA_PUBLIC_BASE_URL: optional(z.string().url()),
   })
   /*
     PRODUCTION FAILS CLOSED (Phase 12). The web server validates this at

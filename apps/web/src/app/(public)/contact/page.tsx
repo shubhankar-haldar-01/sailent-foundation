@@ -8,7 +8,7 @@ import { PageHero } from '@/components/sections/page-hero';
 import { Breadcrumbs } from '@/components/sections/breadcrumbs';
 import { ContactForm } from '@/components/forms/contact-form';
 import { MediaFrame } from '@/components/media/media-frame';
-import { demoOrg } from '@/lib/demo-org';
+import { getOrganisation } from '@/lib/content/organisation';
 import { buildMetadata } from '@/lib/seo/metadata';
 
 export const metadata: Metadata = buildMetadata({
@@ -17,7 +17,16 @@ export const metadata: Metadata = buildMetadata({
   path: '/contact',
 });
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const organisation = await getOrganisation();
+  const { address } = organisation;
+  const addressLines = [
+    address.line1,
+    address.line2,
+    [address.city, address.postalCode].filter(Boolean).join(' '),
+    [address.state, address.country].filter(Boolean).join(', '),
+  ].filter(Boolean);
+
   return (
     <>
       <PageHero
@@ -45,59 +54,66 @@ export default function ContactPage() {
                 requires that no private personal information is exposed.
               */}
               <address className="mt-6 space-y-5 not-italic">
-                <div className="flex gap-3">
-                  <MapPin
-                    className="text-muted-foreground mt-0.5 size-5 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <div>
-                    <p className="text-body-sm font-semibold">Registered office</p>
-                    <p className="text-body-sm text-muted-foreground mt-0.5">
-                      {demoOrg.address.line1}
-                      <br />
-                      {demoOrg.address.line2}
-                      <br />
-                      {demoOrg.address.city} {demoOrg.address.postalCode}
-                      <br />
-                      {demoOrg.address.state}, {demoOrg.address.country}
-                    </p>
+                {addressLines.length > 0 ? (
+                  <div className="flex gap-3">
+                    <MapPin
+                      className="text-muted-foreground mt-0.5 size-5 shrink-0"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <p className="text-body-sm font-semibold">Registered office</p>
+                      <p className="text-body-sm text-muted-foreground mt-0.5">
+                        {addressLines.map((line, index) => (
+                          <span key={index}>
+                            {index > 0 ? <br /> : null}
+                            {line}
+                          </span>
+                        ))}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : null}
 
-                <div className="flex gap-3">
-                  <Mail
-                    className="text-muted-foreground mt-0.5 size-5 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <div>
-                    <p className="text-body-sm font-semibold">Email</p>
-                    <a
-                      href={`mailto:${demoOrg.email}`}
-                      className="text-body-sm text-primary focus-visible:outline-ring mt-0.5 block rounded-sm underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-                    >
-                      {demoOrg.email}
-                    </a>
+                {organisation.email ? (
+                  <div className="flex gap-3">
+                    <Mail
+                      className="text-muted-foreground mt-0.5 size-5 shrink-0"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <p className="text-body-sm font-semibold">Email</p>
+                      <a
+                        href={`mailto:${organisation.email}`}
+                        className="text-body-sm text-primary focus-visible:outline-ring mt-0.5 block rounded-sm underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                      >
+                        {organisation.email}
+                      </a>
+                    </div>
                   </div>
-                </div>
+                ) : null}
 
-                <div className="flex gap-3">
-                  <Phone
-                    className="text-muted-foreground mt-0.5 size-5 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <div>
-                    <p className="text-body-sm font-semibold">Phone</p>
-                    <a
-                      href={`tel:${demoOrg.phoneHref}`}
-                      className="text-body-sm text-primary focus-visible:outline-ring mt-0.5 block rounded-sm underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-                    >
-                      {demoOrg.phoneDisplay}
-                    </a>
-                    <p className="text-caption text-muted-foreground mt-0.5">
-                      {demoOrg.officeHours}
-                    </p>
+                {organisation.phoneDisplay && organisation.phoneHref ? (
+                  <div className="flex gap-3">
+                    <Phone
+                      className="text-muted-foreground mt-0.5 size-5 shrink-0"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <p className="text-body-sm font-semibold">Phone</p>
+                      <a
+                        href={`tel:${organisation.phoneHref}`}
+                        className="text-body-sm text-primary focus-visible:outline-ring mt-0.5 block rounded-sm underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                      >
+                        {organisation.phoneDisplay}
+                      </a>
+                      {organisation.officeHours ? (
+                        <p className="text-caption text-muted-foreground mt-0.5">
+                          {organisation.officeHours}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
+                ) : null}
 
                 <div className="flex gap-3">
                   <Clock
@@ -121,13 +137,16 @@ export default function ContactPage() {
                 <MediaFrame
                   media={{
                     seed: 'contact-map',
-                    alt: `Map showing the office at ${demoOrg.address.line2}, ${demoOrg.address.city}`,
+                    alt: organisation.addressLine
+                      ? `Map showing the office at ${organisation.addressLine}`
+                      : 'Map of the office location',
                   }}
                   aspect="video"
                   rounded={false}
                 />
                 <p className="bg-surface-sunken text-caption text-muted-foreground border-border border-t px-4 py-2">
-                  {demoOrg.address.line1}, {demoOrg.address.city} · Illustrative map
+                  {[address.line1, address.city].filter(Boolean).join(', ') || 'Office'} ·
+                  Illustrative map
                 </p>
               </div>
 
@@ -152,9 +171,11 @@ export default function ContactPage() {
                   </li>
                 </ul>
 
-                <h3 className="text-body mt-5 font-semibold">Follow the work</h3>
+                {organisation.social.length > 0 ? (
+                  <h3 className="text-body mt-5 font-semibold">Follow the work</h3>
+                ) : null}
                 <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
-                  {demoOrg.social.map((link) => (
+                  {organisation.social.map((link) => (
                     <li key={link.label}>
                       <a
                         href={link.url}

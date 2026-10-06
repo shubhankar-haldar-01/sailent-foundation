@@ -17,6 +17,10 @@ import { StorageModule } from './modules/storage/storage.module.js';
 import { MediaModule } from './modules/media/media.module.js';
 import { DocumentsModule } from './modules/documents/documents.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
+import { CommunicationsModule } from './modules/communications/communications.module.js';
+import { DashboardModule } from './modules/dashboard/dashboard.module.js';
+import { FaqsModule } from './modules/faqs/faqs.module.js';
+import { SearchModule } from './modules/search/search.module.js';
 import { ReportsModule } from './modules/reports/reports.module.js';
 import { RedisService } from './modules/redis/redis.service.js';
 import { RedisThrottlerStorage } from './modules/redis/redis-throttler.storage.js';
@@ -166,6 +170,10 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware.j
     MediaModule,
     DocumentsModule,
     NotificationsModule,
+    CommunicationsModule,
+    DashboardModule,
+    FaqsModule,
+    SearchModule,
     ReportsModule,
     HealthModule,
   ],

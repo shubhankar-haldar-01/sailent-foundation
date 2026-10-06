@@ -3,6 +3,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   changeDocumentVisibilitySchema,
   createDocumentSchema,
+  deleteDocumentSchema,
   documentListQuerySchema,
   updateDocumentSchema,
   DOCUMENT_TYPES,
@@ -17,6 +18,7 @@ import {
 export {
   changeDocumentVisibilitySchema,
   createDocumentSchema,
+  deleteDocumentSchema,
   documentListQuerySchema,
   updateDocumentSchema,
 };

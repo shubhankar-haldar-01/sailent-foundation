@@ -16,10 +16,10 @@ Reconstructed from `docs/phase-*.md`, the migrations, the git history and the co
 | 🔴 | BLOCKED |
 | ⚫ | REMOVED |
 
-**Where development stopped (as of 2026-10-06):** post-10.12 polish.
-- The featured/deadline work is complete and committed (`dd64d41`, pushed).
-- The documentation (`d7f42e3`) and the CI target fix (`0e94632`) are committed but not yet pushed.
-- Next: push `main` with approval, and verify the first GitHub Actions run.
+**Where development stopped (as of 2026-10-07):** Phase 13 (Admin, CMS & Communications Completeness).
+- Phases 11 (`5170ce0`) and 12 (`3941ee7`) are committed and pushed.
+- Phase 13 is committed locally as `feat(admin): complete cms and communications workflows`, and is not pushed.
+- Next: push Phase 13 with the owner's approval; then Phase 14 (infrastructure and production operations).
 
 See `DEVELOPMENT_STATUS.md`.
 
@@ -48,8 +48,9 @@ See `DEVELOPMENT_STATUS.md`.
 | 10.12 | Reports & analytics | ✅ |
 | post-10.12 | Design & campaign presentation | 🔵 |
 | 11 | Payment & Donation Production Readiness | ✅ implemented; pushed (`5170ce0`, 2026-10-07) |
-| 12 | Accounts, Authentication & Security Hardening | ✅ implemented; committed locally, not pushed (2026-10-07) |
-| 13–15 | Admin, CMS & communications · Infrastructure · Final launch readiness (2026-10-07 roadmap review) | ⚪ |
+| 12 | Accounts, Authentication & Security Hardening | ✅ implemented; pushed (`3941ee7`, 2026-10-07) |
+| 13 | Admin, CMS & Communications Completeness | ✅ implemented; committed locally, not pushed (2026-10-07) |
+| 14–15 | Infrastructure & production operations · Final launch readiness (2026-10-07 roadmap review) | ⚪ |
 | — | Not yet scheduled | ⚪ |
 
 ---
@@ -78,7 +79,7 @@ See `DEVELOPMENT_STATUS.md`.
 |---|---|
 | **Goal** | All public routes, components and SEO markup, initially on fixtures |
 | **Completed** | The public routes; DemoNotice tied to `FEATURE_MOCK_DATA`; DEMO organisation data; MediaFrame placeholders |
-| **Remaining** | Replace the remaining fixtures: `/faq`, testimonials, search index, donation presets. Replace the DEMO organisation data. Analytics (GA4) was never built. |
+| **Remaining** | ~~`/faq`, search index, donation presets, DEMO organisation data~~ (Phase 13: database-backed, presets deleted). Testimonials stay static by design (no table). Analytics (GA4) was never built. |
 | **Validation** | Playwright journeys and shell specs |
 
 ## Phase 3 — Database & backend foundation  🟡 PARTIAL
@@ -96,7 +97,7 @@ See `DEVELOPMENT_STATUS.md`.
 |---|---|
 | **Goal** | Admin CRUD and lifecycle for programmes and campaigns, taxonomy, media metadata, FAQs, gallery, preview, BFF and admin login |
 | **Completed** | Migrations `0005`–`0007`; admin programmes and campaigns; preview; shared lifecycle in `packages/validation` |
-| **Remaining** | Slug 301 redirects for programmes and campaigns in the web app (blog only); programme rollup counters never written; rich-text editor; `campaigns.program_id` not database-enforced |
+| **Remaining** | Slug 301 redirects for programmes and campaigns in the web app (blog only); programme rollup counters never written; rich-text editor; `campaigns.program_id` not database-enforced. (Cover, gallery and updates admin UI: Phase 13.) |
 
 ## Phase 5 — Product donation system  ✅ COMPLETE
 
@@ -154,7 +155,7 @@ Referenced once, in phase-10.5 §8: it removed Article markup from the blog. **N
 | | |
 |---|---|
 | **Evidence** | `apps/web/e2e/admin-staff.spec.ts` header ("The Phase 10.2–10.4 admin screens"); pages `/admin/users`, `/admin/roles`, `/admin/audit-logs`, `/admin/settings`; API `settings` module |
-| **Remaining** | No phase document. Invite acceptance and password set or reset are missing. The roles screen is read-only (single role). |
+| **Remaining** | No phase document. The roles screen is read-only (single role). (Invite acceptance and password reset: Phase 13. Settings now consumed by the site: Phase 13.) |
 
 ## Phase 10.5 — Success stories  ✅ COMPLETE
 
@@ -185,12 +186,12 @@ Migration `0020`, `/admin/pages`, revisions, HMAC preview, `getComposedPage('hom
 ## Phase 10.10 — Documents  ✅ COMPLETE
 
 Migration `0021`, `/admin/documents`, visibility levels, 5-minute signed downloads, public campaign documents.
-- **Note:** no delete.
+- **Note:** deletion added in Phase 13 (`document.delete`, re-authentication, reason).
 
 ## Phase 10.11 — Notifications  🟡 PARTIAL
 
 Migration `0022`, the notifications inbox and log, versioned templates, admin alerts.
-- **Remaining:** **retry is a no-op** (its queue has no consumer); the newsletter stores nothing; no delivered or bounced statuses; no SMS.
+- **Remaining:** no delivered or bounced statuses; no SMS. (Retry and the newsletter: fixed in Phase 13.)
 
 ## Phase 10.12 — Reports & analytics  ✅ COMPLETE
 
@@ -216,7 +217,7 @@ Reports (donations, campaigns, volunteers, impact, reconciliation, tax readiness
 | **Remaining (human)** | Deployment configuration (`INTERNAL_API_SECRET`, `API_INTERNAL_URL`, `CLIENT_IP_HEADER`), Razorpay dashboard settings, a sandbox trial — `DEPLOYMENT.md` §6a |
 | **Validation** | `DEVELOPMENT_STATUS.md` §2 |
 
-## Phase 12 — Accounts, Authentication & Security Hardening  ✅ IMPLEMENTED (committed locally as `feat(auth): complete account and security hardening`, not pushed, 2026-10-07)
+## Phase 12 — Accounts, Authentication & Security Hardening  ✅ IMPLEMENTED (`3941ee7`, pushed, 2026-10-07)
 
 | | |
 |---|---|
@@ -227,19 +228,29 @@ Reports (donations, campaigns, volunteers, impact, reconciliation, tax readiness
 | **Not in scope** | Staff invite and password reset (Phase 13); SEO (Phase 15) |
 | **Validation** | `DEVELOPMENT_STATUS.md` §2 |
 
-Phases 13–15 (admin, CMS and communications; infrastructure and operations; final launch readiness) come from the 2026-10-07 roadmap review and are not started.
+## Phase 13 — Admin, CMS & Communications Completeness  ✅ IMPLEMENTED (committed locally as `feat(admin): complete cms and communications workflows`, not pushed, 2026-10-07)
+
+| | |
+|---|---|
+| **Goal** | Finish the admin, CMS and communication workflows the roadmap review found incomplete |
+| **Owner decisions** | Contact messages stored + inbox + emailed; newsletter double opt-in; organisation settings drive the public site; new permissions inserted by migration with their SUPER_ADMIN grant. Only SUPER_ADMIN; no staff 2FA; no standalone gallery; no refunds or recurring giving |
+| **Completed** | Migration `0023` (contact messages, newsletter subscribers, two settings rows, six permissions). Campaign/programme cover from the media library; Campaign Gallery admin (add by media id, remove, reorder); progress updates admin (publish, archive). Admin dashboard with live, permission-filtered counts. Settings consumed by the footer, contact, about, JSON-LD and receipts. Staff invitations and password reset (single-use hashed tokens, sessions revoked on reset). Document deletion. `story.archive` enforced. EXIF/GPS stripped from new uploads. Notification retry fixed; four new email processors. Contact inbox; newsletter double opt-in. General FAQs in the database; `/faq` and search from the API (published only). Dead monthly-giving widget removed, with a regression test |
+| **Remaining (human)** | Apply migration `0023` in production; enter organisation details in Admin → Settings; set `MEDIA_PUBLIC_BASE_URL` at web build; optionally strip metadata from images uploaded before Phase 13 — `DEPLOYMENT.md` §6c |
+| **Not in scope** | Hosting and deployment (Phase 14); SEO (Phase 15); testimonials CMS (kept static); sending newsletters |
+| **Validation** | `DEVELOPMENT_STATUS.md` §2 |
+
+Phases 14–15 (infrastructure and production operations on Google Cloud Run; final launch readiness, including SEO) come from the 2026-10-07 roadmap review and are not started.
 
 ## Not yet scheduled  ⚪ NOT STARTED
 
 Documented as needed, or deferred:
-- **Operations:** deployment configuration and hosting; a human-led verification and hardening of the existing production database; backups.
+- **Operations (Phase 14):** deployment configuration and hosting on Google Cloud Run; a human-led verification and hardening of the existing production database; backups.
 - **Scheduled jobs:** counter-drift checks. (Payment reconciliation: Phase 11.)
 - **Monitoring:** Sentry; GA4.
-- **Staff accounts:** invite and password reset (Phase 13). Staff 2FA is not required (owner decision).
+- **Staff accounts:** a session-management UI. (Invite and reset: Phase 13. Staff 2FA is not required, by owner decision.)
 - **Receipts and tax:** receipt PDF; Form 10BD export.
 - **Volunteers and events:** certificate PDF; event reminders.
-- **Communication:** newsletter subscriptions.
-- **Admin:** the admin dashboard home.
+- **Communication:** sending newsletters (Phase 13 records consent only); a testimonials CMS, if ever wanted.
 
 ## ⚫ REMOVED (by decision)
 

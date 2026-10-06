@@ -561,17 +561,35 @@ describe('Documents (integration)', () => {
   });
 
   // =========================================================================
-  describe('there is no delete', () => {
-    it('offers no DELETE route, because no `document.delete` permission exists', async () => {
+  describe('deletion is guarded', () => {
+    /*
+      Until Phase 13 there was no DELETE route at all and this test asserted a
+      404 from the router. The owner asked for deletion in Phase 13; it is now
+      `document.delete` (sensitive) with a reason — full coverage in
+      cms-communications.spec.ts. What this test still guards: a session
+      without a FRESH re-authentication deletes nothing.
+    */
+    it('refuses a DELETE without a fresh re-authentication, and the row survives', async () => {
       const response = await upload();
       const id = (response.body as Envelope<{ id: string }>).data!.id;
 
+      // A NEW sign-in: earlier tests here re-authenticated `staff` within the
+      // last five minutes, and a login is not a re-authentication.
+      const fresh = (
+        (
+          await request(server)
+            .post(`${PREFIX}/auth/staff/login`)
+            .send({ email: TEST_USERS.superAdmin, password: TEST_PASSWORD })
+        ).body as Envelope<{ accessToken: string }>
+      ).data!.accessToken;
+
       const attempt = await request(server)
         .delete(`${PREFIX}/admin/documents/${id}`)
-        .set(auth(staff));
+        .set(auth(fresh))
+        .send({ reason: 'Trying without a fresh password.' });
 
-      // 404 from the router: the route is not declared at all.
-      expect(attempt.status).toBe(404);
+      expect(attempt.status).toBe(403);
+      expect(errorCode(attempt.body as Envelope)).toBe('REAUTH_REQUIRED');
 
       const [row] = (await db().execute(sql`SELECT id FROM documents WHERE id = ${id}::uuid`))
         .rows!;

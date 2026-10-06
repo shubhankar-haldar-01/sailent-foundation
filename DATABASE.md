@@ -1,8 +1,8 @@
 # DATABASE.md — actual database
 
-Verified on 2026-10-06 against:
+Verified on 2026-10-06 (updated for Phase 13 on 2026-10-07) against:
 - the Drizzle schema in `packages/database/src/schema/*.ts`;
-- the SQL migrations `packages/database/drizzle/0000`–`0022`;
+- the SQL migrations `packages/database/drizzle/0000`–`0023`;
 - the seed;
 - read-only queries against the local `sailent_dev` and `sailent_e2e` databases.
 
@@ -14,7 +14,7 @@ Verified on 2026-10-06 against:
 |---|---|
 | Engine | PostgreSQL 17 locally (`sailent_dev`, `sailent_e2e`); the **production** database is a Supabase Postgres project. Its state is unverified, and **agents must not access it** (`AGENTS.md` §8). |
 | ORM | Drizzle (`drizzle-orm` 0.38). Client: `packages/database/src/client.ts` (pooled `pg`, TLS verified with `DATABASE_CA_CERT`) |
-| Tables | 47 live, all in `public` |
+| Tables | 49 live, all in `public` (Phase 13 added `contact_messages` and `newsletter_subscribers`) |
 | Keys | UUID primary keys `gen_random_uuid()` (`_shared.ts`), except composite join tables and the sequence tables |
 | Timestamps | `created_at`/`updated_at` timestamptz, maintained by the **application**; there are no triggers |
 | Soft delete | `deleted_at` on content tables (programmes, campaigns, campaign_products, products, stories, blog, pages, events, team). Donations, payments and receipts are **never** deleted. |
@@ -30,7 +30,7 @@ Verified on 2026-10-06 against:
   - `password_hash` (Argon2id; nullable)
   - `status` (`user_status`)
   - TOTP fields: **unused by owner decision** — staff 2FA is not required (Phase 12); the columns stay, no migration
-  - `failed_login_count`, `locked_until`, `must_change_password` (never read)
+  - `failed_login_count`, `locked_until`, `must_change_password` (set on invited and CLI-created accounts and cleared when a password is set through an invitation or reset link, Phase 13; still not enforced at sign-in)
 - **sessions**
   - one subject, either `user_id` (FK CASCADE) or `donor_id` (**no FK**); CHECK `sessions_one_subject`
   - `audience` (`token_audience`)
@@ -38,10 +38,10 @@ Verified on 2026-10-06 against:
   - `expires_at`, `revoked_at`, `reauthenticated_at`
 - **otp_codes**
   - `identifier`, `purpose` (varchar, no check), `code_hash`, `expires_at`, `attempts`, `consumed_at`
-  - purposes in use: `donor_login` (identifier = the normalised email) and, since Phase 12, `email_change` (identifier = `email_change:<donor id>:<normalised new email>`, so a code is bound to one account and one address). Codes are SHA-256 hashed and compared in constant time.
+  - purposes in use: `donor_login` (identifier = the normalised email); since Phase 12, `email_change` (identifier = `email_change:<donor id>:<normalised new email>`, so a code is bound to one account and one address); since Phase 13, `staff_invite` (7 days) and `staff_password_reset` (1 hour), identifier `staff:<user id>`, whose "code" is the SHA-256 of a 32-byte random link token. Codes are SHA-256 hashed and compared in constant time; staff tokens are claimed atomically (`UPDATE … WHERE consumed_at IS NULL AND expires_at > now() RETURNING`), and issuing a new one burns the older ones.
 - **roles**, **permissions**, **role_permissions** (CASCADE), **user_roles**
   - `user_roles.role_id` is RESTRICT; `granted_by` is SET NULL
-  - 112 permissions (37 sensitive) and **1 role, `SUPER_ADMIN`** (as of 2026-10-06)
+  - 118 permissions (38 sensitive) and **1 role, `SUPER_ADMIN`** (as of 2026-10-07; Phase 13 added `document.delete`, `contact.read`, `contact.manage`, `newsletter.read`, `faq.read`, `faq.manage`)
 
 ### Donors
 - **donors**
@@ -145,7 +145,9 @@ Verified on 2026-10-06 against:
   - polymorphic `related_type`/`related_id`, no FK
 - **impact_updates**: CHECK `impact_updates_has_parent` (campaign, programme or event)
 - **events**: capacity and count CHECKs. **event_registrations**: unique (`event_id`, `email`); `donor_id` has **no FK**
-- **faqs**: polymorphic `context_type`/`context_id`; CHECK `faqs_context_consistent`
+- **faqs**: polymorphic `context_type`/`context_id`; CHECK `faqs_context_consistent`. `context_type = 'general'` rows are the public `/faq` page (Phase 13, `category` = one of `FAQ_CATEGORIES`); campaign rows appear on their campaign
+- **campaign_gallery**: `display_order` is the public order; since Phase 13 items are added from the media library by `mediaId` (a public item needs a public image) and the whole order is set with `PUT …/gallery/order`
+- **campaigns.cover_image** / **programs.cover_image** (text): since Phase 13 the API accepts only the URL of a PUBLIC media-library image (or null)
 - **team_members**: `slug` unique
 
 ### Platform
@@ -155,7 +157,9 @@ Verified on 2026-10-06 against:
   - append-only by convention only
   - `user_id` holds a user **or** a donor ID, with no FK
   - old/new jsonb, `severity`
-- **settings**: `key` unique, `value` jsonb, `is_public`
+- **settings**: `key` unique, `value` jsonb, `is_public`. Six rows: `organization_name`, `registration_details` (Phase 13 adds optional `registeredAs`, `trustDeedNumber`, `registeredOn`, `csr1`), `organization_contact` and `organization_social` (both Phase 13, migration `0023`, inserted EMPTY), `donation_minimum_paise` and `fcra_enabled` (neither read by anything). `GET /settings/public` serves the four organisation rows that are also `is_public`; receipts snapshot `registration_details.registrationNumber` into `receipts.registration_number`
+- **contact_messages** (`0023`): name, normalised email, `subject` (CHECK, 6 values), `message` (1–5000), `status` new/handled/archived, `ip_address`, `handled_by` → users SET NULL, `handled_at`. Never deleted by the application
+- **newsletter_subscribers** (`0023`): unique `lower(btrim(email))`, `status` pending/subscribed/unsubscribed (CHECK `subscribed` ⇒ `confirmed_at`), SHA-256 `confirm_token_hash` (48 h) and `unsubscribe_token_hash` (both unique), `consent_ip`, timestamps. Double opt-in; nothing sends a newsletter
 
 **Dropped tables:** `refunds` (`0010`), `subscriptions` and `subscription_payments` (`0009`).
 
@@ -238,15 +242,16 @@ The journal (`meta/_journal.json`) lists 23 entries. Dates come from the journal
 | 0020 | 2026-09-23* | Pages and revisions | Inner BEGIN/COMMIT |
 | 0021 | 2026-09-23* | Documents `file_key` unique; public needs `published_at` | Unguarded constraints; inner BEGIN/COMMIT |
 | 0022 | 2026-09-23* | Notification templates and revisions; notification columns | Inner BEGIN/COMMIT |
+| 0023 | 2026-10-07* | Phase 13: `contact_messages`, `newsletter_subscribers` (RLS on); `organization_contact` and `organization_social` settings rows (empty); six permissions granted to `SUPER_ADMIN` — all `ON CONFLICT DO NOTHING` / `IF NOT EXISTS` | Additive only; no BEGIN/COMMIT. Journal `when` = 1790102369677 (see below) |
 
 \* Hand-assigned timestamps.
 
 ### Applied state vs repository (local databases)
 
-`drizzle.__drizzle_migrations` has **24 rows** in both `sailent_dev` and `sailent_e2e`.
+`drizzle.__drizzle_migrations` had **24 rows** in both `sailent_dev` and `sailent_e2e` before Phase 13; `sailent_dev` has 25 after `0023` was applied locally on 2026-10-07 (`sailent_e2e` gets it from `db:prepare-e2e`).
 - Matching the hashes against the repo files gives `0000`–`0013` and `0015`–`0022` as exact matches.
 - Row 15 (`0014`) **does not match**: the file was edited after it was applied.
-- Row 24 matches **no file**. The only database object absent from the repo SQL is the CHECK `donors_tax_id_encrypted` (`tax_id_number IS NULL OR tax_id_number LIKE 'enc:%'`). Before Phase 12 it broke `PATCH /me` with a PAN and accounted for 4 failing API tests; Phase 12's `enc:v1:` encryption satisfies it, so those tests now pass **without any database change**. The unknown row itself is still unexplained (owner decision pending).
+- Row 24 matches **no file**. Its `created_at` is **1790102368677** — exactly the next hand-assigned journal timestamp after `0022` — which strongly suggests it was an earlier migration numbered `0023` whose file was later removed. Phase 13's `0023` was first given that same timestamp and Drizzle silently skipped it ("up to date": it applies only migrations newer than the last applied row), so `0023` uses **1790102369677**. A database WITHOUT the unknown row (production, presumably) applies it normally. The only database object absent from the repo SQL is the CHECK `donors_tax_id_encrypted` (`tax_id_number IS NULL OR tax_id_number LIKE 'enc:%'`). Before Phase 12 it broke `PATCH /me` with a PAN and accounted for 4 failing API tests; Phase 12's `enc:v1:` encryption satisfies it, so those tests now pass **without any database change**. The unknown row itself is still unexplained (owner decision pending).
 - See `DEVELOPMENT_STATUS.md` §5.1. **The repository is the canonical schema;** the local databases have drifted.
 
 ### Migration workflow (authoritative rule; identical to `AGENTS.md` §5)
@@ -307,8 +312,8 @@ These ID columns have **no FK at all**:
 ## 8. Seed (`packages/database/src/seed/index.ts`)
 
 ### Reference tier (always runs)
-- 112 permissions and 1 role (`SUPER_ADMIN`)
-- 12 categories, 4 settings, 9 notification templates
+- 118 permissions and 1 role (`SUPER_ADMIN`)
+- 12 categories, 6 settings (the two Phase 13 organisation rows are also inserted by migration `0023`), 9 notification templates
 
 ### Demo tier
 **Two separate checks run, and they look at different things:**
@@ -319,7 +324,7 @@ These ID columns have **no FK at all**:
 - 2 development staff accounts, `admin@sailent.local` and `staff@sailent.local`. Their published dev credentials are neutralised by `db:harden`.
 - 7 programmes, 8 products
 - 9 campaigns: 8 active, 1 completed, 4 featured, every end date null (seed change committed in `dd64d41`, 2026-10-06)
-- 7 campaign products, 27 FAQs, 27 media / gallery rows
+- 7 campaign products, 27 campaign FAQs plus 9 general FAQs for `/faq` (8 published, 1 draft; Phase 13), 27 media / gallery rows
 
 **People and activity:**
 - 5 team members, 3 stories, 4 events (152 registrations), 2 impact updates
@@ -371,6 +376,7 @@ pnpm --filter @sailent/database db:rotate-admin-password
 ## 11. Adding a permission
 
 1. **Add the key** to `PERMISSIONS` in `packages/database/src/seed/permissions.ts`, as `{ key: 'resource.action', description: '…', sensitive?: true }`.
+   - **Preferred since Phase 13 (owner decision, 2026-10-07):** ALSO insert the permission and its `SUPER_ADMIN` grant in the migration that needs it (`INSERT … ON CONFLICT DO NOTHING`, as `0023` does). Production then receives it by applying the migration, with no reference reseed and no lockout window.
    - Mark it `sensitive` if it changes money, permissions, PII visibility or published state.
    - The single role `SUPER_ADMIN` has `permissions: '*'` in `ROLES`, so it receives every catalogue key automatically.
 2. **Use it in the API:** `@RequirePermission('resource.action')` on the controller method. Add `@Sensitive()` if it needs 5-minute re-authentication, and `AuditService.record` for mutations.
@@ -384,7 +390,7 @@ pnpm --filter @sailent/database db:rotate-admin-password
    Run `pnpm --filter @sailent/api exec vitest run test/rbac.spec.ts`.
 6. **Verify the behaviour** in the admin UI as a `SUPER_ADMIN`.
    - The web `can()` helper only hides UI; the API is the enforcement point.
-   - Update the documented count (112 as of 2026-10-06) where it appears: `SECURITY.md`, `PROJECT.md`, this file.
+   - Update the documented count (118 as of 2026-10-07) where it appears: `SECURITY.md`, `PROJECT.md`, this file.
 
 ## 12. Runbook: recount `campaigns.donor_count` (HUMAN ONLY — never automatic, never by an agent)
 

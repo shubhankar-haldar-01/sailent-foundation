@@ -11,9 +11,21 @@ import { StatusActions } from '@/components/admin/status-actions';
 import { StatusPill } from '@/components/admin/status-pill';
 import { changeCampaignStatus } from '@/lib/admin/actions';
 import {
+  CampaignUpdatesPanel,
+  CoverImagePanel,
+  GalleryPanel,
+} from '@/components/admin/campaign-media';
+import { can, currentActor } from '@/lib/auth/session';
+import {
   AdminApiError,
   adminFetch,
+  listCampaignGallery,
+  listCampaignUpdates,
+  listMedia,
   type AdminCampaign,
+  type AdminCampaignUpdate,
+  type AdminGalleryItem,
+  type AdminMedia,
   type AdminCategory,
   type AdminProgram,
   type Paginated,
@@ -22,6 +34,7 @@ import {
 export const dynamic = 'force-dynamic';
 
 interface CampaignDetail extends AdminCampaign {
+  coverImage: string | null;
   description: string | null;
   beneficiaryContext: string | null;
   fundUtilization: string | null;
@@ -82,6 +95,21 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
     if (error instanceof AdminApiError && error.status === 404) notFound();
     throw error;
   }
+
+  /*
+    Phase 13 — cover, gallery and progress updates. Each is loaded only for
+    someone who may use it; the API enforces the same permissions.
+  */
+  const actor = await currentActor();
+  const [mediaOptions, gallery, updates] = await Promise.all([
+    can(actor, 'media.read')
+      ? listMedia({ visibility: 'public', limit: 60 }).then((page) => page.items)
+      : Promise.resolve([] as AdminMedia[]),
+    can(actor, 'campaign_gallery.manage')
+      ? listCampaignGallery(id).then((page) => page.items)
+      : Promise.resolve(null as AdminGalleryItem[] | null),
+    listCampaignUpdates(id).then((page) => page.items) as Promise<AdminCampaignUpdate[]>,
+  ]);
 
   const isPublic = ['published', 'active', 'paused', 'completed'].includes(campaign.status);
 
@@ -206,9 +234,57 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
         />
       </section>
 
+      {can(actor, 'campaign.update') ? (
+        <section>
+          <h2 className="text-h4 mb-1 font-semibold">Cover image</h2>
+          <p className="text-body-sm text-muted-foreground mb-4 max-w-prose">
+            The large picture at the top of the campaign page and on its card. Public images from
+            the media library only.
+          </p>
+          <CoverImagePanel
+            kind="campaign"
+            id={campaign.id}
+            slug={campaign.slug}
+            current={campaign.coverImage}
+            options={mediaOptions}
+          />
+        </section>
+      ) : null}
+
+      {gallery ? (
+        <section>
+          <h2 className="text-h4 mb-1 font-semibold">Campaign Gallery</h2>
+          <p className="text-body-sm text-muted-foreground mb-4 max-w-prose">
+            The photographs in “About This Campaign”, in this order. Only images marked public
+            appear on the site.
+          </p>
+          <GalleryPanel
+            campaignId={campaign.id}
+            slug={campaign.slug}
+            items={gallery}
+            options={mediaOptions}
+          />
+        </section>
+      ) : null}
+
       <section>
         <h2 className="text-h4 mb-4 font-semibold">FAQs</h2>
         <FaqsPanel campaignId={campaign.id} faqs={faqs.items} />
+      </section>
+
+      <section>
+        <h2 className="text-h4 mb-1 font-semibold">Progress updates</h2>
+        <p className="text-body-sm text-muted-foreground mb-4 max-w-prose">
+          Short, dated reports of what the campaign has done. A figure in an update needs a stated
+          method before it can be published.
+        </p>
+        <CampaignUpdatesPanel
+          campaignId={campaign.id}
+          slug={campaign.slug}
+          updates={updates}
+          canCreate={can(actor, 'campaign_update.create')}
+          canPublish={can(actor, 'campaign_update.publish')}
+        />
       </section>
 
       {campaign.slugHistory.length > 0 ? (

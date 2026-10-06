@@ -14,6 +14,24 @@ import { PERMISSIONS_POLICY } from './src/lib/security/permissions-policy';
 const isProductionDeployment = process.env.APP_ENV === 'production';
 const isDevelopmentServer = process.env.NODE_ENV === 'development';
 
+/** `https://media.example.org/base` → a next/image remote pattern for everything under it. */
+function mediaRemotePatterns(base: string | undefined) {
+  if (!base) return [];
+  try {
+    const url = new URL(base);
+    return [
+      {
+        protocol: url.protocol.replace(':', '') as 'http' | 'https',
+        hostname: url.hostname,
+        ...(url.port ? { port: url.port } : {}),
+        pathname: `${url.pathname.replace(/\/$/, '')}/**`,
+      },
+    ];
+  } catch {
+    return [];
+  }
+}
+
 const config: NextConfig = {
   reactStrictMode: true,
 
@@ -29,8 +47,13 @@ const config: NextConfig = {
     // AVIF first, WebP fallback: bandwidth matters on the connections our
     // donors actually use.
     formats: ['image/avif', 'image/webp'],
-    // R2 public bucket is added here once the domain is provisioned (Phase 4).
-    remotePatterns: [],
+    /*
+      The media library's public bucket (Phase 13). `MEDIA_PUBLIC_BASE_URL` is
+      the same value as the API's `R2_PUBLIC_BASE_URL`; unset, no remote image
+      is allowed (as before), and library covers and gallery images cannot be
+      rendered by next/image. Read at BUILD time.
+    */
+    remotePatterns: mediaRemotePatterns(process.env.MEDIA_PUBLIC_BASE_URL),
   },
 
   async headers() {

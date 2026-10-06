@@ -7,6 +7,7 @@ import {
   DownloadButton,
   VisibilityBadge,
   VisibilityControls,
+  DeleteDocumentControls,
 } from '@/components/admin/document-library';
 import { DOCUMENT_TYPE_LABELS, formatBytes } from '@/lib/admin/documents';
 import { AdminApiError, getDocument } from '@/lib/admin/api';
@@ -119,6 +120,8 @@ export default async function AdminDocumentPage({ params }: { params: Promise<{ 
         {can(actor, 'document.change_visibility') ? (
           <VisibilityControls document={document} />
         ) : null}
+
+        {can(actor, 'document.delete') ? <DeleteDocumentControls document={document} /> : null}
       </div>
     </div>
   );

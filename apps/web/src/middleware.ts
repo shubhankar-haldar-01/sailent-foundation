@@ -43,11 +43,18 @@ const AREAS = [
     prefix: '/admin',
     cookie: 'sailent_staff_session',
     signIn: '/admin/login',
+    /*
+      Phase 13: reached from an email by somebody who cannot sign in yet —
+      an invitee, or a staff member who has forgotten their password. Each
+      authenticates by the single-use token in its link, not by a session.
+    */
+    open: ['/admin/accept-invite', '/admin/forgot-password', '/admin/reset-password'],
   },
   {
     prefix: '/dashboard',
     cookie: 'sailent_donor_session',
     signIn: '/sign-in',
+    open: [],
   },
 ] as const;
 
@@ -61,6 +68,7 @@ export function middleware(request: NextRequest) {
 
   // The sign-in page itself must stay reachable, or this is a redirect loop.
   if (pathname === area.signIn) return NextResponse.next();
+  if ((area.open as readonly string[]).includes(pathname)) return NextResponse.next();
 
   if (!request.cookies.has(area.cookie)) {
     const url = request.nextUrl.clone();

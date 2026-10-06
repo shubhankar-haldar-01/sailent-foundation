@@ -1,6 +1,6 @@
 # PROJECT.md — Sailent Foundation platform
 
-Product overview, verified against the code on 2026-10-06 (a snapshot). Each section is labelled **CURRENT** (implemented), **PLANNED** (documented, not built), **REMOVED** (built or planned, then deliberately taken out) or **DEPRECATED**. Implementation status per feature lives in `DEVELOPMENT_STATUS.md` §4.
+Product overview, verified against the code on 2026-10-06 and updated for Phase 13 on 2026-10-07 (a snapshot). Each section is labelled **CURRENT** (implemented), **PLANNED** (documented, not built), **REMOVED** (built or planned, then deliberately taken out) or **DEPRECATED**. Implementation status per feature lives in `DEVELOPMENT_STATUS.md` §4.
 
 ---
 
@@ -25,7 +25,7 @@ Product overview, verified against the code on 2026-10-06 (a snapshot). Each sec
 | Volunteer applicant / volunteer | Public form; volunteering visible in the donor dashboard by email | Applies (6-step form); gets an ID `VOL-YYYY-NNNNN` on approval; assignments, attendance, certificates |
 | Staff | Email + password (Argon2id) → staff session (`sailent_staff_session`) | Admin dashboard `/admin` |
 
-**CURRENT:** there is one staff role, `SUPER_ADMIN`, which holds all 112 permissions (migration `0014`). The documented multi-role model in `docs/rbac.md` (Admin, Campaign Manager, Finance Manager and others) is **REMOVED** in code. Separation of duties is an open review item.
+**CURRENT:** there is one staff role, `SUPER_ADMIN`, which holds all 118 permissions (migration `0014`; six added by `0023` in Phase 13). The documented multi-role model in `docs/rbac.md` (Admin, Campaign Manager, Finance Manager and others) is **REMOVED** in code. Separation of duties is an open review item.
 
 ## 3. Business rules (CURRENT)
 
@@ -79,7 +79,9 @@ Product overview, verified against the code on 2026-10-06 (a snapshot). Each sec
 
 **Homepage composition:** a published `home` page from the page composer can reorder the sections. Otherwise the order above is used.
 
-**Fixture-backed content (CURRENT, should be replaced):** the `/faq` entries, testimonials, search index, donation-widget presets, and the organisation contact and registration details (DEMO).
+**Database-backed since Phase 13:** the `/faq` questions (Admin → FAQs), site search (published content only), and the organisation's contact and registration details (Admin → Settings; footer, `/contact`, `/about`). The contact form stores and emails each message; the newsletter sign-up is double opt-in.
+
+**Still static, by design (Phase 13 boundary):** the homepage and `/volunteer` testimonials are fixtures in `src/lib/mock` — there is no testimonial table or admin screen, and Phase 13 did not invent one (their "monthly donor" wording was corrected). The dead "Once / Monthly" donation widget was deleted: donations are one-time only.
 
 **REMOVED:**
 - `/refund-policy`, `/reports`, `/transparency` and `/gallery`.
@@ -90,7 +92,7 @@ Product overview, verified against the code on 2026-10-06 (a snapshot). Each sec
 ## 5. Admin platform (CURRENT) — `apps/web/src/app/admin`
 
 **Content and fundraising:**
-- Programmes and campaigns: CRUD, lifecycle, FAQs, gallery, products, featured. Preview at `/admin/preview/[entity]/[slug]`.
+- Programmes and campaigns: CRUD, lifecycle, FAQs, products, featured; since Phase 13 the cover image (campaign and programme) from the media library, the Campaign Gallery (add from the library, remove, reorder, public/private) and progress updates (draft, publish, archive). Preview at `/admin/preview/[entity]/[slug]`.
 - Products catalogue.
 
 **People and money:**
@@ -101,17 +103,19 @@ Product overview, verified against the code on 2026-10-06 (a snapshot). Each sec
 **Content management:**
 - Stories (with consent gate) and blog.
 - Pages (section composer, revisions, preview).
-- Media library (R2) and documents (public, private or admin-only; signed downloads).
+- Media library (R2; EXIF/GPS removed from new uploads since Phase 13) and documents (public, private or admin-only; signed downloads; deletion with re-authentication and a reason since Phase 13).
+- General FAQs for `/faq` (Phase 13).
 
 **Communication:**
-- Notifications: inbox, send log, retry. **Retry is currently a no-op.**
+- Notifications: inbox, send log, retry (sends again through the email queue since Phase 13).
 - Notification templates (versioned).
+- Messages: the contact-form inbox (new / handled / archived), and the newsletter subscriber list (Phase 13).
 
 **Reports and administration:**
 - Reports (donations, campaigns, volunteers, impact, CSV export), reconciliation (read-only), tax readiness.
 - Users, roles (read-only, single role), audit logs, settings.
 
-**Dashboard home:** NOT STARTED (`PhasePlaceholder` cards).
+**Dashboard home (Phase 13):** live counts — open campaigns, programmes, donations this month, donors, volunteer applications, upcoming events, new messages, newsletter subscribers — a "needs attention" list, recent donations and recent staff activity, each shown only with its read permission.
 
 ## 6. Authentication (CURRENT)
 
@@ -122,14 +126,14 @@ Product overview, verified against the code on 2026-10-06 (a snapshot). Each sec
 - Sensitive actions require re-entering the password, which is valid for 5 minutes.
 - **Staff TOTP/2FA is not required** (owner decision, 2026-10-07).
 - Sign-ins, failures, lockouts and re-authentication are audited.
-- **No invite acceptance or password reset.** Admins are created only by the CLI scripts (`db:create-admin`, `db:rotate-admin-password`).
+- **Invitations and password reset (Phase 13):** an invited staff member gets a single-use emailed link (7 days) to set their own password; "Forgot your password?" emails a 1-hour link, and a reset signs out every session. The CLI scripts remain for the first administrator.
 
 **Donors and volunteers**
 - Sign in with an email OTP: 6 digits, valid for 10 minutes, 5 attempts per code, 3 codes per 15 minutes.
 - Codes go to an address held by a donor account or a live volunteer record; the first sign-in creates the account.
 - The email address changes only through a code sent to the new address.
 
-**PLANNED (Phase 13):** invite emails, password reset, session-management UI.
+**PLANNED:** a session-management UI.
 
 ## 7. Donation and payment model (CURRENT)
 
@@ -190,9 +194,10 @@ POST /donations
 
 **Templates** are editable and versioned in the admin. Placeholders are HTML-escaped.
 
+**Since Phase 13:** contact messages to the organisation, newsletter confirmation, staff invitations and password-reset links; admin retry works for retryable types.
+
 **Missing:**
-- Admin retry: its queue has no consumer.
-- Newsletter: the form is UI-only.
+- Sending newsletters (only consent is recorded).
 - SMS, WhatsApp and push.
 - Campaign and impact update emails, although the opt-in flags are stored.
 
@@ -217,7 +222,7 @@ POST /donations
 | Cloudflare R2 | Media and documents (public and private buckets) | Implemented in the API; a live round-trip test exists |
 | Razorpay | Payments | Implemented; no keys configured locally |
 | Brevo | Email | Implemented in the worker; optional |
-| Vercel (web), Render/Railway (api, worker) | Hosting | Documented intent only. **No deployment configuration exists.** Cloud Run is not referenced anywhere. |
+| Google Cloud Run (web, api, worker) | Hosting | Owner's intended choice (earlier documents said Vercel and Render/Railway). **No deployment configuration exists yet** — Phase 14. |
 | Sentry, GA4 | Monitoring, analytics | PLANNED; variables declared, no SDK |
 
 ## 14. Permanent exclusions (REMOVED or out of scope by decision)

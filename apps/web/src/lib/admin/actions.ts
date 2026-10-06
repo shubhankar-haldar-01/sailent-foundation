@@ -3,6 +3,8 @@
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import { SOCIAL_NETWORKS } from '@sailent/validation';
+
 import {
   AdminApiError,
   adminFetch,
@@ -1269,6 +1271,18 @@ export async function assignUserRoles(_prev: ActionState, form: FormData): Promi
   }
 }
 
+/** A fresh invitation link for an account still `invited` (Phase 13). */
+export async function resendInvitation(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const id = String(form.get('id') ?? '');
+  try {
+    await adminFetch(`admin/users/${id}/invitation`, { method: 'POST' });
+    revalidateStaff(id);
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
 export async function suspendUser(_prev: ActionState, form: FormData): Promise<ActionState> {
   const id = String(form.get('id') ?? '');
   try {
@@ -1317,6 +1331,11 @@ export async function updateSettings(_prev: ActionState, form: FormData): Promis
   const text = (name: string) => String(form.get(name) ?? '').trim();
   const orNull = (value: string) => (value.length > 0 ? value : null);
 
+  // One field per network; a blank one is simply not listed.
+  const social = SOCIAL_NETWORKS.map((label) => ({ label, url: text(`social_${label}`) })).filter(
+    (link) => link.url.length > 0,
+  );
+
   try {
     const minimum = Number(text('donation_minimum_paise'));
     if (!Number.isInteger(minimum) || minimum < 0) {
@@ -1335,7 +1354,26 @@ export async function updateSettings(_prev: ActionState, form: FormData): Promis
           pan: orNull(text('pan').toUpperCase()),
           section12A: orNull(text('section12A')),
           section80G: orNull(text('section80G')),
+          registeredAs: orNull(text('registeredAs')),
+          trustDeedNumber: orNull(text('trustDeedNumber')),
+          registeredOn: orNull(text('registeredOn')),
+          csr1: orNull(text('csr1')),
         },
+        organization_contact: {
+          email: orNull(text('contactEmail')),
+          pressEmail: orNull(text('pressEmail')),
+          phone: orNull(text('phone')),
+          officeHours: orNull(text('officeHours')),
+          address: {
+            line1: orNull(text('addressLine1')),
+            line2: orNull(text('addressLine2')),
+            city: orNull(text('city')),
+            state: orNull(text('state')),
+            postalCode: orNull(text('postalCode')),
+            country: orNull(text('country')),
+          },
+        },
+        organization_social: social,
         donation_minimum_paise: minimum,
         reason: text('reason') || undefined,
       },
@@ -1343,11 +1381,39 @@ export async function updateSettings(_prev: ActionState, form: FormData): Promis
 
     revalidatePath('/admin/settings');
     revalidatePath('/admin/audit-logs');
+    // The footer on every page, /contact, /about and the structured data.
+    revalidateTag('settings');
+    revalidatePath('/', 'layout');
     return { ok: true };
   } catch (error) {
-    return toState(error);
+    const state = toState(error);
+    if (!state.fieldErrors) return state;
+    // The API names fields by path ("organization_contact.email",
+    // "organization_social.1.url"); the form by input name.
+    const fieldErrors: Record<string, string> = {};
+    for (const [path, message] of Object.entries(state.fieldErrors)) {
+      const socialIndex = /^organization_social\.(\d+)/.exec(path);
+      const name = socialIndex
+        ? `social_${social[Number(socialIndex[1])]?.label ?? ''}`
+        : (SETTINGS_FIELD_NAMES[path] ?? path.split('.').pop() ?? path);
+      fieldErrors[name] = message;
+    }
+    return { ...state, fieldErrors };
   }
 }
+
+const SETTINGS_FIELD_NAMES: Record<string, string> = {
+  'organization_contact.email': 'contactEmail',
+  'organization_contact.pressEmail': 'pressEmail',
+  'organization_contact.phone': 'phone',
+  'organization_contact.officeHours': 'officeHours',
+  'organization_contact.address.line1': 'addressLine1',
+  'organization_contact.address.line2': 'addressLine2',
+  'organization_contact.address.city': 'city',
+  'organization_contact.address.state': 'state',
+  'organization_contact.address.postalCode': 'postalCode',
+  'organization_contact.address.country': 'country',
+};
 
 // ---------------------------------------------------------------------------
 // Success stories
@@ -2003,5 +2069,196 @@ export async function previewTemplate(
     return await previewNotificationTemplate(id, body);
   } catch (error) {
     return { error: toState(error).error ?? 'Could not render that.' };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 13 — documents, contact messages, general FAQs, campaign and
+// programme media, campaign progress updates.
+// ---------------------------------------------------------------------------
+
+/** Delete a document and its stored file. Sensitive, with a reason. */
+export async function deleteDocument(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const id = String(form.get('id') ?? '');
+  const reason = String(form.get('reason') ?? '').trim();
+  try {
+    await adminFetch(`admin/documents/${id}`, { method: 'DELETE', body: { reason } });
+    revalidateDocuments();
+    revalidatePath('/campaigns', 'layout');
+    return { ok: true, redirectTo: '/admin/documents' };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+export async function setContactMessageStatus(
+  _prev: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const id = String(form.get('id') ?? '');
+  try {
+    await adminFetch(`admin/contact-messages/${id}`, {
+      method: 'PATCH',
+      body: { status: String(form.get('status') ?? '') },
+    });
+    revalidatePath('/admin/messages');
+    revalidatePath(`/admin/messages/${id}`);
+    revalidatePath('/admin');
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+function revalidateFaqs() {
+  revalidateTag('faqs');
+  revalidatePath('/faq');
+  revalidatePath('/admin/faqs');
+}
+
+function faqFields(form: FormData) {
+  const order = text(form, 'displayOrder');
+  return {
+    question: text(form, 'question') ?? '',
+    answer: text(form, 'answer') ?? '',
+    category: text(form, 'category') ?? 'general',
+    ...(order !== undefined ? { displayOrder: Number(order) } : {}),
+    isPublished: form.get('isPublished') === 'on',
+  };
+}
+
+export async function createGeneralFaq(_prev: ActionState, form: FormData): Promise<ActionState> {
+  try {
+    await adminFetch('admin/faqs', { method: 'POST', body: faqFields(form) });
+    revalidateFaqs();
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+export async function updateGeneralFaq(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const id = String(form.get('id') ?? '');
+  try {
+    await adminFetch(`admin/faqs/${id}`, { method: 'PATCH', body: faqFields(form) });
+    revalidateFaqs();
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+export async function deleteGeneralFaq(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const id = String(form.get('id') ?? '');
+  try {
+    await adminFetch(`admin/faqs/${id}`, { method: 'DELETE' });
+    revalidateFaqs();
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+/** Campaign gallery: add an image from the media library. */
+export async function addGalleryImage(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const campaignId = String(form.get('campaignId') ?? '');
+  const mediaId = String(form.get('mediaId') ?? '');
+  if (!mediaId) return { error: 'Choose an image.', fieldErrors: { mediaId: 'Choose an image.' } };
+  try {
+    await adminFetch(`admin/campaigns/${campaignId}/gallery`, {
+      method: 'POST',
+      body: { mediaId, visibility: form.get('visibility') === 'private' ? 'private' : 'public' },
+    });
+    revalidateCatalogue(String(form.get('slug') ?? '') || undefined);
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+export async function removeGalleryImage(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const campaignId = String(form.get('campaignId') ?? '');
+  const itemId = String(form.get('itemId') ?? '');
+  try {
+    await adminFetch(`admin/campaigns/${campaignId}/gallery/${itemId}`, { method: 'DELETE' });
+    revalidateCatalogue(String(form.get('slug') ?? '') || undefined);
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+/** The whole order, first to last, as a comma-separated list of item ids. */
+export async function reorderGallery(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const campaignId = String(form.get('campaignId') ?? '');
+  const ids = String(form.get('ids') ?? '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+  try {
+    await adminFetch(`admin/campaigns/${campaignId}/gallery/order`, {
+      method: 'PUT',
+      body: { ids },
+    });
+    revalidateCatalogue(String(form.get('slug') ?? '') || undefined);
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+/** A campaign's or programme's cover: a public library image URL, or none. */
+export async function setCoverImage(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const kind = form.get('kind') === 'program' ? 'programs' : 'campaigns';
+  const id = String(form.get('id') ?? '');
+  const coverImage = text(form, 'coverImage') ?? null;
+  try {
+    await adminFetch(`admin/${kind}/${id}`, { method: 'PATCH', body: { coverImage } });
+    revalidateCatalogue(String(form.get('slug') ?? '') || undefined);
+    revalidatePath(`/admin/${kind}/${id}/edit`);
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+export async function createCampaignUpdate(
+  _prev: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const campaignId = String(form.get('campaignId') ?? '');
+  try {
+    await adminFetch(`admin/campaigns/${campaignId}/updates`, {
+      method: 'POST',
+      body: {
+        title: text(form, 'title') ?? '',
+        description: text(form, 'description') ?? '',
+        impactDate: text(form, 'impactDate') ?? '',
+      },
+    });
+    revalidatePath(`/admin/campaigns/${campaignId}/edit`);
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+export async function setCampaignUpdateStatus(
+  _prev: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const campaignId = String(form.get('campaignId') ?? '');
+  const updateId = String(form.get('updateId') ?? '');
+  try {
+    await adminFetch(`admin/campaigns/${campaignId}/updates/${updateId}/publish`, {
+      method: 'POST',
+      body: { status: String(form.get('status') ?? '') },
+    });
+    revalidateCatalogue(String(form.get('slug') ?? '') || undefined);
+    for (const tag of ['impact']) revalidateTag(tag);
+    revalidatePath(`/admin/campaigns/${campaignId}/edit`);
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
   }
 }

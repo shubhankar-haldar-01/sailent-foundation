@@ -114,6 +114,8 @@ export const adminNav: AdminNavGroup[] = [
       { label: 'Pages', href: '/admin/pages' },
       { label: 'Blog', href: '/admin/blog' },
       { label: 'Media library', href: '/admin/media' },
+      // Phase 13: the general questions on /faq. Campaign FAQs stay on the campaign.
+      { label: 'FAQs', href: '/admin/faqs' },
       /*
         ONE ENTRY, NOT TWO.
 
@@ -129,16 +131,14 @@ export const adminNav: AdminNavGroup[] = [
   },
   {
     /*
-      "Communication", as `information-architecture.md` §8.2 names it.
-
-      Newsletter subscribers is the fourth entry that section lists and is not
-      here: §4.21 does not name it, the table does not exist, and the public
-      form says plainly that nothing is stored yet. Adding a menu item for it
-      would be the only thing about it that was real.
+      "Communication", as `information-architecture.md` §8.2 names it. Messages
+      and Newsletter arrived in Phase 13 with their tables (migration 0023).
     */
     label: 'Communication',
     icon: Bell,
     items: [
+      { label: 'Messages', href: '/admin/messages' },
+      { label: 'Newsletter', href: '/admin/newsletter' },
       { label: 'Notifications', href: '/admin/notifications' },
       { label: 'Email templates', href: '/admin/notification-templates' },
       { label: 'Send log', href: '/admin/notifications/log' },

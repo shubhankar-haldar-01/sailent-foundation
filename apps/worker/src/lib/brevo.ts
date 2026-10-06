@@ -49,8 +49,10 @@ export async function sendEmail(
   logger: Logger,
 ): Promise<SendResult> {
   if (!config.apiKey || !config.senderEmail) {
+    // Never the recipient's address: it is personal data, and the send log
+    // already records who the message was for (Phase 13).
     logger.warn(
-      { to: message.to.email, subject: message.subject },
+      { subject: message.subject, tags: message.tags },
       'Brevo is not configured — the notification is recorded but not sent',
     );
     return { sent: false, reason: 'not_configured' };

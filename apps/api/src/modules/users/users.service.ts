@@ -8,6 +8,7 @@ import type { AuthenticatedActor } from '@sailent/types';
 import { DATABASE } from '../database/database.module.js';
 import { AuditService } from '../audit/audit.service.js';
 import { PasswordService } from '../auth/password.service.js';
+import { StaffAccountService } from '../auth/staff-account.service.js';
 import {
   ConflictException,
   ForbiddenException,
@@ -64,6 +65,7 @@ export class UsersService {
     @Inject(DATABASE) private readonly database: DatabaseClient,
     private readonly passwords: PasswordService,
     private readonly audit: AuditService,
+    private readonly staffAccounts: StaffAccountService,
   ) {}
 
   // -------------------------------------------------------------------------
@@ -196,8 +198,10 @@ export class UsersService {
    * be signed into until the invitee sets their own credential — a
    * administrator-chosen password is one the administrator also knows.
    *
-   * (Delivering the invitation email is Phase 4. Until then an account sits in
-   * `invited` and a Super Admin activates it deliberately.)
+   * The invitation email (Phase 13) carries a single-use link, valid for
+   * seven days, with which the invitee sets their own password and the
+   * account becomes `active` (`StaffAccountService`). The role is the one
+   * chosen here by the inviting SUPER_ADMIN; the invitee chooses nothing else.
    */
   async invite(
     input: {
@@ -266,7 +270,28 @@ export class UsersService {
       requestId: context.requestId,
     });
 
+    await this.staffAccounts.sendInvitation(created.id, actor.id, {
+      ipAddress: context.ip,
+      userAgent: context.userAgent,
+      requestId: context.requestId,
+    });
+
     return this.getById(created.id);
+  }
+
+  /** Send a fresh invitation link (older links stop working). `invited` accounts only. */
+  async resendInvitation(
+    id: string,
+    actor: AuthenticatedActor,
+    context: { ip?: string; userAgent?: string; requestId?: string },
+  ) {
+    await this.getById(id);
+    await this.staffAccounts.sendInvitation(id, actor.id, {
+      ipAddress: context.ip,
+      userAgent: context.userAgent,
+      requestId: context.requestId,
+    });
+    return this.getById(id);
   }
 
   async update(

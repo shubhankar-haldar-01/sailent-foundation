@@ -13,6 +13,7 @@ import {
 import { CurrentActor } from '../../common/decorators/actor.decorator.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { AuthService } from './auth.service.js';
+import { StaffAccountService } from './staff-account.service.js';
 import {
   OtpRequestDto,
   OtpVerifyDto,
@@ -24,14 +25,19 @@ import {
   otpVerifySchema,
   reauthSchema,
   refreshSchema,
+  staffForgotPasswordSchema,
   staffLoginSchema,
+  staffSetPasswordSchema,
 } from './dto/auth.dto.js';
 import { requestClientIp } from '../../common/security/internal-request.js';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly staffAccounts: StaffAccountService,
+  ) {}
 
   /** Client IP, respecting a trusted proxy header when the platform sets one. */
   /** The trusted client address (Phase 12), never a raw X-Forwarded-For. */
@@ -62,6 +68,63 @@ export class AuthController {
       password: body.password,
       totpCode: body.totpCode,
       ip: this.clientIp(request),
+      userAgent: request.headers['user-agent'],
+    });
+  }
+
+  /*
+    Phase 13 — invitation acceptance and password reset. The token travels in
+    the body, never the URL, and is single use (StaffAccountService).
+  */
+  @Public()
+  @Post('staff/invitation/accept')
+  @HttpCode(200)
+  @Throttle({ default: { limit: 10, ttl: 900_000 } })
+  @ApiOperation({ summary: 'Set the first password from an invitation link' })
+  @ApiResponse({ status: 200, description: 'Account active; sign in next' })
+  @ApiResponse({ status: 422, description: 'Expired or used link, or a weak password' })
+  acceptInvitation(
+    @Body(new ZodValidationPipe(staffSetPasswordSchema)) body: { token: string; password: string },
+    @Req() request: Request,
+  ) {
+    return this.staffAccounts.acceptInvitation(body.token, body.password, {
+      ipAddress: this.clientIp(request),
+      userAgent: request.headers['user-agent'],
+    });
+  }
+
+  @Public()
+  @Post('staff/password/forgot')
+  @HttpCode(202)
+  @Throttle({ default: { limit: 3, ttl: 900_000 } })
+  @ApiOperation({
+    summary: 'Email a password-reset link',
+    description:
+      'Always returns 202, whether or not the address belongs to an active staff account.',
+  })
+  async forgotPassword(
+    @Body(new ZodValidationPipe(staffForgotPasswordSchema)) body: { email: string },
+    @Req() request: Request,
+  ) {
+    await this.staffAccounts.requestPasswordReset(body.email, {
+      ipAddress: this.clientIp(request),
+      userAgent: request.headers['user-agent'],
+    });
+    return { status: 'check_inbox' as const };
+  }
+
+  @Public()
+  @Post('staff/password/reset')
+  @HttpCode(200)
+  @Throttle({ default: { limit: 10, ttl: 900_000 } })
+  @ApiOperation({ summary: 'Set a new password from a reset link; signs out every session' })
+  @ApiResponse({ status: 422, description: 'Expired or used link, or a weak password' })
+  resetPassword(
+    @Body(new ZodValidationPipe(staffSetPasswordSchema)) body: { token: string; password: string },
+    @Req() request: Request,
+  ) {
+    return this.staffAccounts.resetPassword(body.token, body.password, {
+      ipAddress: this.clientIp(request),
       userAgent: request.headers['user-agent'],
     });
   }

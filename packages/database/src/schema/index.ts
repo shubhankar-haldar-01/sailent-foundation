@@ -28,6 +28,9 @@
  * Phase 4 adds:
  *   taxonomy      categories, slug_history
  *   content       faqs, media, campaign_gallery
+ *
+ * Phase 13 adds:
+ *   platform      contact_messages, newsletter_subscribers
  */
 export * from './_shared.js';
 export * from './enums.js';
@@ -60,6 +63,7 @@ export * from './receipts.js';
 export * from './notifications.js';
 export * from './audit-logs.js';
 export * from './settings.js';
+export * from './communications.js';
 
 // Relations, so the Drizzle query API can traverse them.
 export * from '../relations/index.js';

@@ -10,7 +10,30 @@ Newest first.
 
 ---
 
-## 2026-10-07 — Phase 12: Accounts, Authentication & Security Hardening (`feat(auth): complete account and security hardening`; committed locally, NOT pushed as of 2026-10-07)
+## 2026-10-07 — Phase 13: Admin, CMS & Communications Completeness (`feat(admin): complete cms and communications workflows`; committed locally, NOT pushed as of 2026-10-07)
+
+**Owner decisions:** contact messages stored + inbox + emailed; newsletter double opt-in; organisation settings drive the public site; new permissions inserted by migration with their SUPER_ADMIN grant. Standing decisions unchanged: SUPER_ADMIN only, no staff 2FA, Campaign Gallery kept (no standalone gallery), no refunds or recurring giving, SEO in Phase 15, Cloud Run hosting in Phase 14.
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| Migration `0023`: `contact_messages`, `newsletter_subscribers`, empty `organization_contact` / `organization_social` settings, six permissions granted to SUPER_ADMIN | Contact and newsletter had no storage; settings had no organisation rows; new admin capabilities needed permissions without a risky reseed | Applied locally only; production is human-only | `0023` (additive) |
+| Campaign/programme cover from the media library; Campaign Gallery admin (add by media id, remove, reorder, visibility); progress updates admin (publish, unpublish, archive) | The API existed (or was unsafe: raw storage keys) but nothing in the admin used it | Public Campaign Gallery unchanged, now editable; covers must be public library images | 0023 not needed |
+| Admin dashboard: live, permission-filtered counts, needs-attention list, recent donations and staff activity | The home page was a placeholder of em dashes | Links into existing pages; no analytics added | — |
+| Settings consumed: footer, `/contact`, `/about`, JSON-LD, years-of-service, receipts' registration number; `GET /settings/public` | No setting was read by anything; contact details were hard-coded DEMO values | DEMO values only in development; production shows what staff enter | rows via `0023` |
+| Staff invitations and password reset (single-use hashed tokens in the link fragment, 7 days / 1 hour, sessions revoked on reset, no enumeration) | Invites sent nothing; no way to set or reset a password outside the CLI | Audited; no TOTP | — (uses `otp_codes`) |
+| Document deletion (`document.delete`, re-auth, reason; object first) | Requested; no way to remove a document | Audit keeps title/type/visibility | permission via `0023` |
+| `story.archive` enforced for archiving and restoring | Declared, never checked | Publishers without it cannot archive | — |
+| EXIF/GPS stripped from new image uploads (byte-level, no re-encode) | Photographs could publish where they were taken | Earlier uploads unchanged (human step) | — |
+| Notification retry sends through the `email` queue; processors for contact, newsletter confirmation, staff invitation and reset; worker stops logging recipient addresses | Retry went to a queue nothing consumed | Retry only for safe types; send log by id only | — |
+| Contact form stored and emailed; newsletter double opt-in with confirm/unsubscribe pages; admin Messages and Newsletter screens | Both forms were UI-only and lost every submission | Rate-limited, honeypot | tables via `0023` |
+| General FAQs in the database (admin + `/faq`); site search over published content via the API | `/faq` and search used development fixtures, including in production | Drafts never public; testimonials stay static by design | — |
+| Removed the dead "Once / Monthly" widget and presets; corrected "Monthly Donor" and the monthly-giving FAQ; regression test | One-time donations only | No change to the real donation flow | — |
+| `MEDIA_PUBLIC_BASE_URL` (web, build time) → `next/image` remote pattern | Library images could not be rendered | Unset = as before | — |
+| Docs: Cloud Run recorded as the intended host (Vercel/Render references superseded) | Owner decision | Deployment itself is Phase 14 | — |
+
+Tests: API `cms-communications.spec.ts` (44) and `strip-metadata.spec.ts`; worker `communications.processor.spec.ts`; validation, web unit and E2E specs; 18 mutation checks. Human-only: apply `0023` in production, enter organisation details, set `MEDIA_PUBLIC_BASE_URL`, optionally clean pre-Phase-13 image metadata (`DEPLOYMENT.md` §6c).
+
+## 2026-10-07 — Phase 12: Accounts, Authentication & Security Hardening (`3941ee7`, pushed 2026-10-07)
 
 **Owner decision:** staff authenticate with email and password; **staff TOTP/2FA is not required** and was not built.
 

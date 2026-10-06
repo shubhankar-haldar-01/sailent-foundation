@@ -60,6 +60,6 @@ import { ReceiptsService } from './receipts.service.js';
     PaymentExceptionsService,
     DonationIdempotencyService,
   ],
-  exports: [ReceiptsService, DonationCaptureService],
+  exports: [ReceiptsService, DonationCaptureService, PaymentExceptionsService],
 })
 export class DonationsModule {}

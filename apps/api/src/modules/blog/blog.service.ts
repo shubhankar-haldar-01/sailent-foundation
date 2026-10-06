@@ -357,8 +357,7 @@ export class BlogService {
       rights merely to unpublish. The route carries `blog.publish` as the floor,
       and this narrows it for the one transition that takes a live article down.
 
-      (`story.archive` is declared in the catalogue and enforced nowhere. That
-      is a pre-existing gap in the stories module, not a pattern to copy.)
+      (Stories do the same with `story.archive` since Phase 13.)
     */
     if (input.status === 'archived' && !actor.permissions.includes('blog.archive')) {
       throw new ForbiddenException('Archiving a post requires blog.archive.');

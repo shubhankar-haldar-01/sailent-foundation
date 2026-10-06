@@ -1,7 +1,7 @@
 # DEPLOYMENT.md — environments, local development, migrations, releases
 
 This document gives environment variable **names** only. It never contains secret values: no passwords, keys, tokens or connection strings with credentials. Status is as of **2026-10-06**:
-- The application is **not deployed** to any hosting. There are no Dockerfiles, no IaC and no deploy workflow, and **Cloud Run is not referenced anywhere**.
+- The application is **not deployed** to any hosting. There are no Dockerfiles, no IaC and no deploy workflow. The owner's intended host is **Google Cloud Run** (§8); that work is Phase 14.
 - A **production Supabase database** exists (owner, 2026-10-06). Its state is unverified, and **AI agents must not access it** (`AGENTS.md` §8).
 
 > **THE HUMAN OWNER APPROVES EVERY COMMIT, PUSH, MERGE AND PRODUCTION ACTION.**
@@ -204,6 +204,20 @@ Set **`APP_ENV=production`** when building and starting the web: it turns on HST
 
 **Content-Security-Policy.** Scripts load only from the site and `checkout.razorpay.com`. If a new third-party script or embed is added (analytics, chat, video), its origin must be added to `apps/web/src/lib/security/content-security-policy.ts`, or the browser will block it.
 
+## 6c. CMS and communications configuration (Phase 13, 2026-10-07)
+
+**Migration `0023` (HUMAN, production).** Adds `contact_messages`, `newsletter_subscribers`, the EMPTY `organization_contact` and `organization_social` settings rows, and six permissions (`document.delete`, `contact.read`, `contact.manage`, `newsletter.read`, `faq.read`, `faq.manage`) granted to `SUPER_ADMIN` — all idempotent. Apply with the normal human migration procedure (§9). **No reference reseed is needed** for the new permissions or settings. Until it is applied, the new admin screens answer 403/500 and the contact and newsletter forms fail.
+
+**Organisation details (staff, in Admin → Settings).** Enter the contact email (contact-form messages are emailed there), phone, office hours, postal address, social links, and the registration details (registration number, PAN, 12A, 80G, registered as, trust deed, date of registration, CSR-1). The public site shows only what is entered; the DEMO values are never shown in production. The registration number is printed on receipts issued afterwards.
+
+**Email (Brevo, §7).** Contact notifications, newsletter confirmations, staff invitations and password-reset links go through the existing transactional email (`BREVO_*`) and use the worker's `APP_PUBLIC_URL` for links. Without Brevo, contact messages are still stored (Admin → Messages) and the send log shows `not_configured`; invitations and resets cannot be delivered, so the CLI scripts (§10) stay the way to create the first administrator.
+
+**`MEDIA_PUBLIC_BASE_URL` (web, BUILD time).** The same value as the API's `R2_PUBLIC_BASE_URL`. `next.config.ts` turns it into the allowed remote image host, so library covers and gallery images render through `next/image`. Unset, no remote image is allowed (as before).
+
+**Existing images keep their EXIF/GPS (HUMAN, optional, production).** Phase 13 strips metadata from NEW uploads only. Objects uploaded earlier (media library and image documents) are unchanged. To clean them, a human would download each object, run it through the same byte-level stripper (`apps/api/src/modules/storage/strip-metadata.ts`), and re-upload it under the same key — with approval, against production storage, never by an agent. Until then, assume older photographs may carry location data.
+
+**Staff accounts.** Inviting a staff member now emails a single-use link (7 days); "Forgot your password?" on `/admin/login` emails a 1-hour link, and a reset signs out every session. Staff 2FA remains not required (owner decision).
+
 ## 7. External services
 
 | Service | Used by | Env var names | Status (as of 2026-10-06) |
@@ -231,15 +245,17 @@ Other variable names:
 
 **Enforced by `workerEnvSchema` in production:** `API_INTERNAL_URL` and `INTERNAL_API_SECRET`. The web server does not validate its environment yet (Phase 12); set its three variables by hand.
 
-## 8. Planned hosting (documented intent; not configured)
+## 8. Planned hosting (owner decision; not configured — Phase 14)
 
 ```
 Cloudflare (DNS / CDN / WAF)
-  ├── apps/web     → Vercel
-  ├── apps/api     → Render or Railway (persistent process; decision A12)
-  └── apps/worker  → Render or Railway
-Production Supabase Postgres · Upstash Redis · Cloudflare R2 · Brevo · Razorpay
+  ├── apps/web     → Google Cloud Run
+  ├── apps/api     → Google Cloud Run (persistent process; decision A12)
+  └── apps/worker  → Google Cloud Run (always-on: it consumes queues)
+Production Supabase Postgres · Redis · Cloudflare R2 · Brevo · Razorpay
 ```
+
+Earlier documents named Vercel and Render/Railway; the owner's decision is Cloud Run. No Dockerfile, service definition or deploy workflow exists yet.
 
 **Not provisioned:** backups (PITR, logical dumps, restore tests), IaC, runbooks, monitoring.
 

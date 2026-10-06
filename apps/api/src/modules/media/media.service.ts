@@ -16,6 +16,7 @@ import {
 import { offsetFor, paginate, resolveSort } from '../../common/dto/pagination.dto.js';
 import { StorageService, type StorageBucket } from '../storage/storage.service.js';
 import { UnsupportedImageError, inspectImage } from '../storage/image-inspection.js';
+import { stripImageMetadata } from '../storage/strip-metadata.js';
 import { MAX_UPLOAD_BYTES, type MediaListQuery, type UpdateMediaInput } from './dto/media.dto.js';
 
 /**
@@ -201,8 +202,15 @@ export class MediaService {
     const bucket: StorageBucket = input.visibility === 'public' ? 'public' : 'private';
     const key = this.storage.buildKey({ prefix: 'media', mimeType: inspected.mimeType });
 
+    /*
+      EXIF, GPS and text metadata removed before anything is stored (Phase 13,
+      `strip-metadata.ts`). Byte-level, no re-encoding: the picture itself is
+      untouched, and the size recorded below is the size actually stored.
+    */
+    const bytes = stripImageMetadata(file.buffer, inspected.mimeType).bytes;
+
     // Object first. See the note at the top of this class.
-    await this.storage.put(bucket, key, file.buffer, inspected.mimeType);
+    await this.storage.put(bucket, key, bytes, inspected.mimeType);
 
     const [created] = await this.db
       .insert(media)
@@ -213,7 +221,7 @@ export class MediaService {
         altText: input.altText,
         caption: input.caption ?? null,
         mimeType: inspected.mimeType,
-        sizeBytes: file.buffer.byteLength,
+        sizeBytes: bytes.byteLength,
         width: inspected.width,
         height: inspected.height,
         visibility: input.visibility,
@@ -234,7 +242,7 @@ export class MediaService {
       newValues: {
         storageKey: key,
         mimeType: inspected.mimeType,
-        sizeBytes: file.buffer.byteLength,
+        sizeBytes: bytes.byteLength,
         visibility: input.visibility,
       },
       ...context,
