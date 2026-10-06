@@ -10,6 +10,20 @@ Newest first.
 
 ---
 
+## 2026-10-06 — Campaign public experience cleanup (UNCOMMITTED as of 2026-10-06)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| Public API `status=open` (active, not past its end date) and `status=closed` (paused, or active past its end date), using the new `deadlineCutoff()` in `@sailent/validation`; listing Active → `open`, Closed → `closed`; homepage "Browse by cause" grid uses `open` | Owner: the homepage shows only campaigns accepting donations; "Active" must not include paused or ended campaigns | Paused and past-deadline campaigns leave the homepage grid and the Active filter and appear under Closed | none |
+| "Other Ways to Support" custom-amount panel restored on the campaign page | Owner decision | Typed amount and card presets share one value | — |
+| Mobile donation area: the fixed bottom "Review" bar is replaced by the full donation card in the page flow | Owner: non-sticky donation area on mobile; the bar covered content and focus | Desktop sticky card unchanged | — |
+| Duplication cleanup: "What Will Your Support Provide?" becomes a summary; "Difference Your Support Can Make" shows outcomes and "What one gift does", without the target or the repeated people-reached figure | Owner decisions | Goal kept on the card and in "Our Goal"; reached figures kept in "Your Impact"; Campaign Gallery kept | — |
+| Stories: a campaign shows only its own (matched by `campaignId`); borrowed stories are labelled | Unrelated stories appeared under a campaign's name | — | — |
+| Section-nav scroll hint; header wordmark wraps on phones; JSON-LD output escaped | Responsive/accessibility audit; stored-injection risk | — | — |
+| Tests: E2E campaign/donations/journeys updated to the new layout; new unit, API and E2E tests | Cover the new decisions | — | — |
+
+Also recorded: `166b70c` (docs) and `7fe6c25` ("ci: pass test database and redis env through turbo", `turbo.json` `passThroughEnv`) were committed and pushed on 2026-10-06. The CI run for `7fe6c25` has not been observed.
+
 ## 2026-10-06 — `0e94632` "ci: target local database in CI migrations and seed" (21:08 IST; not pushed as of 2026-10-06)
 
 | Change | Reason | Impact | Migration |

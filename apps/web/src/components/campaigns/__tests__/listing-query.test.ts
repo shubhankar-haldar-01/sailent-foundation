@@ -31,10 +31,15 @@ describe('parseListingQuery', () => {
     expect(parseListingQuery({ q: 'x'.repeat(500) }).q).toHaveLength(200);
   });
 
-  it('accepts "closed", and asks the API for the paused campaigns it means', () => {
+  it('accepts "closed", and asks the API for paused and past-deadline campaigns', () => {
     expect(parseListingQuery({ status: 'closed' }).status).toBe('closed');
-    expect(API_STATUS.closed).toBe('paused');
+    expect(API_STATUS.closed).toBe('closed');
     expect(listingHref({ status: 'closed' })).toBe('/campaigns?status=closed');
+  });
+
+  it('asks the API only for campaigns taking donations under "Active"', () => {
+    expect(parseListingQuery({}).status).toBe('active');
+    expect(API_STATUS.active).toBe('open');
   });
 
   it('takes the first value when a parameter is repeated', () => {

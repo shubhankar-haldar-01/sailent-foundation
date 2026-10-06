@@ -70,8 +70,11 @@ export default async function HomePage() {
         — so it gets the full open set, not the band's twelve. Twenty-four
         rather than everything because it is a teaser: past two dozen, "View
         More Campaigns" is the honest answer and it queries the server.
+
+        `open`: only campaigns taking donations today. A paused campaign, or
+        one past its end date, has no place on a page asking people to give.
       */
-      getCampaigns({ status: 'active', sort: 'createdAt', limit: 24 }),
+      getCampaigns({ status: 'open', sort: 'createdAt', limit: 24 }),
       getStories(),
       getEvents('upcoming'),
       getComposedPage('home'),

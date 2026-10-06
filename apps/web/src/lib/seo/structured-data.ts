@@ -80,9 +80,24 @@ export function organizationSchema(input: OrganizationInput = {}): Record<string
   return schema;
 }
 
-/** Renders a schema object as a JSON-LD script tag payload. */
+/**
+ * Renders a schema object as a JSON-LD script tag payload.
+ *
+ * ESCAPED FOR THE INSIDE OF A <script> ELEMENT. `JSON.stringify` leaves `<`
+ * alone, so a campaign title or FAQ answer containing `</script>` would end
+ * the element early and the rest would be parsed as HTML. These fields are
+ * written in the admin, so that is a stored-injection path, not a typo risk.
+ * `<`, `>` and `&` become JSON unicode escapes — the same string to any JSON
+ * parser — and so do U+2028/U+2029, which older script parsers treat as line
+ * breaks.
+ */
 export function jsonLd(schema: Record<string, unknown>): { __html: string } {
-  return { __html: JSON.stringify(schema) };
+  return {
+    __html: JSON.stringify(schema).replace(
+      /[<>&\u2028\u2029]/g,
+      (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`,
+    ),
+  };
 }
 
 /**

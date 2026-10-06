@@ -26,30 +26,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 const CAMPAIGN = '/campaigns/school-kits-jharkhand';
 
-/**
- * Which summary layout this viewport gets.
- *
- * ══════════════════════════════════════════════════════════════════════════
- * FROM THE VIEWPORT, NOT FROM THE DOM.
- *
- * The builder switches at Tailwind's `lg`, which is 1024px, so the width the
- * project was configured with settles the question exactly.
- *
- * Asking the DOM instead — "is the Review toggle visible?" — looked equivalent
- * and was the cause of a long-running tablet flake. Immediately after `goto`
- * the markup is present but the stylesheet may not have applied, so the
- * `lg:hidden` rules are not yet in effect and the answer depends on whether the
- * CSS happened to arrive first. Under parallel load it often had not, the test
- * took the desktop branch on a tablet, and then waited five seconds for a
- * control that layout does not show.
- * ══════════════════════════════════════════════════════════════════════════
- */
 /** The donation card's main button: "Donate", or "Donate ₹1,800" once something is chosen. */
 const DONATE_CTA = /^(Donate( ₹[\d,.]+)?|Proceed to Donate|Continue)$/;
-
-function usesSheetLayout(page: Page): boolean {
-  return (page.viewportSize()?.width ?? 1280) < 1024;
-}
 
 async function openBuilder(page: Page) {
   await page.goto(CAMPAIGN);
@@ -60,122 +38,35 @@ async function openBuilder(page: Page) {
 }
 
 /**
- * The Continue control, wherever this viewport puts it.
- *
- * On a desktop the donation summary is a sticky rail and Continue is always
- * visible. On a phone it is a collapsed bar showing the running total, with the
- * itemisation and Continue behind a "Review" toggle — a full summary panel on a
- * 320px screen would push the products themselves off the page.
- *
- * So the test opens the sheet when there is one, rather than asserting a layout
- * that only exists at one width.
- */
-/**
  * A money figure that is actually on screen.
  *
- * The running total is rendered TWICE on a phone — once in the collapsed
- * summary bar and once inside the panel behind it — so a bare `getByText`
- * resolves to whichever comes first in the DOM, which is frequently the hidden
- * one. `visible=true` picks the one a donor can read.
+ * The donation card is rendered TWICE — in the page for phones, in the side
+ * column for desktops — so a bare `getByText` resolves to whichever comes first
+ * in the DOM, which is often the hidden one. `visible=true` picks the one a
+ * donor can read.
  */
 function visibleAmount(page: Page, amount: string) {
   return page.getByText(amount, { exact: true }).locator('visible=true').first();
 }
 
+/**
+ * The donation card's Donate control, at any width.
+ *
+ * On a desktop the card is a sticky rail beside the page; below `lg` it is the
+ * same card in the page, after the ways of giving. Neither hides it behind
+ * anything, so the control is simply the visible one — `.first()` alone would
+ * pick the copy that is `display: none` at this width.
+ *
+ * WAITS FOR THE BUNDLE FIRST. The card is server-rendered, so it is on screen
+ * — and clickable — before React has attached its handlers, and a click in
+ * that window is swallowed or replayed. `networkidle` is the honest signal:
+ * the page's interactivity depends on a script arriving.
+ */
 async function continueButton(page: Page) {
-  /*
-    Matches BOTH labels. The toggle reads "Review" when shut and "Hide" when
-    open, so a locator keyed on "Review" stops resolving the moment it works.
-  */
-  const toggle = page.getByRole('button', { name: /(Review|Hide)$/ }).first();
-
-  /*
-    THE VISIBLE ONE. The summary is rendered twice — a desktop rail and a mobile
-    sheet — and the rail comes first in the DOM, so `.first()` alone returns a
-    `display: none` button below `lg` that never becomes actionable.
-  */
-  /*
-    The label is "Donate ₹1,800" since the second campaign redesign — the
-    amount is in the button — and plain "Donate" with nothing chosen. The older
-    labels are kept in the pattern so this helper still resolves if an older
-    surface is reached; matching them costs nothing, missing costs a timeout.
-  */
-  const control = page.getByRole('button', { name: DONATE_CTA }).locator('visible=true').first();
-
-  if (!usesSheetLayout(page)) {
-    return control;
-  }
-
-  /*
-    WAIT FOR THE BUNDLE BEFORE TOUCHING ANYTHING.
-
-    The summary bar is server-rendered, so it is clickable while React is still
-    hydrating — and React REPLAYS the clicks it captured during hydration. A
-    retry loop that clicked three times while waiting therefore had all three
-    replayed at once, toggling the sheet open, shut and open again, and the
-    sheet's final state came down to parity.
-
-    That is why this test failed and the others did not: the rest reach the
-    sheet through `openBuilder`, which waits for a control to be visible first
-    and incidentally gives hydration time. This one goes straight for the
-    toggle.
-
-    `networkidle` is the honest signal here: the page's interactivity depends on
-    a script arriving, so waiting for the network to settle is waiting for the
-    thing that actually matters.
-  */
   await page.waitForLoadState('networkidle');
-
-  /*
-    RETRY UNTIL THE CONTROL IS THERE, not until the toggle says it opened.
-
-    An earlier version waited on the toggle's `aria-expanded`, which looks
-    equivalent and is not: the bar is server-rendered and clickable before React
-    has attached its handler, and a click in that window is swallowed. The
-    attribute could then read `true` from a later click while the assertion that
-    followed had already moved on — so the test went looking for a Continue
-    button that was not there yet and failed after its own five seconds.
-
-    Asserting on the button we actually want makes the loop self-correcting: if
-    the sheet is shut it clicks, and if a click was swallowed it clicks again.
-  */
-  /*
-    THE CLICK IS GATED ON THE TOGGLE, THE ASSERTION IS ON THE CONTROL.
-
-    Both halves are needed, and an earlier version had each on its own.
-
-    Gating on "is the Continue button there yet" double-clicks: a first click
-    that is slow to register leaves the control absent, so the next iteration
-    clicks again, and the two together open the sheet and shut it. The loop then
-    exits on a lucky iteration and the very next assertion finds nothing.
-
-    Asserting on `aria-expanded` alone is the opposite mistake: it can read true
-    from a click while the panel behind it has not rendered.
-
-    `aria-expanded` and the panel come from the same piece of React state, so
-    gating on it means at most one click is ever in flight, and waiting on the
-    control means the loop does not finish until the thing we want exists.
-  */
-  await expect(async () => {
-    if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
-      await toggle.click();
-    }
-    await expect(control).toBeVisible({ timeout: 2000 });
-
-    /*
-      AND STILL OPEN A MOMENT LATER.
-
-      This second check is the one that matters under load. React replays the
-      clicks it captured while hydrating, so a sheet that has just opened can be
-      shut again by a click issued seconds earlier — after this loop would
-      otherwise have declared success, and just before the caller's assertion
-      runs. Re-checking makes that iteration fail and the loop reopen it, rather
-      than handing back a control that is about to vanish.
-    */
-    await page.waitForTimeout(400);
-    await expect(control).toBeVisible({ timeout: 1000 });
-  }).toPass({ timeout: 20_000 });
-
+  const control = page.getByRole('button', { name: DONATE_CTA }).locator('visible=true').first();
+  await control.scrollIntoViewIfNeeded();
+  await expect(control).toBeVisible();
   return control;
 }
 
@@ -192,8 +83,7 @@ test.describe('donation flow', () => {
     await expect(await continueButton(page)).toBeEnabled();
 
     // Plus ₹500 on top — a hybrid donation. The smallest preset is chosen on
-    // arrival, so it is already there; on a phone the card is the sheet
-    // `continueButton` has just opened.
+    // arrival, so it is already there.
     await expect(
       page
         .getByRole('group', { name: 'Add an Amount' })
@@ -212,14 +102,10 @@ test.describe('donation flow', () => {
    *
    * The campaign page opens with the smallest amount preset chosen, so an empty
    * basket is something a donor reaches by taking that amount off — in the
-   * rail on a desktop, in the bottom sheet on a phone or tablet.
+   * rail on a desktop, in the card in the page on a phone or tablet.
    *
-   * Opening the sheet once raced hydration: the bar is server-rendered and
-   * clickable before React attaches, and React REPLAYS clicks it captured while
-   * hydrating, which could shut the sheet again. `continueButton` waits for the
-   * network to settle and re-checks the sheet is still open before handing the
-   * control back, which is why this test goes through it rather than clicking
-   * the toggle itself.
+   * The test goes through `continueButton`, which waits for hydration first:
+   * a click on the server-rendered card before React attaches is lost.
    *
    * The requirement is unchanged: with nothing chosen nothing offers a way
    * forward, and the reason is visible without hunting for it.
@@ -230,9 +116,9 @@ test.describe('donation flow', () => {
 
     /*
       The page opens with the smallest amount chosen, so "nothing chosen"
-      means taking it off. `continueButton` opens the sheet on a phone — with
-      the hydration-safe retry described there — and returns the Donate
-      control, which is enabled until the amount goes.
+      means taking it off. `continueButton` returns the visible Donate
+      control once the page is interactive; it is enabled until the amount
+      goes.
     */
     const cont = await continueButton(page);
     await expect(cont).toBeEnabled();

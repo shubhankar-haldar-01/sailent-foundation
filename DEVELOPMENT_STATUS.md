@@ -6,19 +6,19 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-10-06 (after commit `0e94632`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
+**Last updated:** 2026-10-06 (campaign public experience cleanup, **uncommitted**, on top of `7fe6c25`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
 
 | | |
 |---|---|
 | **Overall status** | Feature-rich build, **not deployed to any hosting.** Phases 0–10.12 are implemented in the API, admin and public site. |
-| **Current phase** | Post-10.12 polish (no phase number). The homepage and campaign-page design (`ae1520b`, 2026-10-05) and the featured/deadline features (`dd64d41`, 2026-10-06) are committed and pushed. The documentation (`d7f42e3`) and the CI fix (`0e94632`) are committed but **not pushed** (§1). |
-| **Current feature** | Campaign presentation rules: admin-controlled **featured campaigns**, and **ongoing-by-default campaigns** with an optional end-date deadline. |
-| **Branch / HEAD** (as of 2026-10-06) | `main` @ `0e94632`. `origin/main` @ `dd64d41`, so local `main` is **2 commits ahead and not pushed**: `d7f42e3` (documentation) and `0e94632` (CI fix). The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
-| **Working tree** (as of 2026-10-06) | Clean at `0e94632`, apart from this documentation update while it is uncommitted. Run `git status` for the live state. |
+| **Current phase** | Post-10.12 polish (no phase number). Everything up to `7fe6c25` is committed and pushed (§1). |
+| **Current feature** | **Campaign public experience cleanup** (§1, item 7): open/closed availability, restored "Other Ways to Support", the mobile donation card in the page, campaign-specific stories, duplication cleanup, responsive/accessibility/JSON-LD fixes. Implemented and validated; **not committed**. |
+| **Branch / HEAD** (as of 2026-10-06) | `main` @ `7fe6c25` = `origin/main` (up to date). The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
+| **Working tree** (as of 2026-10-06) | The campaign cleanup (24 modified application/test files, 1 new test file) and this documentation update (`DEVELOPMENT_STATUS.md`, `CHANGELOG.md`, `AGENTS.md`), all **uncommitted**. Run `git status` for the live state. |
 | **Production database** | The **production Supabase project** exists (owner confirmed, 2026-10-06). Its schema and data state were **not inspected** and are **unknown**. Agents must not access it (`AGENTS.md` §8). |
 | **Application hosting** | None. No Dockerfiles, IaC or deploy workflow exist. |
 | **Local databases** | `sailent_dev` and `sailent_e2e` have migrations `0000`–`0022` applied, **plus one migration that is not in the repository** (§5.1). The repository has no pending migration. |
-| **CI** | The migrate/seed guard failure is **fixed in `0e94632`**: the CI steps now run `pnpm db:migrate --target=local` and `pnpm db:seed --target=local`. **CI has NOT been verified**: `0e94632` is not pushed, so no GitHub Actions run has used it. The next validation is the **first GitHub Actions run after `main` is pushed** (§5.4). Do not describe CI as passing until that run has been observed. |
+| **CI** | **Not passing as of the last observed run.** Run #4 (at `166b70c`): the `quality` job passed lint, typecheck, migrate and seed, then failed at tests (`EnvValidationError`: Turborepo strict env mode stripped `DATABASE_URL`/`REDIS_URL`); the `security` job failed at `pnpm audit` (30 vulnerabilities: 2 low, 13 moderate, 15 high), so gitleaks was skipped. `7fe6c25` (pushed) adds `passThroughEnv` for the test task; **its GitHub Actions run has not been observed**. The audit failure is **unresolved** (dependency upgrades not approved yet), so the `security` job is expected to keep failing (§5.4). Do not describe CI as passing until a passing run has been observed. |
 
 ---
 
@@ -28,9 +28,12 @@
 
 | Commit | Content | Pushed? |
 |---|---|---|
-| `dd64d41` | feat(campaigns): admin-controlled featured campaigns and optional end-date deadlines (items 1–3 below; 27 files) | ✅ yes (`origin/main`) |
-| `d7f42e3` | added md files: the documentation in item 4 | ❌ not yet |
-| `0e94632` | ci: target local database in CI migrations and seed (item 5; `.github/workflows/ci.yml` only) | ❌ not yet |
+| `dd64d41` | feat(campaigns): admin-controlled featured campaigns and optional end-date deadlines (items 1–3 below; 27 files) | ✅ yes |
+| `d7f42e3` | added md files: the documentation in item 4 | ✅ yes |
+| `0e94632` | ci: target local database in CI migrations and seed (item 5; `.github/workflows/ci.yml` only) | ✅ yes |
+| `166b70c` | docs: update project context and development checkpoint | ✅ yes |
+| `7fe6c25` | ci: pass test database and redis env through turbo (item 6; `turbo.json` only) | ✅ yes |
+| — | Campaign public experience cleanup (item 7) and this documentation update | ❌ **uncommitted** |
 
 Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to `origin/main` with a fast-forward push; until then `origin/main` held only `2ba2b43`.
 
@@ -44,7 +47,7 @@ Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to
   - **Edge case:** if more than 12 of the 24 fetched campaigns are closed, the band shows fewer than 12.
 - **Fixture fallback only.** `apps/web/src/lib/featured-campaigns.ts` `orderFeaturedFirst()` orders the **fixture data** when the API is unavailable and mock data is enabled. It does **not** control live-data ordering.
 - **Band component.** `components/home/featured-campaigns.tsx` renders whatever list it receives (`VISIBLE_CARDS = FEATURED_BAND_SIZE`). It does not call `acceptsDonationsNow()` itself; each card does (below).
-- **"Browse by cause" grid** keeps its own list (`getCampaigns({ status: 'active', sort: 'createdAt', limit: 24 })`).
+- **"Browse by cause" grid** keeps its own list. Since item 7 it asks for `status: 'open'` (campaigns taking donations today) instead of `'active'`.
 
 **2. Ongoing-by-default campaigns with an optional deadline**
 - **Shared rules** (`packages/validation/src/domain/lifecycle.ts`):
@@ -76,9 +79,32 @@ Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to
 
 **5. CI fix (2026-10-06, `0e94632`):** `.github/workflows/ci.yml` now passes `--target=local` to `pnpm db:migrate` and `pnpm db:seed`. Before the fix, both commands were refused by the database target guard before connecting, so every CI run stopped at "Apply migrations". This was reproduced locally with CI's environment and was not a database-safety failure: CI never reached a database. With the flag, the guard also verifies that `DATABASE_URL` is a localhost database (CI's is `localhost:5432/sailent_test`). Checks run: Prettier and a YAML parse (`js-yaml`); the migrate and seed commands were **not** run against any database.
 
+**6. Turborepo test env (2026-10-06, `7fe6c25`):** the `test` task in `turbo.json` gains `passThroughEnv` for `DATABASE_URL`, `REDIS_URL`, `TEST_DATABASE_URL`, `TEST_REDIS_URL` and `ALLOW_REMOTE_TEST_DB`. CI run #4 had failed at tests because strict env mode stripped them. Pushed; **its CI run has not been observed**.
+
+**7. Campaign public experience cleanup (2026-10-06, UNCOMMITTED)**
+- **Open/closed availability.**
+  - The public API `GET /api/v1/campaigns` accepts two new `status` values: `open` (active, with no end date or one not yet passed) and `closed` (paused, or active but past its end date). `active` (the default: active + paused), `paused`, `completed` and `all` are unchanged. No schema change.
+  - The SQL filter uses the new `deadlineCutoff(now)` in `packages/validation/src/domain/lifecycle.ts` (start of today, IST), which agrees exactly with `hasEnded()`: `hasEnded(d, now) ⇔ d < deadlineCutoff(now)`.
+  - Listing (`components/campaigns/listing-query.ts` `API_STATUS`): **Active → `open`**, **Closed → `closed`**; Completed and All unchanged.
+  - Homepage "Browse by cause" grid: `getCampaigns({ status: 'open', … })`. The fixture fallback filters with `acceptsDonationsNow()`.
+- **"Other Ways to Support" restored** on the campaign page (the `showCustomAmountSection={false}` override is removed). The typed amount and the card's presets share one value. "One-Time Donation" in the card now jumps to and focuses that field.
+- **Mobile donation card** (`components/donations/donation-builder.tsx`): the fixed bottom bar ("Review"/"Hide" sheet) is **removed**. Below `lg` the full donation card (progress, presets, total, Donate, assurances) sits **in the page**, after "Other Ways to Support" and before About, and scrolls with it. The desktop sticky rail is unchanged. The radio labels in the card may wrap below 360px (a 2px overflow at 320px otherwise).
+- **Duplication cleanup** (owner decisions):
+  - donation card goal, "Our Goal" and "Your Impact" figures are kept;
+  - "What Will Your Support Provide?" is a short summary with a link back to the items, not the product list again (`campaign-about.tsx`);
+  - "The Difference Your Support Can Make" (`campaign-impact.tsx`) shows reported `impactNotes` (up to four) minus any note that repeats the people-reached count (`repeatsPeopleReached()`), no "Campaign target" tile and no people-reached tile, plus "What one gift does" lines from product prices.
+- **Campaign Gallery kept** unchanged (`AGENTS.md` §11).
+- **Stories** (`campaigns/[slug]/page.tsx`, `stories-strip.tsx`): a campaign shows **only its own stories**, matched by `campaignId` (API list rows carry no `campaignSlug`, so the old match never found them) or `campaignSlug` (fixtures). A campaign with none borrows stories (its programme's first) and the strip says so: a different lead and a "From another campaign" label. `Story` gains an optional `campaignId`.
+- **Responsive / accessibility:**
+  - section nav: edge fades show when more links are off-screen, and the current link is scrolled into the row;
+  - header wordmark wraps below `sm` instead of truncating to "Sailent Foundati…";
+  - the fixed mobile bar no longer covers content or focus.
+- **JSON-LD escaping:** `jsonLd()` (`apps/web/src/lib/seo/structured-data.ts`, used by every JSON-LD script) escapes `<`, `>`, `&`, U+2028 and U+2029 as JSON unicode escapes.
+- **Tests:** E2E `campaign.spec.ts`, `donations.spec.ts`, `journeys.spec.ts` updated to the new layout (no sheet to open; assertions kept, mobile branches now run the full card checks); new E2E tests for the custom-amount panel and the in-page mobile card. New unit tests: `campaign-impact.test.ts`, `jsonLd` in `seo.test.ts`, `deadlineCutoff` in `domain.test.ts`, listing mapping in `listing-query.test.ts`. New API tests in `public-api.spec.ts` for `open`/`closed`.
+
 ### What was being worked on
 
-The CI fix is committed but **unverified on GitHub**. The next step is to push `main` (owner approval required) and observe the first GitHub Actions run. Items 1–3 are committed and pushed.
+The campaign cleanup (item 7) is implemented and validated (§2) and **awaits owner approval to commit**. The CI run for `7fe6c25` has not been observed.
 
 ### Reverted by the owner on 2026-10-06 (do not redo unless asked)
 
@@ -94,19 +120,23 @@ See **`AGENTS.md` §11**, the permanent list of owner-approved designs and decis
 
 ---
 
-## 2. LAST VALIDATION — snapshot as of 2026-10-06
+## 2. LAST VALIDATION — snapshot as of 2026-10-06 (campaign cleanup working tree, local only)
 
 | Command | Result (as of 2026-10-06) |
 |---|---|
 | `pnpm prettier --check .` | ✅ pass |
-| `pnpm typecheck` | ✅ pass |
-| `pnpm lint` | ✅ pass |
-| `pnpm --filter @sailent/web test` | ✅ 104 passed |
-| `pnpm --filter @sailent/validation test` | ✅ 278 passed |
-| `pnpm --filter @sailent/worker test` | ✅ 5 passed |
-| `pnpm --filter @sailent/api test` | ❌ 753 passed, **4 failed**, 9 skipped. All 4 are in `test/me.spec.ts` and are caused by local database drift (§5.1). |
+| `pnpm typecheck` | ✅ pass (13/13 tasks) |
+| `pnpm lint` | ✅ pass (13/13 tasks) |
+| `pnpm --filter @sailent/web test` | ✅ 110 passed |
+| `pnpm --filter @sailent/validation test` | ✅ 280 passed |
+| `pnpm --filter @sailent/worker test` | not re-run (5 passed earlier on 2026-10-06; untouched) |
+| API specs `public-api`, `catalog`, `donations` | ✅ 115 passed |
+| `pnpm --filter @sailent/api test` (full) | ❌ 757 passed, **4 failed**, 9 skipped. All 4 are in `test/me.spec.ts` and are caused by local database drift (§5.1). |
 | `pnpm build --force` (isolated copy) | ✅ pass |
-| Playwright: journeys, shell, campaign, admin-featured, donations, phase-9 (isolated copy, `--workers=2`) | 379 passed, **2 failed**, 31 skipped |
+| Playwright: campaign, donations, journeys, admin-featured, shell × 4 projects (isolated copy, `--workers=2`) | 366 passed, **2 failed**, 32 skipped. One was the WebKit rail failure below; the other was a new 2px overflow at 320px, fixed afterwards. |
+| Playwright re-run after the fix: campaign, donations, journeys × 4 projects | 302 passed, **2 failed** (both the pre-existing WebKit failures below), 28 skipped. `admin-featured` and `shell` were not re-run after the one-class fix. |
+
+These are **local** results. **CI is not passing** as of the last observed run (header table).
 
 **The two Playwright failures** are on the `tablet` project only (WebKit), and both **also fail at commit `ae1520b`**, so they predate this work:
 - `journeys.spec.ts` › "featured campaigns rail › keyboard users can still pause it"
@@ -166,7 +196,7 @@ Statuses: COMPLETE · PARTIALLY COMPLETE · IN PROGRESS · NOT STARTED · BLOCKE
 | Monorepo, design system, shells | COMPLETE | |
 | Public website | PARTIALLY COMPLETE | Mostly API-backed. Still fixture-backed: `/faq`, testimonials, `/volunteer` testimonials, donation-widget presets, `/search`. Organisation details are **DEMO** values (`lib/demo-org.ts`). |
 | Programmes | PARTIALLY COMPLETE | Rollups `campaign_count`, `total_raised` and `beneficiaries_reached` are never written, yet the public listing reads `campaignCount`. |
-| Campaigns | COMPLETE | Lifecycle, FAQs, gallery, products, preview, admin-controlled featuring, and the optional end-date deadline (`dd64d41`). |
+| Campaigns | COMPLETE | Lifecycle, FAQs, gallery, products, preview, admin-controlled featuring, and the optional end-date deadline (`dd64d41`). Public experience cleanup (open/closed filter, Other Ways to Support, in-page mobile card, own stories) implemented, **uncommitted** (§1, item 7). |
 | Products / campaign products | COMPLETE | |
 | One-time donations + Razorpay | PARTIALLY COMPLETE | Tested with a mocked client only. Missing: idempotency key, reconciliation and expiry of pending donations, currency check, total cap. Never run against live Razorpay. Local behaviour without keys: `DEPLOYMENT.md` §6. |
 | Receipts | PARTIALLY COMPLETE | No PDF; 80G fields null. |
@@ -178,7 +208,7 @@ Statuses: COMPLETE · PARTIALLY COMPLETE · IN PROGRESS · NOT STARTED · BLOCKE
 | Stories | COMPLETE | `story.archive` not enforced. |
 | Media + R2 | COMPLETE | No re-encoding. The web `images.remotePatterns` is empty. |
 | Blog | COMPLETE | |
-| Technical SEO | PARTIALLY COMPLETE | Soft 404s; JSON-LD not escaped. |
+| Technical SEO | PARTIALLY COMPLETE | Soft 404s. JSON-LD escaping fixed in the uncommitted working tree (§1, item 7). |
 | Page composer | COMPLETE | Home only. |
 | Documents | COMPLETE | |
 | Notifications | PARTIALLY COMPLETE | Admin retry enqueues to a queue nothing consumes; newsletter is UI-only. |
@@ -227,11 +257,13 @@ This is for a **human** to verify and remediate through the approved process (`D
 - **No staff 2FA in effect.**
 - **Donor data:** PAN stored in plaintext; unverified donor email change; guest checkout can overwrite an existing donor's name and phone.
 - **Web defaults:** `FEATURE_MOCK_DATA` is treated as ON when unset; `webEnvSchema` is never loaded.
-- **Output and headers:** unescaped JSON-LD; no CSP or HSTS on the web; a forged Razorpay webhook gets HTTP 200.
+- **Output and headers:** no CSP or HSTS on the web; a forged Razorpay webhook gets HTTP 200. (JSON-LD escaping is fixed in the uncommitted working tree, §1 item 7.)
 
 ### 5.4 Infrastructure and tooling
 
-- **CI migrate/seed target: FIXED in `0e94632`, NOT YET VERIFIED.** The steps now pass `--target=local`. Before the fix, the guard (`packages/database/src/lib/database-target.ts`) refused both commands ("say which environment you are targeting"), so CI stopped at "Apply migrations". Verification is the first GitHub Actions run after `main` is pushed. That run may expose later failures that the broken step had hidden (for example, `docs/phase-9.md` §9 notes that some web routes fail to build without a running API, and CI starts none). This is unverified.
+- **CI migrate/seed target: fixed in `0e94632` and confirmed** — run #4 passed "Apply migrations" and the seed step.
+- **CI tests: env stripped by Turborepo strict mode.** Fixed in `7fe6c25` (`passThroughEnv`); **the run for `7fe6c25` has not been observed**. Later steps may still fail (for example, `docs/phase-9.md` §9 notes that some web routes fail to build without a running API, and CI starts none). Unverified.
+- **CI security job: `pnpm audit` fails** (30 vulnerabilities as of run #4: 2 low, 13 moderate, 15 high — sharp, postcss and source-map-js via next; multer via `@nestjs/platform-express`; lodash; js-yaml via swagger; drizzle-orm 0.38.4). Gitleaks is skipped as a result. Proposed `pnpm.overrides` and a separate drizzle upgrade are **not approved or applied**.
 - **Drizzle snapshots stop at `0007`.** Migrations are hand-written; `db:generate` and `db:push` are not used (`AGENTS.md` §5).
 - **Inner `BEGIN`/`COMMIT`** in migrations `0018`–`0022`.
 - **Hand-assigned journal timestamps** on `0017`–`0022`.
@@ -250,11 +282,15 @@ This is for a **human** to verify and remediate through the approved process (`D
 - **The web build needs the API** for some routes.
 - **`campaigns.program_id` is nullable.** A live campaign can be detached by PATCH.
 - **2 pre-existing WebKit E2E failures** (§2).
+- **No E2E coverage for paused or past-deadline campaigns.** The E2E seed has none, so the `open`/`closed` split is covered by API integration tests only.
+- **Featured band** still requests `status=active` and filters with `acceptsDonationsNow()` in the web (edge case in §1 item 1); it does not use `status=open`.
+- **Campaign FAQs "View All FAQs"** links to `/faq`, which is fixture-backed.
 
 ### 5.6 UI (known, not bugs)
 
 - Story photographs are 137×113 thumbnails, and campaign images are about 232px wide, so they look soft at larger sizes.
 - The hero photograph contains painted text.
+- **Header wordmark at 1024px** still truncates ("Sailen…") because the desktop nav takes the width. The phone fix (item 7) does not cover it; a desktop header change needs owner approval (`AGENTS.md` §11, item 10).
 
 ---
 
@@ -273,17 +309,19 @@ This is for a **human** to verify and remediate through the approved process (`D
 
 ## 7. UNFINISHED WORK (ordered)
 
-1. ~~Commit the featured/deadline work~~ (done: `dd64d41`, pushed). ~~Fix the CI target flag~~ (done: `0e94632`, not pushed).
-2. With owner approval, push `main`; then observe the first GitHub Actions run and report its result (`quality` and `security` jobs).
-3. Resolve the local drift / PAN encryption (§5.1).
-4. Fix the security items that need no product decisions: rate-limit keying and trusted client IP; the web `FEATURE_MOCK_DATA` default and `webEnvSchema`; JSON-LD escaping; webhook 401.
-5. Human-led production audit and hardening (§5.2).
-6. Then: PAN encryption and email verification; staff 2FA; CSP and HSTS.
-7. Notification retry consumer; reconciliation and pending expiry; programme rollups.
-8. Deployment artefacts and hosting.
-9. Replace the fixture content and the DEMO organisation data.
-10. Optional, owner-approved: rebuild the Drizzle snapshot baseline so `db:generate` becomes usable. **This is not required for hand-written migrations.**
-11. Soft-404 fix; R2 `remotePatterns`; receipt PDF.
+1. ~~Commit the featured/deadline work~~ (done: `dd64d41`). ~~Fix the CI target flag~~ (done: `0e94632`). ~~Turborepo test env~~ (done: `7fe6c25`). All pushed.
+2. **Commit the campaign cleanup** (§1 item 7) with owner approval; push only with a separate approval.
+3. Observe the GitHub Actions run for the new `main` head and report the `quality` and `security` results. Then, with approval, the dependency overrides for `pnpm audit` (§5.4).
+4. Distinct donor count (`donor_count` counts donations; §5.5) — a separate, owner-approved task.
+5. Resolve the local drift / PAN encryption (§5.1).
+6. Fix the security items that need no product decisions: rate-limit keying and trusted client IP; the web `FEATURE_MOCK_DATA` default and `webEnvSchema`; webhook 401. (JSON-LD escaping is part of the campaign cleanup in item 2.)
+7. Human-led production audit and hardening (§5.2).
+8. Then: PAN encryption and email verification; staff 2FA; CSP and HSTS.
+9. Notification retry consumer; reconciliation and pending expiry; programme rollups.
+10. Deployment artefacts and hosting.
+11. Replace the fixture content and the DEMO organisation data.
+12. Optional, owner-approved: rebuild the Drizzle snapshot baseline so `db:generate` becomes usable. **This is not required for hand-written migrations.**
+13. Soft-404 fix; R2 `remotePatterns`; receipt PDF.
 
 ---
 
@@ -332,10 +370,9 @@ These are recorded here and **not** silently resolved in the source documents.
 ## THE NEXT AI AGENT SHOULD START HERE
 
 1. Read `AGENTS.md` in full, especially §8 (production is off limits), §9 (work directly on `main`; owner approval before every commit and every push) and §11 (must not change). Then read this file, and `CLAUDE.md` if you are Claude Code.
-2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-06, local `main` is 2 commits ahead of `origin/main` (`d7f42e3`, `0e94632`), and possibly 3 once this documentation update is committed.
-3. **Next validation: push `main` and watch CI.**
-   - Ask the owner for approval to push `main` (a normal fast-forward push, never force).
-   - After the push, observe the first GitHub Actions run for the new `main` head (for example with `gh run list` / `gh run view`, or on GitHub).
+2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-06, `main` = `origin/main` = `7fe6c25`, with the campaign cleanup and its documentation **uncommitted** (§1 item 7). Ask the owner before committing it, and separately before pushing.
+3. **Next validation: watch CI.**
+   - Observe the GitHub Actions run for the current `main` head (for example with `gh run list` / `gh run view`, or on GitHub). The `security` job is expected to fail at `pnpm audit` until the dependency fixes are approved (§5.4).
    - Report the `quality` and `security` job results with their failing step and log excerpt, if any.
    - **Do not claim CI passes until that run has been observed.**
    - If a later step fails (build, tests, format, audit, gitleaks), report it and wait for the owner. Do not fix it unprompted.

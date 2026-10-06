@@ -163,6 +163,12 @@ export interface Story extends Omit<StoryCardModel, 'coverImage'> {
   gallery: MediaRef[];
   programSlug: string | null;
   campaignSlug: string | null;
+  /**
+   * The campaign's id. List rows from the API carry the id but not the slug,
+   * so this is how a campaign page finds its own stories; the fixtures have
+   * only the slug.
+   */
+  campaignId?: string | null;
   /** Consent is required before a story naming a person may be published. */
   consentRecorded: boolean;
   isFeatured: boolean;

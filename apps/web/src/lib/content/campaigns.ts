@@ -6,6 +6,7 @@ import { donationAvailability } from '@sailent/validation';
 import { campaigns as campaignFixtures } from '@/lib/mock/campaigns';
 import { FEATURED_BAND_SIZE, orderFeaturedFirst } from '@/lib/featured-campaigns';
 import { acceptsDonationsNow } from '@/components/campaigns/campaign-status';
+import type { ApiListingStatus } from '@/components/campaigns/listing-query';
 
 import { isNotFound } from './programs';
 import { loadContent, publicCache, toMedia, type Paginated } from './source';
@@ -269,7 +270,8 @@ export interface CampaignQuery {
   programSlug?: string;
   category?: string;
   state?: string;
-  status?: 'active' | 'completed' | 'all';
+  /** `open`: taking donations today — active and not past its end date. */
+  status?: 'active' | 'open' | 'completed' | 'all';
   q?: string;
   sort?: string;
   limit?: number;
@@ -285,7 +287,10 @@ export async function getCampaigns(query: CampaignQuery = {}): Promise<Campaign[
       });
       return page.items.map(toCampaign);
     },
-    fallback: () => campaignFixtures,
+    // The fixtures only honour `open`, the one filter a page relies on to keep
+    // closed campaigns out of a list.
+    fallback: () =>
+      query.status === 'open' ? campaignFixtures.filter(acceptsDonationsNow) : campaignFixtures,
   });
 }
 
@@ -346,8 +351,8 @@ export interface CampaignListing {
 export async function getCampaignListing(query: {
   q?: string;
   category?: string;
-  /** The API's own names. `active` is its default: active and paused together. */
-  status?: 'active' | 'paused' | 'completed' | 'all';
+  /** The API's own names — see `API_STATUS` in `listing-query.ts`. */
+  status?: ApiListingStatus;
   limit: number;
 }): Promise<CampaignListing> {
   return loadContent({
@@ -366,10 +371,15 @@ export async function getCampaignListing(query: {
     fallback: () => {
       const needle = query.q?.toLowerCase();
       const matching = campaignFixtures.filter((campaign) => {
-        const status = query.status ?? 'active';
+        const status = query.status ?? 'open';
         if (status === 'completed' && campaign.status !== 'completed') return false;
-        if (status === 'paused' && campaign.status !== 'paused') return false;
-        if (status === 'active' && campaign.status === 'completed') return false;
+        if (status === 'open' && !acceptsDonationsNow(campaign)) return false;
+        if (
+          status === 'closed' &&
+          (acceptsDonationsNow(campaign) || !['active', 'paused'].includes(campaign.status))
+        ) {
+          return false;
+        }
         if (query.category && campaign.category !== query.category) return false;
         if (
           needle &&

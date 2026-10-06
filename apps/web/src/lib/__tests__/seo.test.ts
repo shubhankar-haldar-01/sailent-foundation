@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildMetadata, canonicalUrl } from '../seo/metadata';
-import { breadcrumbSchema, organizationSchema, blogPostingSchema } from '../seo/structured-data';
+import {
+  breadcrumbSchema,
+  organizationSchema,
+  blogPostingSchema,
+  jsonLd,
+} from '../seo/structured-data';
 
 describe('canonicalUrl', () => {
   it('produces absolute URLs without a trailing slash', () => {
@@ -138,5 +143,20 @@ describe('article structured data — blog posts and stories (Phase 10.8)', () =
   it('always names the organisation as publisher', () => {
     const schema = blogPostingSchema({ ...base, type: 'Article', authorName: null })!;
     expect(schema.publisher).toMatchObject({ '@type': 'NGO' });
+  });
+});
+
+describe('jsonLd', () => {
+  it('cannot close its own script element', () => {
+    const { __html } = jsonLd({ name: 'Relief </script><script>alert(1)</script> & more' });
+    expect(__html).not.toMatch(/[<>&]/);
+    expect(__html).not.toContain('</script');
+  });
+
+  it('is still the same data to a JSON parser', () => {
+    const schema = { name: 'A < B > C & D', text: 'line\u2028sep\u2029end' };
+    const { __html } = jsonLd(schema);
+    expect(__html).not.toMatch(/[\u2028\u2029]/);
+    expect(JSON.parse(__html)).toEqual(schema);
   });
 });

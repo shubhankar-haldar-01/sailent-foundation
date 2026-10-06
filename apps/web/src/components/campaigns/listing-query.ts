@@ -36,17 +36,20 @@ export const STATUS_LABELS: Record<CampaignStatusFilter, string> = {
 /**
  * What each choice asks the API for.
  *
- * "Closed" is the lifecycle's `paused` state — a campaign still public, with
- * donations closed for now (`donationAvailability` in @sailent/validation).
- * The URL says `closed` because that is the word on the menu; the API keeps
- * its own name for the state.
+ * "Active" is what takes a donation today — the API's `open`: active, and not
+ * past its end date. "Closed" is everything public that does not, short of
+ * finished: paused, or active but past its deadline (`closed`). The two never
+ * overlap, and "Completed" and "All" are as they say.
  */
-export const API_STATUS: Record<CampaignStatusFilter, 'active' | 'paused' | 'completed' | 'all'> = {
-  active: 'active',
-  closed: 'paused',
+export const API_STATUS: Record<CampaignStatusFilter, ApiListingStatus> = {
+  active: 'open',
+  closed: 'closed',
   completed: 'completed',
   all: 'all',
 };
+
+/** The public API's names for the listing's status filter. */
+export type ApiListingStatus = 'open' | 'closed' | 'completed' | 'all';
 
 /** Two rows of four at desktop — one full screen of cards per "View More". */
 export const PAGE_SIZE = 8;

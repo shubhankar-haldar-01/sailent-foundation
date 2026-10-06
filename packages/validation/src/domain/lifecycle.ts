@@ -144,6 +144,20 @@ export function hasEnded(
   return now.getTime() > lastMoment;
 }
 
+/**
+ * The instant before which an end date counts as ended: the start of today,
+ * India time.
+ *
+ * `hasEnded(endDate, now)` is exactly `endDate < deadlineCutoff(now)` — an end
+ * date earlier than today's IST midnight fell on a day that is over. This is
+ * the form a database query can use (`end_date < $cutoff`), so a listing that
+ * filters on the deadline agrees with `hasEnded` to the millisecond.
+ */
+export function deadlineCutoff(now: Date = new Date()): Date {
+  const today = new Date(now.getTime() + IST_OFFSET_MS).toISOString().slice(0, 10);
+  return new Date(`${today}T00:00:00+05:30`);
+}
+
 /** What the donate control should say and do, given the campaign's state. */
 export type DonationAvailability =
   | { state: 'open' }

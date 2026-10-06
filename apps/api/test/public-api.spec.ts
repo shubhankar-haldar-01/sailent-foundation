@@ -254,6 +254,8 @@ describe('Public API (integration)', () => {
   describe('the end date', () => {
     const ENDED = 'end-date-test-ended';
     const ONGOING = 'end-date-test-ongoing';
+    const LATER = 'end-date-test-later';
+    const PAUSED = 'end-date-test-paused';
 
     const db = () =>
       app.get<{ db: { execute(q: unknown): Promise<{ rows?: Record<string, unknown>[] }> } }>(
@@ -265,14 +267,26 @@ describe('Public API (integration)', () => {
         INSERT INTO campaigns (title, slug, fundraising_goal, status, published_at, end_date)
         VALUES ('End date test (ended)', ${ENDED}, 100000, 'active', now(),
                 now() - interval '3 days'),
-               ('End date test (ongoing)', ${ONGOING}, 100000, 'active', now(), NULL)
+               ('End date test (ongoing)', ${ONGOING}, 100000, 'active', now(), NULL),
+               ('End date test (later)', ${LATER}, 100000, 'active', now(),
+                now() + interval '10 days'),
+               ('End date test (paused)', ${PAUSED}, 100000, 'paused', now(), NULL)
         ON CONFLICT (slug) DO NOTHING
       `);
     }, 60_000);
 
     afterAll(async () => {
-      await db().execute(sql`DELETE FROM campaigns WHERE slug IN (${ENDED}, ${ONGOING})`);
+      await db().execute(
+        sql`DELETE FROM campaigns WHERE slug IN (${ENDED}, ${ONGOING}, ${LATER}, ${PAUSED})`,
+      );
     });
+
+    const slugsFor = async (status: string) =>
+      (
+        (await get(`/campaigns?status=${status}&limit=100`).expect(200)).body as Envelope<{
+          items: { slug: string; status: string }[];
+        }>
+      ).data!.items;
 
     const donationOf = async (slug: string) =>
       (
@@ -289,6 +303,42 @@ describe('Public API (integration)', () => {
 
     it('keeps a campaign with no end date open — ongoing is the default', async () => {
       expect((await donationOf(ONGOING)).state).toBe('open');
+    });
+
+    /*
+      `open` is what the homepage grid and the listing's "Active" ask for, so
+      nothing in it may be unable to take a donation; `closed` is the rest of
+      the default listing, short of finished. Together they are the default.
+    */
+    it('lists only campaigns taking donations under status=open', async () => {
+      const open = await slugsFor('open');
+      const slugs = open.map((item) => item.slug);
+      expect(slugs).toEqual(expect.arrayContaining([ONGOING, LATER]));
+      expect(slugs).not.toContain(ENDED);
+      expect(slugs).not.toContain(PAUSED);
+      expect(open.every((item) => item.status === 'active')).toBe(true);
+    });
+
+    it('lists paused and past-deadline campaigns under status=closed', async () => {
+      const closed = await slugsFor('closed');
+      const slugs = closed.map((item) => item.slug);
+      expect(slugs).toEqual(expect.arrayContaining([ENDED, PAUSED]));
+      expect(slugs).not.toContain(ONGOING);
+      expect(slugs).not.toContain(LATER);
+      expect(closed.every((item) => ['active', 'paused'].includes(item.status))).toBe(true);
+    });
+
+    it('splits the default listing between open and closed, with no overlap', async () => {
+      const open = (await slugsFor('open')).map((item) => item.slug);
+      const closed = (await slugsFor('closed')).map((item) => item.slug);
+      const all = (await slugsFor('active')).map((item) => item.slug);
+      expect(open.filter((slug) => closed.includes(slug))).toEqual([]);
+      expect([...open, ...closed].sort()).toEqual([...all].sort());
+    });
+
+    it('rejects a status it does not know', async () => {
+      // Validation failures are 422 across this API.
+      await get('/campaigns?status=draft').expect(422);
     });
   });
 

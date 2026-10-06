@@ -4,6 +4,7 @@ import {
   CAMPAIGN_TRANSITIONS,
   PROGRAM_TRANSITIONS,
   acceptsDonations,
+  deadlineCutoff,
   hasEnded,
   campaignProgress,
   canTransitionCampaign,
@@ -232,6 +233,46 @@ describe('hasEnded', () => {
     const written = '2027-03-31T00:00:00+05:30';
     expect(hasEnded(written, new Date('2027-03-31T20:00:00+05:30'))).toBe(false);
     expect(hasEnded(written, new Date('2027-04-01T00:00:01+05:30'))).toBe(true);
+  });
+});
+
+describe('deadlineCutoff', () => {
+  it('is the start of today, India time', () => {
+    expect(deadlineCutoff(new Date('2026-10-13T20:00:00Z')).toISOString()).toBe(
+      // 01:30 on the 14th in India, so "today" there is already the 14th.
+      new Date('2026-10-14T00:00:00+05:30').toISOString(),
+    );
+    expect(deadlineCutoff(new Date('2026-10-13T08:00:00+05:30')).toISOString()).toBe(
+      new Date('2026-10-13T00:00:00+05:30').toISOString(),
+    );
+  });
+
+  // The listing filters with `end_date < cutoff`; the page decides with
+  // `hasEnded`. The two must never disagree about a campaign.
+  it('agrees with hasEnded for every end date around the boundary', () => {
+    const nows = [
+      '2026-10-13T00:00:00+05:30',
+      '2026-10-13T12:00:00+05:30',
+      '2026-10-13T23:59:59.999+05:30',
+      '2026-10-14T00:00:00+05:30',
+      '2026-10-13T18:29:59Z',
+    ].map((value) => new Date(value));
+    const ends = [
+      '2026-10-12T00:00:00Z',
+      '2026-10-12T18:29:59.999Z',
+      '2026-10-12T18:30:00Z',
+      '2026-10-13T00:00:00Z',
+      '2026-10-13T23:59:59+05:30',
+      '2026-10-14T00:00:00+05:30',
+    ].map((value) => new Date(value));
+
+    for (const now of nows) {
+      for (const end of ends) {
+        expect(end < deadlineCutoff(now), `${end.toISOString()} at ${now.toISOString()}`).toBe(
+          hasEnded(end, now),
+        );
+      }
+    }
   });
 });
 

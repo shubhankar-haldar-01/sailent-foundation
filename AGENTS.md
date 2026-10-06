@@ -206,7 +206,8 @@ Production database actions require **explicit human approval** for that specifi
 6. **Do not remove existing homepage sections, features or content unless explicitly asked.**
 7. **The homepage visual refinement** (single font, new type scale, 1320px container, 8px buttons, hero redesign) was **reverted by the owner on 2026-10-06**. Do not reapply it unless asked.
 8. **Every campaign belongs to a programme** in the seed and demo data.
-9. **Approval-gated changes:** colours, fonts, spacing scale and container widths are design decisions. Ask before changing them globally.
+9. **The Campaign Gallery** (`apps/web/src/components/campaigns/campaign-gallery.tsx`, rendered first in the campaign page's "About This Campaign" section by `campaign-about.tsx`) is an approved part of the campaign detail page. **Do not remove it, or any gallery functionality, without explicit owner approval** — including during cleanup or de-duplication work.
+10. **Approval-gated changes:** colours, fonts, spacing scale and container widths are design decisions. Ask before changing them globally.
 
 ## 12. Working process (mandatory)
 

@@ -66,6 +66,7 @@ function toStory(row: ApiStorySummary | ApiStoryDetail): Story {
     })),
     programSlug: detail.programSlug ?? null,
     campaignSlug: detail.campaignSlug ?? null,
+    campaignId: row.campaignId ?? null,
     consentRecorded: detail.consentObtained ?? false,
     isFeatured: false,
   };

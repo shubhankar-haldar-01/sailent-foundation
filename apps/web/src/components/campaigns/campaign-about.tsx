@@ -1,6 +1,6 @@
 import {
   CalendarDays,
-  CircleCheck,
+  ArrowUp,
   FileText,
   HeartHandshake,
   Lightbulb,
@@ -35,7 +35,7 @@ const goalDate = new Intl.DateTimeFormat('en-IN', {
  * question:
  *
  *   Why This Campaign?              the campaign narrative, as written
- *   What Will Your Support Provide? the products, what each is and costs
+ *   What Will Your Support Provide? a short summary of the products above
  *   Our Goal                        the target, the end date, the people
  *   Your Impact                     how many reached so far, and who
  *
@@ -48,7 +48,8 @@ const goalDate = new Intl.DateTimeFormat('en-IN', {
  * on a tinted tile, an extra-bold heading, left-aligned text:
  *
  *   - the narrative is a full-width story card, its first paragraph a lead;
- *   - what support provides is a checklist, each item with its price;
+ *   - what support provides is a short summary pointing back to the items,
+ *     which are already listed, priced, under "Choose How You Want to Help";
  *   - the goal and the impact are figure cards side by side, the number large,
  *     the facts around it as small chips or a progress bar.
  *
@@ -115,35 +116,25 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
               title="What Will Your Support Provide?"
               className="@2xl:col-span-2"
             >
-              <ul className="divide-border/70 divide-y">
-                {products.map((product) => (
-                  <li
-                    key={product.id}
-                    className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
-                  >
-                    <CircleCheck
-                      className="text-success mt-0.5 size-5 shrink-0"
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="text-body text-foreground block font-bold">
-                        {product.name}
-                      </span>
-                      {product.description ? (
-                        <span className="text-body-sm text-muted-foreground-strong mt-0.5 block leading-relaxed">
-                          {product.description}
-                        </span>
-                      ) : null}
-                    </span>
-                    <span
-                      data-numeric=""
-                      className="text-body-sm bg-wash-mint text-wash-mint-ink-strong shrink-0 rounded-full px-2.5 py-0.5 font-bold tabular-nums"
-                    >
-                      {formatCurrency(product.unitAmount)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              {/*
+                A SUMMARY, NOT THE LIST AGAIN. Every item, its price and what it
+                is are on the cards under "Choose How You Want to Help"; this
+                says what giving them means and points back up to them.
+              */}
+              <p className="text-body text-muted-foreground-strong max-w-[68ch] leading-relaxed">
+                Your support pays for{' '}
+                {products.length === 1 ? 'the item' : `the ${formatNumber(products.length)} items`}{' '}
+                listed above, at the prices shown, delivered to the people this campaign serves.
+                Choose items, give an amount of your own, or both — an amount you choose is used
+                where it is needed most.
+              </p>
+              <a
+                href="#give"
+                className="text-body-sm text-primary focus-visible:outline-ring mt-3 inline-flex items-center gap-1.5 rounded-sm font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                <ArrowUp className="size-4" aria-hidden="true" />
+                See the items and their prices
+              </a>
             </AboutCard>
           ) : null}
 

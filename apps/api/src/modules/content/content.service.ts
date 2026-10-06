@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 
 import {
   campaignProducts,
@@ -19,6 +19,7 @@ import {
   PUBLIC_CAMPAIGN_STATUSES,
   campaignProgress,
   daysRemaining,
+  deadlineCutoff,
   donationAvailability,
   quantityProgress,
 } from '@sailent/validation';
@@ -202,11 +203,31 @@ export class ContentService {
     const filters: SQL[] = [isNull(campaigns.deletedAt)];
 
     /**
-     * Default to ACTIVE only. A caller may ask for `completed` or `all`, but
-     * `draft` and `archived` are never reachable from a public endpoint
-     * whatever is passed — unpublished work is not public.
+     * Default to ACTIVE and PAUSED. A caller may ask for `open`, `closed`,
+     * `paused`, `completed` or `all`, but `draft` and `archived` are never
+     * reachable from a public endpoint whatever is passed — unpublished work is
+     * not public.
+     *
+     * `open` and `closed` split the default by whether a donation can be made
+     * today, the deadline included (`hasEnded` in @sailent/validation):
+     *
+     *   open    active, with no end date or one that has not passed
+     *   closed  paused, or active but past its end date
      */
-    if (query.status === 'completed') {
+    const cutoff = deadlineCutoff();
+    if (query.status === 'open') {
+      filters.push(
+        eq(campaigns.status, 'active'),
+        or(isNull(campaigns.endDate), gte(campaigns.endDate, cutoff))!,
+      );
+    } else if (query.status === 'closed') {
+      filters.push(
+        or(
+          eq(campaigns.status, 'paused'),
+          and(eq(campaigns.status, 'active'), lt(campaigns.endDate, cutoff)),
+        )!,
+      );
+    } else if (query.status === 'completed') {
       filters.push(eq(campaigns.status, 'completed'));
     } else if (query.status === 'paused') {
       filters.push(eq(campaigns.status, 'paused'));

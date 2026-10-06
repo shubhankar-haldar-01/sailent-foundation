@@ -19,7 +19,7 @@ const campaignQuerySchema = paginationQuerySchema.extend({
    * `draft` and `archived` are absent by construction: a value the schema
    * does not accept cannot be smuggled past the service's filter.
    */
-  status: z.enum(['active', 'paused', 'completed', 'all']).optional(),
+  status: z.enum(['active', 'open', 'closed', 'paused', 'completed', 'all']).optional(),
 });
 
 const eventQuerySchema = paginationQuerySchema.extend({
@@ -104,7 +104,13 @@ export class ContentController {
   @ApiOperation({ summary: 'List campaigns' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Max 100' })
-  @ApiQuery({ name: 'status', required: false, enum: ['active', 'completed', 'all'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['active', 'open', 'closed', 'paused', 'completed', 'all'],
+    description:
+      'Default `active`: active and paused. `open`: taking donations today (active, not past its end date). `closed`: paused, or active but past its end date.',
+  })
   @ApiQuery({ name: 'programSlug', required: false })
   @ApiQuery({ name: 'category', required: false })
   @ApiQuery({ name: 'state', required: false })

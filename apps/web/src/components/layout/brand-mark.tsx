@@ -59,9 +59,13 @@ export function BrandLockup({
         <BrandGlyph className="size-5" />
       </span>
       <span className="min-w-0">
+        {/* WRAPS below `sm` rather than truncating: beside the Donate button and
+            the menu on a phone, "Sailent Foundation" was cut to "Sailent
+            Foundati…". Two short lines fit the 64px header; the name whole is
+            the point of a wordmark. */}
         <span
           className={cn(
-            'font-display text-body sm:text-h4 block truncate font-bold leading-tight tracking-tight',
+            'font-display text-body sm:text-h4 block font-bold leading-tight tracking-tight sm:truncate',
             tone === 'inverse' ? 'text-white' : 'text-foreground',
           )}
         >

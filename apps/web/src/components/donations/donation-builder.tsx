@@ -1,13 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { ChevronUp, Gift, Info } from 'lucide-react';
-import { Card, Input, cn, formatCurrency, percentOf } from '@sailent/ui';
+import { Gift, Info } from 'lucide-react';
+import { Card, Input, cn, percentOf } from '@sailent/ui';
 import { summariseDonation, type DonationSummary } from '@sailent/validation';
 
 import {
   CampaignDonationSummary,
-  CampaignProgressBlock,
   PRESET_AMOUNTS,
   type CampaignProgressFigures,
 } from '@/components/donations/campaign-donation-summary';
@@ -89,19 +88,17 @@ export interface DonationBuilderProps {
   /** What follows the ways of giving in the main column. */
   children?: React.ReactNode;
   /**
-   * The assurances (80G, secure payments, trusted). On a desktop they sit at
-   * the foot of the donation card, so the side column is one card; on a phone,
-   * where that card is the bottom sheet, they close the page in a small card of
-   * their own.
+   * The assurances (80G, secure payments, trusted), at the foot of the
+   * donation card — in the side column on a desktop, in the page on a phone.
    */
   assurances?: React.ReactNode;
   /**
    * The custom-amount panel under the products ("Other Ways to Support").
    *
-   * On by default, because on /donate a campaign without products has no
-   * other field in the main column. The campaign page turns it off: there the
-   * donation card's own Custom Amount field is always beside the products,
-   * and a second field for the same amount was one panel too many.
+   * On by default. Under products it is "Other Ways to Support" — any amount,
+   * typed, beside the card's presets and writing to the same amount; without
+   * products it is the only field in the main column. Off only where a page has
+   * nowhere for it.
    */
   showCustomAmountSection?: boolean;
   /**
@@ -136,7 +133,6 @@ export function DonationBuilder({
    * said who they are.
    */
   const [stage, setStage] = React.useState<'build' | 'checkout'>('build');
-  const [isSheetOpen, setIsSheetOpen] = React.useState(false);
 
   /**
    * Which way of giving the donor last chose to work in.
@@ -157,10 +153,10 @@ export function DonationBuilder({
   const [mode, setMode] = React.useState<'amount' | 'products'>('amount');
   const customInputId = React.useId();
   const productsRef = React.useRef<HTMLElement>(null);
-  // The donation card renders twice — the desktop rail and the phone sheet —
-  // so the first amount preset in each copy gets its own ref.
+  // The donation card renders twice — the desktop rail and, below `lg`, in the
+  // page itself — so the first amount preset in each copy gets its own ref.
   const railAmountRef = React.useRef<HTMLButtonElement>(null);
-  const sheetAmountRef = React.useRef<HTMLButtonElement>(null);
+  const inlineAmountRef = React.useRef<HTMLButtonElement>(null);
 
   const chooseMode = (next: 'amount' | 'products') => {
     setMode(next);
@@ -178,7 +174,7 @@ export function DonationBuilder({
     */
     const field = showCustomAmountSection
       ? document.getElementById(customInputId)
-      : ([railAmountRef.current, sheetAmountRef.current].find(
+      : ([railAmountRef.current, inlineAmountRef.current].find(
           (preset) => preset !== null && preset.offsetParent !== null,
         ) ?? null);
 
@@ -281,7 +277,6 @@ export function DonationBuilder({
   );
 
   const total = summaryTotals.total;
-  const itemCount = summaryTotals.itemCount + (customPaise > 0 ? 1 : 0);
 
   const belowMinimum = total > 0 && total < MINIMUM_AMOUNT;
   const canContinue = total > 0 && !belowMinimum && !isPaused && !isClosed;
@@ -302,9 +297,13 @@ export function DonationBuilder({
     [campaign.slug, campaign.title, productLines, customPaise, total],
   );
 
-  const renderSummary = (withProgress: boolean) => (
+  /*
+    The same card in both places, progress and assurances included: on a phone
+    it is the whole donation area, so it carries everything the rail does.
+  */
+  const renderSummary = (amountRef: React.Ref<HTMLButtonElement>) => (
     <CampaignDonationSummary
-      amountRef={withProgress ? railAmountRef : sheetAmountRef}
+      amountRef={amountRef}
       productLines={productLines}
       customPaise={customPaise}
       onCustomAmountChange={setCustomAmount}
@@ -322,7 +321,8 @@ export function DonationBuilder({
       }}
       mode={mode}
       {...(campaign.products.length > 0 ? { onModeChange: chooseMode } : {})}
-      {...(withProgress ? { progress, assurances } : {})}
+      progress={progress}
+      {...(assurances ? { assurances } : {})}
     />
   );
 
@@ -478,75 +478,24 @@ export function DonationBuilder({
           </section>
         ) : null}
 
+        {showSummary ? (
+          /*
+            BELOW `lg`, THE CARD IS PART OF THE PAGE.
+
+            Straight after the ways of giving, in reading order, and it scrolls
+            away like everything else. A bar fixed to the foot of a phone screen
+            covered the content and the focused control under it, and hid the
+            basket behind a tap.
+          */
+          <div className="mt-6 lg:hidden">{renderSummary(inlineAmountRef)}</div>
+        ) : null}
+
         {children}
       </div>
 
-      {showSummary || assurances ? (
-        <StickyRail>
-          {/* Desktop: the card, sticky with everything in this column. */}
-          {showSummary ? <div className="hidden lg:block">{renderSummary(true)}</div> : null}
-
-          {/*
-            Below `lg` there is no rail: the card lives in the bottom sheet, and
-            the campaign's progress — which the sheet leaves out to stay short —
-            closes the page here, after the FAQs, with the assurances under it.
-          */}
-          {showSummary ? (
-            <div className="border-border bg-surface rounded-xl border p-5 shadow-sm lg:hidden">
-              <CampaignProgressBlock figures={progress} />
-            </div>
-          ) : null}
-
-          {assurances ? (
-            <div className="border-border bg-surface rounded-xl border p-4 shadow-sm lg:hidden">
-              {assurances}
-            </div>
-          ) : null}
-        </StickyRail>
-      ) : null}
-
       {showSummary ? (
-        /* Mobile: collapsed bar that expands into the full itemisation, so a
-           donor can edit any line without scrolling back up. */
-        <div className="lg:hidden">
-          <div
-            className={cn(
-              'border-border bg-surface fixed inset-x-0 bottom-0 z-40 border-t shadow-lg',
-              'pb-[env(safe-area-inset-bottom,0px)]',
-            )}
-          >
-            {isSheetOpen ? (
-              <div className="max-h-[60dvh] overflow-y-auto p-4">{renderSummary(false)}</div>
-            ) : null}
-
-            <button
-              type="button"
-              onClick={() => setIsSheetOpen((open) => !open)}
-              aria-expanded={isSheetOpen}
-              className="focus-visible:outline-ring flex min-h-14 w-full items-center justify-between gap-3 px-4 text-left focus-visible:outline-2 focus-visible:-outline-offset-2"
-            >
-              <span>
-                <span data-numeric="" className="text-h4 font-semibold tabular-nums">
-                  {formatCurrency(total)}
-                </span>
-                <span className="text-body-sm text-muted-foreground ml-2">
-                  {itemCount === 0
-                    ? 'Nothing selected'
-                    : `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
-                </span>
-              </span>
-              <span className="text-body-sm text-primary flex items-center gap-2 font-medium">
-                {isSheetOpen ? 'Hide' : 'Review'}
-                <ChevronUp
-                  aria-hidden="true"
-                  className={cn('size-4 transition-transform', isSheetOpen && 'rotate-180')}
-                />
-              </span>
-            </button>
-          </div>
-          {/* Spacer so the sticky bar never covers page content. */}
-          <div aria-hidden="true" className="h-16" />
-        </div>
+        /* Desktop only: the card, sticky with everything in this column. */
+        <StickyRail className="hidden lg:flex">{renderSummary(railAmountRef)}</StickyRail>
       ) : null}
     </div>
   );

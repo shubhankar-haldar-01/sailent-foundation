@@ -147,8 +147,10 @@ export function CampaignDonationSummary({
               className={cn(
                 // `text-nowrap` with a tight tracking: "Support with Products"
                 // wrapped to two lines and made the control twice as tall as
-                // the design's single row.
-                'focus-visible:outline-ring min-h-7 flex-1 text-nowrap rounded-md px-2 text-[0.8125rem] font-semibold tracking-tight transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
+                // the design's single row. Below 360px it may wrap: the card is
+                // in the page there, and a label that cannot wrap pushed the
+                // page 2px wider than a 320px screen.
+                'focus-visible:outline-ring min-h-7 flex-1 text-nowrap rounded-md px-2 text-[0.8125rem] font-semibold tracking-tight transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 max-[359px]:text-wrap max-[359px]:py-1 max-[359px]:leading-tight',
                 mode === value
                   ? // `-ink-strong`: the ordinary mint ink on the mint wash is
                     // 4.31:1 against a 4.5:1 floor for 13px text.

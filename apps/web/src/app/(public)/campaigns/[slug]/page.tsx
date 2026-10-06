@@ -52,19 +52,19 @@ export async function generateMetadata({
  * TWO COLUMNS: THE CAMPAIGN, AND THE DONATION CARD BESIDE ALL OF IT.
  *
  * The main column runs, in this order: photograph and facts, section links,
- * products, about (its photos first), stories, recent supporters, the
- * difference support makes, FAQs. An amount is chosen from the presets in the
- * donation card; the page has no separate panel for it. The side column is the
- * donation card and the assurances under it, sticky for the whole length of
- * the main column.
+ * products, other ways to support (any amount, typed), about (its photos
+ * first), stories, recent supporters, the difference support makes, FAQs. The
+ * side column is the donation card and the assurances under it, sticky for the
+ * whole length of the main column.
  *
  * When the campaign has products, the donation builder lays out both columns —
  * it owns the basket the grid and the card share — and this page hands it the
  * rest as slots. When it has none, nothing on the page takes money, and the
  * page lays out the same grid itself with a progress card in the side column.
  *
- * Below `lg` it is one column in the same order; the donation card becomes the
- * bottom sheet, and the progress and assurances close the page.
+ * Below `lg` it is one column in the same order, and nothing is fixed to the
+ * screen: the donation card sits in the page straight after the ways of
+ * giving, and scrolls with it.
  * ══════════════════════════════════════════════════════════════════════════
  */
 export default async function CampaignDetailPage({
@@ -89,15 +89,28 @@ export default async function CampaignDetailPage({
   const relatedCampaigns = siblings.filter((item) => item.slug !== campaign.slug).slice(0, 3);
 
   /*
-    Stories from this campaign first, TOPPED UP from the wider set — one on
-    screen and up to three beside it. A campaign with one story of its own
-    would otherwise show a layout built for four with three gaps in it.
+    THIS CAMPAIGN'S OWN STORIES, and only those when it has any. Topping them
+    up from the wider set put another campaign's result under this one's name.
+
+    A campaign with none borrows — its programme's first, then the rest — and
+    the strip labels them as coming from elsewhere (`fromElsewhere`).
   */
-  const relatedStories = allStories.filter((story) => story.campaignSlug === campaign.slug);
-  const stories = [
-    ...relatedStories,
-    ...allStories.filter((story) => !relatedStories.includes(story)),
-  ].slice(0, 4);
+  const ownStories = allStories.filter(
+    (story) => story.campaignId === campaign.id || story.campaignSlug === campaign.slug,
+  );
+  const storiesFromElsewhere = ownStories.length === 0;
+  const programmeCampaignIds = new Set(siblings.map((item) => item.id));
+  const isFromProgramme = (story: (typeof allStories)[number]) =>
+    (story.campaignId != null && programmeCampaignIds.has(story.campaignId)) ||
+    (campaign.programSlug !== '' && story.programSlug === campaign.programSlug);
+  const stories = (
+    storiesFromElsewhere
+      ? [
+          ...allStories.filter(isFromProgramme),
+          ...allStories.filter((story) => !isFromProgramme(story)),
+        ]
+      : ownStories
+  ).slice(0, 4);
 
   const hasProducts = campaign.products.length > 0;
 
@@ -120,7 +133,7 @@ export default async function CampaignDetailPage({
   const body = (
     <>
       <CampaignAbout campaign={campaign} />
-      <StoriesStrip stories={stories} />
+      <StoriesStrip stories={stories} fromElsewhere={storiesFromElsewhere} />
       <RecentDonors donors={donors} />
       <CampaignImpact campaign={campaign} />
       <CampaignFaqs faqs={campaign.faqs} />
@@ -150,7 +163,6 @@ export default async function CampaignDetailPage({
             campaign={campaign}
             lead={lead}
             assurances={assurances}
-            showCustomAmountSection={false}
             preselectSmallestAmount
           >
             {body}

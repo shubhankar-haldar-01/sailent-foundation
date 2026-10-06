@@ -563,11 +563,8 @@ test.describe('journey: campaign → donation UI', () => {
 
       The donation card offers round amounts as buttons beside the total, and
       opens with ₹500 already pressed, so the products are added on top of it.
-      On a phone the card is the bottom sheet, opened first.
+      On a phone the card is in the page, after the ways of giving.
     */
-    if ((page.viewportSize()?.width ?? 0) < 1024) {
-      await page.getByRole('button', { name: /review/i }).click();
-    }
     await expect(
       page
         .getByRole('group', { name: 'Add an Amount' })
@@ -588,12 +585,8 @@ test.describe('journey: campaign → donation UI', () => {
 
     /*
       The card opens with ₹500 chosen, so "nothing selected" means taking it
-      off first. On a phone the card is the bottom sheet, opened first.
+      off first — in the side column on a desktop, in the page on a phone.
     */
-    const isDesktop = (page.viewportSize()?.width ?? 0) >= 1024;
-    if (!isDesktop) {
-      await page.getByRole('button', { name: /review/i }).click();
-    }
     await page
       .getByRole('group', { name: 'Add an Amount' })
       .filter({ visible: true })
@@ -601,19 +594,15 @@ test.describe('journey: campaign → donation UI', () => {
       .getByRole('button', { name: '₹500', exact: true })
       .click();
 
-    if (isDesktop) {
-      // The card says what to do rather than only greying the button out, and
-      // the action itself is unavailable until there is something to give.
-      await expect(
-        page.getByText('Choose an item above, or pick an amount below.').filter({ visible: true }),
-      ).toBeVisible();
-      await expect(
-        page.getByRole('button', { name: /^Donate( ₹[\d,.]+)?$/ }).filter({ visible: true }),
-      ).toBeDisabled();
-    } else {
-      // The bar under the sheet states it in the space it has.
-      await expect(page.getByText('Nothing selected')).toBeVisible();
-    }
+    // At every width, the card says what to do rather than only greying the
+    // button out, and the action itself is unavailable until there is
+    // something to give.
+    await expect(
+      page.getByText('Choose an item above, or pick an amount below.').filter({ visible: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /^Donate( ₹[\d,.]+)?$/ }).filter({ visible: true }),
+    ).toBeDisabled();
   });
 });
 

@@ -43,8 +43,19 @@ const PICKER_COLUMNS: Record<number, string> = {
  * NO AUTOPLAY. These are photographs of people; moving them under a reader is
  * what WCAG 2.2.2 exists to restrain, and nothing here moves unless asked.
  * ══════════════════════════════════════════════════════════════════════════
+ *
+ * BORROWED STORIES SAY SO. A campaign page shows its own stories; when it has
+ * none, the page may pass stories from the foundation's other work instead,
+ * with `fromElsewhere` — and then the lead and each story's label say where
+ * they come from, so nobody reads another campaign's result as this one's.
  */
-export function StoriesStrip({ stories }: { stories: Story[] }) {
+export function StoriesStrip({
+  stories,
+  fromElsewhere = false,
+}: {
+  stories: Story[];
+  fromElsewhere?: boolean;
+}) {
   const railRef = React.useRef<HTMLUListElement>(null);
   const [active, setActive] = React.useState(0);
 
@@ -81,7 +92,11 @@ export function StoriesStrip({ stories }: { stories: Story[] }) {
         id="stories-heading"
         size="md"
         title="Stories from the Ground"
-        lead="Real stories from the people and communities we are supporting."
+        lead={
+          fromElsewhere
+            ? 'This campaign has not shared a story yet. These come from our other work.'
+            : 'Real stories from the people and communities we are supporting.'
+        }
         viewAll={{ href: '/stories', label: 'View All Stories' }}
       />
 
@@ -159,6 +174,11 @@ export function StoriesStrip({ stories }: { stories: Story[] }) {
         {/* The story itself */}
         <div className="from-surface to-surface-tint @2xl:p-8 flex flex-col justify-center bg-gradient-to-br p-6">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            {fromElsewhere ? (
+              <span className="text-caption border-border text-muted-foreground-strong rounded-md border px-2.5 py-1 font-semibold">
+                From another campaign
+              </span>
+            ) : null}
             {story.programName ? (
               <span className="text-caption bg-wash-mint text-wash-mint-ink-strong rounded-md px-2.5 py-1 font-semibold">
                 {story.programName}

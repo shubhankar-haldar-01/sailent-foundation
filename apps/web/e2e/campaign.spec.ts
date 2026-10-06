@@ -45,6 +45,7 @@ test.describe('campaign page', () => {
 
     const order = [
       'Choose How You Want to Help',
+      'Other Ways to Support',
       'About This Campaign',
       'Stories from the Ground',
       'Recent Supporters',
@@ -63,8 +64,95 @@ test.describe('campaign page', () => {
       [...tops].sort((a, b) => a - b),
     );
 
-    // The separate custom-amount panel was removed; the card's field replaces it.
-    await expect(page.getByRole('heading', { name: 'Other Ways to Support' })).toHaveCount(0);
+    // Below `lg` the donation card is in the page itself, straight after the
+    // ways of giving and before the story.
+    if ((page.viewportSize()?.width ?? 1280) < 1024) {
+      const card = page.getByRole('heading', { name: 'Your Donation' }).filter({ visible: true });
+      const cardTop = (await card.boundingBox())!.y;
+      expect(cardTop).toBeGreaterThan(tops[1]!);
+      expect(cardTop).toBeLessThan(tops[2]!);
+    }
+  });
+
+  /**
+   * "Other Ways to Support": any amount, typed, beside the products. It writes
+   * the same amount the card's presets do, so the two always agree.
+   */
+  test('takes any amount in Other Ways to Support, and totals it with the products', async ({
+    page,
+  }) => {
+    await page.goto(CAMPAIGN);
+    await page.waitForLoadState('networkidle');
+
+    const field = page.getByLabel('Custom donation amount in rupees');
+    await expect(field).toBeVisible();
+    await field.fill('750');
+
+    // No preset is that amount, so none is pressed; the card shows the ₹750.
+    const presets = page.getByRole('group', { name: 'Add an Amount' }).filter({ visible: true });
+    await expect(presets.first().getByRole('button', { pressed: true })).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: 'Donate ₹750' }).filter({ visible: true }),
+    ).toBeEnabled();
+
+    // And a product on top: one donation, both together.
+    const priceText = await page
+      .getByRole('article')
+      .first()
+      .getByText(/^₹[\d,]+$/)
+      .first()
+      .textContent();
+    const price = Number(priceText!.replace(/[₹,]/g, ''));
+    await page
+      .getByRole('button', { name: /^Add one / })
+      .first()
+      .click();
+    await expect(
+      page
+        .getByRole('button', { name: `Donate ₹${(price + 750).toLocaleString('en-IN')}` })
+        .filter({ visible: true }),
+    ).toBeEnabled();
+
+    // Choosing a preset in the card replaces the typed amount in the field.
+    await presets.first().getByRole('button', { name: '₹1,000', exact: true }).click();
+    await expect(field).toHaveValue('1000');
+  });
+
+  /**
+   * Below `lg` nothing is fixed to the screen. The donation card is part of
+   * the page and scrolls away with it, so it never covers the content — or the
+   * control that has focus — and there is no bar to open first.
+   */
+  test('keeps the donation card in the page on a phone, not fixed over it', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 1280) >= 1024, 'below lg only');
+
+    await page.goto(CAMPAIGN);
+    await page.waitForLoadState('networkidle');
+
+    const card = page.getByRole('heading', { name: 'Your Donation' }).filter({ visible: true });
+    const donate = page
+      .getByRole('button', { name: /^Donate( ₹[\d,.]+)?$/ })
+      .filter({ visible: true });
+    await card.scrollIntoViewIfNeeded();
+    await expect(card).toBeInViewport();
+    await expect(donate).toBeVisible();
+
+    // Nothing in the page is pinned to the viewport.
+    const pinned = await page.evaluate(
+      () =>
+        [...document.querySelectorAll('main *')].filter(
+          (element) => getComputedStyle(element).position === 'fixed',
+        ).length,
+    );
+    expect(pinned, 'no element in the page is position: fixed').toBe(0);
+
+    // Further down, the card has scrolled away like the rest of the page.
+    await page.getByRole('heading', { name: 'FAQs', exact: true }).scrollIntoViewIfNeeded();
+    await expect(card).not.toBeInViewport();
+    await expect(donate).not.toBeInViewport();
+
+    // And there is no collapsed bar to open.
+    await expect(page.getByRole('button', { name: /(Review|Hide)$/ })).toHaveCount(0);
   });
 
   /**
@@ -118,12 +206,8 @@ test.describe('campaign page', () => {
     await page.goto(CAMPAIGN);
     await page.waitForLoadState('networkidle');
 
-    // The toggle lives in the summary, and below `lg` that is a collapsed
-    // bottom sheet — one tap away, exactly as it is for a donor.
-    if ((page.viewportSize()?.width ?? 1280) < 1024) {
-      await page.getByRole('button', { name: /review/i }).click();
-    }
-
+    // The toggle lives in the donation card — beside the page on a desktop,
+    // in it below `lg` — and is there without opening anything.
     await expect(page.getByRole('radio', { name: 'One-Time Donation' })).toHaveAttribute(
       'aria-checked',
       'true',
@@ -143,9 +227,12 @@ test.describe('campaign page', () => {
     );
     await expect(page.getByRole('heading', { name: 'Choose How You Want to Help' })).toBeVisible();
 
-    // And back: "One-Time Donation" moves focus to the card's first amount.
+    await expect(firstPreset).toBeVisible();
+
+    // And back: "One-Time Donation" moves to the amount field in Other Ways to
+    // Support and puts the cursor in it.
     await page.getByRole('radio', { name: 'One-Time Donation' }).click();
-    await expect(firstPreset).toBeFocused();
+    await expect(page.getByLabel('Custom donation amount in rupees')).toBeFocused();
   });
 
   /** Products and an amount in one donation — the hybrid the toggle must not block. */
@@ -168,11 +255,8 @@ test.describe('campaign page', () => {
       .click();
 
     // The amount is a preset in the donation card, and the smallest one is
-    // already chosen on arrival — on a phone the card is the bottom sheet, so
-    // it is opened first.
-    if ((page.viewportSize()?.width ?? 1280) < 1024) {
-      await page.getByRole('button', { name: /review/i }).click();
-    }
+    // already chosen on arrival — in the side column on a desktop, in the
+    // page on a phone.
     const preset = page
       .getByRole('group', { name: 'Add an Amount' })
       .filter({ visible: true })
@@ -194,18 +278,11 @@ test.describe('campaign page', () => {
 
   /**
    * The card opens on the smallest preset, so the Donate button is ready
-   * before anything is touched. On a phone the card is a collapsed bar, which
-   * states the running total without being opened.
+   * before anything is touched — at every width, now that the phone's card is
+   * the same card in the page.
    */
   test('starts with the smallest amount already chosen', async ({ page }) => {
     await page.goto(CAMPAIGN);
-
-    if ((page.viewportSize()?.width ?? 1280) < 1024) {
-      await expect(page.getByRole('button', { name: /(Review|Hide)$/ }).first()).toContainText(
-        '₹500',
-      );
-      return;
-    }
 
     const presets = page.getByRole('group', { name: 'Add an Amount' }).filter({ visible: true });
     await expect(presets.first().getByRole('button').first()).toHaveAttribute(
@@ -238,27 +315,13 @@ test.describe('campaign page', () => {
     await add.click();
 
     /*
-      The summary rail is desktop-only. Below `lg` the same component lives in a
-      bottom sheet that is COLLAPSED by default — deliberately, so it does not
-      eat a third of a phone screen — so the test has to open it, exactly as a
-      donor would.
-
-      Decided from the viewport rather than by asking the DOM which layout it is
-      in: a query immediately after navigation can run before the CSS applies,
-      and the answer is then the desktop one on a phone.
-    */
-    const width = page.viewportSize()?.width ?? 1280;
-    if (width < 1024) {
-      await page.getByRole('button', { name: /review/i }).click();
-    }
-
-    /*
       `.filter({ visible: true })`, NOT `.first()`.
 
-      The summary renders TWICE — the desktop rail first in the DOM, then the
-      mobile sheet — and the one that is not this viewport's is still present,
-      just hidden. `.first()` therefore picks a `display:none` node on a phone
-      and waits for it to become visible until the test times out.
+      The summary renders TWICE — the copy in the page for phones first in the
+      DOM, then the desktop rail — and the one that is not this viewport's is
+      still present, just hidden. `.first()` therefore picks a `display:none`
+      node at one width or the other and waits for it to become visible until
+      the test times out.
     */
     const visible = (text: string | RegExp) =>
       page.getByText(text).filter({ visible: true }).first();

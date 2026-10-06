@@ -31,6 +31,11 @@ export interface CampaignSectionLink {
  * section is in the upper part of the screen, so the row tells somebody where
  * they are as well as where they can go. It is set with `aria-current`, which
  * is what a screen reader reads out; the colour is the second signal.
+ *
+ * IT SAYS WHEN THERE IS MORE. On a narrow phone the row scrolls sideways, and
+ * a last link cut off at the edge looked like the whole list. A fade appears
+ * on whichever side has more links, and the current link is scrolled into the
+ * row as the reader moves down the page.
  * ══════════════════════════════════════════════════════════════════════════
  */
 export function CampaignSectionNav({
@@ -41,7 +46,42 @@ export function CampaignSectionNav({
   className?: string;
 }) {
   const [active, setActive] = React.useState(sections[0]?.id);
+  const [more, setMore] = React.useState({ before: false, after: false });
+  const listRef = React.useRef<HTMLUListElement>(null);
   const key = sections.map((section) => section.id).join('|');
+
+  const measure = React.useCallback(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const before = list.scrollLeft > 1;
+    const after = list.scrollLeft + list.clientWidth < list.scrollWidth - 1;
+    setMore((current) =>
+      current.before === before && current.after === after ? current : { before, after },
+    );
+  }, []);
+
+  React.useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [measure, key]);
+
+  // Keep the current link inside the row. Only the row scrolls — never the
+  // page, which `scrollIntoView` would also move.
+  React.useEffect(() => {
+    const list = listRef.current;
+    const link = list?.querySelector<HTMLElement>('[aria-current="true"]');
+    if (!list || !link) return;
+    const start = link.offsetLeft - list.offsetLeft;
+    const end = start + link.offsetWidth;
+    if (start < list.scrollLeft || end > list.scrollLeft + list.clientWidth) {
+      list.scrollTo({ left: Math.max(0, start - 24), behavior: 'smooth' });
+    }
+  }, [active]);
 
   React.useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return;
@@ -86,7 +126,11 @@ export function CampaignSectionNav({
     >
       {/* Scrolls sideways inside itself on a narrow phone rather than pushing
           the page wider than the screen. */}
-      <ul className="rail -mb-px flex gap-2 overflow-x-auto sm:gap-4">
+      <ul
+        ref={listRef}
+        onScroll={measure}
+        className="rail -mb-px flex gap-2 overflow-x-auto sm:gap-4"
+      >
         {sections.map((section) => {
           const isActive = section.id === active;
           return (
@@ -112,6 +156,22 @@ export function CampaignSectionNav({
           );
         })}
       </ul>
+
+      {/* The fades: decoration only — every link is reachable by Tab anyway. */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          'from-background pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r to-transparent transition-opacity',
+          more.before ? 'opacity-100' : 'opacity-0',
+        )}
+      />
+      <span
+        aria-hidden="true"
+        className={cn(
+          'from-background pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l to-transparent transition-opacity',
+          more.after ? 'opacity-100' : 'opacity-0',
+        )}
+      />
     </nav>
   );
 }
