@@ -305,7 +305,7 @@ These ID columns have **no FK at all**:
 **Staff and content:**
 - 2 development staff accounts, `admin@sailent.local` and `staff@sailent.local`. Their published dev credentials are neutralised by `db:harden`.
 - 7 programmes, 8 products
-- 9 campaigns: 8 active, 1 completed, 4 featured, every end date null (as of 2026-10-06, an uncommitted change)
+- 9 campaigns: 8 active, 1 completed, 4 featured, every end date null (seed change committed in `dd64d41`, 2026-10-06)
 - 7 campaign products, 27 FAQs, 27 media / gallery rows
 
 **People and activity:**

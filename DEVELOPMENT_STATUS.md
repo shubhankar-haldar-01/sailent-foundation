@@ -6,25 +6,35 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-10-06. Source: a read-only audit of the repository and the local databases, plus validation runs on 2026-10-06.
+**Last updated:** 2026-10-06 (after commit `0e94632`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
 
 | | |
 |---|---|
 | **Overall status** | Feature-rich build, **not deployed to any hosting.** Phases 0–10.12 are implemented in the API, admin and public site. |
-| **Current phase** | Post-10.12 polish (no phase number). The homepage and campaign-page design is committed (`ae1520b`, 2026-10-05); two follow-up features are **uncommitted** (§1). |
+| **Current phase** | Post-10.12 polish (no phase number). The homepage and campaign-page design (`ae1520b`, 2026-10-05) and the featured/deadline features (`dd64d41`, 2026-10-06) are committed and pushed. The documentation (`d7f42e3`) and the CI fix (`0e94632`) are committed but **not pushed** (§1). |
 | **Current feature** | Campaign presentation rules: admin-controlled **featured campaigns**, and **ongoing-by-default campaigns** with an optional end-date deadline. |
-| **Branch / HEAD** (as of 2026-10-06) | `main` @ `ae1520b`. 4 commits; the first (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Only branch: `main`. |
-| **Working tree** (as of 2026-10-06) | Uncommitted application work: 23 modified + 4 untracked files (listed in §3). The documentation files from the 2026-10-06 audit are also uncommitted. Run `git status` for the live state. |
+| **Branch / HEAD** (as of 2026-10-06) | `main` @ `0e94632`. `origin/main` @ `dd64d41`, so local `main` is **2 commits ahead and not pushed**: `d7f42e3` (documentation) and `0e94632` (CI fix). The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
+| **Working tree** (as of 2026-10-06) | Clean at `0e94632`, apart from this documentation update while it is uncommitted. Run `git status` for the live state. |
 | **Production database** | The **production Supabase project** exists (owner confirmed, 2026-10-06). Its schema and data state were **not inspected** and are **unknown**. Agents must not access it (`AGENTS.md` §8). |
 | **Application hosting** | None. No Dockerfiles, IaC or deploy workflow exist. |
 | **Local databases** | `sailent_dev` and `sailent_e2e` have migrations `0000`–`0022` applied, **plus one migration that is not in the repository** (§5.1). The repository has no pending migration. |
-| **CI** | `.github/workflows/ci.yml` exists. Its pass/fail status on GitHub is **unverified**. Its migrate and seed steps lack `--target=local`, which the target guard refuses (§5.4). |
+| **CI** | The migrate/seed guard failure is **fixed in `0e94632`**: the CI steps now run `pnpm db:migrate --target=local` and `pnpm db:seed --target=local`. **CI has NOT been verified**: `0e94632` is not pushed, so no GitHub Actions run has used it. The next validation is the **first GitHub Actions run after `main` is pushed** (§5.4). Do not describe CI as passing until that run has been observed. |
 
 ---
 
 ## 1. LAST DEVELOPMENT CHECKPOINT — 2026-10-06
 
-### Completed on 2026-10-06 (uncommitted)
+### Commits on 2026-10-06
+
+| Commit | Content | Pushed? |
+|---|---|---|
+| `dd64d41` | feat(campaigns): admin-controlled featured campaigns and optional end-date deadlines (items 1–3 below; 27 files) | ✅ yes (`origin/main`) |
+| `d7f42e3` | added md files: the documentation in item 4 | ❌ not yet |
+| `0e94632` | ci: target local database in CI migrations and seed (item 5; `.github/workflows/ci.yml` only) | ❌ not yet |
+
+Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to `origin/main` with a fast-forward push; until then `origin/main` held only `2ba2b43`.
+
+### Completed on 2026-10-06
 
 **1. Admin-controlled featured campaigns**
 - **Admin form** (`apps/web/src/components/admin/campaign-form.tsx`): a "Feature on the homepage" checkbox and a "Featured order" number field. The server action `featuredFields()` (`apps/web/src/lib/admin/actions.ts`) sends `isFeatured`/`featuredOrder`; unticking clears the order.
@@ -62,11 +72,13 @@
 - New helper: `apps/web/e2e/settle-animations.ts`, used by the axe helpers in `journeys.spec.ts` and `shell.spec.ts` (fixes a WebKit timing flake).
 - Additions to `campaign-status.test.ts`, `packages/validation/src/__tests__/domain.test.ts` and `apps/api/test/public-api.spec.ts`.
 
-**4. Documentation (2026-10-06):** the root context files (`AGENTS.md`, `CLAUDE.md`, `PROJECT.md`, `ARCHITECTURE.md`, `SECURITY.md`, this file, `PHASES.md`, `DATABASE.md`, `DEPLOYMENT.md`, `CHANGELOG.md`), created by a read-only audit and then revised the same day.
+**4. Documentation (2026-10-06):** the root context files (`AGENTS.md`, `CLAUDE.md`, `PROJECT.md`, `ARCHITECTURE.md`, `SECURITY.md`, this file, `PHASES.md`, `DATABASE.md`, `DEPLOYMENT.md`, `CHANGELOG.md`), created by a read-only audit, revised the same day, and committed as `d7f42e3`. A later update (this revision) records the main-only git workflow and the CI fix.
+
+**5. CI fix (2026-10-06, `0e94632`):** `.github/workflows/ci.yml` now passes `--target=local` to `pnpm db:migrate` and `pnpm db:seed`. Before the fix, both commands were refused by the database target guard before connecting, so every CI run stopped at "Apply migrations". This was reproduced locally with CI's environment and was not a database-safety failure: CI never reached a database. With the flag, the guard also verifies that `DATABASE_URL` is a localhost database (CI's is `localhost:5432/sailent_test`). Checks run: Prettier and a YAML parse (`js-yaml`); the migrate and seed commands were **not** run against any database.
 
 ### What was being worked on
 
-Items 1 and 2 are functionally complete and tested, but **not committed**. The owner has not yet approved a commit.
+The CI fix is committed but **unverified on GitHub**. The next step is to push `main` (owner approval required) and observe the first GitHub Actions run. Items 1–3 are committed and pushed.
 
 ### Reverted by the owner on 2026-10-06 (do not redo unless asked)
 
@@ -106,11 +118,11 @@ The likely cause is WebKit keyboard behaviour; this was **not investigated**.
 
 ---
 
-## 3. UNCOMMITTED APPLICATION FILES — snapshot as of 2026-10-06
+## 3. APPLICATION FILES IN `dd64d41` — for reference (committed and pushed 2026-10-06)
 
-Run `git status` for the live state.
+These were uncommitted at the original audit and are now in `dd64d41`. Run `git status` for the live state.
 
-**Modified:**
+**Modified at the time (now committed):**
 - `apps/api/src/modules/catalog/campaigns.service.ts`
 - `apps/api/src/modules/content/content.controller.ts`
 - `apps/api/src/modules/content/content.service.ts`
@@ -135,15 +147,13 @@ Run `git status` for the live state.
 - `packages/validation/src/__tests__/domain.test.ts`
 - `packages/validation/src/domain/lifecycle.ts`
 
-**Untracked:**
+**New at the time (now committed):**
 - `apps/web/e2e/admin-featured.spec.ts`
 - `apps/web/e2e/settle-animations.ts`
 - `apps/web/src/lib/__tests__/featured-campaigns.test.ts`
 - `apps/web/src/lib/featured-campaigns.ts`
 
-**Documentation, also uncommitted:**
-- `AGENTS.md` (modified)
-- New: `CLAUDE.md`, `PROJECT.md`, `ARCHITECTURE.md`, `SECURITY.md`, `DEVELOPMENT_STATUS.md`, `PHASES.md`, `DATABASE.md`, `DEPLOYMENT.md`, `CHANGELOG.md`
+**Documentation:** committed separately as `d7f42e3` (not pushed as of 2026-10-06): `AGENTS.md` and the nine new root files.
 
 ---
 
@@ -156,7 +166,7 @@ Statuses: COMPLETE · PARTIALLY COMPLETE · IN PROGRESS · NOT STARTED · BLOCKE
 | Monorepo, design system, shells | COMPLETE | |
 | Public website | PARTIALLY COMPLETE | Mostly API-backed. Still fixture-backed: `/faq`, testimonials, `/volunteer` testimonials, donation-widget presets, `/search`. Organisation details are **DEMO** values (`lib/demo-org.ts`). |
 | Programmes | PARTIALLY COMPLETE | Rollups `campaign_count`, `total_raised` and `beneficiaries_reached` are never written, yet the public listing reads `campaignCount`. |
-| Campaigns | COMPLETE (+ uncommitted work) | Lifecycle, FAQs, gallery, products, preview. Featured and deadline work uncommitted. |
+| Campaigns | COMPLETE | Lifecycle, FAQs, gallery, products, preview, admin-controlled featuring, and the optional end-date deadline (`dd64d41`). |
 | Products / campaign products | COMPLETE | |
 | One-time donations + Razorpay | PARTIALLY COMPLETE | Tested with a mocked client only. Missing: idempotency key, reconciliation and expiry of pending donations, currency check, total cap. Never run against live Razorpay. Local behaviour without keys: `DEPLOYMENT.md` §6. |
 | Receipts | PARTIALLY COMPLETE | No PDF; 80G fields null. |
@@ -221,7 +231,7 @@ This is for a **human** to verify and remediate through the approved process (`D
 
 ### 5.4 Infrastructure and tooling
 
-- **CI migrate and seed lack `--target=local`.** The guard (`packages/database/src/lib/database-target.ts`) throws "say which environment you are targeting". This is from code reading and has not been executed.
+- **CI migrate/seed target: FIXED in `0e94632`, NOT YET VERIFIED.** The steps now pass `--target=local`. Before the fix, the guard (`packages/database/src/lib/database-target.ts`) refused both commands ("say which environment you are targeting"), so CI stopped at "Apply migrations". Verification is the first GitHub Actions run after `main` is pushed. That run may expose later failures that the broken step had hidden (for example, `docs/phase-9.md` §9 notes that some web routes fail to build without a running API, and CI starts none). This is unverified.
 - **Drizzle snapshots stop at `0007`.** Migrations are hand-written; `db:generate` and `db:push` are not used (`AGENTS.md` §5).
 - **Inner `BEGIN`/`COMMIT`** in migrations `0018`–`0022`.
 - **Hand-assigned journal timestamps** on `0017`–`0022`.
@@ -263,8 +273,8 @@ This is for a **human** to verify and remediate through the approved process (`D
 
 ## 7. UNFINISHED WORK (ordered)
 
-1. Get owner approval, then commit the uncommitted work **on a branch** (`AGENTS.md` §9).
-2. Fix the CI target flag; confirm green CI via a PR to `main`.
+1. ~~Commit the featured/deadline work~~ (done: `dd64d41`, pushed). ~~Fix the CI target flag~~ (done: `0e94632`, not pushed).
+2. With owner approval, push `main`; then observe the first GitHub Actions run and report its result (`quality` and `security` jobs).
 3. Resolve the local drift / PAN encryption (§5.1).
 4. Fix the security items that need no product decisions: rate-limit keying and trusted client IP; the web `FEATURE_MOCK_DATA` default and `webEnvSchema`; JSON-LD escaping; webhook 401.
 5. Human-led production audit and hardening (§5.2).
@@ -321,16 +331,14 @@ These are recorded here and **not** silently resolved in the source documents.
 
 ## THE NEXT AI AGENT SHOULD START HERE
 
-1. Read `AGENTS.md` in full, especially §8 (production is off limits), §9 (git workflow) and §11 (must not change). Then read this file, and `CLAUDE.md` if you are Claude Code.
-2. Run `git status`, `git branch --show-current` and `git log --oneline -5`.
-3. **If the files in §3 are still uncommitted,** they are finished, tested work. Do **not** discard them.
-   - Show the owner a summary and `git diff --stat`, and **ask for approval**.
-   - If approved, create a branch (for example `feat/featured-and-deadline`; there is no fixed convention) and commit there, preferably as two commits: (1) featured campaigns; (2) optional deadline, seed change and E2E helper. The documentation can be a third commit, on the same branch or a `docs/` branch, as the owner prefers.
-   - **Push and open a PR only with approval.**
-4. **First engineering task: make CI trustworthy.**
-   - On a branch (for example `fix/ci-migrate-target`), add `--target=local` to the `pnpm db:migrate` and `pnpm db:seed` steps in `.github/workflows/ci.yml`.
-   - Validate locally (`AGENTS.md` §7).
-   - With approval: commit, push and open a PR to `main`. CI runs on PRs to `main`; confirm the `quality` and `security` jobs pass.
-5. **Then ask the owner for the §5.1 decision.** In parallel, recommend a **human-led** review of the production database (§5.2).
+1. Read `AGENTS.md` in full, especially §8 (production is off limits), §9 (work directly on `main`; owner approval before every commit and every push) and §11 (must not change). Then read this file, and `CLAUDE.md` if you are Claude Code.
+2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-06, local `main` is 2 commits ahead of `origin/main` (`d7f42e3`, `0e94632`), and possibly 3 once this documentation update is committed.
+3. **Next validation: push `main` and watch CI.**
+   - Ask the owner for approval to push `main` (a normal fast-forward push, never force).
+   - After the push, observe the first GitHub Actions run for the new `main` head (for example with `gh run list` / `gh run view`, or on GitHub).
+   - Report the `quality` and `security` job results with their failing step and log excerpt, if any.
+   - **Do not claim CI passes until that run has been observed.**
+   - If a later step fails (build, tests, format, audit, gitleaks), report it and wait for the owner. Do not fix it unprompted.
+4. **Then ask the owner for the §5.1 decision** (PAN encryption vs rebuilding the local databases), and recommend a **human-led** review of the production database (§5.2).
 
-Until CI is green and the API suite is clean, every later change is validated against a broken baseline.
+Do not create feature branches or pull requests unless the owner explicitly asks (`AGENTS.md` §9).

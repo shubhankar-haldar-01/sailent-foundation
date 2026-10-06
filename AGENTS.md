@@ -157,23 +157,23 @@ Production database actions require **explicit human approval** for that specifi
 - `APP_ENV=staging` is a value the code accepts, but no staging database or hosting is configured.
 - Older documents (`docs/phase-8.md` §13.6, §16) call the hosted Supabase project "development/staging". On 2026-10-06 the owner confirmed that this project is **production**.
 
-## 9. Git, branch and approval workflow (PERMANENT RULE)
+## 9. Git and approval workflow (PERMANENT RULE)
 
-1. **Inspect first:** `git status`, `git branch --show-current`, `git log --oneline -5`. Uncommitted work may be finished work; never discard or overwrite it.
-2. **Never work directly on `main`** unless the owner explicitly says so. Create a branch before modifying code.
-   - **No naming convention exists in the repository.** As of 2026-10-06, only `main` exists, and there are no contributing guidelines.
-   - Use a short descriptive name with a type prefix, for example `fix/ci-migrate-target`, `feat/...` or `docs/...`. This is a suggestion, not an established convention; follow the owner's preference if one is given.
+**Development happens directly on `main`.** This is the owner's decision (2026-10-06).
+
+1. **Inspect first:** `git status`, `git branch --show-current`, `git log --oneline -5`, `git status -sb` (to see commits ahead of `origin/main`). Uncommitted work may be finished work; never discard or overwrite it.
+2. **Work on `main`.** Do **not** create feature branches unless the owner explicitly asks for one. Do **not** create pull requests unless the owner explicitly asks for one.
 3. Make the change and keep it scoped to the request.
 4. Run the validation in §7.
-5. Review `git diff` (and `git diff --staged`). Check that no secret, `.env` value or credential is included.
-6. **Ask the human owner for approval before each of these:**
-   - **commit;**
-   - **push;**
-   - **opening or merging a pull request.**
+5. Review `git diff` (and `git diff --staged`). Check that no secret, `.env` value or credential is included. Stage only the files that belong to the change, by name.
+6. **The human owner must approve, separately and every time:**
+   - **every commit** (and its exact scope and message);
+   - **every push**;
+   - **every production action** (§8).
 
-   Never commit, push or merge on your own initiative.
-7. CI (`.github/workflows/ci.yml`) runs on **pushes to `main`** and on **pull requests targeting `main`**. A pushed feature branch runs CI only once a PR to `main` is open.
-8. After meaningful work, update `DEVELOPMENT_STATUS.md` (the checkpoint) and `CHANGELOG.md` in the same branch.
+   Never commit or push on your own initiative. Approval for one commit or push does not cover the next. Never force-push, rebase, reset or rewrite published history without explicit instruction.
+7. CI (`.github/workflows/ci.yml`) runs on **pushes to `main`** (and on pull requests targeting `main`, if the owner ever requests one). Pushing `main` is therefore what triggers validation on GitHub.
+8. After meaningful work, update `DEVELOPMENT_STATUS.md` (the checkpoint) and `CHANGELOG.md`; commit them only with approval.
 
 ## 10. Business rules (permanent unless the owner changes them)
 

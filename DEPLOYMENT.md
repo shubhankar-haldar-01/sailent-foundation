@@ -132,14 +132,14 @@ Playwright starts its own API on 4100 and web on 3100 (`E2E_API_PORT`, `E2E_WEB_
 - `turbo.json` declares only `globalEnv: [NODE_ENV, APP_ENV]`.
 
 ### CI (`.github/workflows/ci.yml`)
-**Triggers:** pushes to `main` and pull requests targeting `main`. A feature branch runs CI only when a PR to `main` is open.
+**Triggers:** pushes to `main` (the workflow also accepts pull requests targeting `main`, but the project works directly on `main` and opens none unless the owner asks; `AGENTS.md` §9). Pushing `main` (owner approval required) is what runs CI.
 
 **`quality` job** (Postgres 17 + Redis 7 services, Node 22):
 1. install
 2. lint
 3. typecheck
-4. build `@sailent/database` and run `pnpm db:migrate`
-5. `pnpm db:seed`
+4. build `@sailent/database` and run `pnpm db:migrate --target=local`
+5. `pnpm db:seed --target=local`
 6. test
 7. build
 8. `pnpm format:check`
@@ -147,7 +147,7 @@ Playwright starts its own API on 4100 and web on 3100 (`E2E_API_PORT`, `E2E_WEB_
 **`security` job:** `pnpm audit --prod --audit-level high` and gitleaks.
 
 **Known problems and gaps:**
-- **The migrate and seed steps lack `--target=local`.** The target guard throws when no target is declared, so the job is expected to fail at migrate. This comes from reading the code; it has not been verified on GitHub.
+- **CI has not yet been verified on GitHub (as of 2026-10-06).** Commit `0e94632` (2026-10-06) added `--target=local` to the migrate and seed steps. Before it, the target guard refused both commands, so every run stopped at "Apply migrations". `0e94632` had not been pushed when this was written, so no GitHub Actions run has used it. **CI is not considered passing until a GitHub Actions run succeeds after the push.** That first run may expose failures the broken step had hidden (for example, the build without a running API).
 - **Not run in CI:** E2E and deployment.
 - **No `permissions:` block** in the workflow.
 
@@ -248,7 +248,7 @@ How the seed behaves, verified in `packages/database/src/seed/index.ts`:
 
 ## 11. Release procedure (PLANNED; hosting is not chosen)
 
-1. The owner approves the merge to `main` with green CI.
+1. The owner approves the commit(s) and the push to `main`, and a GitHub Actions run on that `main` head has succeeded.
 2. Run the full Playwright suite in an isolated copy.
 3. A human applies the migrations (§9).
 4. Deploy the API, then the worker, then the web.

@@ -36,8 +36,8 @@ Product overview, verified against the code on 2026-10-06 (a snapshot). Each sec
   - **Campaign must be accepting donations.** It must be `active`, not past its end date (`hasEnded`, IST end of day), and not stopped at its goal when `stop_at_goal` is set.
   - **Limited items are held for 30 minutes** while a donation is pending.
 - **Campaigns** belong to a programme (required to publish or activate). Lifecycle: `draft → published → active ⇄ paused → completed → archived` (`packages/validation` `CAMPAIGN_TRANSITIONS`).
-  - **Ongoing by default.** `end_date` is an optional deadline. When it passes, the campaign shows as Closed and stops taking donations. *(As of 2026-10-06 this is implemented but uncommitted.)*
-  - **Featured.** Admin sets "Feature on the homepage" and an order. With live data, the API's `sort=featured` orders the homepage band: featured campaigns by featured order, then the rest by soonest deadline. The web keeps only campaigns that are taking donations, which drops paused and ended ones. *(As of 2026-10-06 this is implemented but uncommitted.)*
+  - **Ongoing by default.** `end_date` is an optional deadline. When it passes, the campaign shows as Closed and stops taking donations. *(Committed in `dd64d41`, 2026-10-06.)*
+  - **Featured.** Admin sets "Feature on the homepage" and an order. With live data, the API's `sort=featured` orders the homepage band: featured campaigns by featured order, then the rest by soonest deadline. The web keeps only campaigns that are taking donations, which drops paused and ended ones. *(Committed in `dd64d41`, 2026-10-06.)*
 - **Receipts:** issued automatically on capture.
   - Gapless numbering per financial year (April–March): `SFL-<FY>-NNNNNN`.
   - Immutable: a receipt is superseded, never edited.

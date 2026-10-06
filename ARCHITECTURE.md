@@ -127,7 +127,7 @@ sequenceDiagram
 ### Homepage Featured Campaigns ordering
 - **Live data:** the API orders `GET /api/v1/campaigns?sort=featured` by `is_featured DESC`, `featured_order ASC` (NULLs last), `end_date ASC` (NULLs last), then `created_at`, `id`. The web (`getFeaturedCampaigns()` in `apps/web/src/lib/content/campaigns.ts`) keeps that order, removes campaigns not taking donations (`acceptsDonationsNow()`), and caps the list at 12.
 - **Fixture fallback only:** `apps/web/src/lib/featured-campaigns.ts` `orderFeaturedFirst()` applies the same rule to the mock data when the API is unavailable and mock data is enabled. It does not affect live data.
-- *(As of 2026-10-06 this is uncommitted.)*
+- *(Committed in `dd64d41`, 2026-10-06.)*
 
 ## 7. Storage
 

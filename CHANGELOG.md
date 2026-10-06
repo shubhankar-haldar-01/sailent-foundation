@@ -4,23 +4,38 @@ A chronological development history built from the git history, the migration jo
 
 **Dating notes:**
 - The phase documents 0, 1 and 2 are dated 2026-09-19. The other phase documents carry no date; their migrations' journal timestamps are used instead. The timestamps for `0017`–`0022` were hand-assigned and may not be exact.
-- The git history has only 4 commits. The first (`2ba2b43`, 2026-09-26) contains all work up to Phase 10.12, so individual dates before it cannot be confirmed from git.
+- The first commit (`2ba2b43`, 2026-09-26) contains all work up to Phase 10.12, so individual dates before it cannot be confirmed from git. Later commits (from 2026-10-04) are dated from git.
 
 Newest first.
 
 ---
 
-## 2026-10-06 — Uncommitted (working tree, as of 2026-10-06)
+## 2026-10-06 — `0e94632` "ci: target local database in CI migrations and seed" (21:08 IST; not pushed as of 2026-10-06)
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
-| Documentation revised after a cold-read verification: production terminology fixed; production database access policy added; git/approval workflow and permanent rules moved into `AGENTS.md`; local development, single-test commands, local payment behaviour, seed and `--reference` hazards, and the add-a-permission procedure documented; the snapshot rule unified; stale-prone figures dated | Owner request; a fresh-agent audit found gaps and contradictions | Documentation only | — |
+| `.github/workflows/ci.yml`: `pnpm db:migrate --target=local` and `pnpm db:seed --target=local` | The database target guard refused both commands without a declared target, so every CI run stopped at "Apply migrations" | CI can reach the test steps. With the flag, the guard also verifies that CI's `DATABASE_URL` is a localhost database. **Not verified on GitHub yet.** | — |
+
+## 2026-10-06 — `d7f42e3` "added md files" (20:59 IST; not pushed as of 2026-10-06)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| Documentation/context system: `AGENTS.md` (project rules above the Turborepo block), `CLAUDE.md`, `PROJECT.md`, `ARCHITECTURE.md`, `SECURITY.md`, `DEVELOPMENT_STATUS.md`, `PHASES.md`, `DATABASE.md`, `DEPLOYMENT.md`, `CHANGELOG.md` | Read-only audit, so any agent can resume work safely; revised after a fresh-agent verification | Documentation only | — |
 | Owner decisions recorded: the Supabase project behind the production guard is **production**; AI agents never operate on the production database | Owner, 2026-10-06 | Permanent rule in `AGENTS.md` §8 | — |
-| Documentation system added: root `AGENTS.md` (project content above the Turborepo block), `CLAUDE.md`, `PROJECT.md`, `ARCHITECTURE.md`, `SECURITY.md`, `DEVELOPMENT_STATUS.md`, `PHASES.md`, `DATABASE.md`, `DEPLOYMENT.md`, `CHANGELOG.md` | Read-only audit, so any agent can resume work safely | Documentation only | — |
+
+Later on 2026-10-06 (working tree): `AGENTS.md`, `CLAUDE.md` and the other docs were updated for the main-only git workflow (no feature branches or PRs unless requested) and the CI fix. Not committed as of this entry.
+
+## 2026-10-06 — `dd64d41` "feat(campaigns): admin-controlled featured campaigns and optional end-date deadlines" (20:50 IST; pushed to `origin/main` 2026-10-06)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
 | Ongoing-by-default campaigns: `hasEnded()` (end of day, IST); `donationAvailability`/`acceptsDonations` aware of the deadline; checkout uses it; cards, status card, donation builder and featured band hide Donate for ended campaigns; campaign header shows "Ends …/N days left" or "Closed …" and the "Campaign period" row is removed; admin date hints rewritten | Owner: "there should be no campaign period". The page offered donations that checkout refused after the end date. | Campaigns without an end date never close on their own | none (seed: `endDate: null`). Dev database `UPDATE campaigns SET end_date=NULL` (local only, approved). |
 | Admin-controlled featured campaigns: "Feature on the homepage" and "Featured order" in the admin form; "Featured · N" badge in the admin list; public `sort=featured`; homepage band uses `getFeaturedCampaigns()` (open campaigns only) | Owner asked to give admins the power to choose featured campaigns. The band previously showed the oldest campaigns, ignoring `is_featured`. | Homepage order now follows admin choice | none (columns existed since `0000`) |
 | E2E: shared `settle-animations.ts` for the axe audits; new `admin-featured.spec.ts` | Fix a WebKit axe timing flake; cover the featured flow | Tests only | — |
-| Homepage visual refinement (single font, type scale, 1320px container, 8px buttons, hero redesign…) | Owner brief | **Reverted by the owner** the same day. Not in the tree. | — |
+
+Also on 2026-10-06:
+- Local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to `origin/main` with a fast-forward push. Until then, `origin/main` held only `2ba2b43`.
+- The homepage visual refinement (single font, type scale, 1320px container, 8px buttons, hero redesign) was made and then **reverted by the owner** the same day. It is not in the history.
 
 ## 2026-10-05 — `ae1520b` "homepage and campaign page design done"
 

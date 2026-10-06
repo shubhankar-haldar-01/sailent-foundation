@@ -16,7 +16,12 @@ Reconstructed from `docs/phase-*.md`, the migrations, the git history and the co
 | 🔴 | BLOCKED |
 | ⚫ | REMOVED |
 
-**Where development stopped:** post-10.12 polish, with uncommitted work. See `DEVELOPMENT_STATUS.md`.
+**Where development stopped (as of 2026-10-06):** post-10.12 polish.
+- The featured/deadline work is complete and committed (`dd64d41`, pushed).
+- The documentation (`d7f42e3`) and the CI target fix (`0e94632`) are committed but not yet pushed.
+- Next: push `main` with approval, and verify the first GitHub Actions run.
+
+See `DEVELOPMENT_STATUS.md`.
 
 | Phase | Name | Status |
 |---|---|---|
@@ -195,8 +200,9 @@ Reports (donations, campaigns, volunteers, impact, reconciliation, tax readiness
 |---|---|
 | **Committed** | 2026-10-04 `8dae087`, `d569fcf`: campaign page design. 2026-10-05 `ae1520b`: homepage and campaign page design (campaigns listing redesign, status menu, cards, homepage campaign grid, autoplay rails, focus strip removed, Impact removed from navigation, 4 new campaigns and 2 new programmes in the seed) |
 | **Reverted** | 2026-10-06: the homepage visual refinement (⚫) |
-| **Uncommitted** | Admin-controlled featured campaigns; ongoing-by-default campaigns with an optional deadline (`hasEnded`); E2E settle helper |
-| **Next** | Owner approval, then commit on a branch, then fix CI via a PR (`DEVELOPMENT_STATUS.md` "START HERE") |
+| **Complete (committed)** | ✅ 2026-10-06 `dd64d41` (pushed): admin-controlled featured campaigns; ongoing-by-default campaigns with an optional deadline (`hasEnded`); E2E settle helper |
+| **Committed, not yet pushed** | 2026-10-06 `d7f42e3`: documentation/context system. 2026-10-06 `0e94632`: CI migrate/seed `--target=local` fix (not verified on GitHub yet) |
+| **Next** | With owner approval, push `main` and verify the first GitHub Actions run (`DEVELOPMENT_STATUS.md` "START HERE"). Work happens directly on `main`. |
 
 ## Not yet scheduled  ⚪ NOT STARTED
 

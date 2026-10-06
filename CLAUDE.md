@@ -13,7 +13,7 @@ This file adds only what is specific to Claude Code. It does not restate or alte
 ## 1. Starting a session
 
 1. Read `AGENTS.md`, then [`DEVELOPMENT_STATUS.md`](DEVELOPMENT_STATUS.md) from "THE NEXT AI AGENT SHOULD START HERE".
-2. Run `git status`, `git branch --show-current` and `git log --oneline -5`. If you are on `main`, create a branch before editing code (`AGENTS.md` §9).
+2. Run `git status`, `git branch --show-current`, `git log --oneline -5` and `git status -sb`. Work directly on `main`; create a feature branch or pull request **only** if the owner explicitly asks (`AGENTS.md` §9).
 3. Everything needed to run the project locally is in `DEPLOYMENT.md` §3–§5. Claude memory files for this project may repeat some of it; if they ever disagree with the repository, the repository wins.
 
 ## 2. Inspection before change
@@ -21,6 +21,14 @@ This file adds only what is specific to Claude Code. It does not restate or alte
 - Read the file you will change in full, plus its tests and the shared helper it should use (`packages/validation`, `packages/ui`).
 - For visual work, screenshot the current state with Playwright first, and compare at 390, 768, 1024 and 1440px afterwards.
 - For broad questions, delegate to an `Explore` subagent and keep only its conclusions.
+
+## 2a. Git workflow (summary of `AGENTS.md` §9; that section is authoritative)
+
+- Work on `main`. No feature branches and no pull requests unless the owner explicitly requests them.
+- Stage only the files that belong to the change, by name, after reviewing `git diff`.
+- **Ask the owner before every commit and before every push**, showing the exact scope and message. One approval covers one action.
+- Never force-push, rebase, reset or rewrite published history without explicit instruction.
+- Pushing `main` triggers CI on GitHub (`.github/workflows/ci.yml`).
 
 ## 3. Plan before change
 
@@ -70,7 +78,7 @@ You may **prepare** a migration file, a command or a runbook for a human to revi
 
 ## 8. Documentation updates (required after meaningful work)
 
-- **`DEVELOPMENT_STATUS.md`:** checkpoint (dated), branch, uncommitted files, validation results (dated), known issues, next task.
+- **`DEVELOPMENT_STATUS.md`:** checkpoint (dated), HEAD and commits not yet pushed, uncommitted files, validation results (dated), known issues, next task.
 - **`CHANGELOG.md`:** a dated entry.
 - **`PHASES.md`, `DATABASE.md`, `SECURITY.md`, `ARCHITECTURE.md`:** update them when they are affected.
 - **Contradictions:** record any doc/code contradiction in `DEVELOPMENT_STATUS.md` §9.
