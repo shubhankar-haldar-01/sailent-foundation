@@ -3,9 +3,15 @@ import { and, desc, eq, gt, ilike, or, sql, type SQL } from 'drizzle-orm';
 
 import { campaigns, donations, donors, type DatabaseClient } from '@sailent/database';
 
+import { normaliseEmail } from '@sailent/validation';
+
 import { DATABASE } from '../database/database.module.js';
 import { AuditService } from '../audit/audit.service.js';
-import { NotFoundException } from '../../common/exceptions.js';
+import { ConflictException, NotFoundException } from '../../common/exceptions.js';
+import {
+  FieldEncryptionService,
+  TAX_ID_CONTEXT,
+} from '../../common/security/field-encryption.service.js';
 import { offsetFor, paginate, resolveSort } from '../../common/dto/pagination.dto.js';
 import type { AdminDonorListQuery, UpdateDonorInput } from './dto/donors.dto.js';
 
@@ -48,6 +54,7 @@ export class AdminDonorsService {
   constructor(
     @Inject(DATABASE) private readonly database: DatabaseClient,
     private readonly audit: AuditService,
+    private readonly encryption: FieldEncryptionService,
   ) {}
 
   async list(query: AdminDonorListQuery, options: { includeSensitive: boolean }) {
@@ -210,8 +217,18 @@ export class AdminDonorsService {
       .from(donations)
       .where(and(eq(donations.donorId, id), eq(donations.status, 'successful')));
 
+    /*
+      The tax id is stored ENCRYPTED (Phase 12) and decrypted here only for a
+      caller holding `donor.read_sensitive` — the only path that selected it.
+    */
+    const taxIdNumber =
+      'taxIdNumber' in row && typeof row.taxIdNumber === 'string'
+        ? this.encryption.decrypt(row.taxIdNumber, TAX_ID_CONTEXT)
+        : undefined;
+
     return {
       ...row,
+      ...(taxIdNumber !== undefined ? { taxIdNumber } : {}),
       donations: history,
       // Named `recomputed` rather than merged into the row, so a mismatch with
       // the cached totals is visible instead of hidden.
@@ -242,10 +259,25 @@ export class AdminDonorsService {
 
     if (Object.keys(patch).length === 0) return before;
 
-    await this.database.db
-      .update(donors)
-      .set({ ...patch, updatedAt: new Date() })
-      .where(eq(donors.id, id));
+    // One spelling of an address, and an encrypted tax id (Phase 12).
+    const write: Record<string, string> = { ...patch };
+    if (write.email !== undefined) write.email = normaliseEmail(write.email);
+    if (write.taxIdNumber !== undefined) {
+      write.taxIdNumber = this.encryption.encrypt(write.taxIdNumber, TAX_ID_CONTEXT);
+    }
+
+    try {
+      await this.database.db
+        .update(donors)
+        .set({ ...write, updatedAt: new Date() })
+        .where(eq(donors.id, id));
+    } catch (error) {
+      // `donors_email_lower_unique`: the address belongs to another donor.
+      if ((error as { code?: string }).code === '23505') {
+        throw new ConflictException('That email address already belongs to another donor.');
+      }
+      throw error;
+    }
 
     await this.audit.record({
       action: 'donor.updated',

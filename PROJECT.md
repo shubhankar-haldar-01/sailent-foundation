@@ -42,7 +42,7 @@ Product overview, verified against the code on 2026-10-06 (a snapshot). Each sec
   - Gapless numbering per financial year (April–March): `SFL-<FY>-NNNNNN`.
   - Immutable: a receipt is superseded, never edited.
   - A receipt is **not** an 80G certificate. Form 10BE comes from the Income Tax Department; the platform offers only a Form 10BD readiness view.
-- **Tax ID (PAN):** optional, requested after payment. Never exported raw. *Docs say it is encrypted at rest; in code it is NOT (see `SECURITY.md`).*
+- **Tax ID (PAN):** optional, requested after payment. Never exported raw. Encrypted at rest with AES-256-GCM since Phase 12; the donor sees only a masked value (see `SECURITY.md`).
 - **Public statistics** are computed from the database only. If the database cannot produce a number, it is not shown (decision A14).
 - **Events:** registration requires a donor session; capacity is locked with `FOR UPDATE`; there is no waitlist; there are no paid events.
 - **Volunteers:** the ID is assigned at approval and never reused. Hours round down.
@@ -118,16 +118,18 @@ Product overview, verified against the code on 2026-10-06 (a snapshot). Each sec
 **Staff**
 - Signs in with email and password.
 - Accounts lock for 15 minutes after 5 failures.
-- Sessions use a 15-minute JWT access token and a rotating refresh token.
+- Sessions use a 15-minute JWT access token (HS256 only) and a refresh token rotated atomically; reusing one revokes the session family.
 - Sensitive actions require re-entering the password, which is valid for 5 minutes.
-- **No 2FA in effect.**
+- **Staff TOTP/2FA is not required** (owner decision, 2026-10-07).
+- Sign-ins, failures, lockouts and re-authentication are audited.
 - **No invite acceptance or password reset.** Admins are created only by the CLI scripts (`db:create-admin`, `db:rotate-admin-password`).
 
-**Donors**
+**Donors and volunteers**
 - Sign in with an email OTP: 6 digits, valid for 10 minutes, 5 attempts per code, 3 codes per 15 minutes.
-- A verified mailbox gets an account automatically.
+- Codes go to an address held by a donor account or a live volunteer record; the first sign-in creates the account.
+- The email address changes only through a code sent to the new address.
 
-**PLANNED:** staff TOTP enrolment, invite emails, password reset, session-management UI.
+**PLANNED (Phase 13):** invite emails, password reset, session-management UI.
 
 ## 7. Donation and payment model (CURRENT)
 

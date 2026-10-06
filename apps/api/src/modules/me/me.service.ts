@@ -1,5 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, gte, inArray, lte, sql, type SQL } from 'drizzle-orm';
+import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
+
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { and, desc, eq, gt, gte, inArray, isNull, lte, ne, sql, type SQL } from 'drizzle-orm';
 
 import {
   campaigns,
@@ -7,15 +9,31 @@ import {
   donations,
   donors,
   impactUpdates,
+  otpCodes,
   payments,
   receipts,
   savedCampaigns,
   type DatabaseClient,
 } from '@sailent/database';
 
+import { normaliseEmail } from '@sailent/validation';
+
+import { AppConfig } from '../../config/app.config.js';
 import { DATABASE } from '../database/database.module.js';
 import { AuditService } from '../audit/audit.service.js';
-import { NotFoundException } from '../../common/exceptions.js';
+import { QUEUE_NAMES, QueueService } from '../queue/queue.service.js';
+import {
+  ConflictException,
+  NotFoundException,
+  RateLimitException,
+  UnauthenticatedException,
+  ValidationException,
+} from '../../common/exceptions.js';
+import {
+  FieldEncryptionService,
+  TAX_ID_CONTEXT,
+  maskTaxId,
+} from '../../common/security/field-encryption.service.js';
 import {
   offsetFor,
   paginate,
@@ -60,16 +78,41 @@ interface ActorContext {
  */
 @Injectable()
 export class MeService {
+  private readonly logger = new Logger(MeService.name);
+
   constructor(
     @Inject(DATABASE) private readonly database: DatabaseClient,
     private readonly audit: AuditService,
+    private readonly encryption: FieldEncryptionService,
+    private readonly queue: QueueService,
+    private readonly config: AppConfig,
   ) {}
 
   // -------------------------------------------------------------------------
   // Profile
   // -------------------------------------------------------------------------
 
+  /**
+   * The signed-in donor's profile.
+   *
+   * THE TAX ID IS MASKED (Phase 12). The donor sees `XXXXXX234F` and whether a
+   * number is on file — enough to recognise it and to know to update it — but
+   * the full PAN is not sent back to a browser it does not need to reach. The
+   * number is stored encrypted (`FieldEncryptionService`); only staff holding
+   * `donor.read_sensitive` see it in full.
+   */
   async profile(donorId: string) {
+    const { taxIdNumber, ...row } = await this.profileRow(donorId);
+    return {
+      ...row,
+      hasTaxId: Boolean(taxIdNumber),
+      taxIdNumberMasked: taxIdNumber
+        ? maskTaxId(this.encryption.decrypt(taxIdNumber, TAX_ID_CONTEXT))
+        : null,
+    };
+  }
+
+  private async profileRow(donorId: string) {
     const [row] = await this.database.db
       .select({
         id: donors.id,
@@ -110,22 +153,32 @@ export class MeService {
    * silently widen what is written.
    */
   async updateProfile(donorId: string, input: UpdateProfileInput, context: ActorContext) {
-    const before = await this.profile(donorId);
+    const before = await this.profileRow(donorId);
 
+    /*
+      The email address is NOT changed here (Phase 12): a new address becomes
+      the account's only after a code sent to it is entered —
+      `requestEmailChange` / `verifyEmailChange`. The schema no longer accepts
+      `email` on this route at all.
+
+      The tax id is ENCRYPTED before it is written; the plaintext never
+      reaches the database.
+    */
     const patch = {
       ...(input.firstName !== undefined ? { firstName: input.firstName } : {}),
       ...(input.lastName !== undefined ? { lastName: input.lastName } : {}),
-      ...(input.email !== undefined ? { email: input.email } : {}),
       ...(input.addressLine1 !== undefined ? { addressLine1: input.addressLine1 } : {}),
       ...(input.addressLine2 !== undefined ? { addressLine2: input.addressLine2 } : {}),
       ...(input.city !== undefined ? { city: input.city } : {}),
       ...(input.state !== undefined ? { state: input.state } : {}),
       ...(input.postalCode !== undefined ? { postalCode: input.postalCode } : {}),
       ...(input.taxIdType !== undefined ? { taxIdType: input.taxIdType } : {}),
-      ...(input.taxIdNumber !== undefined ? { taxIdNumber: input.taxIdNumber } : {}),
+      ...(input.taxIdNumber !== undefined
+        ? { taxIdNumber: this.encryption.encrypt(input.taxIdNumber, TAX_ID_CONTEXT) }
+        : {}),
     };
 
-    if (Object.keys(patch).length === 0) return before;
+    if (Object.keys(patch).length === 0) return this.profile(donorId);
 
     await this.database.db
       .update(donors)
@@ -149,6 +202,198 @@ export class MeService {
       userId: donorId,
       oldValues: this.auditable(before),
       newValues: this.auditable({ ...before, ...patch }),
+      ...context,
+    });
+
+    return this.profile(donorId);
+  }
+
+  // -------------------------------------------------------------------------
+  // Email change, verified (Phase 12)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Start changing the account's email address.
+   *
+   * ══════════════════════════════════════════════════════════════════════════
+   * THE NEW ADDRESS MUST BE PROVEN BEFORE IT COUNTS.
+   *
+   * The email is the account: sign-in codes go to it, guest donations attach
+   * to it, a volunteer record is found by it. It used to change on a plain
+   * PATCH, so a donor could claim any address — and with it the future
+   * donations, receipts and volunteering record of whoever owns it.
+   *
+   * Now a six-digit code is sent to the NEW address and the change happens
+   * only when that code comes back (`verifyEmailChange`). Nothing is said here
+   * about whether the address already has an account — that is only checked
+   * once the requester has proven they own it.
+   * ══════════════════════════════════════════════════════════════════════════
+   */
+  async requestEmailChange(donorId: string, newEmail: string, context: ActorContext) {
+    const email = normaliseEmail(newEmail);
+    const current = await this.profileRow(donorId);
+
+    if (current.email && normaliseEmail(current.email) === email) {
+      throw new ValidationException(
+        [{ field: 'email', code: 'unchanged', message: 'That is already your email address.' }],
+        'That is already your email address.',
+      );
+    }
+
+    const identifier = emailChangeIdentifier(donorId, email);
+    const [recent] = await this.database.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(otpCodes)
+      .where(
+        and(
+          eq(otpCodes.identifier, identifier),
+          gt(otpCodes.createdAt, new Date(Date.now() - 15 * 60_000)),
+        ),
+      );
+    if ((recent?.count ?? 0) >= 3) {
+      throw new RateLimitException('Too many codes requested. Try again in a few minutes.');
+    }
+
+    const code = String(randomInt(100_000, 1_000_000));
+    await this.database.db.insert(otpCodes).values({
+      identifier,
+      purpose: EMAIL_CHANGE_PURPOSE,
+      codeHash: hashCode(code),
+      expiresAt: new Date(Date.now() + EMAIL_CHANGE_TTL_MINUTES * 60_000),
+      ipAddress: context.ipAddress ?? null,
+    });
+
+    try {
+      await this.queue.enqueue(
+        QUEUE_NAMES.EMAIL,
+        'donor.login_code',
+        {
+          email,
+          name: [current.firstName, current.lastName].filter(Boolean).join(' ').trim() || null,
+          code,
+          ttlMinutes: EMAIL_CHANGE_TTL_MINUTES,
+          purpose: 'email_change',
+        },
+        { removeOnComplete: true, removeOnFail: { age: EMAIL_CHANGE_TTL_MINUTES * 60 } },
+      );
+    } catch (error) {
+      this.logger.error(
+        `Could not enqueue an email-change code: ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
+    }
+
+    // Development only, exactly as the sign-in code (never in production).
+    if (this.config.mockDataEnabled) {
+      this.logger.warn(`[dev] Email-change code for ${email}: ${code}`);
+    }
+
+    await this.audit.record({
+      action: 'donor.email_change_requested',
+      entityType: 'donor',
+      entityId: donorId,
+      actorType: 'donor',
+      userId: donorId,
+      newValues: { newEmailHandle: emailHandle(email) },
+      ...context,
+    });
+
+    return { sent: true as const };
+  }
+
+  /** Finish an email change: the code sent to the new address, entered. */
+  async verifyEmailChange(donorId: string, newEmail: string, code: string, context: ActorContext) {
+    const email = normaliseEmail(newEmail);
+    const identifier = emailChangeIdentifier(donorId, email);
+
+    const [record] = await this.database.db
+      .select()
+      .from(otpCodes)
+      .where(
+        and(
+          eq(otpCodes.identifier, identifier),
+          eq(otpCodes.purpose, EMAIL_CHANGE_PURPOSE),
+          isNull(otpCodes.consumedAt),
+          gt(otpCodes.expiresAt, new Date()),
+        ),
+      )
+      .orderBy(desc(otpCodes.createdAt))
+      .limit(1);
+
+    const failed = async (reason: string) =>
+      this.audit.record({
+        action: 'donor.email_change_failed',
+        entityType: 'donor',
+        entityId: donorId,
+        actorType: 'donor',
+        userId: donorId,
+        newValues: { reason, newEmailHandle: emailHandle(email) },
+        severity: 'warning',
+        ...context,
+      });
+
+    if (!record) {
+      await failed('no_live_code');
+      throw new UnauthenticatedException('That code has expired. Request a new one.');
+    }
+    if (record.attempts >= EMAIL_CHANGE_MAX_ATTEMPTS) {
+      await failed('too_many_attempts');
+      throw new RateLimitException('Too many attempts on this code. Request a new one.');
+    }
+
+    const presented = Buffer.from(hashCode(code));
+    const matches =
+      presented.length === record.codeHash.length &&
+      timingSafeEqual(presented, Buffer.from(record.codeHash));
+    if (!matches) {
+      await this.database.db
+        .update(otpCodes)
+        .set({ attempts: record.attempts + 1 })
+        .where(eq(otpCodes.id, record.id));
+      await failed('wrong_code');
+      throw new UnauthenticatedException('That code is not correct.');
+    }
+
+    await this.database.db
+      .update(otpCodes)
+      .set({ consumedAt: new Date() })
+      .where(eq(otpCodes.id, record.id));
+
+    // Only now — the requester owns the mailbox — is a clash worth reporting.
+    const [taken] = await this.database.db
+      .select({ id: donors.id })
+      .from(donors)
+      .where(and(sql`lower(btrim(${donors.email})) = ${email}`, ne(donors.id, donorId)))
+      .limit(1);
+    if (taken) {
+      await failed('address_in_use');
+      throw new ConflictException(
+        'That address already belongs to another account. Sign in with it, or contact us to merge the two.',
+      );
+    }
+
+    const before = await this.profileRow(donorId);
+    try {
+      await this.database.db
+        .update(donors)
+        .set({ email, updatedAt: new Date() })
+        .where(eq(donors.id, donorId));
+    } catch (error) {
+      // The unique index (`donors_email_lower_unique`) caught a race.
+      if ((error as { code?: string }).code === '23505') {
+        throw new ConflictException('That address already belongs to another account.');
+      }
+      throw error;
+    }
+
+    await this.audit.record({
+      action: 'donor.email_change_verified',
+      entityType: 'donor',
+      entityId: donorId,
+      actorType: 'donor',
+      userId: donorId,
+      oldValues: { email: before.email },
+      newValues: { email },
+      severity: 'warning',
       ...context,
     });
 
@@ -660,4 +905,26 @@ export class MeService {
       savedCampaigns: saved.items,
     };
   }
+}
+
+const EMAIL_CHANGE_PURPOSE = 'email_change';
+const EMAIL_CHANGE_TTL_MINUTES = 10;
+const EMAIL_CHANGE_MAX_ATTEMPTS = 5;
+
+/**
+ * An email-change code is bound to BOTH the account and the new address, so a
+ * code issued for one account cannot be used on another, nor for a different
+ * address than the one it was sent to.
+ */
+function emailChangeIdentifier(donorId: string, email: string): string {
+  return `email_change:${donorId}:${email}`;
+}
+
+function hashCode(code: string): string {
+  return createHash('sha256').update(code).digest('hex');
+}
+
+/** A pseudonymous handle for an address in an audit entry. */
+function emailHandle(email: string): string {
+  return createHash('sha256').update(email).digest('hex').slice(0, 16);
 }

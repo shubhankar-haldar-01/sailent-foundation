@@ -93,6 +93,8 @@ const baseEnv: Record<string, string> = {
   SWAGGER_ENABLED: 'false',
   // Phase 11: the secret the web server and worker present to the API.
   INTERNAL_API_SECRET: 'h'.repeat(40),
+  // Phase 12: encryption at rest for the donor tax id (32 bytes, base64).
+  FIELD_ENCRYPTION_KEY: Buffer.alloc(32, 3).toString('base64'),
 };
 
 /**
@@ -150,12 +152,43 @@ describe('production payment configuration', () => {
     ).toThrow(/INTERNAL_API_SECRET/);
   });
 
+  it('requires FIELD_ENCRYPTION_KEY in production, as a real 32-byte key', () => {
+    const { FIELD_ENCRYPTION_KEY: _omitted, ...withoutKey } = baseEnv;
+    const production = { APP_ENV: 'production', FEATURE_MOCK_DATA: 'false' };
+    expect(() => loadEnv(apiEnvSchema, 'api', { ...withoutKey, ...production })).toThrow(
+      /FIELD_ENCRYPTION_KEY/,
+    );
+    expect(() =>
+      loadEnv(apiEnvSchema, 'api', {
+        ...baseEnv,
+        ...production,
+        FIELD_ENCRYPTION_KEY: 'not-a-32-byte-key',
+      }),
+    ).toThrow(/FIELD_ENCRYPTION_KEY must be 32 bytes/);
+  });
+
+  it('refuses a localhost or plain-http public URL for the worker in production', () => {
+    const worker = {
+      APP_ENV: 'production',
+      NODE_ENV: 'production',
+      DATABASE_URL: 'postgres://user:pass@db.example.test:5432/sailent',
+      REDIS_URL: 'redis://redis.example.test:6379',
+      API_INTERNAL_URL: 'https://api.internal.example',
+      INTERNAL_API_SECRET: 'h'.repeat(40),
+    };
+    expect(() => loadEnv(workerEnvSchema, 'worker', worker)).toThrow(/APP_PUBLIC_URL/);
+    expect(() =>
+      loadEnv(workerEnvSchema, 'worker', { ...worker, APP_PUBLIC_URL: 'http://sailent.example' }),
+    ).toThrow(/APP_PUBLIC_URL/);
+  });
+
   it('requires the worker to know where the API is and how to authenticate in production', () => {
     const worker = {
       APP_ENV: 'production',
       NODE_ENV: 'production',
       DATABASE_URL: 'postgres://user:pass@db.example.test:5432/sailent',
       REDIS_URL: 'redis://redis.example.test:6379',
+      APP_PUBLIC_URL: 'https://sailent.example',
     };
     expect(() => loadEnv(workerEnvSchema, 'worker', worker)).toThrow(
       /API_INTERNAL_URL[\s\S]*INTERNAL_API_SECRET/,

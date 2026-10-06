@@ -26,10 +26,10 @@ Verified on 2026-10-06 against:
 
 ### Identity and RBAC
 - **users** (staff only)
-  - email: unique on `lower(email)`
+  - email: unique on `lower(email)`; staff sign-in matches `lower(btrim(email))` against the normalised address (Phase 12)
   - `password_hash` (Argon2id; nullable)
   - `status` (`user_status`)
-  - TOTP fields (unused in practice)
+  - TOTP fields: **unused by owner decision** — staff 2FA is not required (Phase 12); the columns stay, no migration
   - `failed_login_count`, `locked_until`, `must_change_password` (never read)
 - **sessions**
   - one subject, either `user_id` (FK CASCADE) or `donor_id` (**no FK**); CHECK `sessions_one_subject`
@@ -38,6 +38,7 @@ Verified on 2026-10-06 against:
   - `expires_at`, `revoked_at`, `reauthenticated_at`
 - **otp_codes**
   - `identifier`, `purpose` (varchar, no check), `code_hash`, `expires_at`, `attempts`, `consumed_at`
+  - purposes in use: `donor_login` (identifier = the normalised email) and, since Phase 12, `email_change` (identifier = `email_change:<donor id>:<normalised new email>`, so a code is bound to one account and one address). Codes are SHA-256 hashed and compared in constant time.
 - **roles**, **permissions**, **role_permissions** (CASCADE), **user_roles**
   - `user_roles.role_id` is RESTRICT; `granted_by` is SET NULL
   - 112 permissions (37 sensitive) and **1 role, `SUPER_ADMIN`** (as of 2026-10-06)
@@ -45,9 +46,9 @@ Verified on 2026-10-06 against:
 ### Donors
 - **donors**
   - `donor_code` (unique, `DNR-YYYY-NNNNN`)
-  - email: unique index `donors_email_lower_unique` on `lower(btrim(email))`, added by SQL in `0011`; the TS schema declares only a plain index
+  - email: unique index `donors_email_lower_unique` on `lower(btrim(email))`, added by SQL in `0011`; the TS schema declares only a plain index. Since Phase 12 the API writes and looks up every address through `normaliseEmail()` (`packages/validation`: NFC, trim, lower case). A donor changes it only through a code sent to the new address (`/me/email/change` → `/me/email/verify`); guest checkout attaches to an existing donor **without** changing the row
   - `phone` (not unique since `0011`)
-  - `tax_id_type` and `tax_id_number`: **plaintext in code**; CHECK `donors_tax_id_type_required`
+  - `tax_id_type` and `tax_id_number`; CHECK `donors_tax_id_type_required`. Since Phase 12 `tax_id_number` is **encrypted by the API** (AES-256-GCM, `FIELD_ENCRYPTION_KEY`) and stored as `enc:v1:<iv>:<ciphertext>:<tag>` (base64url). Still `text`; **no migration**. Rows written before Phase 12 may hold plaintext; they are read as-is and encrypted on their next write (bulk re-encryption in production is human-only, `DEPLOYMENT.md` §6b)
   - address fields
   - consent and notify flags
   - `total_donated`, `donation_count`
@@ -245,7 +246,7 @@ The journal (`meta/_journal.json`) lists 23 entries. Dates come from the journal
 `drizzle.__drizzle_migrations` has **24 rows** in both `sailent_dev` and `sailent_e2e`.
 - Matching the hashes against the repo files gives `0000`–`0013` and `0015`–`0022` as exact matches.
 - Row 15 (`0014`) **does not match**: the file was edited after it was applied.
-- Row 24 matches **no file**. The only database object absent from the repo SQL is the CHECK `donors_tax_id_encrypted` (`tax_id_number IS NULL OR tax_id_number LIKE 'enc:%'`). It breaks `PATCH /me` with a PAN, and accounts for the 4 failing API tests.
+- Row 24 matches **no file**. The only database object absent from the repo SQL is the CHECK `donors_tax_id_encrypted` (`tax_id_number IS NULL OR tax_id_number LIKE 'enc:%'`). Before Phase 12 it broke `PATCH /me` with a PAN and accounted for 4 failing API tests; Phase 12's `enc:v1:` encryption satisfies it, so those tests now pass **without any database change**. The unknown row itself is still unexplained (owner decision pending).
 - See `DEVELOPMENT_STATUS.md` §5.1. **The repository is the canonical schema;** the local databases have drifted.
 
 ### Migration workflow (authoritative rule; identical to `AGENTS.md` §5)

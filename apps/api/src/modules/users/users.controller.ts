@@ -35,6 +35,7 @@ import {
   updateUserSchema,
   userListQuerySchema,
 } from './dto/users.dto.js';
+import { requestClientIp } from '../../common/security/internal-request.js';
 
 /**
  * Staff account administration.
@@ -58,9 +59,9 @@ export class UsersController {
   ) {}
 
   private context(request: Request) {
-    const forwarded = request.headers['x-forwarded-for'];
     return {
-      ip: typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : request.ip,
+      // The trusted client address (Phase 12), never a raw X-Forwarded-For.
+      ip: requestClientIp(request),
       userAgent: request.headers['user-agent'],
       requestId: request.headers['x-request-id'] as string | undefined,
     };

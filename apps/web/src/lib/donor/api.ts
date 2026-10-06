@@ -90,7 +90,9 @@ export interface DonorProfile {
   email: string | null;
   phone: string | null;
   taxIdType: string | null;
-  taxIdNumber: string | null;
+  /** Phase 12: the API never returns the full number to the donor — `XXXXXX234F`. */
+  taxIdNumberMasked: string | null;
+  hasTaxId: boolean;
   addressLine1: string | null;
   addressLine2: string | null;
   city: string | null;

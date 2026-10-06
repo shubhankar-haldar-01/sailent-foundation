@@ -15,6 +15,7 @@ import {
   acceptsDonations,
   hasEnded,
   donationType,
+  normaliseEmail,
   summariseDonation,
   validateDonationComposition,
   type CampaignStatus,
@@ -532,10 +533,15 @@ export class DonationsService {
    * second donor the index then refuses to create.
    * ════════════════════════════════════════════════════════════════════════
    *
-   * A returning donor's name and phone are UPDATED from what they typed now.
-   * People marry, change employer, change number, mistype. The latest thing
-   * they told us is the best thing we know, and the receipt they are about to
-   * receive should carry it.
+   * AN EXISTING DONOR'S RECORD IS NOT CHANGED BY CHECKOUT (Phase 12).
+   *
+   * This used to overwrite a returning donor's name and phone with whatever
+   * was typed — and checkout is unauthenticated, so anybody who knew an
+   * address could rewrite that person's name on their record and on every
+   * future receipt. Now the donation is attached to the existing account and
+   * the account is left exactly as it was; its owner changes their details
+   * from their own signed-in profile. The response is identical either way,
+   * so checkout still does not reveal whether an address has an account.
    */
   private async upsertDonor(
     tx: Parameters<Parameters<DatabaseClient['db']['transaction']>[0]>[0],
@@ -544,7 +550,7 @@ export class DonationsService {
     const [firstName, ...rest] = input.name.trim().split(/\s+/);
     const lastName = rest.join(' ') || null;
 
-    const email = input.email.trim().toLowerCase();
+    const email = normaliseEmail(input.email);
 
     const [existing] = await tx
       .select({ id: donors.id })
@@ -552,18 +558,8 @@ export class DonationsService {
       .where(sql`lower(btrim(${donors.email})) = ${email}`)
       .limit(1);
 
-    if (existing) {
-      await tx
-        .update(donors)
-        .set({
-          firstName: firstName ?? input.name,
-          lastName,
-          phone: input.phone,
-          updatedAt: new Date(),
-        })
-        .where(eq(donors.id, existing.id));
-      return existing;
-    }
+    // Attached, never modified — see above.
+    if (existing) return existing;
 
     const year = new Date().getFullYear();
     const [created] = await tx

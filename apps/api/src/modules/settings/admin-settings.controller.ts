@@ -13,6 +13,7 @@ import {
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { SettingsService } from './settings.service.js';
 import { updateSettingsSchema, type UpdateSettingsInput } from './dto/settings.dto.js';
+import { requestClientIp } from '../../common/security/internal-request.js';
 
 /**
  * Site settings — staff only, and nothing here is public.
@@ -44,9 +45,9 @@ export class AdminSettingsController {
   constructor(private readonly settings: SettingsService) {}
 
   private context(request: Request) {
-    const forwarded = request.headers['x-forwarded-for'];
     return {
-      ipAddress: typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : request.ip,
+      // The trusted client address (Phase 12), never a raw X-Forwarded-For.
+      ipAddress: requestClientIp(request),
       userAgent: request.headers['user-agent'],
       requestId: request.headers['x-request-id'] as string | undefined,
     };

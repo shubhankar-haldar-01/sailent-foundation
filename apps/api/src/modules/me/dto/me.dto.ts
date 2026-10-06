@@ -36,7 +36,9 @@ const baseProfileSchema = z
   .object({
     firstName: z.string().trim().min(1).max(80).optional(),
     lastName: z.string().trim().max(80).optional(),
-    email: z.string().trim().email().max(160).optional(),
+    // `email` is deliberately absent (Phase 12): an address changes only
+    // through the verified flow (`emailChangeRequestSchema` below), and
+    // sending it here is rejected by `.strict()`.
 
     addressLine1: z.string().trim().max(160).optional(),
     addressLine2: z.string().trim().max(160).optional(),
@@ -89,6 +91,22 @@ export const updateProfileSchema = baseProfileSchema.superRefine((value, ctx) =>
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+/** Start an email change: the new address, which will receive a code. */
+export const emailChangeRequestSchema = z
+  .object({ email: z.string().trim().email('Enter a valid email address').max(160) })
+  .strict();
+
+/** Finish it: the same address and the six-digit code sent to it. */
+export const emailChangeVerifySchema = z
+  .object({
+    email: z.string().trim().email('Enter a valid email address').max(160),
+    code: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, 'The code is six digits'),
+  })
+  .strict();
 
 /**
  * Notification and visibility preferences.
@@ -146,7 +164,6 @@ export const saveCampaignSchema = z.object({ campaignId: z.string().uuid() }).st
 export class UpdateProfileDto {
   @ApiPropertyOptional({ maxLength: 80 }) firstName?: string;
   @ApiPropertyOptional({ maxLength: 80 }) lastName?: string;
-  @ApiPropertyOptional({ format: 'email' }) email?: string;
   @ApiPropertyOptional() addressLine1?: string;
   @ApiPropertyOptional() addressLine2?: string;
   @ApiPropertyOptional() city?: string;

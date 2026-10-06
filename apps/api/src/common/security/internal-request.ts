@@ -61,3 +61,26 @@ export function trustedClientIp(headers: HeaderBag, secret: string | undefined):
   if (!ip || isIP(ip) === 0) return null;
   return ip;
 }
+
+/**
+ * The client address to RECORD — on a session, in an audit entry, against a
+ * sign-in code (Phase 12).
+ *
+ * The same rule as the rate limiter: the address the web server vouched for
+ * with the internal secret, otherwise the connecting address. It replaces 18
+ * copies of `X-Forwarded-For`'s first entry, which a browser could set to
+ * anything and the BFF passed straight through — so every audited IP was
+ * whatever the person being audited chose to write.
+ *
+ * Reads `INTERNAL_API_SECRET` from the process environment, which is where
+ * `AppConfig` validated it from at startup, so controllers need no extra
+ * injection to call it.
+ */
+export function requestClientIp(request: {
+  headers: HeaderBag;
+  ip?: string | undefined;
+}): string | undefined {
+  return (
+    trustedClientIp(request.headers, process.env.INTERNAL_API_SECRET || undefined) ?? request.ip
+  );
+}

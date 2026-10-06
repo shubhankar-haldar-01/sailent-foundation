@@ -316,12 +316,24 @@ describe('Donor account (integration)', () => {
         .expect(200);
 
       const body = (
-        response.body as Envelope<{ firstName: string; city: string; taxIdNumber: string }>
+        response.body as Envelope<{
+          firstName: string;
+          city: string;
+          hasTaxId: boolean;
+          taxIdNumberMasked: string;
+        }>
       ).data!;
       expect(body.firstName).toBe('Alicia');
       expect(body.city).toBe('Ranchi');
-      // Normalised, because the Income Tax Department's format is upper-case.
-      expect(body.taxIdNumber).toBe('ABCDE1234F');
+      /*
+        Normalised upper-case, because the Income Tax Department's format is —
+        and since Phase 12 shown back MASKED: the full number is stored
+        encrypted and is not returned to the donor's browser. The admin test
+        below proves the stored number is the upper-cased one.
+      */
+      expect(body.hasTaxId).toBe(true);
+      expect(body.taxIdNumberMasked).toBe('XXXXXX234F');
+      expect(body).not.toHaveProperty('taxIdNumber');
     });
 
     /**

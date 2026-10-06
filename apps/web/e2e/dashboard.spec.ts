@@ -288,6 +288,22 @@ test.describe('signed in as a donor', () => {
    * profile shows them and does not offer a field for them. A form input named
    * `totalDonated` appearing here would mean somebody had added one.
    */
+  /**
+   * Phase 12. The address changes only through a code sent to the NEW
+   * address, so the profile's own field is read-only and the change has a
+   * section of its own.
+   */
+  test('changes the email address only through a confirmation code', async ({ page }) => {
+    await page.goto('/dashboard/profile');
+    // Exact: "New email address" and the change section's label also match.
+    await expect(page.getByRole('textbox', { name: 'Email address', exact: true })).toHaveAttribute(
+      'readonly',
+      '',
+    );
+    await expect(page.getByRole('heading', { name: 'Change your email address' })).toBeVisible();
+    await expect(page.getByLabel('New email address')).toBeVisible();
+  });
+
   test('the profile offers no way to edit the lifetime totals', async ({ page }, testInfo) => {
     const donor = donorFor(testInfo.project.name);
     await page.goto('/dashboard/profile');
@@ -295,8 +311,8 @@ test.describe('signed in as a donor', () => {
     await expect(page.locator('[name="totalDonated"]')).toHaveCount(0);
     await expect(page.locator('[name="donationCount"]')).toHaveCount(0);
     await expect(page.locator('[name="donorCode"]')).toHaveCount(0);
-    // The address is the sign-in identifier, so it is not a profile field
-    // either — changing it is a support operation, like the phone number.
+    // The phone number is not a profile field either; the email address is
+    // changed only through a confirmation code (the test above).
     await expect(page.locator('[name="phone"]')).toHaveCount(0);
 
     // But they are visible, because a donor should see what is held about them.

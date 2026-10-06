@@ -39,7 +39,9 @@ There are three deployables and one shared database. The packages are consumed a
   - `publicCache(tag)` = `{ revalidate: 300, tags: [tag] }`. Admin server actions call `revalidateTag` and `revalidatePath` after writes.
 - **Admin data** goes through `src/lib/admin/api.ts` (`adminFetch`, which uses the staff token and `no-store`) and `src/lib/admin/actions.ts`. That file holds about 70 server actions and does no permission checks of its own; the API enforces them.
 - **Donor data** goes through `src/lib/donor/*` (`donorFetch`, actions, `readDonorViewer`).
-- **BFF** `src/app/api/bff/[...path]/route.ts`: proxies browser calls to the API. It attaches the donor token for `me/*` paths and the staff token for everything else.
+- **BFF** `src/app/api/bff/[...path]/route.ts`: proxies browser calls to the API. It attaches the donor token for `me/*` paths and the staff token for everything else. Since Phase 12 it first refuses (403) any POST/PATCH/PUT/DELETE whose `Origin` is not this site, `NEXT_PUBLIC_APP_URL` or `TRUSTED_ORIGINS` — or, with no `Origin`, lacks `Sec-Fetch-Site: same-origin` (`src/lib/security/origin-check.ts`).
+- **Security headers** (`next.config.ts`): `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`, `Permissions-Policy`, a Content-Security-Policy (`src/lib/security/content-security-policy.ts`, Razorpay Checkout allowed) and, for `APP_ENV=production`, HSTS.
+- **Startup** (`src/instrumentation.ts`): validates `webEnvSchema` and refuses to start production with mock data, demo organisation data, or the internal secret / client-IP header missing.
 - **Middleware** `src/middleware.ts` checks only that the session cookie *exists* for `/admin/*` and `/dashboard/*`. This is for redirect UX; it is not authorization.
 - **Tokens:** `src/lib/auth/token-store.ts` keeps one httpOnly JSON cookie per audience: `{accessToken, refreshToken, expiresAt, actor}`. It refreshes 60s before expiry. There is a known risk: a refresh during a server-component render cannot set the cookie (see `SECURITY.md`).
 - **SEO:** `src/lib/seo/*` provides `buildMetadata`, canonical URLs, JSON-LD builders and the sitemap segments (route handlers `sitemap*.xml`).
@@ -48,7 +50,7 @@ There are three deployables and one shared database. The packages are consumed a
 
 ## 3. Backend — `apps/api`
 
-- NestJS. The global prefix is `api/v1` (`packages/config` `API_PREFIX`). There are 26 modules (`src/app.module.ts`): Database, Redis, Queue, Audit, Auth, Content, Users, Catalog, Products, Donations, Events, Team, Volunteers, Impact, Me, Donors, Settings, Stories, Blog, Pages, Storage, Media, Documents, Notifications, Reports and Health.
+- NestJS. The global prefix is `api/v1` (`packages/config` `API_PREFIX`). There are 27 modules (`src/app.module.ts`): Database, Redis, Queue, Audit, Security (field encryption, Phase 12), Auth, Content, Users, Catalog, Products, Donations, Events, Team, Volunteers, Impact, Me, Donors, Settings, Stories, Blog, Pages, Storage, Media, Documents, Notifications, Reports and Health.
 - **Request pipeline:**
   1. `RequestIdMiddleware` sets the request ID.
   2. helmet; HSTS is enabled in production only.
@@ -88,8 +90,16 @@ sequenceDiagram
   A-->>W: data (envelope)
 ```
 
-- **Access JWT:** HS256, with a per-audience key derived from `JWT_ACCESS_SECRET`.
-- **Refresh tokens:** opaque; stored as SHA-256 in `sessions`; rotated within a family; reuse revokes the family.
+- **Who signs in how (owner decision, Phase 12):**
+  - **Staff:** email and password (Argon2id), lockout after 5 failures for 15 minutes, `@Sensitive` re-authentication. **Staff TOTP/2FA is not required and not implemented**, by owner decision; do not add it unless the owner asks.
+  - **Donors and volunteers:** a six-digit code by email. A code is sent to an address held by a donor account **or a live volunteer record**; the first sign-in opens the general (`donors`) account, which `/me/volunteering` links to the volunteer by email.
+  - Every email address is normalised with `normaliseEmail()` (`packages/validation`).
+  - A donor's address changes only through a code sent to the new address (`POST /me/email/change`, `POST /me/email/verify`).
+- **Access JWT:** **HS256 only** — signed with an explicit algorithm and verified with `algorithms: ['HS256']` (`token.service.ts`). Per-audience key derived from `JWT_ACCESS_SECRET`. The session row is checked on every request, so logout and revocation take effect at once.
+- **Refresh tokens:** opaque; stored as SHA-256 in `sessions`; rotated within a family. Rotation claims the old token atomically (`UPDATE … WHERE revoked_at IS NULL RETURNING`, in one transaction with the new session); a second use — including the loser of a race — revokes the family.
+- **Client addresses:** the API records and rate-limits on the address the web server vouches for (`x-sailent-client-ip` with `INTERNAL_API_SECRET`), otherwise the connecting address — never `X-Forwarded-For` (`requestClientIp()`, `common/security/internal-request.ts`).
+- **Audit:** sign-ins, failures, lockouts, re-authentication, logout, refresh-token reuse and email changes are written to `audit_logs`, without passwords, codes, tokens or PANs.
+- **PAN at rest:** `FieldEncryptionService` (AES-256-GCM, `FIELD_ENCRYPTION_KEY`) encrypts `donors.tax_id_number`; donors see only a masked value.
 - **Authorization:** permission strings, deny-by-default. Permissions are resolved from the database on every request. There is one role, `SUPER_ADMIN`.
 
 ## 6. Donation and payment flow (implemented)
@@ -219,7 +229,7 @@ sequenceDiagram
 
 Decisions that are **not** implemented as documented:
 - **A4:** the webhook is processed inline, not through a queue.
-- **A8:** TOTP is not in effect.
+- **A8:** superseded — staff TOTP/2FA is **not required**, by owner decision (2026-10-07). Staff use email and password.
 - **A10:** there is no database-level audit-log immutability.
 
 See `DEVELOPMENT_STATUS.md` §9.

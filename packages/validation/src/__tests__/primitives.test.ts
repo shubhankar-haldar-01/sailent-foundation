@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { emailSchema, phoneSchema, slugSchema } from '../schemas/primitives.js';
+import { emailSchema, normaliseEmail, phoneSchema, slugSchema } from '../schemas/primitives.js';
 import { panSchema, taxIdSchema } from '../schemas/identity.js';
 import {
   donationAmountSchema,
@@ -140,5 +140,13 @@ describe('pagination', () => {
   it('parses the leading-hyphen descending convention', () => {
     expect(sortSchema.parse('-createdAt')).toEqual({ field: 'createdAt', direction: 'desc' });
     expect(sortSchema.parse('title')).toEqual({ field: 'title', direction: 'asc' });
+  });
+});
+
+describe('normaliseEmail', () => {
+  it('trims, lower-cases and Unicode-normalises, so one mailbox has one spelling', () => {
+    expect(normaliseEmail('  Asha@Example.COM ')).toBe('asha@example.com');
+    // é composed (U+00E9) and decomposed (e + U+0301) are the same address.
+    expect(normaliseEmail('jos\u00e9@example.com')).toBe(normaliseEmail('jose\u0301@example.com'));
   });
 });

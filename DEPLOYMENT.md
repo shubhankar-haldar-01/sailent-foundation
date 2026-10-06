@@ -59,7 +59,8 @@ Copy `.env.example` to `.env` at the repo root (`.env` is gitignored), then adju
 | Runtime | `APP_ENV=development`, `NODE_ENV=development` (these are the defaults) |
 
 **Optional locally:**
-- `FEATURE_MOCK_DATA`: defaults to on outside production; it enables fixture fallback and the dev OTP log.
+- `FEATURE_MOCK_DATA`: defaults to on outside production; it enables fixture fallback and the dev OTP log. `false` or `0` turns it off; it is always off when `APP_ENV=production`.
+- `FIELD_ENCRYPTION_KEY`: without it, saving a donor's PAN returns 503 (everything else works). Generate a local-only key with `openssl rand -base64 32`; the API tests use their own fixed test key.
 - `JWT_*`: a development fallback secret is used if unset.
 - `RAZORPAY_*`: without them, payments are unavailable (§6).
 - `BREVO_*`: without them, email is not sent.
@@ -180,6 +181,28 @@ The API tests mock the Razorpay client. A live test-mode payment has never been 
 **Checkout retries.** A failed attempt in Razorpay's window no longer ends the checkout; the donor can retry on the same order, and pressing Donate again for the same basket reopens the same donation and order. `POST /donations` accepts an optional `Idempotency-Key` (16–128 of `A–Z a–z 0–9 - _`), held in Redis for 30 minutes.
 
 **Razorpay dashboard (human only):** live keys in production (`rzp_live_…`; a test key fails validation); the webhook at `{API}/api/v1/payments/razorpay/webhook` with its own secret, subscribed to `payment.captured`, `payment.failed`, `refund.created` and `refund.processed`; automatic capture on; **international payments disabled** (the organisation is not FCRA-registered). Verify Checkout on a real Android device during the sandbox trial — `Permissions-Policy` now allows `payment` for Razorpay's origins only.
+
+## 6b. Account and security configuration (Phase 12, 2026-10-07)
+
+**Staff authentication** is email and password. Staff TOTP/2FA is **not required** (owner decision) and there is nothing to configure for it.
+
+**`FIELD_ENCRYPTION_KEY` (API only; required in production).** Encrypts donors' PANs (AES-256-GCM). 32 random bytes as base64 (`openssl rand -base64 32`) or 64 hex characters; the API refuses to start in production without a valid key. **Human only:**
+- generate it once per environment, store it in the hosting provider's secret store and a separate secure backup. **Losing it makes every stored PAN unreadable;** anyone holding it and a database copy can read them;
+- never reuse the local or test key, and never give it to the web or worker;
+- rotation is not automated: changing the key requires decrypting with the old key and re-encrypting with the new one, run by a human with approval;
+- **existing plaintext PANs in production** (written before Phase 12) keep working — they are read as-is and encrypted on their next save. Re-encrypting them in bulk is a human-prepared, human-run, owner-approved step; agents do not run it (`AGENTS.md` §8).
+
+**Web server (production).** At startup the web validates its environment (`apps/web/src/instrumentation.ts`) and refuses to run unless:
+- `FEATURE_MOCK_DATA=false`;
+- `INTERNAL_API_SECRET` (same value as the API) and `CLIENT_IP_HEADER` are set (§6a);
+- `NEXT_PUBLIC_APP_URL` is the public `https://` address;
+- `apps/web/src/lib/demo-org.ts` no longer holds DEMO organisation data (replace it with the real details).
+
+Set **`APP_ENV=production`** when building and starting the web: it turns on HSTS (two years, subdomains, no preload). Serve the site over HTTPS only before doing so. `TRUSTED_ORIGINS` (comma-separated) lists any extra origins allowed to POST through the BFF — normally empty, because the site's own origin is always allowed.
+
+**Worker (production):** `APP_PUBLIC_URL` must be the public `https://` address used in email links.
+
+**Content-Security-Policy.** Scripts load only from the site and `checkout.razorpay.com`. If a new third-party script or embed is added (analytics, chat, video), its origin must be added to `apps/web/src/lib/security/content-security-policy.ts`, or the browser will block it.
 
 ## 7. External services
 

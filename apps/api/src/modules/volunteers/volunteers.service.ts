@@ -7,6 +7,7 @@ import {
   isPendingReview,
   requiresVolunteerId,
   type VolunteerStatus,
+  normaliseEmail,
 } from '@sailent/validation';
 import type { AuthenticatedActor } from '@sailent/types';
 
@@ -98,7 +99,7 @@ export class VolunteersService {
    */
   async apply(input: ApplyAsVolunteerInput, context: AuditContext) {
     const phone = input.phone.replace(/[^\d]/g, '').slice(-10);
-    const email = input.email.trim().toLowerCase();
+    const email = normaliseEmail(input.email);
 
     /**
      * IDENTITY IS THE NUMBER *OR* THE ADDRESS, NOT THE NUMBER ALONE.
@@ -627,7 +628,7 @@ export class VolunteersService {
         volunteerId: volunteers.volunteerId,
       })
       .from(volunteers)
-      .where(sql`lower(btrim(${volunteers.email})) = ${email.trim().toLowerCase()}`)
+      .where(sql`lower(btrim(${volunteers.email})) = ${normaliseEmail(email)}`)
       .limit(1);
     return row ?? null;
   }

@@ -10,6 +10,21 @@ import { z } from 'zod';
 
 export const uuidSchema = z.string().uuid('Must be a valid UUID');
 
+/**
+ * THE one spelling of an email address (Phase 12).
+ *
+ * Every comparison of an address — sign-in, sign-in codes, donor and volunteer
+ * lookups, checkout, email changes, uniqueness — uses this, and so do the
+ * unique indexes it must agree with (`lower(btrim(email))`, migrations `0011`
+ * and `0018`). Unicode-normalised (NFC) first, so a composed and a decomposed
+ * spelling of the same character are one address, then trimmed and
+ * lower-cased. Two places with two rules is how a lookup misses a row the
+ * index considers a duplicate.
+ */
+export function normaliseEmail(value: string): string {
+  return value.normalize('NFC').trim().toLowerCase();
+}
+
 export const emailSchema = z
   .string()
   .trim()

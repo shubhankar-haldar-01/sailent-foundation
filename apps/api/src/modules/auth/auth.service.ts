@@ -1,10 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { createHash, randomInt } from 'node:crypto';
-import { and, eq, gt, isNull, sql } from 'drizzle-orm';
+import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
+import { and, eq, gt, isNull, notInArray, sql } from 'drizzle-orm';
 
 import {
   donors,
   otpCodes,
+  volunteers,
   permissions as permissionsTable,
   rolePermissions,
   roles,
@@ -14,8 +15,10 @@ import {
   type DatabaseClient,
 } from '@sailent/database';
 import type { AuthenticatedActor, TokenAudience } from '@sailent/types';
+import { normaliseEmail } from '@sailent/validation';
 
 import { AppConfig } from '../../config/app.config.js';
+import { AuditService } from '../audit/audit.service.js';
 import { QUEUE_NAMES, QueueService } from '../queue/queue.service.js';
 import { DATABASE } from '../database/database.module.js';
 import { referenceCode } from '../../common/utils/reference.js';
@@ -29,21 +32,28 @@ import { PasswordService } from './password.service.js';
 import { TokenService } from './token.service.js';
 import { TotpService } from './totp.service.js';
 
+/*
+  One spelling of an address, used everywhere: `normaliseEmail` from
+  @sailent/validation (Phase 12). People do not type their own email
+  consistently — a capital from a phone keyboard, a space pasted from a contact
+  card — and every one of those is the same mailbox. It agrees with the unique
+  indexes on `lower(btrim(email))` (migrations `0011`, `0018`).
+*/
+
 /**
- * One spelling of an address, used everywhere.
- *
- * People do not type their own email consistently — a capital first letter from
- * a phone keyboard, a trailing space pasted from a contact card. Every one of
- * those is the same mailbox, and if they are not normalised in ONE place they
- * become separate rate-limit buckets, separate OTP rows, and an address that
- * fails to match the donor it belongs to.
- *
- * This matches `donors_email_lower_unique`, the functional index created in
- * migration `0011`. The two must agree, or a lookup misses a row the index
- * considers a duplicate.
+ * A pseudonymous handle for an address in an audit entry about an attempt that
+ * matched no account: enough to see the same address failing repeatedly,
+ * without writing the address itself into the log of somebody who never had an
+ * account.
  */
-function normaliseEmail(value: string): string {
-  return value.trim().toLowerCase();
+function emailHandle(email: string): string {
+  return createHash('sha256').update(normaliseEmail(email)).digest('hex').slice(0, 16);
+}
+
+/** Request context for audit entries: the trusted client address and user agent. */
+export interface AuthRequestContext {
+  ip?: string;
+  userAgent?: string;
 }
 
 export interface IssuedSession {
@@ -115,6 +125,7 @@ export class AuthService {
     private readonly totp: TotpService,
     private readonly config: AppConfig,
     private readonly queue: QueueService,
+    private readonly audit: AuditService,
   ) {}
 
   // -------------------------------------------------------------------------
@@ -128,10 +139,12 @@ export class AuthService {
     ip?: string;
     userAgent?: string;
   }): Promise<IssuedSession> {
+    const email = normaliseEmail(input.email);
+    const context = { ipAddress: input.ip, userAgent: input.userAgent };
     const [user] = await this.database.db
       .select()
       .from(users)
-      .where(sql`lower(${users.email}) = lower(${input.email})`)
+      .where(sql`lower(btrim(${users.email})) = ${email}`)
       .limit(1);
 
     /**
@@ -147,10 +160,27 @@ export class AuthService {
         '$argon2id$v=19$m=65536,t=3,p=4$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
         input.password,
       );
+      await this.audit.record({
+        action: 'auth.staff.login_failed',
+        entityType: 'auth',
+        actorType: 'user',
+        newValues: { reason: 'unknown_account', emailHandle: emailHandle(email) },
+        severity: 'warning',
+        ...context,
+      });
       throw new UnauthenticatedException('Those details do not match an account.');
     }
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
+      await this.audit.record({
+        action: 'auth.staff.login_failed',
+        entityType: 'user',
+        entityId: user.id,
+        userId: user.id,
+        newValues: { reason: 'locked' },
+        severity: 'warning',
+        ...context,
+      });
       throw new RateLimitException('Too many failed attempts. Try again in a few minutes.');
     }
 
@@ -158,13 +188,31 @@ export class AuthService {
       // Status is checked AFTER the password, so an attacker cannot use the
       // error to discover which accounts exist and are suspended.
       const valid = await this.passwords.verify(user.passwordHash, input.password);
-      if (!valid) await this.recordFailedLogin(user.id, user.failedLoginCount);
+      if (!valid) await this.recordFailedLogin(user.id, user.failedLoginCount, context);
+      await this.audit.record({
+        action: 'auth.staff.login_failed',
+        entityType: 'user',
+        entityId: user.id,
+        userId: user.id,
+        newValues: { reason: 'inactive' },
+        severity: 'warning',
+        ...context,
+      });
       throw new ForbiddenException('This account is not active. Contact an administrator.');
     }
 
     const valid = await this.passwords.verify(user.passwordHash, input.password);
     if (!valid) {
-      await this.recordFailedLogin(user.id, user.failedLoginCount);
+      await this.recordFailedLogin(user.id, user.failedLoginCount, context);
+      await this.audit.record({
+        action: 'auth.staff.login_failed',
+        entityType: 'user',
+        entityId: user.id,
+        userId: user.id,
+        newValues: { reason: 'wrong_password' },
+        severity: 'warning',
+        ...context,
+      });
       throw new UnauthenticatedException('Those details do not match an account.');
     }
 
@@ -192,7 +240,7 @@ export class AuthService {
       if (!this.totp.verify(user.totpSecret, input.totpCode)) {
         // A wrong second factor counts against the lockout too — otherwise the
         // code space could be brute-forced once a password is known.
-        await this.recordFailedLogin(user.id, user.failedLoginCount);
+        await this.recordFailedLogin(user.id, user.failedLoginCount, context);
         throw new UnauthenticatedException('That code is not correct.');
       }
     }
@@ -207,16 +255,30 @@ export class AuthService {
       })
       .where(eq(users.id, user.id));
 
-    return this.issueSession({
+    const session = await this.issueSession({
       subject: user.id,
       audience: 'staff',
       permissions,
       ip: input.ip,
       userAgent: input.userAgent,
     });
+
+    await this.audit.record({
+      action: 'auth.staff.login_succeeded',
+      entityType: 'user',
+      entityId: user.id,
+      userId: user.id,
+      ...context,
+    });
+
+    return session;
   }
 
-  private async recordFailedLogin(userId: string, currentCount: number): Promise<void> {
+  private async recordFailedLogin(
+    userId: string,
+    currentCount: number,
+    context: { ipAddress?: string; userAgent?: string } = {},
+  ): Promise<void> {
     const next = currentCount + 1;
     const lock = next >= MAX_FAILED_LOGINS;
 
@@ -227,6 +289,18 @@ export class AuthService {
         lockedUntil: lock ? new Date(Date.now() + LOCKOUT_MINUTES * 60_000) : null,
       })
       .where(eq(users.id, userId));
+
+    if (lock) {
+      await this.audit.record({
+        action: 'auth.staff.locked',
+        entityType: 'user',
+        entityId: userId,
+        userId,
+        newValues: { failedAttempts: next, lockedForMinutes: LOCKOUT_MINUTES },
+        severity: 'critical',
+        ...context,
+      });
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -263,7 +337,7 @@ export class AuthService {
       throw new RateLimitException('Too many codes requested. Try again in a few minutes.');
     }
 
-    const code = String(randomInt(100_000, 999_999));
+    const code = String(randomInt(100_000, 1_000_000));
 
     await this.database.db.insert(otpCodes).values({
       identifier,
@@ -304,17 +378,22 @@ export class AuthService {
   }
 
   /**
-   * Get the code to the donor.
+   * Get the code to the account holder.
    *
    * ══════════════════════════════════════════════════════════════════════════
-   * SENDS ONLY TO AN ADDRESS ALREADY ON A DONOR RECORD.
+   * SENDS ONLY TO AN ADDRESS WE ALREADY HOLD — ON A DONOR OR A VOLUNTEER RECORD.
    *
    * The caller supplies the address, so the obvious risk is using this endpoint
    * to mail a code — or just mail anything — to an arbitrary inbox. The lookup
-   * below is what prevents it: an address with no donor behind it gets nothing.
-   * A code sent to a stranger would be useless anyway, since `verifyOtp`
-   * refuses without a donor, but "useless" is not the same as "not sent" when
-   * somebody else's inbox is the thing receiving it.
+   * below is what prevents it: an address we have no record of gets nothing.
+   *
+   * VOLUNTEERS COUNT (Phase 12). This used to look at donors only, so somebody
+   * who applied to volunteer without ever donating was told a code was on its
+   * way and never received one — locked out of their own assignments, hours
+   * and certificates. A live volunteer record (anything but rejected or
+   * archived) now qualifies too. `verifyOtp` then opens the general account
+   * (`donors` is the public account table) on first sign-in, as it already
+   * did; the volunteer record is found from it by address.
    *
    * SILENT WHEN THERE IS NO DONOR, for the same reason `requestOtp` is: it
    * answers identically either way, and that is what stops this being a way to
@@ -328,21 +407,16 @@ export class AuthService {
    * ══════════════════════════════════════════════════════════════════════════
    */
   private async deliverOtp(email: string, code: string): Promise<void> {
-    const [donor] = await this.database.db
-      .select({ email: donors.email, firstName: donors.firstName, lastName: donors.lastName })
-      .from(donors)
-      .where(sql`lower(btrim(${donors.email})) = ${email}`)
-      .limit(1);
+    const recipient = await this.signInRecipient(email);
+    if (!recipient) return;
 
-    if (!donor?.email) return;
-
-    const name = [donor.firstName, donor.lastName].filter(Boolean).join(' ').trim() || null;
+    const { name } = recipient;
 
     try {
       await this.queue.enqueue(
         QUEUE_NAMES.EMAIL,
         'donor.login_code',
-        { email: donor.email, name, code, ttlMinutes: OTP_TTL_MINUTES },
+        { email: recipient.email, name, code, ttlMinutes: OTP_TTL_MINUTES },
         {
           /*
             This payload IS a credential, so it does not get the default
@@ -360,6 +434,52 @@ export class AuthService {
         `Could not enqueue a donor sign-in code: ${error instanceof Error ? error.message : 'unknown error'}`,
       );
     }
+  }
+
+  /**
+   * Who a sign-in code may be sent to: a donor account at this address, or —
+   * failing that — a live volunteer record. Null when we hold neither, and the
+   * caller then sends nothing (and says nothing different).
+   */
+  private async signInRecipient(
+    email: string,
+  ): Promise<{ email: string; name: string | null } | null> {
+    const [donor] = await this.database.db
+      .select({ email: donors.email, firstName: donors.firstName, lastName: donors.lastName })
+      .from(donors)
+      .where(sql`lower(btrim(${donors.email})) = ${email}`)
+      .limit(1);
+
+    if (donor?.email) {
+      return {
+        email: donor.email,
+        name: [donor.firstName, donor.lastName].filter(Boolean).join(' ').trim() || null,
+      };
+    }
+
+    const [volunteer] = await this.database.db
+      .select({
+        email: volunteers.email,
+        firstName: volunteers.firstName,
+        lastName: volunteers.lastName,
+      })
+      .from(volunteers)
+      .where(
+        and(
+          sql`lower(btrim(${volunteers.email})) = ${email}`,
+          notInArray(volunteers.status, ['rejected', 'archived']),
+        ),
+      )
+      .limit(1);
+
+    if (volunteer?.email) {
+      return {
+        email: volunteer.email,
+        name: [volunteer.firstName, volunteer.lastName].filter(Boolean).join(' ').trim() || null,
+      };
+    }
+
+    return null;
   }
 
   async verifyOtp(input: {
@@ -384,21 +504,39 @@ export class AuthService {
       .orderBy(sql`${otpCodes.createdAt} DESC`)
       .limit(1);
 
+    const context = { ipAddress: input.ip, userAgent: input.userAgent };
+    const failed = (reason: string) =>
+      this.audit.record({
+        action: 'auth.donor.otp_failed',
+        entityType: 'auth',
+        actorType: 'donor',
+        newValues: { reason, emailHandle: emailHandle(identifier) },
+        severity: 'warning',
+        ...context,
+      });
+
     if (!record) {
+      await failed('no_live_code');
       throw new UnauthenticatedException('That code has expired. Request a new one.');
     }
 
     if (record.attempts >= OTP_MAX_ATTEMPTS) {
+      await failed('too_many_attempts');
       throw new RateLimitException('Too many attempts on this code. Request a new one.');
     }
 
-    const matches = record.codeHash === createHash('sha256').update(input.code).digest('hex');
+    // Constant-time: both sides are SHA-256 hex digests of equal length.
+    const presented = Buffer.from(createHash('sha256').update(input.code).digest('hex'));
+    const matches =
+      presented.length === record.codeHash.length &&
+      timingSafeEqual(presented, Buffer.from(record.codeHash));
 
     if (!matches) {
       await this.database.db
         .update(otpCodes)
         .set({ attempts: record.attempts + 1 })
         .where(eq(otpCodes.id, record.id));
+      await failed('wrong_code');
       throw new UnauthenticatedException('That code is not correct.');
     }
 
@@ -475,7 +613,7 @@ export class AuthService {
       throw new UnauthenticatedException('Could not open an account for that address.');
     }
 
-    return this.issueSession({
+    const session = await this.issueSession({
       subject: account.id,
       audience: 'donor',
       permissions: [],
@@ -485,6 +623,17 @@ export class AuthService {
       ip: input.ip,
       userAgent: input.userAgent,
     });
+
+    await this.audit.record({
+      action: donor ? 'auth.donor.otp_verified' : 'auth.donor.account_created',
+      entityType: 'donor',
+      entityId: account.id,
+      actorType: 'donor',
+      userId: account.id,
+      ...context,
+    });
+
+    return session;
   }
 
   // -------------------------------------------------------------------------
@@ -543,7 +692,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken: refresh.token,
-      expiresIn: 15 * 60,
+      expiresIn: this.tokens.accessTtlSeconds(),
       actor: {
         id: input.subject,
         audience: input.audience,
@@ -577,53 +726,89 @@ export class AuthService {
 
     if (!session) throw new UnauthenticatedException('That session is no longer valid.');
 
-    if (session.revokedAt) {
+    const subject = session.userId ?? session.donorId;
+    const reuse = async () => {
       this.logger.error(
         { sessionId: session.id, family: session.tokenFamily },
         'Refresh token reuse detected — revoking the whole family',
       );
       await this.revokeFamily(session.tokenFamily, 'reuse_detected');
-      throw new UnauthenticatedException('That session is no longer valid.');
-    }
+      await this.audit.record({
+        action: 'auth.refresh_reuse_detected',
+        entityType: 'session',
+        entityId: session.id,
+        actorType: session.audience === 'staff' ? 'user' : 'donor',
+        ...(subject ? { userId: subject } : {}),
+        newValues: { audience: session.audience },
+        severity: 'critical',
+        ipAddress: input.ip,
+        userAgent: input.userAgent,
+      });
+      return new UnauthenticatedException('That session is no longer valid.');
+    };
+
+    if (session.revokedAt) throw await reuse();
 
     if (session.expiresAt < new Date()) {
       throw new UnauthenticatedException('That session has expired.');
     }
 
-    const subject = session.userId ?? session.donorId;
     if (!subject) throw new UnauthenticatedException('That session is no longer valid.');
 
     // Permissions are resolved PER REFRESH, not carried forward, so a role
     // change takes effect without waiting for the user to log out.
     const permissions = session.audience === 'staff' ? await this.resolvePermissions(subject) : [];
 
-    await this.database.db
-      .update(sessions)
-      .set({ revokedAt: new Date(), revokedReason: 'rotated' })
-      .where(eq(sessions.id, session.id));
-
     const rotated = this.tokens.rotateRefreshToken(session.tokenFamily);
     const expiresAt = new Date(Date.now() + this.tokens.refreshTtlMs(session.audience));
 
-    const [next] = await this.database.db
-      .insert(sessions)
-      .values({
-        userId: session.userId,
-        donorId: session.donorId,
-        audience: session.audience,
-        tokenFamily: session.tokenFamily,
-        tokenHash: rotated.hash,
-        expiresAt,
-        ipAddress: input.ip ?? null,
-        userAgent: input.userAgent ?? null,
-        // Carried across rotation. Refreshing a token is not itself a
-        // re-authentication, but neither does it undo one — the five-minute
-        // window still runs from the moment the password was actually re-entered.
-        reauthenticatedAt: session.reauthenticatedAt,
-      })
-      .returning({ id: sessions.id });
+    /**
+     * ATOMIC ROTATION (Phase 12).
+     *
+     * The old token is CLAIMED with a conditional update — `revoked_at IS NULL`
+     * in the WHERE, and the row count decides. It used to be read, checked and
+     * then updated, so two requests presenting the same token at the same
+     * moment could both see it live and both be issued a new session: a
+     * stolen-and-replayed token raced the real one and won a session of its
+     * own. Now exactly one request can claim it; the other finds nothing to
+     * claim, which is a replay by definition, and the family is revoked.
+     *
+     * The claim and the new session are one transaction, so a failure in
+     * between cannot leave the family with no live token.
+     */
+    const next = await this.database.db.transaction(async (tx) => {
+      const claimed = await tx
+        .update(sessions)
+        .set({ revokedAt: new Date(), revokedReason: 'rotated' })
+        .where(and(eq(sessions.id, session.id), isNull(sessions.revokedAt)))
+        .returning({ id: sessions.id });
 
-    if (!next) throw new ConflictException('Could not refresh the session.');
+      if (claimed.length === 0) return null;
+
+      const [inserted] = await tx
+        .insert(sessions)
+        .values({
+          userId: session.userId,
+          donorId: session.donorId,
+          audience: session.audience,
+          tokenFamily: session.tokenFamily,
+          tokenHash: rotated.hash,
+          expiresAt,
+          ipAddress: input.ip ?? null,
+          userAgent: input.userAgent ?? null,
+          // Carried across rotation. Refreshing a token is not itself a
+          // re-authentication, but neither does it undo one — the five-minute
+          // window still runs from the moment the password was actually re-entered.
+          reauthenticatedAt: session.reauthenticatedAt,
+        })
+        .returning({ id: sessions.id });
+
+      if (!inserted) throw new ConflictException('Could not refresh the session.');
+      return inserted;
+    });
+
+    // Somebody else claimed this token first: a replay.
+    if (!next) throw await reuse();
 
     return {
       accessToken: this.tokens.issueAccessToken({
@@ -632,7 +817,7 @@ export class AuthService {
         sessionId: next.id,
       }),
       refreshToken: rotated.token,
-      expiresIn: 15 * 60,
+      expiresIn: this.tokens.accessTtlSeconds(),
       actor: {
         id: subject,
         audience: session.audience,
@@ -642,15 +827,33 @@ export class AuthService {
     };
   }
 
-  async logout(refreshToken: string): Promise<void> {
+  async logout(refreshToken: string, context: AuthRequestContext = {}): Promise<void> {
     const hash = this.tokens.hashRefreshToken(refreshToken);
     const [session] = await this.database.db
-      .select({ family: sessions.tokenFamily })
+      .select({
+        id: sessions.id,
+        family: sessions.tokenFamily,
+        audience: sessions.audience,
+        userId: sessions.userId,
+        donorId: sessions.donorId,
+      })
       .from(sessions)
       .where(eq(sessions.tokenHash, hash))
       .limit(1);
 
-    if (session) await this.revokeFamily(session.family, 'logout');
+    if (!session) return;
+
+    await this.revokeFamily(session.family, 'logout');
+    const subject = session.userId ?? session.donorId;
+    await this.audit.record({
+      action: 'auth.logout',
+      entityType: 'session',
+      entityId: session.id,
+      actorType: session.audience === 'staff' ? 'user' : 'donor',
+      ...(subject ? { userId: subject } : {}),
+      ipAddress: context.ip,
+      userAgent: context.userAgent,
+    });
   }
 
   private async revokeFamily(family: string, reason: string): Promise<void> {
@@ -681,7 +884,10 @@ export class AuthService {
     actor: AuthenticatedActor;
     password: string;
     totpCode?: string;
+    ip?: string;
+    userAgent?: string;
   }): Promise<{ reauthenticatedAt: Date; validForSeconds: number }> {
+    const context = { ipAddress: input.ip, userAgent: input.userAgent };
     if (input.actor.audience !== 'staff') {
       throw new ForbiddenException('Only staff accounts can re-authenticate.');
     }
@@ -698,7 +904,15 @@ export class AuthService {
 
     const valid = await this.passwords.verify(user.passwordHash, input.password);
     if (!valid) {
-      await this.recordFailedLogin(user.id, user.failedLoginCount);
+      await this.recordFailedLogin(user.id, user.failedLoginCount, context);
+      await this.audit.record({
+        action: 'auth.staff.reauth_failed',
+        entityType: 'user',
+        entityId: user.id,
+        userId: user.id,
+        severity: 'warning',
+        ...context,
+      });
       throw new UnauthenticatedException('That password is not correct.');
     }
 
@@ -710,7 +924,7 @@ export class AuthService {
         throw new UnauthenticatedException('Enter the 6-digit code from your authenticator app.');
       }
       if (!this.totp.verify(user.totpSecret, input.totpCode)) {
-        await this.recordFailedLogin(user.id, user.failedLoginCount);
+        await this.recordFailedLogin(user.id, user.failedLoginCount, context);
         throw new UnauthenticatedException('That code is not correct.');
       }
     }
@@ -725,6 +939,14 @@ export class AuthService {
       .update(users)
       .set({ failedLoginCount: 0, lockedUntil: null })
       .where(eq(users.id, user.id));
+
+    await this.audit.record({
+      action: 'auth.staff.reauth_succeeded',
+      entityType: 'user',
+      entityId: user.id,
+      userId: user.id,
+      ...context,
+    });
 
     return { reauthenticatedAt: now, validForSeconds: REAUTH_WINDOW_MINUTES * 60 };
   }

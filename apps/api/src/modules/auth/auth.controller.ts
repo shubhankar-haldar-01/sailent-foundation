@@ -26,6 +26,7 @@ import {
   refreshSchema,
   staffLoginSchema,
 } from './dto/auth.dto.js';
+import { requestClientIp } from '../../common/security/internal-request.js';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -33,10 +34,9 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   /** Client IP, respecting a trusted proxy header when the platform sets one. */
+  /** The trusted client address (Phase 12), never a raw X-Forwarded-For. */
   private clientIp(request: Request): string | undefined {
-    const forwarded = request.headers['x-forwarded-for'];
-    if (typeof forwarded === 'string') return forwarded.split(',')[0]?.trim();
-    return request.ip;
+    return requestClientIp(request);
   }
 
   @Public()
@@ -127,8 +127,14 @@ export class AuthController {
   @Post('logout')
   @HttpCode(204)
   @ApiOperation({ summary: 'Revoke the current session family' })
-  async logout(@Body(new ZodValidationPipe(refreshSchema)) body: { refreshToken: string }) {
-    await this.auth.logout(body.refreshToken);
+  async logout(
+    @Body(new ZodValidationPipe(refreshSchema)) body: { refreshToken: string },
+    @Req() request: Request,
+  ) {
+    await this.auth.logout(body.refreshToken, {
+      ip: this.clientIp(request),
+      userAgent: request.headers['user-agent'],
+    });
   }
 
   @ApiBearerAuth('staff')
@@ -148,11 +154,14 @@ export class AuthController {
   async reauth(
     @Body(new ZodValidationPipe(reauthSchema)) body: { password: string; totpCode?: string },
     @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
   ) {
     return this.auth.reauthenticate({
       actor,
       password: body.password,
       totpCode: body.totpCode,
+      ip: this.clientIp(request),
+      userAgent: request.headers['user-agent'],
     });
   }
 

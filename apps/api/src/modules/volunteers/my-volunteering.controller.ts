@@ -9,6 +9,7 @@ import { RequireAudience } from '../../common/decorators/permissions.decorator.j
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { MyVolunteeringService } from './my-volunteering.service.js';
 import { updateMyVolunteerProfileSchema } from './dto/volunteers.dto.js';
+import { requestClientIp } from '../../common/security/internal-request.js';
 
 /**
  * A volunteer's own record.
@@ -36,9 +37,9 @@ export class MyVolunteeringController {
   constructor(private readonly mine: MyVolunteeringService) {}
 
   private context(request: Request) {
-    const forwarded = request.headers['x-forwarded-for'];
     return {
-      ipAddress: typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : request.ip,
+      // The trusted client address (Phase 12), never a raw X-Forwarded-For.
+      ipAddress: requestClientIp(request),
       userAgent: request.headers['user-agent'],
       requestId: request.headers['x-request-id'] as string | undefined,
     };

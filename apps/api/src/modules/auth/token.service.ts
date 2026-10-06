@@ -17,6 +17,19 @@ import { AppConfig } from '../../config/app.config.js';
  * Refresh tokens are opaque random strings, not JWTs, and only their SHA-256 is
  * stored. A leaked database therefore cannot be used to mint sessions.
  */
+/**
+ * THE ONE ALGORITHM (Phase 12).
+ *
+ * Access tokens are HMAC-SHA256 with a per-audience key, and nothing else is
+ * accepted. Signing names it explicitly, and verification passes
+ * `algorithms: [ACCESS_TOKEN_ALGORITHM]`, so a token whose header claims
+ * another algorithm — `none`, another HMAC size, an asymmetric one presented
+ * with our secret as a "public key" — is refused before its signature is even
+ * considered. Trusting the token's own header to say how it should be checked
+ * is the classic JWT confusion bug.
+ */
+export const ACCESS_TOKEN_ALGORITHM = 'HS256' as const;
+
 @Injectable()
 export class TokenService {
   constructor(private readonly config: AppConfig) {}
@@ -44,7 +57,10 @@ export class TokenService {
         sid: input.sessionId,
       },
       this.secretFor(input.audience),
-      { expiresIn: this.config.env.JWT_ACCESS_TTL as jwt.SignOptions['expiresIn'] },
+      {
+        algorithm: ACCESS_TOKEN_ALGORITHM,
+        expiresIn: this.config.env.JWT_ACCESS_TTL as jwt.SignOptions['expiresIn'],
+      },
     );
   }
 
@@ -57,7 +73,9 @@ export class TokenService {
    */
   verifyAccessToken(token: string, audience: TokenAudience): AccessTokenClaims | null {
     try {
-      const payload = jwt.verify(token, this.secretFor(audience)) as jwt.JwtPayload;
+      const payload = jwt.verify(token, this.secretFor(audience), {
+        algorithms: [ACCESS_TOKEN_ALGORITHM],
+      }) as jwt.JwtPayload;
       if (payload.aud !== audience) return null;
 
       return {
@@ -88,6 +106,11 @@ export class TokenService {
   }
 
   /** Refresh TTL differs by audience: staff sessions are shorter because staff can move money. */
+  /** The access token's lifetime in seconds, as configured (`JWT_ACCESS_TTL`). */
+  accessTtlSeconds(): number {
+    return Math.floor(parseDuration(this.config.env.JWT_ACCESS_TTL) / 1000);
+  }
+
   refreshTtlMs(audience: TokenAudience): number {
     const raw =
       audience === 'staff'

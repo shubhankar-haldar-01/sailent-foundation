@@ -47,8 +47,9 @@ See `DEVELOPMENT_STATUS.md`.
 | 10.11 | Notifications | 🟡 |
 | 10.12 | Reports & analytics | ✅ |
 | post-10.12 | Design & campaign presentation | 🔵 |
-| 11 | Payment & Donation Production Readiness | ✅ implemented; committed locally, not pushed (2026-10-07) |
-| 12–15 | Accounts & security · Admin, CMS & communications · Infrastructure · Final launch readiness (2026-10-07 roadmap review) | ⚪ |
+| 11 | Payment & Donation Production Readiness | ✅ implemented; pushed (`5170ce0`, 2026-10-07) |
+| 12 | Accounts, Authentication & Security Hardening | ✅ implemented; committed locally, not pushed (2026-10-07) |
+| 13–15 | Admin, CMS & communications · Infrastructure · Final launch readiness (2026-10-07 roadmap review) | ⚪ |
 | — | Not yet scheduled | ⚪ |
 
 ---
@@ -86,7 +87,7 @@ See `DEVELOPMENT_STATUS.md`.
 |---|---|
 | **Goal** | Core schema, API modules, authentication, audit, content API, web switched to the API |
 | **Completed** | Migrations `0000`–`0004`; Auth (Argon2id, JWT, rotation, re-auth); audit; content endpoints; Supabase lockdown (RLS) |
-| **Remaining** | Soft 404s; TOTP built but not in effect after Phase 8; JWT `algorithms` pin; refresh rotation atomicity |
+| **Remaining** | Soft 404s. (JWT `algorithms` pin and atomic refresh rotation: Phase 12. Staff TOTP: not required, by owner decision.) |
 | **Dependencies** | none |
 
 ## Phase 4 — Programmes & campaigns management  🟡 PARTIAL
@@ -120,7 +121,7 @@ See `DEVELOPMENT_STATUS.md`.
 |---|---|
 | **Goal** | Donor email OTP, `/dashboard`, saved campaigns, preferences; refunds and recurring giving withdrawn |
 | **Completed** | Migrations `0010`–`0011`; `/me` (15 routes); `/admin/donors`; `/dashboard` (11 pages) |
-| **Remaining** | **PAN encryption, which the docs claim exists but the code does not implement**; verification of email changes; guest-checkout overwriting of donor details |
+| **Remaining** | ~~PAN encryption; verification of email changes; guest-checkout overwriting of donor details~~ (all Phase 12) |
 | **Notes** | `/reports` and `/transparency` were removed here |
 
 ## Phase 8 — Volunteer management (built after Phase 9)  🟡 PARTIAL
@@ -206,7 +207,7 @@ Reports (donations, campaigns, volunteers, impact, reconciliation, tax readiness
 | **Committed, not yet pushed** | 2026-10-06 `d7f42e3`: documentation/context system. 2026-10-06 `0e94632`: CI migrate/seed `--target=local` fix (not verified on GitHub yet) |
 | **Next** | With owner approval, push `main` and verify the first GitHub Actions run (`DEVELOPMENT_STATUS.md` "START HERE"). Work happens directly on `main`. |
 
-## Phase 11 — Payment & Donation Production Readiness  ✅ IMPLEMENTED (committed locally as `feat(payments): complete payment production readiness`, not pushed, 2026-10-07)
+## Phase 11 — Payment & Donation Production Readiness  ✅ IMPLEMENTED (`5170ce0`, pushed, 2026-10-07)
 
 | | |
 |---|---|
@@ -215,7 +216,18 @@ Reports (donations, campaigns, volunteers, impact, reconciliation, tax readiness
 | **Remaining (human)** | Deployment configuration (`INTERNAL_API_SECRET`, `API_INTERNAL_URL`, `CLIENT_IP_HEADER`), Razorpay dashboard settings, a sandbox trial — `DEPLOYMENT.md` §6a |
 | **Validation** | `DEVELOPMENT_STATUS.md` §2 |
 
-Phases 12–15 (accounts and security hardening; admin, CMS and communications; infrastructure and operations; final launch readiness) come from the 2026-10-07 roadmap review and are not started.
+## Phase 12 — Accounts, Authentication & Security Hardening  ✅ IMPLEMENTED (committed locally as `feat(auth): complete account and security hardening`, not pushed, 2026-10-07)
+
+| | |
+|---|---|
+| **Goal** | Close the account and authentication gaps from the 2026-10-07 roadmap review, without staff 2FA (owner decision) |
+| **Completed** | Volunteers without a donation can sign in by email code; one email normalisation (`normaliseEmail`); email change verified by a code to the new address; guest checkout no longer overwrites a donor; JWT pinned to HS256; atomic refresh rotation with race detection; authentication audit events with no secrets; client addresses only from the trusted forwarding header (18 `X-Forwarded-For` readers removed); PAN encrypted with AES-256-GCM and masked for donors; Content-Security-Policy and production HSTS on the web; Origin check on BFF writes; production fail-closed web environment (mock data, demo organisation, required secrets). No migration, no seed change. |
+| **Owner decision** | Staff authenticate with email and password. **Staff TOTP/2FA is not required** and was not built. |
+| **Remaining (human)** | Generate and store `FIELD_ENCRYPTION_KEY`; re-encrypt any plaintext PANs in production; set the web's production environment (`APP_ENV=production`, `INTERNAL_API_SECRET`, `CLIENT_IP_HEADER`, `TRUSTED_ORIGINS` if needed) — `DEPLOYMENT.md` §6b |
+| **Not in scope** | Staff invite and password reset (Phase 13); SEO (Phase 15) |
+| **Validation** | `DEVELOPMENT_STATUS.md` §2 |
+
+Phases 13–15 (admin, CMS and communications; infrastructure and operations; final launch readiness) come from the 2026-10-07 roadmap review and are not started.
 
 ## Not yet scheduled  ⚪ NOT STARTED
 
@@ -223,7 +235,7 @@ Documented as needed, or deferred:
 - **Operations:** deployment configuration and hosting; a human-led verification and hardening of the existing production database; backups.
 - **Scheduled jobs:** counter-drift checks. (Payment reconciliation: Phase 11.)
 - **Monitoring:** Sentry; GA4.
-- **Staff accounts:** staff 2FA enrolment; invite and password reset.
+- **Staff accounts:** invite and password reset (Phase 13). Staff 2FA is not required (owner decision).
 - **Receipts and tax:** receipt PDF; Form 10BD export.
 - **Volunteers and events:** certificate PDF; event reminders.
 - **Communication:** newsletter subscriptions.

@@ -10,6 +10,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { VolunteerWorkService } from './volunteer-work.service.js';
 import { VolunteerCertificatesService } from './volunteer-certificates.service.js';
 import type { UpdateMyVolunteerProfileInput } from './dto/volunteers.dto.js';
+import { normaliseEmail } from '@sailent/validation';
 
 /**
  * A volunteer's own record.
@@ -78,7 +79,7 @@ export class MyVolunteeringService {
     const [volunteer] = await this.database.db
       .select()
       .from(volunteers)
-      .where(sql`lower(btrim(${volunteers.email})) = ${account.email.trim().toLowerCase()}`)
+      .where(sql`lower(btrim(${volunteers.email})) = ${normaliseEmail(account.email)}`)
       .orderBy(desc(volunteers.createdAt))
       .limit(1);
 

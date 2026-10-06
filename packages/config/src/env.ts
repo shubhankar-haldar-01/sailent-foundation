@@ -23,6 +23,33 @@ const booleanFromString = z
 const port = z.coerce.number().int().min(1).max(65535);
 
 /**
+ * A 32-byte key, as base64 or 64 hex characters (Phase 12). Mirrors
+ * `decodeFieldKey` in the API, which is what actually reads it.
+ */
+function isFieldKey(value: string): boolean {
+  const trimmed = value.trim();
+  if (/^[0-9a-f]{64}$/i.test(trimmed)) return true;
+  try {
+    return Buffer.from(trimmed, 'base64').length === 32;
+  } catch {
+    return false;
+  }
+}
+
+/** A public URL a production deployment may use: HTTPS and not a loopback host. */
+function isPublicHttpsUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === 'https:' &&
+      !['localhost', '127.0.0.1', '[::1]', '0.0.0.0'].includes(url.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Treat an empty value as absent.
  *
  * `.env.example` declares every variable, including ones that stay optional
@@ -99,7 +126,21 @@ export const apiEnvSchema = baseSchema
     JWT_ACCESS_TTL: z.string().default('15m'),
     JWT_REFRESH_TTL_DONOR: z.string().default('30d'),
     JWT_REFRESH_TTL_STAFF: z.string().default('7d'),
-    FIELD_ENCRYPTION_KEY: optional(z.string()),
+    /*
+      ENCRYPTION AT REST for the donor tax id (PAN), AES-256-GCM (Phase 12).
+      32 random bytes as base64 or hex — e.g. `openssl rand -base64 32`.
+      Required in production; without it locally a PAN cannot be saved.
+      Losing it makes stored PANs unreadable: keep it in the secret manager,
+      backed up, never in the repository.
+    */
+    FIELD_ENCRYPTION_KEY: optional(
+      z
+        .string()
+        .refine(
+          isFieldKey,
+          'FIELD_ENCRYPTION_KEY must be 32 bytes, as base64 or 64 hex characters',
+        ),
+    ),
 
     SENTRY_DSN: optional(z.string()),
     SENTRY_ENVIRONMENT: z.string().default('development'),
@@ -210,6 +251,8 @@ export const apiEnvSchema = baseSchema
       'RAZORPAY_WEBHOOK_SECRET',
       // Without it, rate limits are site-wide and reconciliation cannot run.
       'INTERNAL_API_SECRET',
+      // Without it, a donor's tax id cannot be stored (Phase 12).
+      'FIELD_ENCRYPTION_KEY',
       /*
         Without these an administrator can reach the upload form, choose a
         file, and have it fail after the validation has passed — or worse,
@@ -319,6 +362,15 @@ export const workerEnvSchema = baseSchema
         });
       }
     }
+    // Every link in every email is built from this; the localhost default
+    // would send donors to their own machine (Phase 12).
+    if (!isPublicHttpsUrl(env.APP_PUBLIC_URL)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['APP_PUBLIC_URL'],
+        message: 'APP_PUBLIC_URL must be a public https:// URL in production',
+      });
+    }
   });
 
 export type WorkerEnv = z.infer<typeof workerEnvSchema>;
@@ -327,15 +379,56 @@ export type WorkerEnv = z.infer<typeof workerEnvSchema>;
 // Web (server-side). Anything the browser needs must be NEXT_PUBLIC_*.
 // ---------------------------------------------------------------------------
 
-export const webEnvSchema = baseSchema.extend({
-  NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
-  NEXT_PUBLIC_APP_NAME: z.string().default('Sailent Foundation'),
-  /** Server-side only. The browser never calls the API directly (decision A1). */
-  API_URL: z.string().url().default('http://localhost:4000'),
-  NEXT_PUBLIC_SENTRY_DSN: optional(z.string()),
-  NEXT_PUBLIC_GA_MEASUREMENT_ID: optional(z.string()),
-  FEATURE_MOCK_DATA: booleanFromString.default(true),
-});
+export const webEnvSchema = baseSchema
+  .extend({
+    NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
+    NEXT_PUBLIC_APP_NAME: z.string().default('Sailent Foundation'),
+    /** Server-side only. The browser never calls the API directly (decision A1). */
+    API_URL: z.string().url().default('http://localhost:4000'),
+    NEXT_PUBLIC_SENTRY_DSN: optional(z.string()),
+    NEXT_PUBLIC_GA_MEASUREMENT_ID: optional(z.string()),
+    FEATURE_MOCK_DATA: booleanFromString.default(true),
+
+    /* Phase 11: the shared secret, and where the client address comes from. */
+    INTERNAL_API_SECRET: optional(z.string().min(32)),
+    CLIENT_IP_HEADER: optional(z.string().min(1)),
+    TRUSTED_PROXY_HOPS: z.coerce.number().int().min(1).max(10).default(1),
+    /*
+      Phase 12: extra origins (comma-separated) allowed to make state-changing
+      requests through the web server, beyond the site's own origin. Usually
+      unset.
+    */
+    TRUSTED_ORIGINS: optional(z.string()),
+  })
+  /*
+    PRODUCTION FAILS CLOSED (Phase 12). The web server validates this at
+    startup (`apps/web/src/instrumentation.ts`) and refuses to start a
+    production deployment that would serve demo fixtures, cannot vouch for
+    client addresses, or points at a local URL.
+  */
+  .superRefine((env, ctx) => {
+    if (env.APP_ENV !== 'production') return;
+    const issue = (path: string, message: string) =>
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
+
+    if (env.FEATURE_MOCK_DATA)
+      issue('FEATURE_MOCK_DATA', 'FEATURE_MOCK_DATA must be false in production');
+    if (!env.INTERNAL_API_SECRET) {
+      issue('INTERNAL_API_SECRET', 'INTERNAL_API_SECRET is required when APP_ENV=production');
+    }
+    if (!env.CLIENT_IP_HEADER) {
+      issue(
+        'CLIENT_IP_HEADER',
+        'CLIENT_IP_HEADER is required when APP_ENV=production, or every rate limit is site-wide',
+      );
+    }
+    if (!isPublicHttpsUrl(env.NEXT_PUBLIC_APP_URL)) {
+      issue(
+        'NEXT_PUBLIC_APP_URL',
+        'NEXT_PUBLIC_APP_URL must be a public https:// URL in production',
+      );
+    }
+  });
 
 export type WebEnv = z.infer<typeof webEnvSchema>;
 

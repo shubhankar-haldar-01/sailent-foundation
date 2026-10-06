@@ -38,6 +38,7 @@ import { MeModule } from './modules/me/me.module.js';
 import { DonorsModule } from './modules/donors/donors.module.js';
 import { AuthGuard } from './common/guards/auth.guard.js';
 import { ClientThrottlerGuard } from './common/guards/client-throttler.guard.js';
+import { SecurityModule } from './common/security/security.module.js';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware.js';
 
 @Module({
@@ -144,6 +145,7 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware.j
     RedisModule,
     QueueModule,
     AuditModule,
+    SecurityModule,
     AuthModule,
     ContentModule,
     UsersModule,

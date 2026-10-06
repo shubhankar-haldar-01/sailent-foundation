@@ -20,6 +20,7 @@ import {
   resolveSort,
   type PaginationQuery,
 } from '../../common/dto/pagination.dto.js';
+import { normaliseEmail } from '@sailent/validation';
 
 /**
  * Columns that may be selected for a staff account.
@@ -212,7 +213,7 @@ export class UsersService {
     const [existing] = await this.database.db
       .select({ id: users.id })
       .from(users)
-      .where(sql`lower(${users.email}) = lower(${input.email})`)
+      .where(sql`lower(btrim(${users.email})) = ${normaliseEmail(input.email)}`)
       .limit(1);
 
     if (existing) {
@@ -225,7 +226,7 @@ export class UsersService {
       const [user] = await tx
         .insert(users)
         .values({
-          email: input.email,
+          email: normaliseEmail(input.email),
           firstName: input.firstName,
           lastName: input.lastName ?? null,
           phone: input.phone ?? null,

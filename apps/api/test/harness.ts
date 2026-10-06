@@ -118,6 +118,17 @@ if (process.env.TEST_REDIS_URL) {
 
 assertDisposableDatabase();
 
+/*
+  A FIXED, TEST-ONLY KEY for encrypting donor tax ids (Phase 12), used only
+  when the environment does not provide one. It protects nothing real: these
+  suites run against a disposable local database. Production requires its own
+  `FIELD_ENCRYPTION_KEY` and refuses to start without it.
+*/
+export const TEST_FIELD_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString('base64');
+if (!process.env.FIELD_ENCRYPTION_KEY) {
+  process.env.FIELD_ENCRYPTION_KEY = TEST_FIELD_ENCRYPTION_KEY;
+}
+
 /**
  * TEST CREDENTIALS. NOT THE SEEDED DEVELOPMENT ACCOUNTS.
  *

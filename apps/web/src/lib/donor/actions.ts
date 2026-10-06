@@ -30,6 +30,51 @@ function text(form: FormData, key: string): string | undefined {
  * name means. Reading the whole FormData and forwarding it would make the set
  * of writable columns a property of the HTML.
  */
+export interface EmailChangeState {
+  error?: string;
+  /** The address a code was sent to, while waiting for it. */
+  pendingEmail?: string;
+  ok?: boolean;
+}
+
+/**
+ * Step one of an email change: send a code to the NEW address (Phase 12).
+ * The account's address does not change until step two.
+ */
+export async function requestEmailChange(
+  _previous: EmailChangeState,
+  form: FormData,
+): Promise<EmailChangeState> {
+  const email = text(form, 'newEmail');
+  if (!email) return { error: 'Enter the new email address.' };
+  try {
+    await donorFetch('me/email/change', { method: 'POST', body: { email } });
+  } catch (error) {
+    return { error: toState(error).error };
+  }
+  return { pendingEmail: email };
+}
+
+/** Step two: the code from the new inbox. Only now does the address change. */
+export async function verifyEmailChange(
+  previous: EmailChangeState,
+  form: FormData,
+): Promise<EmailChangeState> {
+  const email = previous.pendingEmail ?? text(form, 'newEmail');
+  const code = text(form, 'code');
+  if (!email) return { error: 'Start again with the new email address.' };
+  if (!code || !/^\d{6}$/.test(code)) {
+    return { pendingEmail: email, error: 'The code is six digits.' };
+  }
+  try {
+    await donorFetch('me/email/verify', { method: 'POST', body: { email, code } });
+  } catch (error) {
+    return { pendingEmail: email, error: toState(error).error };
+  }
+  revalidatePath('/dashboard/profile');
+  return { ok: true };
+}
+
 export async function updateDonorProfile(
   _previous: DonorActionState,
   form: FormData,
@@ -40,7 +85,7 @@ export async function updateDonorProfile(
       body: {
         firstName: text(form, 'firstName'),
         lastName: text(form, 'lastName'),
-        email: text(form, 'email'),
+        // No email: it changes only through the verified flow below (Phase 12).
         addressLine1: text(form, 'addressLine1'),
         addressLine2: text(form, 'addressLine2'),
         city: text(form, 'city'),

@@ -219,7 +219,7 @@ Production database actions require **explicit human approval** for that specifi
 
 ## 13. Architectural decisions
 
-Decisions A1–A14 are in `docs/phase-0-decisions.md`. Read it for the reasoning, but where it differs from the code, `DEVELOPMENT_STATUS.md` §9 lists what the code actually does (A4 webhook queue, A7 receipt format, A8 TOTP and A10 audit immutability are not as documented).
+Decisions A1–A14 are in `docs/phase-0-decisions.md`. Read it for the reasoning, but where it differs from the code, `DEVELOPMENT_STATUS.md` §9 lists what the code actually does (A4 webhook queue, A7 receipt format, A8 TOTP and A10 audit immutability are not as documented; A8 is superseded by the owner's decision of 2026-10-07 that staff TOTP/2FA is not required).
 
 <!-- BEGIN:turborepo-agent-rules -->
 

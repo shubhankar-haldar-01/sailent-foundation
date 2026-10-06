@@ -5,6 +5,7 @@ import { API_PREFIX, REQUEST_ID_HEADER } from '@sailent/config';
 
 import { clientForwardingHeaders, INTERNAL_HEADERS } from '@/lib/api/forwarding';
 import { getDonorAccessToken } from '@/lib/auth/donor-session';
+import { isTrustedRequestOrigin } from '@/lib/security/origin-check';
 import { getAccessToken } from '@/lib/auth/session';
 
 /**
@@ -53,6 +54,25 @@ const STRIPPED_REQUEST_HEADERS = new Set([
 
 async function proxy(request: NextRequest, path: string[]): Promise<NextResponse> {
   const requestId = request.headers.get(REQUEST_ID_HEADER) ?? randomUUID();
+
+  /*
+    CSRF (Phase 12): a state-changing request must come from this site's own
+    pages. Refused before any token is attached, so a cross-site request never
+    reaches the API with the visitor's session. See `origin-check.ts`.
+  */
+  if (!isTrustedRequestOrigin(request.method, request.headers)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'This request did not come from this site, so it was refused.',
+          requestId,
+        },
+      },
+      { status: 403, headers: { [REQUEST_ID_HEADER]: requestId } },
+    );
+  }
   const target = new URL(`${API_PREFIX}/${path.join('/')}`, ensureTrailingSlash(API_BASE));
   target.search = request.nextUrl.search;
 

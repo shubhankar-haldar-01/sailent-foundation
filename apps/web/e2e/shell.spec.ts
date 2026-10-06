@@ -58,6 +58,39 @@ test.describe('public shell', () => {
     expect(campaignPage?.headers()['x-frame-options']).toBe('DENY');
   });
 
+  /**
+   * Phase 12. A Content-Security-Policy on every page, permitting Razorpay
+   * Checkout and nothing else from outside, and the BFF refusing a
+   * state-changing request that did not come from this site.
+   */
+  test('sends a Content-Security-Policy that keeps Razorpay Checkout working', async ({ page }) => {
+    const response = await page.goto('/campaigns/school-kits-jharkhand');
+    const csp = response?.headers()['content-security-policy'] ?? '';
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).toMatch(/script-src [^;]*https:\/\/checkout\.razorpay\.com/);
+    expect(csp).toMatch(/frame-src [^;]*https:\/\/api\.razorpay\.com/);
+    expect(csp).toContain("frame-ancestors 'none'");
+  });
+
+  test('refuses a cross-site write through the BFF, and allows a same-site one', async ({
+    page,
+    baseURL,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'One project is enough.');
+    const forged = await page.request.post('/api/bff/donations', {
+      headers: { Origin: 'https://evil.example' },
+      data: {},
+    });
+    expect(forged.status()).toBe(403);
+
+    const own = await page.request.post('/api/bff/donations', {
+      headers: { Origin: new URL(baseURL!).origin },
+      data: {},
+    });
+    // Reaches the API, which rejects the empty donation on its merits.
+    expect(own.status()).not.toBe(403);
+  });
+
   test('never scrolls horizontally', async ({ page }) => {
     // The most common responsive defect, and the easiest to regress.
     await page.goto('/');

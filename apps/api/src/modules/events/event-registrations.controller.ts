@@ -21,6 +21,7 @@ import {
   eventIdParam,
   registerForEventSchema,
 } from './dto/events.dto.js';
+import { requestClientIp } from '../../common/security/internal-request.js';
 
 /**
  * Registering for an event, as the person attending.
@@ -54,9 +55,9 @@ export class EventRegistrationsController {
   constructor(private readonly registrations: EventRegistrationsService) {}
 
   private context(request: Request) {
-    const forwarded = request.headers['x-forwarded-for'];
     return {
-      ipAddress: typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : request.ip,
+      // The trusted client address (Phase 12), never a raw X-Forwarded-For.
+      ipAddress: requestClientIp(request),
       userAgent: request.headers['user-agent'],
       requestId: request.headers['x-request-id'] as string | undefined,
     };

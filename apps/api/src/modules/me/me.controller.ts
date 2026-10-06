@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -22,6 +34,8 @@ import { myEventsQuerySchema, type MyEventsQuery } from '../events/dto/events.dt
 import {
   campaignIdParam,
   donationIdParam,
+  emailChangeRequestSchema,
+  emailChangeVerifySchema,
   myDonationsQuerySchema,
   saveCampaignSchema,
   SaveCampaignDto,
@@ -33,6 +47,7 @@ import {
   type UpdateProfileInput,
   type UpdateSettingsInput,
 } from './dto/me.dto.js';
+import { requestClientIp } from '../../common/security/internal-request.js';
 
 /**
  * The donor's own account.
@@ -74,9 +89,9 @@ export class MeController {
   ) {}
 
   private context(request: Request) {
-    const forwarded = request.headers['x-forwarded-for'];
     return {
-      ipAddress: typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : request.ip,
+      // The trusted client address (Phase 12), never a raw X-Forwarded-For.
+      ipAddress: requestClientIp(request),
       userAgent: request.headers['user-agent'],
       requestId: request.headers['x-request-id'] as string | undefined,
     };
@@ -107,6 +122,42 @@ export class MeController {
     @Req() request: Request,
   ) {
     return this.me.updateProfile(actor.id, body, this.context(request));
+  }
+
+  /**
+   * Change the account's email address, in two verified steps (Phase 12).
+   * A code goes to the NEW address; the address changes only when it returns.
+   */
+  @Post('email/change')
+  @HttpCode(200)
+  @Throttle({ default: { limit: 3, ttl: 900_000 } })
+  @ApiOperation({
+    summary: 'Start an email change',
+    description:
+      'Sends a six-digit code to the new address. The address does not change until `POST /me/email/verify` is called with that code. Says nothing about whether the new address already has an account.',
+  })
+  requestEmailChange(
+    @Body(new ZodValidationPipe(emailChangeRequestSchema)) body: { email: string },
+    @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
+  ) {
+    return this.me.requestEmailChange(actor.id, body.email, this.context(request));
+  }
+
+  @Post('email/verify')
+  @HttpCode(200)
+  @Throttle({ default: { limit: 10, ttl: 900_000 } })
+  @ApiOperation({
+    summary: 'Finish an email change',
+    description:
+      'Applies the new address once the code sent to it is entered. 409 if the address belongs to another account.',
+  })
+  verifyEmailChange(
+    @Body(new ZodValidationPipe(emailChangeVerifySchema)) body: { email: string; code: string },
+    @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
+  ) {
+    return this.me.verifyEmailChange(actor.id, body.email, body.code, this.context(request));
   }
 
   @Get('overview')

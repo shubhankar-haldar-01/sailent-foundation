@@ -10,7 +10,29 @@ Newest first.
 
 ---
 
-## 2026-10-07 — Phase 11: Payment & Donation Production Readiness (`feat(payments): complete payment production readiness`; committed locally, NOT pushed as of 2026-10-07)
+## 2026-10-07 — Phase 12: Accounts, Authentication & Security Hardening (`feat(auth): complete account and security hardening`; committed locally, NOT pushed as of 2026-10-07)
+
+**Owner decision:** staff authenticate with email and password; **staff TOTP/2FA is not required** and was not built.
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| Sign-in codes are sent to an address held by a donor **or a live volunteer record** | A volunteer who had never donated could not sign in to see their volunteering | First sign-in opens the general account; unknown addresses still get the same answer and no mail | none |
+| One `normaliseEmail()` (NFC, trim, lower case) across staff login, OTP, email change, guest checkout, volunteers, invites and admin corrections | Addresses were compared inconsistently | `Admin@X.org ` and `admin@x.org` are the same account everywhere | none |
+| Email change only by a code sent to the new address (`POST /me/email/change`, `/me/email/verify`); `PATCH /me` refuses `email` | A donor could take over someone else's future guest donations by changing their address | Read-only address on the profile with a confirm-by-code form | none |
+| Guest checkout no longer changes an existing donor's name or phone | Anyone knowing a donor's email could rewrite their details | Same response whether or not an account exists | none |
+| Access JWT pinned to HS256 (sign and verify) | No algorithm allow-list | `none`/other algorithms refused | none |
+| Atomic refresh rotation (`UPDATE … WHERE revoked_at IS NULL RETURNING` in one transaction) | Two simultaneous refreshes could both succeed | The loser is treated as reuse: family revoked, audited | none |
+| Authentication audit events (staff login success/failure/lockout, re-auth, donor OTP, logout, refresh reuse, email change) | Sign-ins were not audited | No passwords, codes, tokens or PANs recorded | none |
+| Client IPs for audit and sessions from `requestClientIp()` (trusted header with `INTERNAL_API_SECRET`, else the connection) in 18 controllers | `X-Forwarded-For` was trusted and spoofable | Recorded addresses can no longer be forged | none |
+| PAN encrypted with AES-256-GCM (`enc:v1:`; `FIELD_ENCRYPTION_KEY`, required in production); donors see a masked value only | PANs were stored and returned in plaintext | Satisfies the local `donors_tax_id_encrypted` CHECK, so the 4 `me.spec` drift failures are gone; legacy plaintext is read and re-encrypted on write | none (column stays `text`) |
+| Content-Security-Policy on the web (Razorpay Checkout allowed); HSTS with `APP_ENV=production` | No CSP or HSTS | External script injection blocked; `'unsafe-inline'` kept for Next.js (documented) | — |
+| BFF refuses cross-site writes (Origin / `Sec-Fetch-Site` check, `TRUSTED_ORIGINS`) | CSRF relied on `SameSite=Lax` only | 403 before any token is attached | — |
+| Web validates its environment at startup; production refuses mock data, demo organisation data, missing `INTERNAL_API_SECRET`/`CLIENT_IP_HEADER` or a non-https URL; mock fixtures never used in production; worker requires an https `APP_PUBLIC_URL` | `webEnvSchema` was never loaded; unset `FEATURE_MOCK_DATA` meant ON | Misconfigured production fails to start instead of serving demo data | — |
+| Tests: `account-security.spec.ts` (22), JWT and encryption unit tests, config guards, `normaliseEmail`, origin check, CSP, runtime flags; E2E CSP, BFF cross-site and email-change tests | Cover the phase | Tests only | — |
+
+No schema, migration, seed, CI or payment-behaviour change. Not in scope: staff invite and password reset (Phase 13), SEO (Phase 15). Human-only: generate and store `FIELD_ENCRYPTION_KEY`, re-encrypt existing production PANs, configure the production web environment (`DEPLOYMENT.md` §6b).
+
+## 2026-10-07 — Phase 11: Payment & Donation Production Readiness (`5170ce0`, pushed 2026-10-07)
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|

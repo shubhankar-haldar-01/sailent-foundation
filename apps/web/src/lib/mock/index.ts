@@ -31,6 +31,7 @@ import { events } from './events';
 import { programs } from './programs';
 import { stories } from './stories';
 import type { SearchRecord } from './types';
+import { mockDataEnabled } from '@/lib/runtime-flags';
 
 export * from './types';
 export * from './programs';
@@ -49,7 +50,7 @@ export * from './impact';
  * production, so the notice cannot be forgotten and the fixtures cannot
  * silently become the live site.
  */
-export const isDemoContent = process.env.FEATURE_MOCK_DATA !== 'false';
+export const isDemoContent = mockDataEnabled();
 
 /**
  * Search index.

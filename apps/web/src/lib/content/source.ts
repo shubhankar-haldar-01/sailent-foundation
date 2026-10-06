@@ -3,6 +3,7 @@ import 'server-only';
 import { createServerApiClient } from '@/lib/api/server';
 import { publicAssetExists } from '@/lib/media/public-asset';
 import type { ApiClient } from '@/lib/api/client';
+import { mockDataEnabled } from '@/lib/runtime-flags';
 
 /**
  * The content source.
@@ -33,7 +34,7 @@ import type { ApiClient } from '@/lib/api/client';
  */
 
 /** True while the fixtures are permitted. False in every production build. */
-export const fixturesEnabled = process.env.FEATURE_MOCK_DATA !== 'false';
+export const fixturesEnabled = mockDataEnabled();
 
 export interface LoadOptions<T> {
   /** What to ask the API for. */

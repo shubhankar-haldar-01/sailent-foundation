@@ -6,18 +6,18 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-10-07 (Phase 11 — Payment & Donation Production Readiness, **committed locally, not pushed**, as `feat(payments): complete payment production readiness` on top of `e87864b`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
+**Last updated:** 2026-10-07 (Phase 12 — Accounts, Authentication & Security Hardening, **committed locally, not pushed**, as `feat(auth): complete account and security hardening` on top of `5170ce0`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
 
 | | |
 |---|---|
 | **Overall status** | Feature-rich build, **not deployed to any hosting.** Phases 0–10.12 are implemented in the API, admin and public site. |
-| **Current phase** | **Phase 11 — Payment & Donation Production Readiness** (§1, item 11), first phase of the 2026-10-07 roadmap (Phases 11–15). Implemented, validated and **committed locally** as `feat(payments): complete payment production readiness`; **not pushed**. Everything up to `e87864b` (webhook hardening C1 + L1) is committed and pushed. |
-| **Current feature** | Payment reconciliation and pending expiry; checkout retry and idempotency; per-client rate limits; payment hardening; read-only admin payment exceptions; Razorpay-compatible `Permissions-Policy`. |
-| **Branch / HEAD** (as of 2026-10-07) | Local `main` is **1 commit ahead** of `origin/main` (`e87864b`): the Phase 11 commit `feat(payments): complete payment production readiness`, **not pushed**. Run `git log --oneline -1` for its hash. The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
-| **Working tree** (as of 2026-10-07) | Clean: Phase 11 (API, worker, web, config, tests) and its documentation are all in the Phase 11 commit. Run `git status` for the live state. |
+| **Current phase** | **Phase 12 — Accounts, Authentication & Security Hardening** (§1, item 12), second phase of the 2026-10-07 roadmap (Phases 11–15). Implemented, validated and **committed locally** as `feat(auth): complete account and security hardening`; **not pushed**. Phase 11 (`5170ce0`) and everything before it is committed and pushed. |
+| **Current feature** | Volunteer sign-in; email normalisation; verified email change; no guest overwrite; HS256 pin; atomic refresh rotation; authentication audit events; trusted client IPs; PAN encryption and masking; CSP and HSTS; BFF Origin check; production fail-closed web environment. **Staff TOTP/2FA is not required (owner decision).** |
+| **Branch / HEAD** (as of 2026-10-07) | Local `main` is **1 commit ahead** of `origin/main` (`5170ce0`, Phase 11): the Phase 12 commit `feat(auth): complete account and security hardening`, **not pushed**. Run `git log --oneline -1` for its hash. The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
+| **Working tree** (as of 2026-10-07) | Clean: Phase 12 (API, worker, web, config, validation, tests) and its documentation are all in the Phase 12 commit. Run `git status` for the live state. |
 | **Production database** | The **production Supabase project** exists (owner confirmed, 2026-10-06). Its schema and data state were **not inspected** and are **unknown**. Agents must not access it (`AGENTS.md` §8). |
 | **Application hosting** | None. No Dockerfiles, IaC or deploy workflow exist. |
-| **Local databases** | `sailent_dev` and `sailent_e2e` have migrations `0000`–`0022` applied, **plus one migration that is not in the repository** (§5.1). The repository has no pending migration. |
+| **Local databases** | `sailent_dev` and `sailent_e2e` have migrations `0000`–`0022` applied, **plus one migration that is not in the repository** (§5.1); since Phase 12 it no longer causes test failures. The repository has no pending migration. |
 | **CI** | **Not passing as of the last observed run.** Run #4 (at `166b70c`): the `quality` job passed lint, typecheck, migrate and seed, then failed at tests (`EnvValidationError`: Turborepo strict env mode stripped `DATABASE_URL`/`REDIS_URL`); the `security` job failed at `pnpm audit` (30 vulnerabilities: 2 low, 13 moderate, 15 high), so gitleaks was skipped. `7fe6c25` (pushed) adds `passThroughEnv` for the test task; **its GitHub Actions run has not been observed**. The audit failure is **unresolved** (dependency upgrades not approved yet), so the `security` job is expected to keep failing (§5.4). Do not describe CI as passing until a passing run has been observed. The owner has **deferred CI work** for now (2026-10-06). |
 
 ---
@@ -37,7 +37,8 @@
 | `2fc5aa9` | fix(donations): count distinct donors accurately (item 8) | ✅ yes |
 | `f9816be` | fix(programs): count open campaigns accurately (item 9) | ✅ yes |
 | `e87864b` | fix(payments): make razorpay webhooks retry-safe (item 10) | ✅ yes |
-| `feat(payments): complete payment production readiness` | Phase 11 (item 11), with its documentation | ❌ **committed locally, not pushed** |
+| `5170ce0` | feat(payments): complete payment production readiness — Phase 11 (item 11), with its documentation | ✅ yes (pushed by the owner) |
+| `feat(auth): complete account and security hardening` | Phase 12 (item 12), with its documentation | ❌ **committed locally, not pushed** |
 
 Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to `origin/main` with a fast-forward push; until then `origin/main` held only `2ba2b43`.
 
@@ -135,7 +136,7 @@ From the read-only payment audit of 2026-10-07. Only C1 (a transient webhook fai
 - **Limits:** no lease column, so a `pending` row from a crash looks like one still in progress and two simultaneous deliveries may both run (capture stays exactly-once; a repeated `payment.failed` can add an extra history row). Recovery relies on Razorpay redelivering (a limited window, about 24 hours); after that, a `pending`/`failed` row needs reconciliation (H1) or a manual replay tool, neither of which exists.
 - **Still open from the payment audit (not started):** H1 reconciliation and pending expiry; H2 checkout failure/retry handling (double-payment risk); H3 throttling keyed on the real client IP; M1 receipt financial year in IST; M2 production live-key guard; M3 international payments (FCRA); M4 admin payment-exceptions view; M6 guest checkout overwriting donor details; L2–L5. See §5.5.
 
-**11. Phase 11 — Payment & Donation Production Readiness (2026-10-07, committed locally as `feat(payments): complete payment production readiness`, NOT pushed)**
+**11. Phase 11 — Payment & Donation Production Readiness (2026-10-07, `5170ce0`, pushed)**
 
 The payment-audit findings H1, H2, H3, M1, M2, M4, L2, L3 and L4 (idempotency), plus the `Permissions-Policy` check. No schema change, no migration.
 - **Reconciliation and pending expiry (H1).** `PaymentReconciliationService` (`apps/api/src/modules/donations/payment-reconciliation.service.ts`), run by `POST /api/v1/internal/payments/reconcile` (`internal-payments.controller.ts`, authenticated only by `INTERNAL_API_SECRET`; 503 when unset). The worker schedules it (`apps/worker/src/processors/payment-reconciliation.processor.ts`; `payments` queue, repeatable `payments.reconcile`, default every 10 min).
@@ -151,9 +152,72 @@ The payment-audit findings H1, H2, H3, M1, M2, M4, L2, L3 and L4 (idempotency), 
 - **Also updated:** `.env.example` (variable names only), the admin reconciliation page copy, `SECURITY.md`, `DATABASE.md` §6, `DEPLOYMENT.md` §6/§6a/§7.
 - **Not changed:** exactly-once capture, signatures, amount checks, distinct donor counts, campaign status/deadline/stop-at-goal checks, out-of-band refund flagging, schema.
 
+**12. Phase 12 — Accounts, Authentication & Security Hardening (2026-10-07, committed locally as `feat(auth): complete account and security hardening`, NOT pushed)**
+
+**Owner decisions for this phase:**
+- Staff authenticate with email and password.
+- **Staff TOTP/2FA is NOT required.** No enrolment, no TOTP at login, no mandatory staff 2FA was built. The dormant `TOTP_REQUIRED_ROLES` set (retired roles only) is unchanged and has no effect.
+
+No schema change, no migration, no seed change, no CI change, no payment behaviour change.
+
+**A. Account flows.**
+- **Volunteer sign-in.** `AuthService.signInRecipient()` sends a code to an address held by a donor **or** a volunteer whose status is not rejected/archived. The first sign-in opens the general (`donors`) account, which `/me/volunteering` links by email. An unknown address still gets the same answer and no mail.
+- **Email normalisation.** One `normaliseEmail()` (NFC, trim, lower case) in `packages/validation`, used by staff login, donor OTP, the email change, guest checkout, volunteer apply and lookup, `/me/volunteering`, staff invites and admin donor corrections. Staff login matches `lower(btrim(users.email))`.
+- **Verified email change.** `PATCH /me` refuses `email` (422, strict schema). `POST /me/email/change` sends a six-digit code to the NEW address (`otp_codes` purpose `email_change`, identifier `email_change:<donor id>:<email>`; 10 min, 5 attempts, 3 per 15 min). `POST /me/email/verify` applies it; a clash is reported (409) only after the code proves ownership. The worker's `donor.login_code` processor has an email-change variant. The web profile shows the address read-only, with a request-then-confirm form.
+- **Guest checkout** (`donations.service.ts` `upsertDonor`) attaches a donation to an existing donor **without** changing the donor's name or phone, and answers the same whether or not an account exists.
+- **Volunteer self-service** stays limited to its allowed fields; tests now assert that status, hours, volunteer id, email and the reviewer fields are refused (422).
+
+**B. JWT and sessions.**
+- `TokenService` signs with `algorithm: 'HS256'` and verifies with `algorithms: ['HS256']` (`ACCESS_TOKEN_ALGORITHM`).
+- Refresh rotation claims the old token with `UPDATE … WHERE revoked_at IS NULL RETURNING` inside the transaction that creates the new session. The loser of a race is treated as reuse: the family is revoked and `auth.refresh_reuse_detected` audited.
+- Logout revokes the session, and the access token stops working at once (the session row is checked on every request).
+
+**C. Authentication audit events** (`audit_logs`, via `AuditService`):
+- staff: `auth.staff.login_succeeded`, `login_failed` (reason), `locked`, `reauth_succeeded` / `reauth_failed`;
+- donor: `auth.donor.otp_verified` / `otp_failed` / `account_created`;
+- sessions: `auth.logout`, `auth.refresh_reuse_detected`;
+- email change: `donor.email_change_requested` / `_verified` / `_failed`.
+
+No password, code, token or PAN is written. An address with no account is recorded as a 16-character hash.
+
+**D. PAN protection.**
+- `FieldEncryptionService` (`apps/api/src/common/security/`, global `SecurityModule`): AES-256-GCM, random IV, the column name as associated data, stored as `enc:v1:<iv>:<ct>:<tag>`.
+- `FIELD_ENCRYPTION_KEY` is required in production; without it, saving a PAN returns 503 (never plaintext). Legacy plaintext is read and encrypted on the next write.
+- `/me` returns `taxIdNumberMasked` + `hasTaxId` only; staff with `donor.read_sensitive` see it decrypted.
+
+**E. Headers.**
+- **CSP:** `apps/web/src/lib/security/content-security-policy.ts`, Razorpay Checkout allowed, `'unsafe-inline'` scripts kept (documented trade-off).
+- **HSTS:** 2 years, subdomains, when started with `APP_ENV=production`.
+
+**F. CSRF.** The BFF refuses (403) a write whose `Origin` is not this site, `NEXT_PUBLIC_APP_URL` or `TRUSTED_ORIGINS`, or that has no `Origin` and no `Sec-Fetch-Site: same-origin` (`apps/web/src/lib/security/origin-check.ts`). Webhook and worker calls go to the API directly and are unaffected.
+
+**G. Client IPs.** `requestClientIp()` (`common/security/internal-request.ts`) replaces the 18 controller helpers that trusted `X-Forwarded-For`. It uses the Phase 11 trusted header only with `INTERNAL_API_SECRET`, and otherwise the connecting address.
+
+**H. Fail-closed environment.**
+- **API:** requires a valid `FIELD_ENCRYPTION_KEY` in production.
+- **Worker:** requires an https `APP_PUBLIC_URL` in production.
+- **Web:** validates `webEnvSchema` at startup (`apps/web/src/instrumentation.ts`). Production refuses mock data, a missing `INTERNAL_API_SECRET` or `CLIENT_IP_HEADER`, a non-https app URL, and DEMO organisation data. Mock fixtures are never used when `APP_ENV=production` (`lib/runtime-flags.ts`).
+
+**Tests:**
+- `apps/api/test/account-security.spec.ts` (22);
+- `token.service.spec.ts`, `field-encryption.service.spec.ts`;
+- config guards in `app.config.spec.ts`;
+- `normaliseEmail`;
+- web `origin-check`, `content-security-policy`, `runtime-flags`;
+- E2E: the CSP and BFF cross-site tests in `shell.spec.ts`, and the email-change test in `dashboard.spec.ts`.
+
+**Not in scope:** staff invite and password reset (Phase 13); SEO (Phase 15). **Campaign Gallery: untouched.**
+
+**Human-only follow-ups:**
+- generate and store `FIELD_ENCRYPTION_KEY`;
+- re-encrypt existing production PANs;
+- configure the production web environment.
+
+All in `DEPLOYMENT.md` §6b.
+
 ### What was being worked on
 
-Phase 11 (item 11) is implemented, validated (§2) and committed locally as one commit, `feat(payments): complete payment production readiness`. It is **not pushed**; pushing needs the owner's approval. CI is deferred by the owner.
+Phase 12 (item 12) is implemented, validated (§2) and committed locally as one commit, `feat(auth): complete account and security hardening`. It is **not pushed**; pushing needs the owner's approval. CI is deferred by the owner.
 
 ### Reverted by the owner on 2026-10-06 (do not redo unless asked)
 
@@ -170,6 +234,18 @@ See **`AGENTS.md` §11**, the permanent list of owner-approved designs and decis
 ---
 
 ## 2. LAST VALIDATION — snapshot as of 2026-10-07 (local only)
+
+**Phase 12 (item 12), 2026-10-07:**
+
+| Command | Result |
+|---|---|
+| `pnpm prettier --check .`, `pnpm typecheck`, `pnpm lint` | ✅ pass (13/13 tasks each) |
+| `pnpm --filter @sailent/api test` (full) | ✅ **861 passed, 0 failed**, 9 skipped (second run). The 4 `me.spec.ts` drift failures are gone (PAN is now stored `enc:v1:`, §5.1). The first run had 1 intermittent `public-api.spec.ts` failure ("matches the open-campaign rule for every programme", a whole-database comparison raced by other suites); it passed on the rerun. Includes `account-security.spec.ts` 22/22. |
+| `pnpm --filter @sailent/web test` / `@sailent/validation` / `@sailent/database` / `@sailent/worker` | ✅ 146 / 281 / 180 / 8 passed |
+| `pnpm build --force` (isolated copy) | ✅ 8/8 tasks |
+| Playwright, **full suite** × 4 projects (744 tests, isolated copy, `--workers=2`) | 546 passed, 6 failed, 168 skipped, 24 not run. 4 failures were one too-broad locator in the new email-change test (fixed); the 24 not run were the later tests in that serial block. The other 2 are the **pre-existing WebKit failures** (below). |
+| Playwright `dashboard.spec.ts` × 4 projects, after the locator fix | ✅ 92 passed |
+| Mutation checks | Each of these reverts made tests fail: no `algorithms` pin (HS384/HS512 accepted); no `revoked_at IS NULL` in the refresh claim (race test); `X-Forwarded-For` trusted again in the auth controller (spoof test); PAN written in plaintext (encryption test); origin check bypassed (3 failures); the volunteer schema made `.passthrough()` (5 failures). |
 
 **Phase 11 (item 11), 2026-10-07:**
 
@@ -319,18 +395,17 @@ Statuses: COMPLETE · PARTIALLY COMPLETE · IN PROGRESS · NOT STARTED · BLOCKE
 
 ## 5. CURRENT KNOWN ISSUES (highest first) — as of 2026-10-06
 
-### 5.1 Local database drift (causes the 4 failing API tests)
+### 5.1 Local database drift (no longer causes test failures, since Phase 12)
 
 **Unknown migration.** `drizzle.__drizzle_migrations` holds **24 rows** in both `sailent_dev` and `sailent_e2e`; the repository journal has **23**.
 - Row 24 matches no repository file. Its only effect is a CHECK constraint, `donors_tax_id_encrypted` (`tax_id_number IS NULL OR tax_id_number LIKE 'enc:%'`).
-- The application writes PAN **in plaintext**: `FIELD_ENCRYPTION_KEY` is never read.
-- So `PATCH /me` with a tax ID fails locally.
-- `TEST_DATABASE_URL` points at `sailent_dev`, so the API tests hit that drift.
+- Since Phase 12 the API encrypts PANs (`enc:v1:…`), which satisfies the constraint, so `PATCH /me` with a tax ID works locally and the 4 `me.spec.ts` failures are resolved — **with no database change**.
+- The row itself is still unexplained, and the repository has no matching migration.
 
 **Edited migration.** Row 15 (`0014`) no longer matches its file; the file was edited after it was applied.
 
-**Owner decision needed:**
-- **(a)** implement PAN encryption, with a committed migration for the constraint; or
+**Owner decision still open (lower priority now):**
+- **(a)** commit a migration that adds the same CHECK, so every database (including production, after its PANs are re-encrypted by a human) carries it; or
 - **(b)** drop the constraint locally and rebuild the local databases from the repository migrations.
 
 ### 5.2 Production database: unverified residue (HIGH)
@@ -347,11 +422,14 @@ This is for a **human** to verify and remediate through the approved process (`D
 
 ### 5.3 Security (details in `SECURITY.md`)
 
-- **Rate limits.** Per real client since Phase 11 — once the web server's `CLIENT_IP_HEADER` and `INTERNAL_API_SECRET` are configured; until then site-wide, as before (`DEPLOYMENT.md` §6a). `X-Forwarded-For` is still trusted for **audit** IPs (Phase 12).
-- **No staff 2FA in effect.**
-- **Donor data:** PAN stored in plaintext; unverified donor email change; guest checkout can overwrite an existing donor's name and phone.
-- **Web defaults:** `FEATURE_MOCK_DATA` is treated as ON when unset; `webEnvSchema` is never loaded.
-- **Output and headers:** no CSP or HSTS on the web. (A forged Razorpay webhook gets HTTP 401 since `e87864b`. JSON-LD escaping: fixed in `ed69d41`.)
+- **Rate limits and audit IPs.** Per real client since Phase 11, and audit/session IPs since Phase 12 — once the web server's `CLIENT_IP_HEADER` and `INTERNAL_API_SECRET` are configured; until then site-wide, as before (`DEPLOYMENT.md` §6a). `X-Forwarded-For` is no longer trusted anywhere in the API.
+- **Staff 2FA: not required, by owner decision** (2026-10-07). Not a gap.
+- **Staff invite and password reset** do not exist (Phase 13).
+- **PAN:** encrypted since Phase 12, but **production may hold plaintext PANs** written earlier; re-encrypting them, and generating and keeping `FIELD_ENCRYPTION_KEY`, are human-only (`DEPLOYMENT.md` §6b).
+- **CSP keeps `'unsafe-inline'` scripts** (accepted trade-off, `SECURITY.md`). HSTS needs `APP_ENV=production` on the web.
+- **Audit log** is not tamper-proof (no REVOKE, writes fail open).
+- **Account lockout** can be triggered by anyone for any staff account, and its 429 reveals that the account exists (unchanged).
+- Donor OTPs are a bare SHA-256, not an HMAC (low).
 
 ### 5.4 Infrastructure and tooling
 
@@ -375,7 +453,7 @@ This is for a **human** to verify and remediate through the approved process (`D
   - Reconciliation, per-client limits and the worker schedule need **deployment configuration** (`INTERNAL_API_SECRET` on API, web and worker; `API_INTERNAL_URL`; `CLIENT_IP_HEADER`), a human task (`DEPLOYMENT.md` §6a). Without it, limits stay site-wide and nothing is reconciled.
   - **Never run against real Razorpay** (no keys): order payments endpoint, Checkout retry behaviour and the `Permissions-Policy` change are verified only against fakes — the sandbox trial (Phase 15) must cover them.
   - M3 international payments are accepted and kept (FCRA) — disable in the Razorpay dashboard (human).
-  - M6 guest checkout overwrites an existing donor's name and phone (Phase 12).
+  - ~~M6 guest checkout overwrites an existing donor's name and phone~~ — fixed in Phase 12.
   - No total-value cap on a donation (custom amount is capped at ₹10 lakh); receipt PDF; receipt superseding (blocked by `receipts_donation_unique`).
   - `payment_webhooks` rows left `failed`/`pending` are not replayed by any tool (reconciliation settles the donation directly; the rows stay visible in Payment exceptions).
   - Reconciliation examines up to 100 donations per run, oldest first; stuck ones (authorised or mismatched payments) are re-examined every run until resolved by a human.
@@ -403,7 +481,7 @@ This is for a **human** to verify and remediate through the approved process (`D
 | No real registration data (PAN, 12A, 80G, address) | Go-live; 80G receipts | Supply the values |
 | No Razorpay keys in any environment | Live payment testing | Provide test-mode keys |
 | No application hosting chosen or configured | Deployment | Decide the platform. Cloud Run is not referenced in the repository. |
-| Local database drift / PAN encryption | Clean API test run | Choose (a) or (b) in §5.1 |
+| `FIELD_ENCRYPTION_KEY` not generated for production; production PANs possibly plaintext | Storing PANs in production | Generate and store the key; re-encrypt existing PANs (`DEPLOYMENT.md` §6b) |
 | Unknown production database state | Any production work | A human verifies the production schema version and residue (§5.2) |
 | No refund/cancellation policy page (Razorpay requires one) | Razorpay activation | Supply the policy text |
 
@@ -414,12 +492,12 @@ This is for a **human** to verify and remediate through the approved process (`D
 1. ~~Commit the featured/deadline work~~ (done: `dd64d41`). ~~Fix the CI target flag~~ (done: `0e94632`). ~~Turborepo test env~~ (done: `7fe6c25`). All pushed.
 2. ~~Commit the campaign cleanup~~ (done: `ed69d41`, pushed). **Commit the donor-count change** (§1 item 8) with owner approval; push only with a separate approval.
 3. CI (deferred by the owner, 2026-10-06): observe the GitHub Actions run and, with approval, the dependency overrides for `pnpm audit` (§5.4).
-4. ~~Programme campaign counts~~ (`f9816be`) and ~~webhook hardening~~ (`e87864b`), pushed. Phase 11 committed locally (`feat(payments): complete payment production readiness`); **push it** with owner approval; then **Phase 12 — Accounts, Authentication & Security Hardening** (2026-10-07 roadmap).
-5. Resolve the local drift / PAN encryption (§5.1).
-6. Fix the security items that need no product decisions (Phase 12): the web `FEATURE_MOCK_DATA` default and `webEnvSchema`; spoofable audit IPs. (Rate-limit keying: Phase 11. Webhook 401: `e87864b`. JSON-LD escaping: `ed69d41`.)
-7. Human-led production audit and hardening (§5.2).
-8. Then: PAN encryption and email verification; staff 2FA; CSP and HSTS.
-9. Notification retry consumer; reconciliation and pending expiry; programme rollups.
+4. ~~Programme campaign counts~~ (`f9816be`), ~~webhook hardening~~ (`e87864b`) and ~~Phase 11~~ (`5170ce0`), pushed. Phase 12 committed locally (`feat(auth): complete account and security hardening`); **push it** with owner approval; then **Phase 13 — Admin, CMS & Communications** (2026-10-07 roadmap; includes staff invite and password reset).
+5. Owner decision on the leftover local migration row (§5.1); no longer blocks tests.
+6. ~~Web `FEATURE_MOCK_DATA` default and `webEnvSchema`; spoofable audit IPs; PAN encryption; email verification; CSP and HSTS~~ (Phase 12). Staff 2FA: not required (owner decision).
+7. Human-led production audit and hardening (§5.2), including `FIELD_ENCRYPTION_KEY` and re-encrypting existing PANs (`DEPLOYMENT.md` §6b).
+8. Phase 14 (infrastructure and operations) and Phase 15 (final launch readiness, including SEO).
+9. Notification retry consumer; programme rollups. (Reconciliation and pending expiry: Phase 11.)
 10. Deployment artefacts and hosting.
 11. Replace the fixture content and the DEMO organisation data.
 12. Optional, owner-approved: rebuild the Drizzle snapshot baseline so `db:generate` becomes usable. **This is not required for hand-written migrations.**
@@ -443,8 +521,8 @@ These are recorded here and **not** silently resolved in the source documents.
 | # | Document says | Code / repository says |
 |---|---|---|
 | 1 | `README.md`: "Phase 1 complete"; webhook at `/webhooks/razorpay`; Neon | Phases 0–10.12 implemented; webhook `POST /api/v1/payments/razorpay/webhook`; Supabase (production) and local Postgres |
-| 2 | `docs/security-architecture.md`, `database-architecture.md`: PAN encrypted (AES-256-GCM) | Plaintext; `FIELD_ENCRYPTION_KEY` unused |
-| 3 | A8, `security-architecture.md`: TOTP mandatory for privileged staff | Not in effect; the TOTP role set lists deleted roles |
+| 2 | `docs/security-architecture.md`, `database-architecture.md`: PAN encrypted (AES-256-GCM) | **Resolved in Phase 12:** encrypted with AES-256-GCM and `FIELD_ENCRYPTION_KEY` (`enc:v1:` format). Rows written before Phase 12 may still be plaintext until rewritten. |
+| 3 | A8, `security-architecture.md`: TOTP mandatory for privileged staff | **Superseded by owner decision (2026-10-07):** staff TOTP/2FA is not required. The TOTP role set lists deleted roles and has no effect. The older documents are left unchanged. |
 | 4 | A4: webhook processed asynchronously via BullMQ | Inline |
 | 5 | A7: receipt `SF/2026-27/000001` | `SFL-<FY>-000001` |
 | 6 | A10: audit-log INSERT/SELECT-only role | No GRANT/REVOKE or trigger; the app connects as the owner |
@@ -457,7 +535,7 @@ These are recorded here and **not** silently resolved in the source documents.
 | 13 | `docs/database-development.md` "Development credentials": five per-role accounts with a required second factor | The current seed creates two `SUPER_ADMIN` accounts (`admin@sailent.local`, `staff@sailent.local`); TOTP is not enforced for `SUPER_ADMIN`. Older local databases may still hold the earlier accounts. |
 | 14 | `content-layer.md` §8: blog is fixture-backed | Database-backed |
 | 15 | Worker queue comments: declared queues are consumed | Only `example` and `email` are consumed |
-| 16 | `.env.example`: `SMS_*`, `SENTRY_*`, `JWT_REFRESH_SECRET`, `FEATURE_FCRA_ENABLED`, `FIELD_ENCRYPTION_KEY` | Never read |
+| 16 | `.env.example`: `SMS_*`, `SENTRY_*`, `JWT_REFRESH_SECRET`, `FEATURE_FCRA_ENABLED` | Never read (`FIELD_ENCRYPTION_KEY` is read since Phase 12) |
 | 17 | `docs/environment.md`: blank values fall back via `\|\|` | Web code uses `??` for `API_URL` |
 | 18 | `docs/phase-8.md` §13.6, §16: the Supabase project is "development/staging" | The code guard treats that host as production; the owner confirmed (2026-10-06) that it is **production** |
 | 19 | Phase 8 code comments use both labels for the same hosted project | "production" in `rotate-admin-password.ts` (about line 56) and in the seed's `main()` comment; "staging" in `database-target.ts` (about line 199) and `prepare-e2e.ts`. Per the owner (2026-10-06), it is **production**. The comments are left unchanged (application code). |
@@ -472,12 +550,12 @@ These are recorded here and **not** silently resolved in the source documents.
 ## THE NEXT AI AGENT SHOULD START HERE
 
 1. Read `AGENTS.md` in full, especially §8 (production is off limits), §9 (work directly on `main`; owner approval before every commit and every push) and §11 (must not change). Then read this file, and `CLAUDE.md` if you are Claude Code.
-2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-07, local `main` is 1 commit ahead of `origin/main` (`e87864b`): the Phase 11 commit `feat(payments): complete payment production readiness`, **not pushed** (§1 item 11). Ask the owner before pushing it.
+2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-07, local `main` is 1 commit ahead of `origin/main` (`5170ce0`): the Phase 12 commit `feat(auth): complete account and security hardening`, **not pushed** (§1 item 12). Ask the owner before pushing it. Staff TOTP/2FA is **not required** (owner decision); do not add it.
 3. **CI (deferred by the owner on 2026-10-06; resume only when asked): watch CI.**
    - Observe the GitHub Actions run for the current `main` head (for example with `gh run list` / `gh run view`, or on GitHub). The `security` job is expected to fail at `pnpm audit` until the dependency fixes are approved (§5.4).
    - Report the `quality` and `security` job results with their failing step and log excerpt, if any.
    - **Do not claim CI passes until that run has been observed.**
    - If a later step fails (build, tests, format, audit, gitleaks), report it and wait for the owner. Do not fix it unprompted.
-4. **Then ask the owner for the §5.1 decision** (PAN encryption vs rebuilding the local databases), and recommend a **human-led** review of the production database (§5.2).
+4. **Then:** Phase 13 (Admin, CMS & Communications) when the owner starts it. Recommend a **human-led** review of the production database (§5.2) and the Phase 12 human-only steps (`DEPLOYMENT.md` §6b). The §5.1 leftover migration row still needs an owner decision, but no longer blocks tests.
 
 Do not create feature branches or pull requests unless the owner explicitly asks (`AGENTS.md` §9).
