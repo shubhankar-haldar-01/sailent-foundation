@@ -20,7 +20,14 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "passThroughEnv": [
+        "DATABASE_URL",
+        "REDIS_URL",
+        "TEST_DATABASE_URL",
+        "TEST_REDIS_URL",
+        "ALLOW_REMOTE_TEST_DB"
+      ]
     },
     "test:e2e": {
       "dependsOn": ["^build"],
