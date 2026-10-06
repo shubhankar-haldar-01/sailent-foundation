@@ -343,6 +343,33 @@ describe('Public API (integration)', () => {
   });
 
   /**
+   * The impact total of donors counts PEOPLE: distinct donors with a
+   * successful donation, never the campaigns' counters added together (which
+   * counted somebody who gave to four campaigns four times). Its behaviour
+   * across a repeat gift is covered where captures happen, in
+   * `donations.spec.ts`.
+   */
+  describe('the impact donor total', () => {
+    it('is the number of distinct donors with a successful donation', async () => {
+      const db = app.get<{
+        db: { execute(q: unknown): Promise<{ rows: Record<string, string>[] }> };
+      }>(DATABASE).db;
+      const response = await get('/impact').expect(200);
+      const reported = (response.body as Envelope<{ totals: { donorCount: number } }>).data!.totals
+        .donorCount;
+
+      const result = await db.execute(sql`
+        SELECT count(DISTINCT donor_id)::int AS donors,
+               count(*) FILTER (WHERE donor_id IS NULL)::int AS unmatched
+          FROM donations
+         WHERE status = 'successful'
+      `);
+      const row = result.rows[0]!;
+      expect(reported).toBe(Number(row.donors) + Number(row.unmatched));
+    });
+  });
+
+  /**
    * The donor list is the ONLY public endpoint that returns a person's name, so
    * it gets its own block. Every test here is about what must NOT come back.
    */

@@ -6,19 +6,19 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-10-06 (campaign public experience cleanup, **uncommitted**, on top of `7fe6c25`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
+**Last updated:** 2026-10-06 (accurate donor count, **uncommitted**, on top of `ed69d41`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
 
 | | |
 |---|---|
 | **Overall status** | Feature-rich build, **not deployed to any hosting.** Phases 0–10.12 are implemented in the API, admin and public site. |
-| **Current phase** | Post-10.12 polish (no phase number). Everything up to `7fe6c25` is committed and pushed (§1). |
-| **Current feature** | **Campaign public experience cleanup** (§1, item 7): open/closed availability, restored "Other Ways to Support", the mobile donation card in the page, campaign-specific stories, duplication cleanup, responsive/accessibility/JSON-LD fixes. Implemented and validated; **not committed**. |
-| **Branch / HEAD** (as of 2026-10-06) | `main` @ `7fe6c25` = `origin/main` (up to date). The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
-| **Working tree** (as of 2026-10-06) | The campaign cleanup (24 modified application/test files, 1 new test file) and this documentation update (`DEVELOPMENT_STATUS.md`, `CHANGELOG.md`, `AGENTS.md`), all **uncommitted**. Run `git status` for the live state. |
+| **Current phase** | Post-10.12 polish (no phase number). Everything up to `ed69d41` (the campaign public experience cleanup) is committed and pushed (§1). |
+| **Current feature** | **Accurate donor count** (§1, item 8): `campaigns.donor_count` counts distinct donors per campaign, and the public impact total counts distinct donors. Implemented and validated; **not committed**. Historical counters were **not** recounted. |
+| **Branch / HEAD** (as of 2026-10-06) | `main` @ `ed69d41` = `origin/main` (up to date). The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
+| **Working tree** (as of 2026-10-06) | The donor-count change (`donation-capture.service.ts`, `content.service.ts`, `test/donations.spec.ts`, `test/public-api.spec.ts`) and this documentation update (`DEVELOPMENT_STATUS.md`, `CHANGELOG.md`, `DATABASE.md`), all **uncommitted**. Run `git status` for the live state. |
 | **Production database** | The **production Supabase project** exists (owner confirmed, 2026-10-06). Its schema and data state were **not inspected** and are **unknown**. Agents must not access it (`AGENTS.md` §8). |
 | **Application hosting** | None. No Dockerfiles, IaC or deploy workflow exist. |
 | **Local databases** | `sailent_dev` and `sailent_e2e` have migrations `0000`–`0022` applied, **plus one migration that is not in the repository** (§5.1). The repository has no pending migration. |
-| **CI** | **Not passing as of the last observed run.** Run #4 (at `166b70c`): the `quality` job passed lint, typecheck, migrate and seed, then failed at tests (`EnvValidationError`: Turborepo strict env mode stripped `DATABASE_URL`/`REDIS_URL`); the `security` job failed at `pnpm audit` (30 vulnerabilities: 2 low, 13 moderate, 15 high), so gitleaks was skipped. `7fe6c25` (pushed) adds `passThroughEnv` for the test task; **its GitHub Actions run has not been observed**. The audit failure is **unresolved** (dependency upgrades not approved yet), so the `security` job is expected to keep failing (§5.4). Do not describe CI as passing until a passing run has been observed. |
+| **CI** | **Not passing as of the last observed run.** Run #4 (at `166b70c`): the `quality` job passed lint, typecheck, migrate and seed, then failed at tests (`EnvValidationError`: Turborepo strict env mode stripped `DATABASE_URL`/`REDIS_URL`); the `security` job failed at `pnpm audit` (30 vulnerabilities: 2 low, 13 moderate, 15 high), so gitleaks was skipped. `7fe6c25` (pushed) adds `passThroughEnv` for the test task; **its GitHub Actions run has not been observed**. The audit failure is **unresolved** (dependency upgrades not approved yet), so the `security` job is expected to keep failing (§5.4). Do not describe CI as passing until a passing run has been observed. The owner has **deferred CI work** for now (2026-10-06). |
 
 ---
 
@@ -33,7 +33,8 @@
 | `0e94632` | ci: target local database in CI migrations and seed (item 5; `.github/workflows/ci.yml` only) | ✅ yes |
 | `166b70c` | docs: update project context and development checkpoint | ✅ yes |
 | `7fe6c25` | ci: pass test database and redis env through turbo (item 6; `turbo.json` only) | ✅ yes |
-| — | Campaign public experience cleanup (item 7) and this documentation update | ❌ **uncommitted** |
+| `ed69d41` | feat(campaigns): campaign public experience cleanup (item 7) | ✅ yes |
+| — | Accurate donor count (item 8) and this documentation update | ❌ **uncommitted** |
 
 Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to `origin/main` with a fast-forward push; until then `origin/main` held only `2ba2b43`.
 
@@ -102,9 +103,18 @@ Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to
 - **JSON-LD escaping:** `jsonLd()` (`apps/web/src/lib/seo/structured-data.ts`, used by every JSON-LD script) escapes `<`, `>`, `&`, U+2028 and U+2029 as JSON unicode escapes.
 - **Tests:** E2E `campaign.spec.ts`, `donations.spec.ts`, `journeys.spec.ts` updated to the new layout (no sheet to open; assertions kept, mobile branches now run the full card checks); new E2E tests for the custom-amount panel and the in-page mobile card. New unit tests: `campaign-impact.test.ts`, `jsonLd` in `seo.test.ts`, `deadlineCutoff` in `domain.test.ts`, listing mapping in `listing-query.test.ts`. New API tests in `public-api.spec.ts` for `open`/`closed`.
 
+**8. Accurate donor count (2026-10-06, UNCOMMITTED)**
+- **Rule:** "Donors" means distinct donors. Identity is `donations.donor_id` (one donor row per email, `donors_email_lower_unique`).
+- **Campaign counter** (`apps/api/src/modules/donations/donation-capture.service.ts`): capture adds 1 to `donor_count` only when no other successful donation to that campaign has the same `donor_id`. A repeat gift (anonymous or not, same email in any case or spacing) adds to `amount_raised` only. The same donor on another campaign counts there. The existing campaign-row `FOR UPDATE` lock and the `status <> 'successful'` capture gate are unchanged; the lock plus READ COMMITTED makes the check safe when two captures race. A NULL `donor_id` counts as one donor.
+- **Public impact total** (`apps/api/src/modules/content/content.service.ts` `getImpact()`): `totals.donorCount` = distinct `donor_id` over successful donations (plus NULL-donor donations), not `SUM(campaigns.donor_count)`. Same field name and response shape. The web does not render this field.
+- **Not changed:** schema, migrations, seed (synthetic `donor_count` baselines kept), web UI, `donors.donation_count`/`total_donated`.
+- **No recount was run.** Existing counters (including any production values) keep their old meaning until a human runs the recount runbook in `DATABASE.md` §12. Never run it on the demo databases.
+- **Tests:** `apps/api/test/donations.spec.ts` gains a "donor count" block (repeat donor +0 with money added; different donor +1; same email differently written +0; same donor on another campaign +1 there; anonymous repeat +0; two racing captures by one new donor +1; `/impact` unchanged after a repeat gift). The webhook/browser race test now uses its own donor so "+1 once" still tests what it meant. The teardown now restores `amount_raised` and `donor_count` on the campaigns it spends (it already restored `provided_quantity`), so runs no longer leak counter increments into `sailent_dev`. `public-api.spec.ts` checks `/impact` equals the distinct count. Against the old capture code, 4 of the new tests fail (checked 2026-10-06).
+- **Pre-existing dev drift left alone:** `sailent_dev` `school-kits-jharkhand` reads 397 donors against a seed value of 320, from earlier test runs that never restored counters. Not reconciled (owner rule); a local re-seed would reset it.
+
 ### What was being worked on
 
-The campaign cleanup (item 7) is implemented and validated (§2) and **awaits owner approval to commit**. The CI run for `7fe6c25` has not been observed.
+The donor-count change (item 8) is implemented and validated (§2) and **awaits owner approval to commit**. CI is deferred by the owner.
 
 ### Reverted by the owner on 2026-10-06 (do not redo unless asked)
 
@@ -120,7 +130,21 @@ See **`AGENTS.md` §11**, the permanent list of owner-approved designs and decis
 
 ---
 
-## 2. LAST VALIDATION — snapshot as of 2026-10-06 (campaign cleanup working tree, local only)
+## 2. LAST VALIDATION — snapshot as of 2026-10-06 (local only)
+
+**Donor-count change (item 8), 2026-10-06:**
+
+| Command | Result |
+|---|---|
+| `pnpm prettier --check .` | ✅ pass |
+| `pnpm typecheck` | ✅ pass (13/13 tasks) |
+| `pnpm lint` | ✅ pass (13/13 tasks) |
+| API `test/donations.spec.ts` + `test/public-api.spec.ts` | ✅ 66 passed (26 + 40) |
+| `pnpm --filter @sailent/api test` (full) | ❌ 764 passed, **4 failed**, 9 skipped — the same 4 `me.spec.ts` failures from local database drift (§5.1) |
+| `pnpm --filter @sailent/web test` / `@sailent/validation test` | ✅ 110 / 280 passed (unchanged code) |
+| Playwright | not run (API-only change; no web change) |
+
+**Campaign cleanup (item 7, now `ed69d41`):**
 
 | Command | Result (as of 2026-10-06) |
 |---|---|
@@ -275,7 +299,7 @@ This is for a **human** to verify and remediate through the approved process (`D
 
 - **Notification retry is a no-op.**
 - **Programme rollups are never written.**
-- **`donor_count` counts donations,** not distinct donors.
+- **Historical `donor_count` values are not recounted.** New captures count distinct donors (§1 item 8); values written before 2026-10-06 may be overstated where a donor gave more than once. Recount is a human-only runbook (`DATABASE.md` §12).
 - **Orphan pending donations without Razorpay keys** (`DEPLOYMENT.md` §6).
 - **No reconciliation job.**
 - **Soft 404s.**
@@ -310,11 +334,11 @@ This is for a **human** to verify and remediate through the approved process (`D
 ## 7. UNFINISHED WORK (ordered)
 
 1. ~~Commit the featured/deadline work~~ (done: `dd64d41`). ~~Fix the CI target flag~~ (done: `0e94632`). ~~Turborepo test env~~ (done: `7fe6c25`). All pushed.
-2. **Commit the campaign cleanup** (§1 item 7) with owner approval; push only with a separate approval.
-3. Observe the GitHub Actions run for the new `main` head and report the `quality` and `security` results. Then, with approval, the dependency overrides for `pnpm audit` (§5.4).
-4. Distinct donor count (`donor_count` counts donations; §5.5) — a separate, owner-approved task.
+2. ~~Commit the campaign cleanup~~ (done: `ed69d41`, pushed). **Commit the donor-count change** (§1 item 8) with owner approval; push only with a separate approval.
+3. CI (deferred by the owner, 2026-10-06): observe the GitHub Actions run and, with approval, the dependency overrides for `pnpm audit` (§5.4).
+4. Programme campaign counts (rollups never written; §5.5), soft 404s, then the admin dashboard home — the order recommended in the 2026-10-06 roadmap review.
 5. Resolve the local drift / PAN encryption (§5.1).
-6. Fix the security items that need no product decisions: rate-limit keying and trusted client IP; the web `FEATURE_MOCK_DATA` default and `webEnvSchema`; webhook 401. (JSON-LD escaping is part of the campaign cleanup in item 2.)
+6. Fix the security items that need no product decisions: rate-limit keying and trusted client IP; the web `FEATURE_MOCK_DATA` default and `webEnvSchema`; webhook 401. (JSON-LD escaping: done in `ed69d41`.)
 7. Human-led production audit and hardening (§5.2).
 8. Then: PAN encryption and email verification; staff 2FA; CSP and HSTS.
 9. Notification retry consumer; reconciliation and pending expiry; programme rollups.
@@ -370,8 +394,8 @@ These are recorded here and **not** silently resolved in the source documents.
 ## THE NEXT AI AGENT SHOULD START HERE
 
 1. Read `AGENTS.md` in full, especially §8 (production is off limits), §9 (work directly on `main`; owner approval before every commit and every push) and §11 (must not change). Then read this file, and `CLAUDE.md` if you are Claude Code.
-2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-06, `main` = `origin/main` = `7fe6c25`, with the campaign cleanup and its documentation **uncommitted** (§1 item 7). Ask the owner before committing it, and separately before pushing.
-3. **Next validation: watch CI.**
+2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-06, `main` = `origin/main` = `ed69d41`, with the donor-count change and its documentation **uncommitted** (§1 item 8). Ask the owner before committing it, and separately before pushing.
+3. **CI (deferred by the owner on 2026-10-06; resume only when asked): watch CI.**
    - Observe the GitHub Actions run for the current `main` head (for example with `gh run list` / `gh run view`, or on GitHub). The `security` job is expected to fail at `pnpm audit` until the dependency fixes are approved (§5.4).
    - Report the `quality` and `security` job results with their failing step and log excerpt, if any.
    - **Do not claim CI passes until that run has been observed.**

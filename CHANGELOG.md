@@ -10,7 +10,16 @@ Newest first.
 
 ---
 
-## 2026-10-06 — Campaign public experience cleanup (UNCOMMITTED as of 2026-10-06)
+## 2026-10-06 — Accurate donor count (UNCOMMITTED as of 2026-10-06)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| `campaigns.donor_count` counts distinct donors per campaign: capture adds 1 only for a donor's first successful donation to that campaign (identity `donations.donor_id`), under the existing campaign-row lock | It counted donations, so a repeat donor was counted again | Repeat gifts raise `amount_raised` only; the same donor counts once per campaign | none |
+| Public `GET /impact` `totals.donorCount` = distinct successful donors, not `SUM(campaigns.donor_count)` | The sum counted one person once per campaign, and repeats | Same field and shape; the web does not render it | none |
+| Donation tests: a donor-count block; webhook-race test given its own donor; teardown restores `amount_raised`/`donor_count`. `/impact` distinct-count test | Cover the rule; stop tests leaking counter increments into `sailent_dev` | Tests only | — |
+| `DATABASE.md` §6 semantics and §12 human-only recount runbook | Existing counters were not recounted | Documentation | — |
+
+## 2026-10-06 — `ed69d41` Campaign public experience cleanup (pushed 2026-10-06)
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|

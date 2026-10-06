@@ -78,7 +78,7 @@ Verified on 2026-10-06 against:
   - `program_id` → programs RESTRICT, **NULLABLE**
   - `category_id` → categories SET NULL
   - `slug` unique
-  - `fundraising_goal`, `amount_raised`, `donor_count` (counts donations, not distinct donors)
+  - `fundraising_goal`, `amount_raised`, `donor_count` (**distinct donors** per campaign since 2026-10-06; see §6 and §12)
   - `status` (`campaign_status`)
   - `stop_at_goal`, `allow_custom_amount`, `min_donation_amount`
   - `is_featured`, `featured_order`
@@ -270,6 +270,15 @@ The scripts are in `packages/database/package.json`:
 ## 6. Data integrity rules (application-enforced)
 
 - Derived counters change only in the capture transaction (`donation-capture.service.ts`) under `FOR UPDATE`. The seed is the sanctioned exception, demo tier only.
+- **`campaigns.donor_count` counts distinct donors per campaign** (since 2026-10-06; before that it counted successful donations).
+  - The identity is `donations.donor_id`: one `donors` row per email (`donors_email_lower_unique` on `lower(btrim(email))`), so a repeat or anonymous gift from the same email is the same donor.
+  - Capture adds 1 only when no **other** successful donation to that campaign has the same `donor_id`; a repeat gift adds to `amount_raised` only. The same donor on another campaign counts there.
+  - Concurrency: the `FOR UPDATE` on the campaign row serialises captures for one campaign, and READ COMMITTED gives the check a fresh snapshot, so two simultaneous first gifts from one donor add exactly 1.
+  - A donation with `donor_id` NULL (no current code path creates one) counts as one donor.
+  - Limits of email identity: one person with two emails counts twice; a shared household email counts once.
+  - Existing values were **not** recounted. Seeded demo values are synthetic baselines with no donation rows behind them; real captures add to them under the new rule.
+- **The public impact total** (`GET /api/v1/impact` → `totals.donorCount`) is `count(DISTINCT donor_id)` (plus NULL-donor donations) over `donations` with `status = 'successful'`. It is no longer the sum of `campaigns.donor_count`. On demo data it therefore does not match the synthetic per-campaign figures. The web does not render this field as of 2026-10-06.
+- `donors.donation_count` and `donors.total_donated` are per-donor and still count donations; they are unchanged.
 - Receipt numbers are gapless per financial year (`receipt_sequences` row lock), in the format `SFL-<FY>-NNNNNN`.
 - Volunteer IDs are gapless per year (`volunteer_sequences`).
 - The campaign lifecycle is limited to the transitions in `packages/validation` `CAMPAIGN_TRANSITIONS`.
@@ -372,3 +381,52 @@ pnpm --filter @sailent/database db:rotate-admin-password
 6. **Verify the behaviour** in the admin UI as a `SUPER_ADMIN`.
    - The web `can()` helper only hides UI; the API is the enforcement point.
    - Update the documented count (112 as of 2026-10-06) where it appears: `SECURITY.md`, `PROJECT.md`, this file.
+
+## 12. Runbook: recount `campaigns.donor_count` (HUMAN ONLY — never automatic, never by an agent)
+
+Since 2026-10-06, new captures count distinct donors (§6), but **existing values were not recounted**. A campaign that took repeat gifts before that date still has an overstated `donor_count`.
+
+**Rules:**
+- **Production:** a human only, with explicit owner approval, **after** the production database has been verified (`DEVELOPMENT_STATUS.md` §5.2). Agents never connect to production (`AGENTS.md` §8).
+- **Only where `donor_count` has no synthetic baseline.** It is valid on production only if the demo seed never ran there; confirm that first. **Never run it on `sailent_dev` or `sailent_e2e`**: it would replace the seed's synthetic figures with the handful of demo donations. Locally, re-seeding already resets them.
+- **Run it when no donations are being captured** (a quiet window). The update's subquery reads a snapshot from the start of the statement, so a donation captured while it runs could be left out of that campaign's figure.
+
+**1. Dry run (read-only).** Shows every campaign whose stored value differs from its distinct successful donors:
+
+```sql
+SELECT c.slug,
+       c.donor_count AS stored,
+       count(DISTINCT d.donor_id)
+         + count(d.id) FILTER (WHERE d.donor_id IS NULL) AS distinct_donors
+  FROM campaigns c
+  LEFT JOIN donations d ON d.campaign_id = c.id AND d.status = 'successful'
+ GROUP BY c.id, c.slug, c.donor_count
+HAVING c.donor_count <>
+       count(DISTINCT d.donor_id) + count(d.id) FILTER (WHERE d.donor_id IS NULL)
+ ORDER BY c.slug;
+```
+
+Review the output. A `stored` value **lower** than `distinct_donors` means something else wrote the counter; stop and investigate before updating.
+
+**2. Update (in one transaction, after review and approval):**
+
+```sql
+BEGIN;
+UPDATE campaigns c
+   SET donor_count = x.distinct_donors,
+       updated_at = now()
+  FROM (
+    SELECT c2.id,
+           count(DISTINCT d.donor_id)
+             + count(d.id) FILTER (WHERE d.donor_id IS NULL) AS distinct_donors
+      FROM campaigns c2
+      LEFT JOIN donations d ON d.campaign_id = c2.id AND d.status = 'successful'
+     GROUP BY c2.id
+  ) x
+ WHERE c.id = x.id
+   AND c.donor_count <> x.distinct_donors;
+-- Check the row count against the dry run, then:
+COMMIT;
+```
+
+**3. Afterwards:** re-run the dry run (it should return no rows), and record the date, the operator and the row count in `DEVELOPMENT_STATUS.md` and `CHANGELOG.md`. `amount_raised` is not touched by this runbook.

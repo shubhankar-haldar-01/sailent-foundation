@@ -43,6 +43,21 @@ const WEBHOOK_SECRET = 'test_webhook_secret_qrstuvwxyz12';
 
 const DONOR = { name: 'Integration Donor', email: 'integration@example.test', phone: '9811100011' };
 
+/**
+ * Donors of their own, for the tests whose assertion depends on who has given
+ * before. `donor_count` counts a donor once per campaign, so a test that
+ * expects "+1" must use somebody who has not already given to that campaign in
+ * this run. Every phone starts `98111` so the teardown removes them.
+ */
+const donorFor = (key: string, phone: string) => ({
+  name: `Integration Donor ${key}`,
+  email: `integration-${key}@example.test`,
+  phone,
+});
+
+/** The campaigns whose counters this suite spends, restored in teardown. */
+const COUNTED_CAMPAIGNS = ['school-kits-jharkhand', 'flood-relief-balasore'] as const;
+
 /** A fake provider whose ids are deterministic, so assertions can name them. */
 function fakeRazorpay(overrides: Partial<Record<string, unknown>> = {}) {
   const payments = new Map<string, RazorpayPayment>();
@@ -119,6 +134,7 @@ describe('Donations (integration)', () => {
   let campaignId: string;
   let kitId: string;
   let providedAtStart = new Map<string, number>();
+  let countersAtStart = new Map<string, { raised: number; donors: number }>();
   let kitPrice: number;
   let bookId: string;
   let bookPrice: number;
@@ -168,6 +184,50 @@ describe('Donations (integration)', () => {
     );
     const row = result.rows[0]!;
     return { raised: Number(row.amount_raised), donors: Number(row.donor_count) };
+  }
+
+  /** `amount_raised` and `donor_count` of any campaign, by slug. */
+  async function countersFor(slug: string) {
+    const database = app.get<{
+      db: { execute(q: unknown): Promise<{ rows: Record<string, string>[] }> };
+    }>(DATABASE);
+    const result = await database.db.execute(
+      sql`SELECT amount_raised, donor_count FROM campaigns WHERE slug = ${slug}`,
+    );
+    const row = result.rows[0]!;
+    return { raised: Number(row.amount_raised), donors: Number(row.donor_count) };
+  }
+
+  /** The public impact total of distinct donors. */
+  async function impactDonors() {
+    const response = await request(server).get(`${PREFIX}/impact`).expect(200);
+    return (response.body as Envelope<{ totals: { donorCount: number } }>).data!.totals.donorCount;
+  }
+
+  /** Start a donation and capture it through the browser's verify path. */
+  async function startCapture(body: Record<string, unknown>) {
+    const { body: started } = await startDonation(body);
+    const orderId = started.data!.razorpayOrderId as string;
+    const donationId = started.data!.donationId as string;
+    const amount = started.data!.amount as number;
+    const payment = razorpay.__paymentForOrder(orderId);
+    const verify = () =>
+      request(server)
+        .post(`${PREFIX}/donations/${donationId}/verify-payment`)
+        .send({
+          razorpayOrderId: orderId,
+          razorpayPaymentId: payment.id,
+          razorpaySignature: checkoutSignature(orderId, payment.id),
+        });
+    return { amount, verify };
+  }
+
+  async function captureDonation(body: Record<string, unknown>) {
+    const { amount, verify } = await startCapture(body);
+    const verified = await verify();
+    expect(verified.status).toBe(200);
+    expect((verified.body as Envelope<{ applied: boolean }>).data!.applied).toBe(true);
+    return amount;
   }
 
   async function providedFor(campaignProductId: string) {
@@ -221,6 +281,18 @@ describe('Donations (integration)', () => {
 
     const campaign = await request(server).get(`${PREFIX}/campaigns/school-kits-jharkhand`);
     campaignId = (campaign.body as Envelope<{ id: string }>).data!.id;
+
+    /*
+      The campaign counters too, for the same reason as `provided_quantity`:
+      captures here raise `amount_raised` and `donor_count` on SEEDED
+      campaigns, and deleting the donation rows does not lower them. Without
+      this, every run left the development database's figures a little higher.
+    */
+    countersAtStart = new Map(
+      await Promise.all(
+        COUNTED_CAMPAIGNS.map(async (slug) => [slug, await countersFor(slug)] as const),
+      ),
+    );
   });
 
   afterAll(async () => {
@@ -257,6 +329,11 @@ describe('Donations (integration)', () => {
     for (const [campaignProductId, provided] of providedAtStart) {
       await database.db.execute(
         sql`UPDATE campaign_products SET provided_quantity = ${provided} WHERE id = ${campaignProductId}::uuid`,
+      );
+    }
+    for (const [slug, counters] of countersAtStart) {
+      await database.db.execute(
+        sql`UPDATE campaigns SET amount_raised = ${counters.raised}, donor_count = ${counters.donors} WHERE slug = ${slug}`,
       );
     }
 
@@ -376,7 +453,9 @@ describe('Donations (integration)', () => {
       const { body } = await startDonation({
         campaignSlug: 'school-kits-jharkhand',
         items: [{ campaignProductId: bookId, quantity: 2 }],
-        donor: DONOR,
+        // A donor who has not given to this campaign yet, so "+1 donor" below
+        // is still the assertion that the second capture added nothing.
+        donor: donorFor('race', '9811100012'),
       });
 
       const orderId = body.data!.razorpayOrderId as string;
@@ -529,6 +608,147 @@ describe('Donations (integration)', () => {
 
       expect(errorCode(response.body as Envelope)).toBe('CONFLICT');
       expect(await campaignState()).toEqual(before);
+    });
+  });
+
+  // =========================================================================
+  /**
+   * "Donors" counts PEOPLE, once per campaign — not donations.
+   *
+   * The identity is `donor_id`: one donor row per email address. A repeat gift
+   * adds to the money and not to the head count; the same person giving to a
+   * second campaign is a new donor THERE. The public impact total counts
+   * distinct donors across everything.
+   */
+  describe('donor count', () => {
+    const SCHOOL = 'school-kits-jharkhand';
+    const FLOOD = 'flood-relief-balasore';
+
+    it('counts a repeat donation in the money, not in the donors', async () => {
+      const donor = donorFor('repeat', '9811100021');
+      const before = await countersFor(SCHOOL);
+      const impactBefore = await impactDonors();
+
+      const first = await captureDonation({
+        campaignSlug: SCHOOL,
+        items: [],
+        customAmount: 50_000,
+        donor,
+      });
+      const afterFirst = await countersFor(SCHOOL);
+      expect(afterFirst.raised).toBe(before.raised + first);
+      expect(afterFirst.donors).toBe(before.donors + 1);
+      expect(await impactDonors()).toBe(impactBefore + 1);
+
+      const second = await captureDonation({
+        campaignSlug: SCHOOL,
+        items: [],
+        customAmount: 70_000,
+        donor,
+      });
+      const afterSecond = await countersFor(SCHOOL);
+      expect(afterSecond.raised).toBe(afterFirst.raised + second);
+      expect(afterSecond.donors).toBe(afterFirst.donors);
+      // The public total is distinct donors too: a repeat gift leaves it alone.
+      expect(await impactDonors()).toBe(impactBefore + 1);
+    });
+
+    it('counts a different donor', async () => {
+      const before = await countersFor(SCHOOL);
+      await captureDonation({
+        campaignSlug: SCHOOL,
+        items: [],
+        customAmount: 50_000,
+        donor: donorFor('different', '9811100022'),
+      });
+      expect((await countersFor(SCHOOL)).donors).toBe(before.donors + 1);
+    });
+
+    it('treats the same email, written differently, as the same donor', async () => {
+      const before = await countersFor(SCHOOL);
+      await captureDonation({
+        campaignSlug: SCHOOL,
+        items: [],
+        customAmount: 50_000,
+        donor: donorFor('normalised', '9811100023'),
+      });
+      await captureDonation({
+        campaignSlug: SCHOOL,
+        items: [],
+        customAmount: 50_000,
+        donor: {
+          ...donorFor('normalised', '9811100023'),
+          email: '  Integration-Normalised@Example.TEST ',
+        },
+      });
+      expect((await countersFor(SCHOOL)).donors).toBe(before.donors + 1);
+    });
+
+    it('counts the same donor again on a different campaign', async () => {
+      const donor = donorFor('two-campaigns', '9811100024');
+      const school = await countersFor(SCHOOL);
+      const flood = await countersFor(FLOOD);
+
+      await captureDonation({ campaignSlug: SCHOOL, items: [], customAmount: 50_000, donor });
+      const floodAmount = await captureDonation({
+        campaignSlug: FLOOD,
+        items: [],
+        customAmount: 50_000,
+        donor,
+      });
+
+      expect((await countersFor(SCHOOL)).donors).toBe(school.donors + 1);
+      const floodAfter = await countersFor(FLOOD);
+      expect(floodAfter.donors).toBe(flood.donors + 1);
+      expect(floodAfter.raised).toBe(flood.raised + floodAmount);
+    });
+
+    it('does not count an anonymous repeat gift from the same donor again', async () => {
+      const donor = donorFor('anonymous', '9811100025');
+      const before = await countersFor(SCHOOL);
+
+      await captureDonation({ campaignSlug: SCHOOL, items: [], customAmount: 50_000, donor });
+      const anonymousAmount = await captureDonation({
+        campaignSlug: SCHOOL,
+        items: [],
+        customAmount: 60_000,
+        donor: { ...donor, anonymous: true },
+      });
+
+      const after = await countersFor(SCHOOL);
+      expect(after.donors).toBe(before.donors + 1);
+      expect(after.raised).toBe(before.raised + 50_000 + anonymousAmount);
+    });
+
+    /**
+     * Two gifts from one new donor, captured at the same moment. The campaign
+     * row lock serialises them, and the second sees the first's committed row,
+     * so the donor is counted exactly once and both amounts land.
+     */
+    it('counts one new donor once when two of their captures race', async () => {
+      const donor = donorFor('concurrent', '9811100026');
+      const before = await countersFor(SCHOOL);
+
+      const a = await startCapture({
+        campaignSlug: SCHOOL,
+        items: [],
+        customAmount: 50_000,
+        donor,
+      });
+      const b = await startCapture({
+        campaignSlug: SCHOOL,
+        items: [],
+        customAmount: 80_000,
+        donor,
+      });
+
+      const [first, second] = await Promise.all([a.verify(), b.verify()]);
+      expect(first.status).toBe(200);
+      expect(second.status).toBe(200);
+
+      const after = await countersFor(SCHOOL);
+      expect(after.donors).toBe(before.donors + 1);
+      expect(after.raised).toBe(before.raised + a.amount + b.amount);
     });
   });
 

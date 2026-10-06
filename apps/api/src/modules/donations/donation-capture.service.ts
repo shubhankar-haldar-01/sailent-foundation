@@ -131,6 +131,20 @@ export class DonationCaptureService {
        * donations silently, and the ones it loses are real money. The `FOR
        * UPDATE` above the update serialises two captures against the same
        * campaign so `donor_count` is also exact.
+       *
+       * `donor_count` COUNTS DONORS, NOT DONATIONS. It goes up only for a
+       * donor's FIRST successful donation to this campaign; a repeat gift adds
+       * to `amount_raised` and nothing else. The donor is `donor_id` — one row
+       * per email address (`donors_email_lower_unique`), so the same person
+       * giving twice, anonymously or not, is the same donor.
+       *
+       * The check excludes THIS donation, which the gate above has already
+       * marked successful. It is safe under concurrency because of the lock:
+       * a second capture for the same donor and campaign waits on the `FOR
+       * UPDATE`, and its statement then sees the first one's committed row
+       * (READ COMMITTED takes a fresh snapshot per statement), so it adds 0.
+       * A donation with no donor cannot be matched to another, so it counts
+       * as one donor.
        */
       await tx.execute(
         sql`SELECT id FROM campaigns WHERE id = ${donation.campaignId}::uuid FOR UPDATE`,
@@ -138,7 +152,17 @@ export class DonationCaptureService {
       await tx.execute(sql`
         UPDATE campaigns
            SET amount_raised = amount_raised + ${donation.amount},
-               donor_count = donor_count + 1,
+               donor_count = donor_count + CASE
+                 WHEN ${donation.donorId}::uuid IS NULL OR NOT EXISTS (
+                   SELECT 1
+                     FROM donations
+                    WHERE campaign_id = ${donation.campaignId}::uuid
+                      AND donor_id = ${donation.donorId}::uuid
+                      AND status = 'successful'
+                      AND id <> ${donation.id}::uuid
+                 )
+                 THEN 1 ELSE 0
+               END,
                updated_at = now()
          WHERE id = ${donation.campaignId}::uuid
       `);

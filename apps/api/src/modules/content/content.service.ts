@@ -903,7 +903,10 @@ export class ContentService {
         programmes: sql<number>`(SELECT count(*)::int FROM programs WHERE status = 'published' AND deleted_at IS NULL)`,
         campaigns: sql<number>`(SELECT count(*)::int FROM campaigns WHERE status IN ('active','completed') AND deleted_at IS NULL)`,
         beneficiariesReached: sql<number>`(SELECT coalesce(sum(beneficiaries_reached),0)::int FROM campaigns WHERE deleted_at IS NULL)`,
-        donorCount: sql<number>`(SELECT coalesce(sum(donor_count),0)::int FROM campaigns WHERE deleted_at IS NULL)`,
+        // DISTINCT DONORS, not a sum of the campaigns' counters: summing
+        // counted somebody who gave to four campaigns four times. A donation
+        // with no donor cannot be matched to another, so it counts as one.
+        donorCount: sql<number>`(SELECT (count(DISTINCT donor_id) + count(*) FILTER (WHERE donor_id IS NULL))::int FROM donations WHERE status = 'successful')`,
         activeVolunteers: sql<number>`(SELECT count(*)::int FROM volunteers WHERE status = 'active')`,
         verifiedVolunteerHours: sql<number>`(SELECT coalesce(sum(verified_hours),0)::int FROM volunteers)`,
       })
