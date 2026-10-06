@@ -1052,8 +1052,11 @@ async function seedDemoContent(db: Database): Promise<void> {
       beneficiariesReached: 354,
       status: 'active' as const,
       isFeatured: true,
-      // Relative, so "N days left" on the card never goes stale or negative.
-      endDate: inDays(20),
+      // No end date on any seeded campaign: campaigns are ongoing by default
+      // and run until an administrator pauses or completes them. A real
+      // deadline is optional, set in the admin form, and closes donations at
+      // the end of that day (`hasEnded` in @sailent/validation).
+      endDate: null,
       /** Campaign-specific pricing. See `productCatalogue`. */
       products: [
         {
@@ -1087,7 +1090,7 @@ async function seedDemoContent(db: Database): Promise<void> {
       beneficiariesReached: 4120,
       status: 'active' as const,
       isFeatured: true,
-      endDate: new Date('2027-03-31T00:00:00+05:30'),
+      endDate: null,
       /** Campaign-specific pricing. See `productCatalogue`. */
       products: [
         {
@@ -1120,7 +1123,7 @@ async function seedDemoContent(db: Database): Promise<void> {
       beneficiariesReached: 640,
       status: 'active' as const,
       isFeatured: true,
-      endDate: inDays(12),
+      endDate: null,
       /** Campaign-specific pricing. See `productCatalogue`. */
       products: [
         {
@@ -1153,7 +1156,7 @@ async function seedDemoContent(db: Database): Promise<void> {
       beneficiariesReached: 64,
       status: 'active' as const,
       isFeatured: true,
-      endDate: inDays(25),
+      endDate: null,
       /** Campaign-specific pricing. See `productCatalogue`. */
       products: [
         {
@@ -1181,7 +1184,7 @@ async function seedDemoContent(db: Database): Promise<void> {
       beneficiariesReached: 60,
       status: 'completed' as const,
       isFeatured: false,
-      endDate: new Date('2026-08-31T00:00:00+05:30'),
+      endDate: null,
       products: [],
     },
     /*
@@ -1205,7 +1208,7 @@ async function seedDemoContent(db: Database): Promise<void> {
       beneficiariesReached: 96,
       status: 'active' as const,
       isFeatured: false,
-      endDate: inDays(30),
+      endDate: null,
       products: [],
     },
     {
@@ -1225,7 +1228,7 @@ async function seedDemoContent(db: Database): Promise<void> {
       beneficiariesReached: 313,
       status: 'active' as const,
       isFeatured: false,
-      endDate: inDays(35),
+      endDate: null,
       products: [],
     },
     {
@@ -1245,7 +1248,7 @@ async function seedDemoContent(db: Database): Promise<void> {
       beneficiariesReached: 45,
       status: 'active' as const,
       isFeatured: false,
-      endDate: inDays(40),
+      endDate: null,
       products: [],
     },
     {
@@ -1265,7 +1268,7 @@ async function seedDemoContent(db: Database): Promise<void> {
       beneficiariesReached: 540,
       status: 'active' as const,
       isFeatured: false,
-      endDate: inDays(45),
+      endDate: null,
       products: [],
     },
   ];

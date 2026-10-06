@@ -165,6 +165,7 @@ export class CampaignsService {
           startDate: campaigns.startDate,
           endDate: campaigns.endDate,
           isFeatured: campaigns.isFeatured,
+          featuredOrder: campaigns.featuredOrder,
           publishedAt: campaigns.publishedAt,
           createdAt: campaigns.createdAt,
           updatedAt: campaigns.updatedAt,

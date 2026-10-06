@@ -4,6 +4,7 @@ import {
   CAMPAIGN_TRANSITIONS,
   PROGRAM_TRANSITIONS,
   acceptsDonations,
+  hasEnded,
   campaignProgress,
   canTransitionCampaign,
   canTransitionProgram,
@@ -208,6 +209,51 @@ describe('acceptsDonations', () => {
     const draft = donationAvailability('draft');
     expect(draft.state).not.toBe('open');
     if (draft.state !== 'open') expect(draft.reason).toBeTruthy();
+  });
+});
+
+describe('hasEnded', () => {
+  // 13 Oct 2026 as an administrator picks it in the form: midnight UTC.
+  const END = new Date('2026-10-13T00:00:00Z');
+
+  it('treats no end date as no deadline', () => {
+    expect(hasEnded(null)).toBe(false);
+    expect(hasEnded(undefined)).toBe(false);
+    expect(hasEnded('not a date')).toBe(false);
+  });
+
+  it('keeps the whole last day open, in India time', () => {
+    expect(hasEnded(END, new Date('2026-10-13T08:00:00+05:30'))).toBe(false);
+    expect(hasEnded(END, new Date('2026-10-13T23:59:59+05:30'))).toBe(false);
+    expect(hasEnded(END, new Date('2026-10-14T00:00:01+05:30'))).toBe(true);
+  });
+
+  it('reads a date written with an India offset as that same day', () => {
+    const written = '2027-03-31T00:00:00+05:30';
+    expect(hasEnded(written, new Date('2027-03-31T20:00:00+05:30'))).toBe(false);
+    expect(hasEnded(written, new Date('2027-04-01T00:00:01+05:30'))).toBe(true);
+  });
+});
+
+describe('donations and the end date', () => {
+  const PAST = '2020-01-01T00:00:00Z';
+  const FUTURE = '2999-01-01T00:00:00Z';
+
+  it('closes an active campaign once its end date has passed', () => {
+    expect(donationAvailability('active', PAST)).toMatchObject({ state: 'ended' });
+    expect(acceptsDonations('active', PAST)).toBe(false);
+  });
+
+  it('keeps it open before the end date, and with none', () => {
+    expect(donationAvailability('active', FUTURE).state).toBe('open');
+    expect(donationAvailability('active', null).state).toBe('open');
+    expect(acceptsDonations('active', FUTURE)).toBe(true);
+    expect(acceptsDonations('active')).toBe(true);
+  });
+
+  it('leaves every other state as it was — the status speaks first', () => {
+    expect(donationAvailability('paused', PAST)).toMatchObject({ state: 'paused' });
+    expect(donationAvailability('completed', PAST)).toMatchObject({ state: 'completed' });
   });
 });
 

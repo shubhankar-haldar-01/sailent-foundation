@@ -1,12 +1,18 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+import { settleAnimations } from './settle-animations';
+
 /**
  * Phase 1 covers the application shells and the responsive/accessibility
  * foundation, not business flows. Those arrive with the modules that own them.
  */
 
 async function expectNoAxeViolations(page: Page) {
+  // Audit the page people read, not a frame of its entrance: the same WCAG
+  // checks, run once the cards have finished fading in (see the helper).
+  await settleAnimations(page);
+
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze();

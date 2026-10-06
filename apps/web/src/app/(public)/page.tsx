@@ -16,6 +16,7 @@ import {
   getComposedPage,
   getCampaigns,
   getEvents,
+  getFeaturedCampaigns,
   getHeadlineMetrics,
   getStories,
 } from '@/lib/content';
@@ -53,22 +54,23 @@ export const metadata: Metadata = buildMetadata({
  * wants the explanation still meets it before the stories.
  */
 export default async function HomePage() {
-  // Five independent reads, issued together. Awaited one after another this
-  // page would be as slow as their sum, and the homepage is the one nobody
-  // waits for.
-  const [headlineMetrics, featuredCampaigns, stories, events, composed, viewer] = await Promise.all(
-    [
+  // Independent reads, issued together. Awaited one after another this page
+  // would be as slow as their sum, and the homepage is the one nobody waits for.
+  const [headlineMetrics, featuredCampaigns, campaigns, stories, events, composed, viewer] =
+    await Promise.all([
       getHeadlineMetrics(),
       /*
-      Twenty-four, not six.
-
-      The row still shows three at a time, but the focus-area strip now filters
-      it in the browser — so anything not fetched cannot be found. At a limit of
-      six, an area whose campaigns happened to sort seventh would show "no
-      campaign running" while one was. The cap is generous rather than absent
-      because the band is a teaser: past two dozen, "View all campaigns" is the
-      honest answer and it queries the server.
-    */
+        The Featured Campaigns band: what an administrator marked featured, in
+        their order, then the rest by deadline — active campaigns only. See
+        `lib/featured-campaigns.ts`.
+      */
+      getFeaturedCampaigns(),
+      /*
+        The "browse by cause" grid further down, which filters in the browser
+        — so it gets the full open set, not the band's twelve. Twenty-four
+        rather than everything because it is a teaser: past two dozen, "View
+        More Campaigns" is the honest answer and it queries the server.
+      */
       getCampaigns({ status: 'active', sort: 'createdAt', limit: 24 }),
       getStories(),
       getEvents('upcoming'),
@@ -76,8 +78,7 @@ export default async function HomePage() {
       // Signed in, and what they saved — so the campaign cards' save hearts
       // draw themselves correctly, as they do on the campaigns listing.
       readDonorViewer(),
-    ],
-  );
+    ]);
 
   const data = {
     metrics: headlineMetrics,
@@ -128,7 +129,7 @@ export default async function HomePage() {
         More Campaigns" — directly before "Who we are". An ADDITION to the
         featured band above, with its own cause selection.
       */}
-      <CampaignShowcase campaigns={featuredCampaigns} viewer={viewer} />
+      <CampaignShowcase campaigns={campaigns} viewer={viewer} />
       <WhoWeAre />
       <StoriesAndEvents stories={stories.slice(0, 3)} events={events.slice(0, 3)} />
       <Testimonials />

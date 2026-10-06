@@ -8,6 +8,7 @@ import {
   ShareButton,
 } from '@/components/donations/campaign-donation-summary';
 import type { Campaign } from '@/lib/mock/types';
+import { acceptsDonationsNow } from '@/components/campaigns/campaign-status';
 
 /**
  * The side card for a campaign that has no products to choose.
@@ -35,7 +36,7 @@ export function CampaignStatusCard({
 }) {
   const goal = campaign.progress?.goal ?? campaign.goalAmount;
   const raised = campaign.progress?.raised ?? campaign.amountRaised;
-  const isOpen = campaign.status === 'active' && (campaign.donation?.state ?? 'open') === 'open';
+  const isOpen = acceptsDonationsNow(campaign);
 
   const reason =
     campaign.donation?.reason ??

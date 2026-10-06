@@ -11,6 +11,7 @@ import { CampaignCard } from '@/components/campaigns/campaign-card';
 import { RailPauseToggle } from '@/components/motion/rail-pause-toggle';
 import { useAutoplayRail } from '@/components/motion/use-autoplay-rail';
 import { matchesCategory } from '@/lib/categories';
+import { FEATURED_BAND_SIZE } from '@/lib/featured-campaigns';
 import { focusAreas } from '@/lib/mock/home';
 import type { DonorViewer } from '@/lib/donor/viewer';
 import type { Campaign } from '@/lib/mock/types';
@@ -23,8 +24,12 @@ import type { Campaign } from '@/lib/mock/types';
  * on its own. The band is still a teaser, not an index: everything else is
  * reached through "View All Campaigns", which queries the server rather than
  * shipping a longer list to the browser.
+ *
+ * WHICH twelve is decided on the server (`getFeaturedCampaigns`): the ones an
+ * administrator marked "Feature on the homepage", in their featured order,
+ * then the other active campaigns by deadline.
  */
-const VISIBLE_CARDS = 12;
+const VISIBLE_CARDS = FEATURED_BAND_SIZE;
 
 /**
  * Featured campaigns.

@@ -136,6 +136,14 @@ export default async function AdminCampaignsPage({
                     >
                       {campaign.title}
                     </Link>
+                    {campaign.isFeatured ? (
+                      <span className="bg-success-subtle text-success text-caption ml-2 inline-flex items-center rounded-full px-2 py-0.5 align-middle font-semibold">
+                        Featured
+                        {campaign.featuredOrder !== null && campaign.featuredOrder !== undefined
+                          ? ` · ${campaign.featuredOrder}`
+                          : ''}
+                      </span>
+                    ) : null}
                     <p className="text-caption text-muted-foreground">
                       /{campaign.slug}
                       {campaign.category ? ` · ${campaign.category}` : ''}

@@ -6,11 +6,11 @@ import { MediaFrame } from '@/components/media/media-frame';
 import type { Campaign } from '@/lib/mock/types';
 
 /**
- * "01 Jun 2026" — the approved design's form. `formatDate`'s short style is
- * "01/06/26", which reads as a reference number and is ambiguous to anybody
+ * "13 Oct 2026" — the approved design's form. `formatDate`'s short style is
+ * "13/10/26", which reads as a reference number and is ambiguous to anybody
  * used to month-first dates.
  */
-const periodDate = new Intl.DateTimeFormat('en-IN', {
+const deadlineDate = new Intl.DateTimeFormat('en-IN', {
   day: '2-digit',
   month: 'short',
   year: 'numeric',
@@ -34,14 +34,19 @@ const periodDate = new Intl.DateTimeFormat('en-IN', {
  * interruption rather than an aid.
  * ══════════════════════════════════════════════════════════════════════════
  *
- * THREE FACTS, AND ONLY ONES THE RECORD HOLDS. Location, people in need and the
- * campaign period each render only when the campaign actually carries them —
- * an empty "0 people in need" is worse than a shorter row (decision A14).
+ * ONLY FACTS THE RECORD HOLDS. Location and people in need render only when
+ * the campaign carries them — an empty "0 people in need" is worse than a
+ * shorter row (decision A14).
+ *
+ * NO "CAMPAIGN PERIOD". Campaigns are ongoing by default: they run until an
+ * administrator pauses or completes them, and a start-to-end range read like
+ * a grant window rather than an appeal. The one date a donor needs is a real
+ * DEADLINE, so that is shown — and only when an active campaign has one:
+ * "Ends 13 Oct 2026 · 7 days left" while it is open, "Closed 13 Oct 2026"
+ * once it has passed (see `hasEnded` in @sailent/validation).
  */
 export function CampaignHero({ campaign }: { campaign: Campaign }) {
-  const period = [campaign.startsAt, campaign.endsAt]
-    .filter((value): value is string => Boolean(value))
-    .map((value) => periodDate.format(new Date(value)));
+  const deadline = campaign.status === 'active' ? deadlineFact(campaign) : null;
 
   // "Ranchi, Jharkhand" is set as the design sets it: the place on the first
   // line and the state under it, so it matches the value-over-label rhythm of
@@ -117,17 +122,38 @@ export function CampaignHero({ campaign }: { campaign: Campaign }) {
           />
         ) : null}
 
-        {period.length > 0 ? (
+        {deadline ? (
           <Fact
             icon={CalendarDays}
             tone="bg-wash-mint text-wash-mint-ink-strong"
-            value={period.join(' – ')}
-            label="Campaign period"
+            value={deadline.value}
+            label={deadline.label}
           />
         ) : null}
       </ul>
     </section>
   );
+}
+
+/**
+ * The deadline, as the header states it — or null for a campaign without one.
+ *
+ * `donation.state === 'ended'` is the shared rule's verdict that the end date
+ * has passed; `daysLeft` is the API's count of the days still to go.
+ */
+function deadlineFact(campaign: Campaign): { value: string; label: string } | null {
+  if (!campaign.endsAt) return null;
+  const date = deadlineDate.format(new Date(campaign.endsAt));
+
+  if (campaign.donation?.state === 'ended') {
+    return { value: `Closed ${date}`, label: 'Donations closed' };
+  }
+
+  const days = campaign.daysLeft ?? 0;
+  return {
+    value: `Ends ${date}`,
+    label: days <= 0 ? 'Last day to give' : days === 1 ? '1 day left' : `${days} days left`,
+  };
 }
 
 /**

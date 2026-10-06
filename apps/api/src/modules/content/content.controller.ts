@@ -109,7 +109,13 @@ export class ContentController {
   @ApiQuery({ name: 'category', required: false })
   @ApiQuery({ name: 'state', required: false })
   @ApiQuery({ name: 'q', required: false, description: 'Free-text search' })
-  @ApiQuery({ name: 'sort', required: false, example: '-amountRaised' })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    example: '-amountRaised',
+    description:
+      '`featured` puts the campaigns marked featured first, in their featured order, then the rest by deadline.',
+  })
   listCampaigns(@Query(new ZodValidationPipe(campaignQuerySchema)) query: never) {
     return this.content.listCampaigns(query);
   }

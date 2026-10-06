@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+import { settleAnimations } from './settle-animations';
+
 import { E2E_POST } from './global-setup';
 
 /**
@@ -15,25 +17,9 @@ import { E2E_POST } from './global-setup';
  */
 
 async function expectNoAxeViolations(page: Page) {
-  /*
-    AUDIT THE PAGE PEOPLE READ, NOT A FRAME OF ITS ENTRANCE.
-
-    Cards fade and rise in, and their progress bars fill, over the first second
-    or so. Axe measures contrast from computed colours, so a scan taken mid-fade
-    reads every card's text at partial opacity and reports it as low contrast —
-    the Donate button measured #c25e26 instead of its real #ba4503. Waiting for
-    every FINITE animation to finish first means the same WCAG checks run
-    against the settled page. Looping ones (a loading skeleton's pulse) never
-    finish and are left out, or this would wait forever.
-  */
-  await page.evaluate(() =>
-    Promise.all(
-      document
-        .getAnimations()
-        .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
-        .map((animation) => animation.finished.catch(() => undefined)),
-    ),
-  );
+  // Audit the page people read, not a frame of its entrance: the same WCAG
+  // checks, run once the cards have finished fading in (see the helper).
+  await settleAnimations(page);
 
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])

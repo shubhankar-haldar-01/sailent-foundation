@@ -75,6 +75,23 @@ function text(form: FormData, key: string): string | undefined {
   return trimmed === '' ? undefined : trimmed;
 }
 
+/**
+ * The homepage "featured" pair from a campaign form.
+ *
+ * Unticked sends `false` and clears the order, so un-featuring a campaign
+ * leaves no stale position behind to resurface if it is featured again. A
+ * blank order is null — featured, after the numbered ones. Anything that is
+ * not a whole number is passed through as-is for the API to refuse by name.
+ */
+function featuredFields(form: FormData): { isFeatured: boolean; featuredOrder: number | null } {
+  const isFeatured = form.get('isFeatured') === 'on';
+  const raw = text(form, 'featuredOrder');
+  return {
+    isFeatured,
+    featuredOrder: isFeatured && raw !== undefined ? Number(raw) : null,
+  };
+}
+
 /** Rupees in the form, paise on the wire (decision A2). */
 function rupeesToPaise(form: FormData, key: string): number | undefined {
   const raw = text(form, key);
@@ -182,6 +199,7 @@ export async function createCampaign(_prev: ActionState, form: FormData): Promis
           : undefined,
         startDate: text(form, 'startDate'),
         endDate: text(form, 'endDate'),
+        ...featuredFields(form),
       },
     });
   } catch (error) {
@@ -215,12 +233,15 @@ export async function updateCampaign(_prev: ActionState, form: FormData): Promis
         endDate: text(form, 'endDate') ?? null,
         fundUtilization: text(form, 'fundUtilization'),
         internalNotes: text(form, 'internalNotes'),
+        ...featuredFields(form),
       },
     });
   } catch (error) {
     return toState(error);
   }
 
+  // Revalidates the `campaigns` tag and the homepage, so a change to what is
+  // featured shows on the next visit rather than after the cache expires.
   revalidateCatalogue(text(form, 'slug'));
   revalidatePath(`/admin/campaigns/${id}/edit`);
   return { ok: true };

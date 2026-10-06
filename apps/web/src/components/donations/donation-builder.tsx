@@ -193,7 +193,12 @@ export function DonationBuilder({
   };
 
   const isPaused = campaign.status === 'paused';
-  const isClosed = campaign.status === 'completed' || campaign.status === 'archived';
+  // Past its end date counts as finished: the checkout refuses it, so the
+  // controls must not invite it.
+  const isClosed =
+    campaign.status === 'completed' ||
+    campaign.status === 'archived' ||
+    campaign.donation?.state === 'ended';
 
   const setQuantity = (productId: string, quantity: number) => {
     setQuantities((current) => ({ ...current, [productId]: Math.max(0, quantity) }));

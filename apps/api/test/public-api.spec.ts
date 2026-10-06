@@ -182,6 +182,117 @@ describe('Public API (integration)', () => {
 
   // =========================================================================
   /**
+   * `sort=featured` — what leads the homepage's Featured Campaigns band.
+   *
+   * Two campaigns of its own, so the suite never flips a seeded campaign's
+   * flag under another spec file running against the same database. Their
+   * featured orders, 0 and 1, sort ahead of every seeded featured campaign,
+   * which has none.
+   */
+  describe('featured order', () => {
+    const FIRST = 'featured-order-test-first';
+    const SECOND = 'featured-order-test-second';
+
+    const db = () =>
+      app.get<{ db: { execute(q: unknown): Promise<{ rows?: Record<string, unknown>[] }> } }>(
+        DATABASE,
+      ).db;
+
+    beforeAll(async () => {
+      // Inserted second-first, so creation order cannot be what puts them right.
+      await db().execute(sql`
+        INSERT INTO campaigns (title, slug, fundraising_goal, status, is_featured, featured_order,
+                               published_at)
+        VALUES ('Featured order test (second)', ${SECOND}, 100000, 'active', true, 1, now()),
+               ('Featured order test (first)', ${FIRST}, 100000, 'active', true, 0, now())
+        ON CONFLICT (slug) DO NOTHING
+      `);
+    }, 60_000);
+
+    afterAll(async () => {
+      await db().execute(sql`DELETE FROM campaigns WHERE slug IN (${FIRST}, ${SECOND})`);
+    });
+
+    type Row = { slug: string; isFeatured: boolean; endDate: string | null };
+    const list = async () =>
+      (
+        (await get('/campaigns?sort=featured&limit=100').expect(200)).body as Envelope<{
+          items: Row[];
+        }>
+      ).data!.items;
+
+    it('puts the featured campaigns first, in their featured order', async () => {
+      const items = await list();
+      expect(items.slice(0, 2).map((item) => item.slug)).toEqual([FIRST, SECOND]);
+
+      // Every featured campaign before every other one.
+      const firstOrdinary = items.findIndex((item) => !item.isFeatured);
+      if (firstOrdinary !== -1) {
+        expect(items.slice(firstOrdinary).every((item) => !item.isFeatured)).toBe(true);
+      }
+    });
+
+    it('orders the rest by deadline, soonest first, with no deadline last', async () => {
+      const rest = (await list()).filter((item) => !item.isFeatured);
+      const deadlines = rest.map((item) =>
+        item.endDate ? new Date(item.endDate).getTime() : Number.POSITIVE_INFINITY,
+      );
+      expect(deadlines).toEqual([...deadlines].sort((a, b) => a - b));
+    });
+
+    it('still serves only what the public may see', async () => {
+      const items = (await list()) as (Row & { status: string })[];
+      expect(items.every((item) => ['active', 'paused'].includes(item.status))).toBe(true);
+    });
+  });
+
+  /**
+   * An end date is an optional DEADLINE. Once it has passed, an active
+   * campaign reports itself closed, so the page never offers a donation the
+   * checkout would refuse. Its own rows, for the same reason as above.
+   */
+  describe('the end date', () => {
+    const ENDED = 'end-date-test-ended';
+    const ONGOING = 'end-date-test-ongoing';
+
+    const db = () =>
+      app.get<{ db: { execute(q: unknown): Promise<{ rows?: Record<string, unknown>[] }> } }>(
+        DATABASE,
+      ).db;
+
+    beforeAll(async () => {
+      await db().execute(sql`
+        INSERT INTO campaigns (title, slug, fundraising_goal, status, published_at, end_date)
+        VALUES ('End date test (ended)', ${ENDED}, 100000, 'active', now(),
+                now() - interval '3 days'),
+               ('End date test (ongoing)', ${ONGOING}, 100000, 'active', now(), NULL)
+        ON CONFLICT (slug) DO NOTHING
+      `);
+    }, 60_000);
+
+    afterAll(async () => {
+      await db().execute(sql`DELETE FROM campaigns WHERE slug IN (${ENDED}, ${ONGOING})`);
+    });
+
+    const donationOf = async (slug: string) =>
+      (
+        (await get(`/campaigns/${slug}`).expect(200)).body as Envelope<{
+          donation: { state: string; reason?: string };
+        }>
+      ).data!.donation;
+
+    it('closes an active campaign once its end date has passed', async () => {
+      const donation = await donationOf(ENDED);
+      expect(donation.state).toBe('ended');
+      expect(donation.reason).toBeTruthy();
+    });
+
+    it('keeps a campaign with no end date open — ongoing is the default', async () => {
+      expect((await donationOf(ONGOING)).state).toBe('open');
+    });
+  });
+
+  /**
    * The donor list is the ONLY public endpoint that returns a person's name, so
    * it gets its own block. Every test here is about what must NOT come back.
    */

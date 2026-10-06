@@ -250,6 +250,31 @@ export class ContentService {
     };
     const { column, direction } = resolveSort(query.sort, sortable, 'endDate');
 
+    /**
+     * `sort=featured` — the homepage's Featured Campaigns band.
+     *
+     * The campaigns an administrator has marked FEATURED come first, in the
+     * order they were given (`featured_order`, lowest first; a featured
+     * campaign with no number goes after the numbered ones). Everything else
+     * follows by deadline, soonest first, so the band is never empty and what
+     * fills it is what most needs support now. Postgres sorts NULLs last in
+     * ascending order, so a campaign with no end date follows those that
+     * have one.
+     *
+     * `created_at` and `id` settle ties, so two identical requests can never
+     * return the same rows in a different order.
+     */
+    const orderBy =
+      query.sort === 'featured'
+        ? [
+            desc(campaigns.isFeatured),
+            asc(campaigns.featuredOrder),
+            asc(campaigns.endDate),
+            asc(campaigns.createdAt),
+            asc(campaigns.id),
+          ]
+        : [direction === 'desc' ? desc(column) : asc(column)];
+
     const [items, [count]] = await Promise.all([
       this.db
         .select({
@@ -303,7 +328,7 @@ export class ContentService {
         .from(campaigns)
         .leftJoin(programs, eq(programs.id, campaigns.programId))
         .where(where)
-        .orderBy(direction === 'desc' ? desc(column) : asc(column))
+        .orderBy(...orderBy)
         .limit(query.limit)
         .offset(offsetFor(query.page, query.limit)),
       this.db
@@ -392,8 +417,9 @@ export class ContentService {
       progress: campaignProgress(campaign.fundraisingGoal, campaign.amountRaised),
       daysRemaining: daysRemaining(campaign.endDate),
       // Tells the client what the donate control should say, and why — without
-      // the client having to know the lifecycle rules.
-      donation: donationAvailability(campaign.status),
+      // the client having to know the lifecycle rules. From the status, and the
+      // end date, which closes an active campaign at the end of its day.
+      donation: donationAvailability(campaign.status, campaign.endDate),
     };
   }
 

@@ -43,12 +43,15 @@ export function CampaignForm({
     startDate: string | null;
     endDate: string | null;
     amountRaised: number;
+    isFeatured: boolean;
+    featuredOrder: number | null;
   };
 }) {
   const [state, action, pending] = React.useActionState<ActionState, FormData>(
     campaign ? updateCampaign : createCampaign,
     {},
   );
+  const [isFeatured, setIsFeatured] = React.useState(campaign?.isFeatured ?? false);
 
   return (
     <form action={action} className="max-w-2xl space-y-5">
@@ -166,7 +169,12 @@ export function CampaignForm({
           <Input id="state" name="state" defaultValue={campaign?.state ?? ''} />
         </Field>
 
-        <Field label="Start date" name="startDate" errors={state.fieldErrors}>
+        <Field
+          label="Start date"
+          name="startDate"
+          errors={state.fieldErrors}
+          hint="For your records. Not shown on the public page."
+        >
           <Input
             id="startDate"
             name="startDate"
@@ -179,7 +187,7 @@ export function CampaignForm({
           label="End date"
           name="endDate"
           errors={state.fieldErrors}
-          hint="Leave blank if there is no real deadline."
+          hint="Optional. Leave blank for an ongoing campaign. If set, donations close automatically at the end of this day."
         >
           <Input
             id="endDate"
@@ -189,6 +197,56 @@ export function CampaignForm({
           />
         </Field>
       </div>
+
+      {/*
+        What leads the homepage. Featured campaigns come first in the
+        "Featured Campaigns" band, in this order; the band fills the rest with
+        active campaigns ending soonest. See `lib/featured-campaigns.ts`.
+      */}
+      <fieldset className="border-border space-y-4 rounded-lg border p-4">
+        <legend className="text-body-sm px-1 font-medium">Homepage</legend>
+
+        <label className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            name="isFeatured"
+            checked={isFeatured}
+            onChange={(changed) => setIsFeatured(changed.target.checked)}
+            aria-describedby="isFeatured-hint"
+            className="mt-0.5 size-4"
+          />
+          <span>
+            <span className="text-body-sm block">Feature on the homepage</span>
+            <span id="isFeatured-hint" className="text-caption text-muted-foreground block">
+              Featured campaigns lead the homepage&rsquo;s &ldquo;Featured Campaigns&rdquo; band.
+              Only active campaigns are shown there, so a paused or completed one waits until it is
+              active again.
+            </span>
+          </span>
+        </label>
+
+        {isFeatured ? (
+          <Field
+            label="Featured order"
+            name="featuredOrder"
+            errors={state.fieldErrors}
+            hint="Lower numbers come first. Leave blank to place it after the numbered ones."
+          >
+            <Input
+              id="featuredOrder"
+              name="featuredOrder"
+              type="number"
+              min={0}
+              max={9999}
+              step="1"
+              inputMode="numeric"
+              defaultValue={campaign?.featuredOrder ?? ''}
+              aria-describedby="featuredOrder-hint"
+              className="w-32"
+            />
+          </Field>
+        ) : null}
+      </fieldset>
 
       {campaign ? (
         <>

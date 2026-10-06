@@ -100,8 +100,48 @@ export function isPubliclyVisible(status: CampaignStatus): boolean {
  * stop accepting, or can no longer spend as described — and since donations
  * are final, each is a conversation nobody can put right afterwards.
  */
-export function acceptsDonations(status: CampaignStatus): boolean {
-  return status === 'active';
+export function acceptsDonations(
+  status: CampaignStatus,
+  endDate?: Date | string | null,
+  now: Date = new Date(),
+): boolean {
+  return status === 'active' && !hasEnded(endDate, now);
+}
+
+/** India Standard Time: +05:30 all year, no daylight saving. */
+const IST_OFFSET_MS = 330 * 60_000;
+
+/**
+ * Whether a campaign's optional deadline has passed.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * THE END DATE IS THE LAST DAY YOU CAN GIVE.
+ *
+ * "Ends 13 Oct" means donations are taken all through 13 October, so this
+ * closes at 23:59:59.999 India time ON that date — not at the midnight that
+ * starts it, which would end the campaign a day before the page says. The day
+ * is read in India time whatever the stored instant, so a date picked in the
+ * admin form (midnight UTC) and one written with an explicit +05:30 offset
+ * both land on the calendar day the administrator meant.
+ *
+ * No end date means no deadline: the campaign runs until an administrator
+ * pauses or completes it. That is the default.
+ * ══════════════════════════════════════════════════════════════════════════
+ *
+ * The ONE implementation: the public page, the cards and the checkout all ask
+ * this, so none of them can say "open" while another says "closed".
+ */
+export function hasEnded(
+  endDate: Date | string | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  if (!endDate) return false;
+  const instant = new Date(endDate).getTime();
+  if (Number.isNaN(instant)) return false;
+
+  const day = new Date(instant + IST_OFFSET_MS).toISOString().slice(0, 10);
+  const lastMoment = new Date(`${day}T23:59:59.999+05:30`).getTime();
+  return now.getTime() > lastMoment;
 }
 
 /** What the donate control should say and do, given the campaign's state. */
@@ -110,9 +150,22 @@ export type DonationAvailability =
   | { state: 'not-open'; reason: string }
   | { state: 'paused'; reason: string }
   | { state: 'completed'; reason: string }
+  /** Active, but past its end date — closed by the deadline, not by a person. */
+  | { state: 'ended'; reason: string }
   | { state: 'unavailable'; reason: string };
 
-export function donationAvailability(status: CampaignStatus): DonationAvailability {
+export function donationAvailability(
+  status: CampaignStatus,
+  endDate?: Date | string | null,
+  now: Date = new Date(),
+): DonationAvailability {
+  if (status === 'active' && hasEnded(endDate, now)) {
+    return {
+      state: 'ended',
+      reason: 'This campaign closed on its end date. Thank you to everyone who gave.',
+    };
+  }
+
   switch (status) {
     case 'active':
       return { state: 'open' };

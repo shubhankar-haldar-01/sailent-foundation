@@ -1,7 +1,11 @@
 import 'server-only';
 
 import type { Campaign, CampaignProduct } from '@/lib/mock/types';
+import { donationAvailability } from '@sailent/validation';
+
 import { campaigns as campaignFixtures } from '@/lib/mock/campaigns';
+import { FEATURED_BAND_SIZE, orderFeaturedFirst } from '@/lib/featured-campaigns';
+import { acceptsDonationsNow } from '@/components/campaigns/campaign-status';
 
 import { isNotFound } from './programs';
 import { loadContent, publicCache, toMedia, type Paginated } from './source';
@@ -86,7 +90,8 @@ export interface CampaignProgressDto {
 }
 
 export interface DonationAvailabilityDto {
-  state: 'open' | 'not-open' | 'paused' | 'completed' | 'unavailable';
+  /** `ended`: active, but past its end date — closed by the deadline, not by a person. */
+  state: 'open' | 'not-open' | 'paused' | 'completed' | 'ended' | 'unavailable';
   reason?: string;
 }
 
@@ -208,9 +213,14 @@ function toCampaign(row: ApiCampaignSummary | ApiCampaignDetail): Campaign {
      * whether a campaign may take money, so the page never recalculates either
      * — a percentage that differs between the API and the page is the kind of
      * discrepancy a donor screenshots.
+     *
+     * A detail carries `donation`; a LIST row does not, so it is worked out
+     * here by the same shared rule the API and the checkout use — status, then
+     * end date. Without it every card would offer "Donate Now" on a campaign
+     * whose deadline has passed and whose checkout already refuses.
      */
     progress: row.progress,
-    donation: row.donation,
+    donation: row.donation ?? donationAvailability(row.status, row.endDate),
     daysLeft: row.daysRemaining ?? daysUntil(row.endDate),
 
     startsAt: row.startDate ?? new Date().toISOString(),
@@ -276,6 +286,36 @@ export async function getCampaigns(query: CampaignQuery = {}): Promise<Campaign[
       return page.items.map(toCampaign);
     },
     fallback: () => campaignFixtures,
+  });
+}
+
+/**
+ * The homepage's Featured Campaigns band: the campaigns an administrator
+ * marked featured, in their featured order, then the rest by deadline — active
+ * ones only. See `lib/featured-campaigns.ts` for the rule.
+ *
+ * The API orders them (`sort=featured`), and that order is kept exactly — it
+ * is the only one that knows each campaign's featured order. Paused campaigns
+ * are dropped here, because the public `active` listing returns active and
+ * paused together — and so are active ones past their end date, which can no
+ * longer take a donation. The request asks for twice the band so that dropping
+ * them still leaves it full. The fixtures have no API to order them, so
+ * `orderFeaturedFirst` applies the same rule to them.
+ */
+export async function getFeaturedCampaigns(): Promise<Campaign[]> {
+  return loadContent({
+    label: 'featured campaigns',
+    fromApi: async (api) => {
+      const page = await api.get<Paginated<ApiCampaignSummary>>('campaigns', {
+        query: { status: 'active', sort: 'featured', limit: FEATURED_BAND_SIZE * 2 },
+        ...publicCache('campaigns'),
+      });
+      return page.items
+        .map(toCampaign)
+        .filter((campaign) => acceptsDonationsNow(campaign))
+        .slice(0, FEATURED_BAND_SIZE);
+    },
+    fallback: () => orderFeaturedFirst(campaignFixtures),
   });
 }
 

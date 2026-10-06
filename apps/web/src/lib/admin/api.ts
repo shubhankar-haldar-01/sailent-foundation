@@ -116,6 +116,10 @@ export interface AdminCampaign {
   programId: string | null;
   programTitle: string | null;
   productCount?: number;
+  /** Leads the homepage's Featured Campaigns band. */
+  isFeatured: boolean;
+  /** Its place in that band, lowest first; null goes after the numbered ones. */
+  featuredOrder: number | null;
   progress: {
     goal: number;
     raised: number;

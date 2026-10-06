@@ -5,7 +5,12 @@ import { Button, Skeleton, cn, formatCurrency, formatNumber, percentOf } from '@
 import { SaveCampaignHeart } from '@/components/dashboard/save-campaign-button';
 import { categoryTone } from '@/components/home/category-icon';
 import { CoinsSolid, PeopleSolid, TargetSolid } from '@/components/home/focus-icons';
-import { CAMPAIGN_STATE_NAMES, STATUS_VISUALS, campaignState } from './campaign-status';
+import {
+  CAMPAIGN_STATE_NAMES,
+  STATUS_VISUALS,
+  acceptsDonationsNow,
+  campaignState,
+} from './campaign-status';
 import { MediaFrame } from '@/components/media/media-frame';
 import type { Campaign } from '@/lib/mock/types';
 
@@ -66,8 +71,8 @@ export function CampaignCard({
   const percent = campaign.progress?.rawPercent ?? percentOf(raised, goal);
   // A sliver of bar for any real money, so ₹500 against ₹5 lakh is not drawn as nothing.
   const barWidth = Math.min(100, Math.max(percent, raised > 0 ? 2 : 0));
-  const isOpen = campaign.status === 'active' && (campaign.donation?.state ?? 'open') === 'open';
-  const state = campaignState(campaign.status);
+  const isOpen = acceptsDonationsNow(campaign);
+  const state = campaignState(campaign.status, campaign.donation?.state);
   const stateBadge = state && (showStatus || state !== 'active') ? STATUS_VISUALS[state] : null;
 
   return (

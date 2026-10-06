@@ -13,6 +13,7 @@ import {
 } from '@sailent/database';
 import {
   acceptsDonations,
+  hasEnded,
   donationType,
   summariseDonation,
   validateDonationComposition,
@@ -322,7 +323,10 @@ export class DonationsService {
       throw new ConflictException('This campaign is not accepting donations at the moment.');
     }
 
-    if (campaign.endDate && campaign.endDate.getTime() < Date.now()) {
+    // The same deadline rule the page uses (`hasEnded`): the end date is the
+    // last day to give, through to midnight India time — so the page never
+    // offers a donation this refuses, or refuses one it offered.
+    if (hasEnded(campaign.endDate)) {
       throw new ConflictException('This campaign has closed.');
     }
 
