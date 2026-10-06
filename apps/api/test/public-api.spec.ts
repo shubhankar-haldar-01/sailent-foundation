@@ -343,6 +343,97 @@ describe('Public API (integration)', () => {
   });
 
   /**
+   * A programme's `campaignCount` is its OPEN campaigns — what its card shows
+   * as "N active campaigns" — counted live from `campaigns`, never read from
+   * the `programs.campaign_count` rollup that nothing writes. Open is the
+   * listing's `status=open` rule: active, not deleted, and not past its end
+   * date. A programme of its own, with one campaign in each state.
+   */
+  describe('programme campaign counts', () => {
+    const PROGRAM = 'campaign-count-test-programme';
+    const prefix = 'campaign-count-test-';
+
+    const db = () =>
+      app.get<{ db: { execute(q: unknown): Promise<{ rows: Record<string, unknown>[] }> } }>(
+        DATABASE,
+      ).db;
+
+    beforeAll(async () => {
+      await db().execute(sql`
+        INSERT INTO programs (title, slug, status, published_at)
+        VALUES ('Campaign count test programme', ${PROGRAM}, 'published', now())
+        ON CONFLICT DO NOTHING
+      `);
+      await db().execute(sql`
+        INSERT INTO campaigns (title, slug, fundraising_goal, status, published_at, end_date,
+                               deleted_at, program_id)
+        SELECT v.title, ${prefix} || v.suffix, 100000, v.status::campaign_status, now(),
+               v.end_date, v.deleted_at, p.id
+          FROM programs p,
+               (VALUES
+                 ('Open, ongoing',     'open-ongoing',  'active',    NULL::timestamptz,            NULL::timestamptz),
+                 ('Open, deadline',    'open-deadline', 'active',    now() + interval '10 days',   NULL),
+                 ('Past its deadline', 'expired',       'active',    now() - interval '3 days',    NULL),
+                 ('Paused',            'paused',        'paused',    NULL,                         NULL),
+                 ('Completed',         'completed',     'completed', NULL,                         NULL),
+                 ('Draft',             'draft',         'draft',     NULL,                         NULL),
+                 ('Deleted',           'deleted',       'active',    NULL,                         now())
+               ) AS v(title, suffix, status, end_date, deleted_at)
+         WHERE p.slug = ${PROGRAM}
+        ON CONFLICT (slug) DO NOTHING
+      `);
+    }, 60_000);
+
+    afterAll(async () => {
+      await db().execute(sql`DELETE FROM campaigns WHERE slug LIKE ${prefix + '%'}`);
+      await db().execute(sql`DELETE FROM programs WHERE slug = ${PROGRAM}`);
+    });
+
+    type ProgramRow = { slug: string; campaignCount: number };
+    const listed = async () =>
+      ((await get('/programs?limit=100').expect(200)).body as Envelope<{ items: ProgramRow[] }>)
+        .data!.items;
+
+    it('counts only the open campaigns on the programme list', async () => {
+      const row = (await listed()).find((item) => item.slug === PROGRAM);
+      expect(row?.campaignCount).toBe(2);
+    });
+
+    it('gives the programme page the same count', async () => {
+      const response = await get(`/programs/${PROGRAM}`).expect(200);
+      expect((response.body as Envelope<ProgramRow>).data!.campaignCount).toBe(2);
+    });
+
+    // The same rule in plain SQL, for every published programme — the check
+    // that the correlated subquery is not silently counting zero.
+    it('matches the open-campaign rule for every programme', async () => {
+      const result = await db().execute(sql`
+        SELECT p.slug,
+               (SELECT count(*)::int FROM campaigns c
+                 WHERE c.program_id = p.id
+                   AND c.deleted_at IS NULL
+                   AND c.status = 'active'
+                   AND (c.end_date IS NULL
+                        OR c.end_date >= date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata')
+                                         AT TIME ZONE 'Asia/Kolkata')) AS open
+          FROM programs p
+         WHERE p.status = 'published' AND p.deleted_at IS NULL
+      `);
+      const expected = Object.fromEntries(
+        result.rows.map((row) => [row.slug as string, Number(row.open)]),
+      );
+      const actual = Object.fromEntries(
+        (await listed()).map((item) => [item.slug, item.campaignCount]),
+      );
+
+      expect(actual).toEqual(expected);
+      // The seeded programmes all have open campaigns, so a zero everywhere
+      // would be the stale rollup coming back.
+      expect(Object.values(actual).some((count) => count > 0)).toBe(true);
+    });
+  });
+
+  /**
    * The impact total of donors counts PEOPLE: distinct donors with a
    * successful donation, never the campaigns' counters added together (which
    * counted somebody who gave to four campaigns four times). Its behaviour

@@ -6,15 +6,15 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-10-06 (accurate donor count, **uncommitted**, on top of `ed69d41`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
+**Last updated:** 2026-10-06 (programme campaign counts, **uncommitted**, on top of `2fc5aa9`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
 
 | | |
 |---|---|
 | **Overall status** | Feature-rich build, **not deployed to any hosting.** Phases 0–10.12 are implemented in the API, admin and public site. |
-| **Current phase** | Post-10.12 polish (no phase number). Everything up to `ed69d41` (the campaign public experience cleanup) is committed and pushed (§1). |
-| **Current feature** | **Accurate donor count** (§1, item 8): `campaigns.donor_count` counts distinct donors per campaign, and the public impact total counts distinct donors. Implemented and validated; **not committed**. Historical counters were **not** recounted. |
-| **Branch / HEAD** (as of 2026-10-06) | `main` @ `ed69d41` = `origin/main` (up to date). The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
-| **Working tree** (as of 2026-10-06) | The donor-count change (`donation-capture.service.ts`, `content.service.ts`, `test/donations.spec.ts`, `test/public-api.spec.ts`) and this documentation update (`DEVELOPMENT_STATUS.md`, `CHANGELOG.md`, `DATABASE.md`), all **uncommitted**. Run `git status` for the live state. |
+| **Current phase** | Post-10.12 polish (no phase number). Everything up to `2fc5aa9` (accurate donor count) is committed and pushed (§1). |
+| **Current feature** | **Programme campaign counts** (§1, item 9): the public programme APIs count open campaigns live instead of reading the unwritten `campaign_count` rollup. Implemented and validated; **not committed**. |
+| **Branch / HEAD** (as of 2026-10-06) | `main` @ `2fc5aa9` = `origin/main` (up to date). The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
+| **Working tree** (as of 2026-10-06) | The programme-count change (`content.service.ts`, `test/public-api.spec.ts`, web `lib/content/programs.ts`, `lib/mock/programs.ts`, new `lib/open-campaigns.ts` and its test, `e2e/journeys.spec.ts`) and this documentation update (`DEVELOPMENT_STATUS.md`, `CHANGELOG.md`, `DATABASE.md`), all **uncommitted**. Run `git status` for the live state. |
 | **Production database** | The **production Supabase project** exists (owner confirmed, 2026-10-06). Its schema and data state were **not inspected** and are **unknown**. Agents must not access it (`AGENTS.md` §8). |
 | **Application hosting** | None. No Dockerfiles, IaC or deploy workflow exist. |
 | **Local databases** | `sailent_dev` and `sailent_e2e` have migrations `0000`–`0022` applied, **plus one migration that is not in the repository** (§5.1). The repository has no pending migration. |
@@ -34,7 +34,8 @@
 | `166b70c` | docs: update project context and development checkpoint | ✅ yes |
 | `7fe6c25` | ci: pass test database and redis env through turbo (item 6; `turbo.json` only) | ✅ yes |
 | `ed69d41` | feat(campaigns): campaign public experience cleanup (item 7) | ✅ yes |
-| — | Accurate donor count (item 8) and this documentation update | ❌ **uncommitted** |
+| `2fc5aa9` | fix(donations): count distinct donors accurately (item 8) | ✅ yes |
+| — | Programme campaign counts (item 9) and this documentation update | ❌ **uncommitted** |
 
 Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to `origin/main` with a fast-forward push; until then `origin/main` held only `2ba2b43`.
 
@@ -103,7 +104,7 @@ Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to
 - **JSON-LD escaping:** `jsonLd()` (`apps/web/src/lib/seo/structured-data.ts`, used by every JSON-LD script) escapes `<`, `>`, `&`, U+2028 and U+2029 as JSON unicode escapes.
 - **Tests:** E2E `campaign.spec.ts`, `donations.spec.ts`, `journeys.spec.ts` updated to the new layout (no sheet to open; assertions kept, mobile branches now run the full card checks); new E2E tests for the custom-amount panel and the in-page mobile card. New unit tests: `campaign-impact.test.ts`, `jsonLd` in `seo.test.ts`, `deadlineCutoff` in `domain.test.ts`, listing mapping in `listing-query.test.ts`. New API tests in `public-api.spec.ts` for `open`/`closed`.
 
-**8. Accurate donor count (2026-10-06, UNCOMMITTED)**
+**8. Accurate donor count (2026-10-06, `2fc5aa9`, pushed)**
 - **Rule:** "Donors" means distinct donors. Identity is `donations.donor_id` (one donor row per email, `donors_email_lower_unique`).
 - **Campaign counter** (`apps/api/src/modules/donations/donation-capture.service.ts`): capture adds 1 to `donor_count` only when no other successful donation to that campaign has the same `donor_id`. A repeat gift (anonymous or not, same email in any case or spacing) adds to `amount_raised` only. The same donor on another campaign counts there. The existing campaign-row `FOR UPDATE` lock and the `status <> 'successful'` capture gate are unchanged; the lock plus READ COMMITTED makes the check safe when two captures race. A NULL `donor_id` counts as one donor.
 - **Public impact total** (`apps/api/src/modules/content/content.service.ts` `getImpact()`): `totals.donorCount` = distinct `donor_id` over successful donations (plus NULL-donor donations), not `SUM(campaigns.donor_count)`. Same field name and response shape. The web does not render this field.
@@ -112,9 +113,15 @@ Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to
 - **Tests:** `apps/api/test/donations.spec.ts` gains a "donor count" block (repeat donor +0 with money added; different donor +1; same email differently written +0; same donor on another campaign +1 there; anonymous repeat +0; two racing captures by one new donor +1; `/impact` unchanged after a repeat gift). The webhook/browser race test now uses its own donor so "+1 once" still tests what it meant. The teardown now restores `amount_raised` and `donor_count` on the campaigns it spends (it already restored `provided_quantity`), so runs no longer leak counter increments into `sailent_dev`. `public-api.spec.ts` checks `/impact` equals the distinct count. Against the old capture code, 4 of the new tests fail (checked 2026-10-06).
 - **Pre-existing dev drift left alone:** `sailent_dev` `school-kits-jharkhand` reads 397 donors against a seed value of 320, from earlier test runs that never restored counters. Not reconciled (owner rule); a local re-seed would reset it.
 
+**9. Programme campaign counts (2026-10-06, UNCOMMITTED)**
+- **Problem:** the public `GET /programs` and `GET /programs/:slug` returned `programs.campaign_count`, a rollup nothing writes, so every programme card read "Ongoing program" instead of "N active campaigns".
+- **API** (`apps/api/src/modules/content/content.service.ts`): a private `openCampaignCount()` correlated subquery (aliased raw SQL, as in `categories.service.ts`) counts campaigns with `program_id = programs.id`, not deleted, `status = 'active'`, and no end date or one `>= deadlineCutoff()` — the `status=open` rule. Used by `listPrograms` and `getProgramBySlug` (which now selects every column with the live count in place of the stale one). Field name `campaignCount` and the response shapes are unchanged. The admin programme count (all non-deleted campaigns) is unchanged. The `campaign_count` column stays in the schema, unused by public reads (`DATABASE.md` §2).
+- **Fixture fallback** (`apps/web/src/lib/content/programs.ts`): programme fixtures no longer carry hand-typed counts (they disagreed with the fixture campaigns); `countOpenCampaigns()` (`apps/web/src/lib/open-campaigns.ts`) derives them from the campaign fixtures with the same rule (`hasEnded`).
+- **Tests:** `public-api.spec.ts` "programme campaign counts" — a test programme with open-ongoing, open-with-deadline, expired, paused, completed, draft and deleted campaigns counts **2** on the list and the detail; every published programme's count equals the same rule in SQL. All three fail against the old query (checked 2026-10-06). Web unit test `open-campaigns.test.ts`. E2E: the programmes journey asserts the Education card reads "1 active campaign".
+
 ### What was being worked on
 
-The donor-count change (item 8) is implemented and validated (§2) and **awaits owner approval to commit**. CI is deferred by the owner.
+The programme-count change (item 9) is implemented and validated (§2) and **awaits owner approval to commit**. CI is deferred by the owner.
 
 ### Reverted by the owner on 2026-10-06 (do not redo unless asked)
 
@@ -131,6 +138,16 @@ See **`AGENTS.md` §11**, the permanent list of owner-approved designs and decis
 ---
 
 ## 2. LAST VALIDATION — snapshot as of 2026-10-06 (local only)
+
+**Programme campaign counts (item 9), 2026-10-06:**
+
+| Command | Result |
+|---|---|
+| `pnpm prettier --check .`, `pnpm typecheck`, `pnpm lint` | ✅ pass (13/13 tasks each) |
+| API `public-api.spec.ts` + `catalog.spec.ts` | ✅ 99 passed |
+| `pnpm --filter @sailent/web test` / `@sailent/validation test` | ✅ 114 / 280 passed |
+| `pnpm --filter @sailent/api test` (full, 3 runs) | 766–767 passed, 9 skipped. Always the 4 `me.spec.ts` drift failures (§5.1). Once each, an intermittent failure in `rbac.spec.ts` ("ignores an unknown sort field") and `blog.spec.ts` ("stamps publishedAt once"); both pass alone and in the other runs (§5.5). |
+| Playwright `journeys.spec.ts -g programs` × 4 projects (isolated copy) | ✅ 8 passed |
 
 **Donor-count change (item 8), 2026-10-06:**
 
@@ -298,7 +315,7 @@ This is for a **human** to verify and remediate through the approved process (`D
 ### 5.5 Functional
 
 - **Notification retry is a no-op.**
-- **Programme rollups are never written.**
+- **Programme rollups are never written.** Public reads of the campaign count now compute it live (§1 item 9); `total_raised` and `beneficiaries_reached` remain unwritten and unrendered.
 - **Historical `donor_count` values are not recounted.** New captures count distinct donors (§1 item 8); values written before 2026-10-06 may be overstated where a donor gave more than once. Recount is a human-only runbook (`DATABASE.md` §12).
 - **Orphan pending donations without Razorpay keys** (`DEPLOYMENT.md` §6).
 - **No reconciliation job.**
@@ -306,6 +323,7 @@ This is for a **human** to verify and remediate through the approved process (`D
 - **The web build needs the API** for some routes.
 - **`campaigns.program_id` is nullable.** A live campaign can be detached by PATCH.
 - **2 pre-existing WebKit E2E failures** (§2).
+- **Intermittent API test failures in full parallel runs** (seen 2026-10-06): `rbac.spec.ts` "ignores an unknown sort field" compares two consecutive `/admin/users` responses while other suites sign users in; `blog.spec.ts` "stamps publishedAt once" failed once. Both pass alone. Not investigated.
 - **No E2E coverage for paused or past-deadline campaigns.** The E2E seed has none, so the `open`/`closed` split is covered by API integration tests only.
 - **Featured band** still requests `status=active` and filters with `acceptsDonationsNow()` in the web (edge case in §1 item 1); it does not use `status=open`.
 - **Campaign FAQs "View All FAQs"** links to `/faq`, which is fixture-backed.
@@ -336,7 +354,7 @@ This is for a **human** to verify and remediate through the approved process (`D
 1. ~~Commit the featured/deadline work~~ (done: `dd64d41`). ~~Fix the CI target flag~~ (done: `0e94632`). ~~Turborepo test env~~ (done: `7fe6c25`). All pushed.
 2. ~~Commit the campaign cleanup~~ (done: `ed69d41`, pushed). **Commit the donor-count change** (§1 item 8) with owner approval; push only with a separate approval.
 3. CI (deferred by the owner, 2026-10-06): observe the GitHub Actions run and, with approval, the dependency overrides for `pnpm audit` (§5.4).
-4. Programme campaign counts (rollups never written; §5.5), soft 404s, then the admin dashboard home — the order recommended in the 2026-10-06 roadmap review.
+4. **Commit the programme campaign counts** (§1 item 9) with owner approval. Then soft 404s, then the admin dashboard home — the order recommended in the 2026-10-06 roadmap review.
 5. Resolve the local drift / PAN encryption (§5.1).
 6. Fix the security items that need no product decisions: rate-limit keying and trusted client IP; the web `FEATURE_MOCK_DATA` default and `webEnvSchema`; webhook 401. (JSON-LD escaping: done in `ed69d41`.)
 7. Human-led production audit and hardening (§5.2).
@@ -394,7 +412,7 @@ These are recorded here and **not** silently resolved in the source documents.
 ## THE NEXT AI AGENT SHOULD START HERE
 
 1. Read `AGENTS.md` in full, especially §8 (production is off limits), §9 (work directly on `main`; owner approval before every commit and every push) and §11 (must not change). Then read this file, and `CLAUDE.md` if you are Claude Code.
-2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-06, `main` = `origin/main` = `ed69d41`, with the donor-count change and its documentation **uncommitted** (§1 item 8). Ask the owner before committing it, and separately before pushing.
+2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-06, `main` = `origin/main` = `2fc5aa9`, with the programme-count change and its documentation **uncommitted** (§1 item 9). Ask the owner before committing it, and separately before pushing.
 3. **CI (deferred by the owner on 2026-10-06; resume only when asked): watch CI.**
    - Observe the GitHub Actions run for the current `main` head (for example with `gh run list` / `gh run view`, or on GitHub). The `security` job is expected to fail at `pnpm audit` until the dependency fixes are approved (§5.4).
    - Report the `quality` and `security` job results with their failing step and log excerpt, if any.

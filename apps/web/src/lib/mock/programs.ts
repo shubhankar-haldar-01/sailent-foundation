@@ -9,7 +9,14 @@ import type { Program } from './types';
  * numbers before launch.
  */
 
-export const programs: Program[] = [
+/**
+ * A programme fixture: everything but its open-campaign count, which the
+ * content layer derives from the campaign fixtures (`countOpenCampaigns`)
+ * rather than trusting a typed-in number that drifted from them.
+ */
+export type ProgramFixture = Omit<Program, 'activeCampaignCount'>;
+
+export const programs: ProgramFixture[] = [
   {
     slug: 'education',
     name: 'Education',
@@ -71,7 +78,6 @@ export const programs: Program[] = [
       { label: 'Schools partnered', value: 34 },
       { label: 'Learning centres', value: 12 },
     ],
-    activeCampaignCount: 3,
     accentIcon: 'book',
     cover: {
       seed: 'program-education',
@@ -135,7 +141,6 @@ export const programs: Program[] = [
       { label: 'Villages on the clinic route', value: 26 },
       { label: 'Health workers trained', value: 48 },
     ],
-    activeCampaignCount: 2,
     accentIcon: 'heart',
     cover: {
       seed: 'program-healthcare',
@@ -192,7 +197,6 @@ export const programs: Program[] = [
       { label: 'Children in nutrition support', value: 1260 },
       { label: 'Community crèches running', value: 9 },
     ],
-    activeCampaignCount: 1,
     accentIcon: 'shield',
     cover: {
       seed: 'program-child-welfare',
@@ -245,7 +249,6 @@ export const programs: Program[] = [
       { label: 'Women in active groups', value: 1480 },
       { label: 'Enterprises started', value: 210 },
     ],
-    activeCampaignCount: 1,
     accentIcon: 'sprout',
     cover: {
       seed: 'program-women',
@@ -288,7 +291,6 @@ export const programs: Program[] = [
       { label: 'Trainees enrolled', value: 640 },
       { label: 'Placed in work', value: 410 },
     ],
-    activeCampaignCount: 1,
     accentIcon: 'briefcase',
     cover: {
       seed: 'program-livelihood',
@@ -330,7 +332,6 @@ export const programs: Program[] = [
       { label: 'Water structures built', value: 38 },
       { label: 'Saplings planted', value: 12400 },
     ],
-    activeCampaignCount: 0,
     accentIcon: 'leaf',
     cover: {
       seed: 'program-environment',
@@ -360,7 +361,6 @@ export const programs: Program[] = [
       { title: 'Livestock health training', description: 'Basic animal husbandry for households.' },
     ],
     metrics: [{ label: 'Animals treated', value: 3100 }],
-    activeCampaignCount: 0,
     accentIcon: 'paw',
     cover: {
       seed: 'program-animal',
@@ -369,6 +369,6 @@ export const programs: Program[] = [
   },
 ];
 
-export function getProgram(slug: string): Program | undefined {
+export function getProgram(slug: string): ProgramFixture | undefined {
   return programs.find((program) => program.slug === slug);
 }

@@ -73,7 +73,9 @@ Verified on 2026-10-06 against:
   - `slug` unique
   - `status` (`publish_status`)
   - `category_id` → categories SET NULL
-  - rollups `campaign_count`, `total_raised`, `beneficiaries_reached`: **never written by any code**
+  - rollups `campaign_count`, `total_raised`, `beneficiaries_reached`: **never written by any code** (the schema comment's "nightly job" does not exist)
+    - **`campaign_count` is retained but no longer read by the public API** (since 2026-10-06). `GET /programs` and `GET /programs/:slug` return `campaignCount` computed live: the programme's **open** campaigns (`program_id` matches, not deleted, `status = 'active'`, and no end date or one not yet passed by `deadlineCutoff()`, the same rule as the campaign listing's `status=open`). The admin programme list computes its own live count of all non-deleted campaigns. Dropping the column would need a migration; it is left in place.
+    - `total_raised` and `beneficiaries_reached` are still returned in the programme detail response (stale 0) and are not rendered by the web.
 - **campaigns**
   - `program_id` → programs RESTRICT, **NULLABLE**
   - `category_id` → categories SET NULL

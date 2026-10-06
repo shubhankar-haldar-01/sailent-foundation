@@ -10,7 +10,15 @@ Newest first.
 
 ---
 
-## 2026-10-06 — Accurate donor count (UNCOMMITTED as of 2026-10-06)
+## 2026-10-06 — Programme campaign counts (UNCOMMITTED as of 2026-10-06)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| Public `GET /programs` and `GET /programs/:slug` compute `campaignCount` live: open campaigns (active, not deleted, not past their end date; the `status=open` rule) | They read `programs.campaign_count`, a rollup nothing writes, so every card showed "Ongoing program" | Programme cards show "N active campaigns". Same field and shape; admin count unchanged; `campaign_count` column retained, unused by public reads | none |
+| Fixture fallback derives programme counts from the campaign fixtures (`countOpenCampaigns`) | The hand-typed fixture counts disagreed with the fixture campaigns | Development fallback only | — |
+| Tests: programme-count API tests (count 2 across seven campaign states; equality with SQL for every programme); web unit test; E2E card assertion | Cover the rule and the silent-zero subquery risk | Tests only | — |
+
+## 2026-10-06 — `2fc5aa9` Accurate donor count (pushed 2026-10-06)
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|

@@ -1,7 +1,9 @@
 import 'server-only';
 
 import type { Program } from '@/lib/mock/types';
-import { programs as programFixtures } from '@/lib/mock/programs';
+import { campaigns as campaignFixtures } from '@/lib/mock/campaigns';
+import { programs as programFixtures, type ProgramFixture } from '@/lib/mock/programs';
+import { countOpenCampaigns } from '@/lib/open-campaigns';
 
 import { loadContent, publicCache, toMedia, type Paginated } from './source';
 
@@ -48,6 +50,22 @@ function accentIcon(value: string | null): AccentIcon {
     : 'sprout';
 }
 
+/**
+ * A fixture programme with its open-campaign count DERIVED from the campaign
+ * fixtures, by the same rule the API counts with. Fallback only.
+ */
+function fromFixture(fixture: ProgramFixture): Program {
+  return {
+    ...fixture,
+    activeCampaignCount: countOpenCampaigns(fixture.slug, campaignFixtures),
+  };
+}
+
+function findFixture(slug: string): Program | null {
+  const fixture = programFixtures.find((program) => program.slug === slug);
+  return fixture ? fromFixture(fixture) : null;
+}
+
 function toProgram(row: ApiProgramSummary | ApiProgramDetail): Program {
   const detail = row as Partial<ApiProgramDetail>;
 
@@ -83,7 +101,7 @@ export async function getPrograms(): Promise<Program[]> {
       });
       return page.items.map(toProgram);
     },
-    fallback: () => programFixtures,
+    fallback: () => programFixtures.map(fromFixture),
   });
 }
 
@@ -177,7 +195,7 @@ export async function getProgram(slug: string): Promise<Program | null> {
         throw error;
       }
     },
-    fallback: () => programFixtures.find((program) => program.slug === slug) ?? null,
+    fallback: () => findFixture(slug),
   });
 }
 
@@ -206,7 +224,7 @@ export async function getProgramPage(slug: string): Promise<ProgramPage | null> 
       }
     },
     fallback: () => {
-      const program = programFixtures.find((item) => item.slug === slug);
+      const program = findFixture(slug);
       return program ? { program, campaigns: [], stories: [], impactUpdates: [] } : null;
     },
   });

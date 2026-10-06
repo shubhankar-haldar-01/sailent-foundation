@@ -637,6 +637,17 @@ test.describe('journey: homepage → programs', () => {
       name on every page, so "the first Education link in the document" was
       never a reliable way to name the programme card.
     */
+    // The card counts the programme's OPEN campaigns, live from the database
+    // (the seed gives Education one). It read "Ongoing program" for every
+    // programme while the count came from a rollup nothing wrote.
+    await expect(
+      page
+        .getByRole('main')
+        .locator('a[href="/programs/education"]')
+        .first()
+        .locator('xpath=ancestor::div[1]'),
+    ).toContainText('1 active campaign');
+
     await page
       .getByRole('main')
       .getByRole('link', { name: 'Education' })

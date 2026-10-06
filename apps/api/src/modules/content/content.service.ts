@@ -1,5 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, gte, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  getTableColumns,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 
 import {
   campaignProducts,
@@ -71,6 +84,32 @@ export class ContentService {
   // Programmes
   // -------------------------------------------------------------------------
 
+  /**
+   * A programme's OPEN campaigns, counted live — the number its card shows as
+   * "N active campaigns".
+   *
+   * Open is the same rule as the campaign listing's `status=open`: active, not
+   * deleted, and with no end date or one that has not passed
+   * (`deadlineCutoff()`, which agrees with `hasEnded()`). Paused, completed
+   * and draft campaigns are not counted.
+   *
+   * COMPUTED, NOT READ FROM `programs.campaign_count`. That column is a rollup
+   * nothing ever writes, so it read 0 for every programme. It stays in the
+   * schema, unused by public reads.
+   *
+   * Raw SQL with an alias, as in `categories.service.ts`: an interpolated
+   * correlation can silently compare a column with itself and count zero.
+   */
+  private openCampaignCount() {
+    return sql<number>`(
+      SELECT count(*)::int FROM campaigns ca
+       WHERE ca.program_id = programs.id
+         AND ca.deleted_at IS NULL
+         AND ca.status = 'active'
+         AND (ca.end_date IS NULL OR ca.end_date >= ${deadlineCutoff().toISOString()}::timestamptz)
+    )`;
+  }
+
   async listPrograms(query: PaginationQuery): Promise<PaginatedResult<unknown>> {
     const where = and(eq(programs.status, 'published'), isNull(programs.deletedAt));
 
@@ -91,7 +130,7 @@ export class ContentService {
           shortDescription: programs.shortDescription,
           coverImage: programs.coverImage,
           category: programs.category,
-          campaignCount: programs.campaignCount,
+          campaignCount: this.openCampaignCount(),
           displayOrder: programs.displayOrder,
           // Presentation only, but the card cannot render without it and a
           // second request per card to fetch one string would be absurd.
@@ -113,7 +152,8 @@ export class ContentService {
 
   async getProgramBySlug(slug: string) {
     const [program] = await this.db
-      .select()
+      // Every column, with the stale `campaign_count` replaced by the live count.
+      .select({ ...getTableColumns(programs), campaignCount: this.openCampaignCount() })
       .from(programs)
       .where(
         and(eq(programs.slug, slug), eq(programs.status, 'published'), isNull(programs.deletedAt)),
