@@ -64,12 +64,12 @@ jobs:
       # migrations here also means CI fails when a migration is broken — which
       # is the only place that failure is cheap.
       - name: Apply migrations
-        run: pnpm --filter @sailent/database build && pnpm db:migrate
+        run: pnpm --filter @sailent/database build && pnpm db:migrate --target=local
         env:
           DATABASE_URL: postgresql://sailent:sailent@localhost:5432/sailent_test
 
       - name: Seed reference and development data
-        run: pnpm db:seed
+        run: pnpm db:seed --target=local
         env:
           DATABASE_URL: postgresql://sailent:sailent@localhost:5432/sailent_test
           # Explicitly NOT production: the seed refuses to write demo content
