@@ -1033,6 +1033,55 @@ export function reconciliationReport(range: ReportRangeQuery) {
   });
 }
 
+/**
+ * Payment exceptions (Phase 11): what needs a human. Read-only — the API has
+ * no write route for it, and nothing here can mark a donation successful.
+ */
+export interface PaymentExceptions {
+  generatedAt: string;
+  thresholds: {
+    unfinishedWebhookMinutes: number;
+    stuckDonationMinutes: number;
+    reconcileAfterMinutes: number;
+    expireAfterHours: number;
+  };
+  summary: {
+    failedWebhooks: number;
+    needsReview: number;
+    unfinishedWebhooks: number;
+    stuckDonations: number;
+    overdueDonations: number;
+    cancelledLast7Days: number;
+  };
+  webhooks: {
+    id: string;
+    providerEventId: string;
+    eventType: string;
+    processingStatus: string;
+    error: string | null;
+    receivedAt: string;
+    processedAt: string | null;
+    providerPaymentId: string | null;
+    providerOrderId: string | null;
+    donationReference: string | null;
+    donationStatus: string | null;
+  }[];
+  stuckDonations: {
+    id: string;
+    reference: string;
+    status: string;
+    amount: number;
+    campaignTitle: string | null;
+    providerOrderId: string | null;
+    createdAt: string;
+    overdue: boolean;
+  }[];
+}
+
+export function paymentExceptions() {
+  return adminFetch<PaymentExceptions>('admin/payments/exceptions');
+}
+
 export function taxReadinessReport(financialYear?: number) {
   return adminFetch<TaxReadinessReport>('admin/reports/tax-readiness', {
     query: financialYear ? { financialYear } : {},

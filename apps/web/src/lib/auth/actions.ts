@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 
 import { API_PREFIX } from '@sailent/config';
 
+import { actionForwardingHeaders } from '@/lib/api/forwarding';
+
 import { clearSession, readSession, writeSession } from './session';
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:4000';
@@ -34,7 +36,8 @@ export async function signIn(_previous: LoginState, formData: FormData): Promise
   try {
     response = await fetch(`${API_BASE}/${API_PREFIX}/auth/staff/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // The real client, so the API's limits apply per person (Phase 11).
+      headers: { 'Content-Type': 'application/json', ...(await actionForwardingHeaders()) },
       body: JSON.stringify({ email, password, ...(totpCode ? { totpCode } : {}) }),
       cache: 'no-store',
     });

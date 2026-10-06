@@ -301,6 +301,70 @@ export class DonationCaptureService {
     this.logger.log(`Donation ${input.donationId} marked failed via ${input.source}`);
   }
 
+  /**
+   * Expire a donation that was never paid for (Phase 11).
+   *
+   * Narrower still than `markFailed`: it moves ONLY a `pending` or
+   * `processing` donation, so a successful, failed or already cancelled one is
+   * never touched, and nothing is deleted. It touches no counter. The payment
+   * row follows, and the move is recorded in the payment history.
+   *
+   * `cancelled` IS NOT A DEAD END. Capture's gate is `status <> 'successful'`,
+   * so if money for this donation turns up later — a webhook, a donor who kept
+   * the tab open, the next reconciliation — it is still recorded, exactly once.
+   * Cancellation only stops an abandoned checkout holding stock and sitting in
+   * the pending list.
+   *
+   * Returns whether it moved anything.
+   */
+  async markCancelled(input: {
+    donationId: string;
+    reason: string;
+    source: CaptureSource;
+  }): Promise<boolean> {
+    const moved = await this.database.db.transaction(async (tx) => {
+      const updated = await tx.execute<{ id: string }>(sql`
+        UPDATE donations
+           SET status = 'cancelled',
+               failed_reason = ${input.reason},
+               updated_at = now()
+         WHERE id = ${input.donationId}::uuid
+           AND status IN ('pending', 'processing')
+        RETURNING id
+      `);
+
+      if ((updated.rows?.length ?? 0) === 0) return false;
+
+      const [payment] = await tx
+        .select({ id: payments.id, status: payments.status })
+        .from(payments)
+        .where(eq(payments.donationId, input.donationId))
+        .limit(1);
+
+      if (payment && payment.status !== 'successful') {
+        await tx
+          .update(payments)
+          .set({ status: 'cancelled', failureReason: input.reason, updatedAt: new Date() })
+          .where(eq(payments.id, payment.id));
+
+        await tx.insert(paymentTransactions).values({
+          paymentId: payment.id,
+          fromStatus: payment.status,
+          toStatus: 'cancelled',
+          source: input.source,
+          notes: input.reason,
+        });
+      }
+
+      return true;
+    });
+
+    if (moved) {
+      this.logger.log(`Donation ${input.donationId} cancelled via ${input.source}`);
+    }
+    return moved;
+  }
+
   // -------------------------------------------------------------------------
   // Internals
   // -------------------------------------------------------------------------

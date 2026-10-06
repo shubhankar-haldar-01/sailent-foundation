@@ -57,11 +57,28 @@ export interface WebhookOutcome {
 }
 
 /**
- * The provider's amount disagrees with ours. NOT retryable: no number of
- * redeliveries changes what was charged. The browser path answers it like
- * any other conflict; the webhook path sends it to a human (`needs_review`).
+ * The provider's payment disagrees with our record of the donation — a
+ * different amount, a different currency, or a different order. NOT
+ * retryable: no number of redeliveries changes what was charged. The browser
+ * path answers it like any other conflict; the webhook path sends it to a
+ * human (`needs_review`); reconciliation leaves the donation untouched and
+ * reports it.
  */
-export class AmountMismatchException extends ConflictException {}
+export class PaymentMismatchException extends ConflictException {}
+
+/** The amount case of `PaymentMismatchException`, kept as its own name. */
+export class AmountMismatchException extends PaymentMismatchException {}
+
+/** What a capture is checked against: our own record of the donation. */
+export interface DonationForCapture {
+  id: string;
+  reference: string;
+  /** Paise. */
+  amount: number;
+  currency: string;
+  /** The Razorpay order created for this donation, if one was. */
+  providerOrderId: string | null;
+}
 
 /**
  * Deciding whether a payment really happened.
@@ -160,7 +177,11 @@ export class PaymentVerificationService {
     }
 
     const providerPayment = await this.razorpay.fetchPayment(input.razorpayPaymentId);
-    return this.captureIfGenuine(donation, providerPayment, 'api_fetch');
+    return this.captureIfGenuine(
+      { ...donation, providerOrderId: payment.providerOrderId },
+      providerPayment,
+      'api_fetch',
+    );
   }
 
   /**
@@ -251,7 +272,7 @@ export class PaymentVerificationService {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown error';
 
-      if (error instanceof AmountMismatchException) {
+      if (error instanceof PaymentMismatchException) {
         // Already logged loudly where it was detected. Final, and a human's.
         await this.finish(webhookRowId, 'needs_review', message);
         return { accepted: true, duplicate: false, eventType };
@@ -378,18 +399,45 @@ export class PaymentVerificationService {
   }
 
   /**
+   * Reconciliation's way in: a payment it fetched from Razorpay itself, for a
+   * donation it read from our own database. Exactly the checks and the capture
+   * the browser and the webhook get — there is no second path to `successful`.
+   */
+  captureVerifiedPayment(
+    donation: DonationForCapture,
+    providerPayment: RazorpayPayment,
+  ): Promise<CaptureOutcome> {
+    return this.captureIfGenuine(donation, providerPayment, 'reconciliation');
+  }
+
+  /**
    * Capture, but only if the provider agrees this is real money.
    *
    * The amount check is the one that matters most: an attacker who can alter
    * the amount in a checkout call would otherwise pay ₹1 and have a ₹9,000
    * donation recorded. Comparing the provider's own figure against ours closes
    * that, and a mismatch is a refusal rather than a partial credit.
+   *
+   * THE ORDER AND THE CURRENCY ARE CHECKED TOO (Phase 11), as defence in depth
+   * behind the signatures: the payment must belong to the order we created
+   * for THIS donation, and be in the donation's currency (INR). The order is
+   * checked first, so a failed payment on some other order can never mark
+   * this donation failed.
    */
   private async captureIfGenuine(
-    donation: { id: string; reference: string; amount: number },
+    donation: DonationForCapture,
     providerPayment: RazorpayPayment,
-    source: 'webhook' | 'api_fetch',
+    source: 'webhook' | 'api_fetch' | 'reconciliation',
   ): Promise<CaptureOutcome> {
+    if (!donation.providerOrderId || providerPayment.order_id !== donation.providerOrderId) {
+      this.logger.error(
+        `Order mismatch on donation ${donation.reference}: payment ${providerPayment.id} belongs to ${providerPayment.order_id ?? 'no order'}`,
+      );
+      throw new PaymentMismatchException(
+        'That payment does not belong to this donation. Our team has been alerted.',
+      );
+    }
+
     if (providerPayment.status !== 'captured') {
       if (providerPayment.status === 'failed') {
         await this.capture.markFailed({
@@ -403,6 +451,15 @@ export class PaymentVerificationService {
 
       throw new ConflictException(
         'That payment has not completed. If money has left your account it will be recorded or returned shortly.',
+      );
+    }
+
+    if (providerPayment.currency !== donation.currency) {
+      this.logger.error(
+        `Currency mismatch on donation ${donation.reference}: provider says ${providerPayment.currency}, we expect ${donation.currency}`,
+      );
+      throw new PaymentMismatchException(
+        'The currency of this payment does not match the donation. Our team has been alerted and will contact you.',
       );
     }
 
@@ -430,6 +487,7 @@ export class PaymentVerificationService {
         id: donations.id,
         reference: donations.reference,
         amount: donations.amount,
+        currency: donations.currency,
         status: donations.status,
       })
       .from(donations)
@@ -448,6 +506,8 @@ export class PaymentVerificationService {
         id: donations.id,
         reference: donations.reference,
         amount: donations.amount,
+        currency: donations.currency,
+        providerOrderId: payments.providerOrderId,
       })
       .from(donations)
       .innerJoin(payments, eq(payments.donationId, donations.id))

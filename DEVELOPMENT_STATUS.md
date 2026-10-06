@@ -6,15 +6,15 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-10-07 (Razorpay webhook hardening C1 + L1, **uncommitted**, on top of `f9816be`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
+**Last updated:** 2026-10-07 (Phase 11 — Payment & Donation Production Readiness, **committed locally, not pushed**, as `feat(payments): complete payment production readiness` on top of `e87864b`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
 
 | | |
 |---|---|
 | **Overall status** | Feature-rich build, **not deployed to any hosting.** Phases 0–10.12 are implemented in the API, admin and public site. |
-| **Current phase** | Post-10.12 polish (no phase number). Everything up to `f9816be` (programme campaign counts) is committed and pushed (§1). |
-| **Current feature** | **Payment safety** (§1, item 10): retry-safe Razorpay webhooks (audit finding C1) and 401 on a bad webhook signature (L1). Implemented and validated; **not committed**. The other payment-audit findings remain open (§5.5). |
-| **Branch / HEAD** (as of 2026-10-07) | `main` @ `f9816be` = `origin/main` (up to date). The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
-| **Working tree** (as of 2026-10-07) | The webhook hardening (`payment-verification.service.ts`, `razorpay-webhook.controller.ts`, `test/donations.spec.ts`) and this documentation update (`DEVELOPMENT_STATUS.md`, `CHANGELOG.md`), all **uncommitted**. Run `git status` for the live state. |
+| **Current phase** | **Phase 11 — Payment & Donation Production Readiness** (§1, item 11), first phase of the 2026-10-07 roadmap (Phases 11–15). Implemented, validated and **committed locally** as `feat(payments): complete payment production readiness`; **not pushed**. Everything up to `e87864b` (webhook hardening C1 + L1) is committed and pushed. |
+| **Current feature** | Payment reconciliation and pending expiry; checkout retry and idempotency; per-client rate limits; payment hardening; read-only admin payment exceptions; Razorpay-compatible `Permissions-Policy`. |
+| **Branch / HEAD** (as of 2026-10-07) | Local `main` is **1 commit ahead** of `origin/main` (`e87864b`): the Phase 11 commit `feat(payments): complete payment production readiness`, **not pushed**. Run `git log --oneline -1` for its hash. The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
+| **Working tree** (as of 2026-10-07) | Clean: Phase 11 (API, worker, web, config, tests) and its documentation are all in the Phase 11 commit. Run `git status` for the live state. |
 | **Production database** | The **production Supabase project** exists (owner confirmed, 2026-10-06). Its schema and data state were **not inspected** and are **unknown**. Agents must not access it (`AGENTS.md` §8). |
 | **Application hosting** | None. No Dockerfiles, IaC or deploy workflow exist. |
 | **Local databases** | `sailent_dev` and `sailent_e2e` have migrations `0000`–`0022` applied, **plus one migration that is not in the repository** (§5.1). The repository has no pending migration. |
@@ -36,7 +36,8 @@
 | `ed69d41` | feat(campaigns): campaign public experience cleanup (item 7) | ✅ yes |
 | `2fc5aa9` | fix(donations): count distinct donors accurately (item 8) | ✅ yes |
 | `f9816be` | fix(programs): count open campaigns accurately (item 9) | ✅ yes |
-| — | Razorpay webhook hardening C1 + L1 (item 10) and this documentation update | ❌ **uncommitted** |
+| `e87864b` | fix(payments): make razorpay webhooks retry-safe (item 10) | ✅ yes |
+| `feat(payments): complete payment production readiness` | Phase 11 (item 11), with its documentation | ❌ **committed locally, not pushed** |
 
 Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to `origin/main` with a fast-forward push; until then `origin/main` held only `2ba2b43`.
 
@@ -120,7 +121,7 @@ Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to
 - **Fixture fallback** (`apps/web/src/lib/content/programs.ts`): programme fixtures no longer carry hand-typed counts (they disagreed with the fixture campaigns); `countOpenCampaigns()` (`apps/web/src/lib/open-campaigns.ts`) derives them from the campaign fixtures with the same rule (`hasEnded`).
 - **Tests:** `public-api.spec.ts` "programme campaign counts" — a test programme with open-ongoing, open-with-deadline, expired, paused, completed, draft and deleted campaigns counts **2** on the list and the detail; every published programme's count equals the same rule in SQL. All three fail against the old query (checked 2026-10-06). Web unit test `open-campaigns.test.ts`. E2E: the programmes journey asserts the Education card reads "1 active campaign".
 
-**10. Razorpay webhook hardening — payment audit C1 + L1 (2026-10-07, UNCOMMITTED)**
+**10. Razorpay webhook hardening — payment audit C1 + L1 (2026-10-07, `e87864b`, pushed)**
 
 From the read-only payment audit of 2026-10-07. Only C1 (a transient webhook failure could lose a captured payment) and L1 (a bad signature answered 200) are fixed here.
 - **Retryable events** (`apps/api/src/modules/donations/payment-verification.service.ts`, `claim()`): the insert into `payment_webhooks` and its unique `provider_event_id` are unchanged. On a conflict, the stored status decides:
@@ -134,9 +135,25 @@ From the read-only payment audit of 2026-10-07. Only C1 (a transient webhook fai
 - **Limits:** no lease column, so a `pending` row from a crash looks like one still in progress and two simultaneous deliveries may both run (capture stays exactly-once; a repeated `payment.failed` can add an extra history row). Recovery relies on Razorpay redelivering (a limited window, about 24 hours); after that, a `pending`/`failed` row needs reconciliation (H1) or a manual replay tool, neither of which exists.
 - **Still open from the payment audit (not started):** H1 reconciliation and pending expiry; H2 checkout failure/retry handling (double-payment risk); H3 throttling keyed on the real client IP; M1 receipt financial year in IST; M2 production live-key guard; M3 international payments (FCRA); M4 admin payment-exceptions view; M6 guest checkout overwriting donor details; L2–L5. See §5.5.
 
+**11. Phase 11 — Payment & Donation Production Readiness (2026-10-07, committed locally as `feat(payments): complete payment production readiness`, NOT pushed)**
+
+The payment-audit findings H1, H2, H3, M1, M2, M4, L2, L3 and L4 (idempotency), plus the `Permissions-Policy` check. No schema change, no migration.
+- **Reconciliation and pending expiry (H1).** `PaymentReconciliationService` (`apps/api/src/modules/donations/payment-reconciliation.service.ts`), run by `POST /api/v1/internal/payments/reconcile` (`internal-payments.controller.ts`, authenticated only by `INTERNAL_API_SECRET`; 503 when unset). The worker schedules it (`apps/worker/src/processors/payment-reconciliation.processor.ts`; `payments` queue, repeatable `payments.reconcile`, default every 10 min).
+  - Candidates: `pending`/`processing` donations older than 15 min (up to 30 days), and `failed` ones with an order from the last 72 h; oldest first, 100 per run.
+  - A captured payment on the order (`RazorpayClient.fetchOrderPayments`) → `PaymentVerificationService.captureVerifiedPayment` → the same order/currency/amount checks and the same exactly-once capture as browser and webhook.
+  - Nothing captured, `pending`, past **24 h** → `DonationCaptureService.markCancelled` (conditional on `pending`/`processing`; payment row and `payment_transactions` follow). Not if an `authorized` payment exists; not if a captured payment mismatches (both stay pending and show in the exceptions view). No order → cancelled after 24 h. `failed` is never cancelled.
+  - Idempotent and race-safe with the webhook and the browser; a late payment on a `cancelled` donation still captures.
+- **Checkout retry and duplicates (H2, L4).** `razorpay-checkout.ts` no longer settles on `payment.failed` (Razorpay's window allows a retry on the same order); it settles on payment or close (reporting the last failure). `checkout-attempt.ts` + `donation-checkout.tsx`: the same basket reopens the same donation and order. `POST /donations` accepts `Idempotency-Key` (`DonationIdempotencyService`, Redis 30 min; same key+body → same donation while unpaid incl. failed; different body → 422; in progress → 409; paid/cancelled → 409; Redis down → no idempotency).
+- **Per-client rate limits (H3).** `ClientThrottlerGuard` keys on the address in `x-sailent-client-ip`, believed only with `INTERNAL_API_SECRET` in `x-sailent-internal-auth` (`common/security/internal-request.ts`), else `req.ip`. The BFF and the staff-login, OTP and volunteer-apply server actions add the headers (`apps/web/src/lib/api/forwarding.ts`, `client-ip.ts`) and the BFF strips browser-supplied copies. The web server derives the address only from `CLIENT_IP_HEADER` (+ `TRUSTED_PROXY_HOPS`) — unset means site-wide limits, as before. Limits unchanged.
+- **Hardening.** IST financial year (`receipts.service.ts`, M1); production rejects non-`rzp_live_` keys and requires `INTERNAL_API_SECRET` (API) and `API_INTERNAL_URL` + `INTERNAL_API_SECRET` (worker) (`packages/config/src/env.ts`, M2); order and currency checked on the fetched payment before capture (L2, L3; mismatches are `PaymentMismatchException` → `needs_review` from the webhook).
+- **Admin payment exceptions (M4).** `GET /api/v1/admin/payments/exceptions` (`payment.read`; GET only) and `/admin/payments` (Finance menu): failed, unfinished (pending > 15 min) and needs-review webhooks with payment/order ids and the linked donation; donations pending > 1 h (overdue past 24 h); cancelled in the last 7 days. No raw payload, no donor details, no write action.
+- **Razorpay Checkout compatibility.** `Permissions-Policy` `payment=()` → `payment=(self "https://api.razorpay.com" "https://checkout.razorpay.com")` (`apps/web/src/lib/security/permissions-policy.ts`). Not verified on a real device (no Razorpay keys) — part of the sandbox trial.
+- **Also updated:** `.env.example` (variable names only), the admin reconciliation page copy, `SECURITY.md`, `DATABASE.md` §6, `DEPLOYMENT.md` §6/§6a/§7.
+- **Not changed:** exactly-once capture, signatures, amount checks, distinct donor counts, campaign status/deadline/stop-at-goal checks, out-of-band refund flagging, schema.
+
 ### What was being worked on
 
-The webhook hardening (item 10) is implemented and validated (§2) and **awaits owner approval to commit**. CI is deferred by the owner.
+Phase 11 (item 11) is implemented, validated (§2) and committed locally as one commit, `feat(payments): complete payment production readiness`. It is **not pushed**; pushing needs the owner's approval. CI is deferred by the owner.
 
 ### Reverted by the owner on 2026-10-06 (do not redo unless asked)
 
@@ -153,6 +170,19 @@ See **`AGENTS.md` §11**, the permanent list of owner-approved designs and decis
 ---
 
 ## 2. LAST VALIDATION — snapshot as of 2026-10-07 (local only)
+
+**Phase 11 (item 11), 2026-10-07:**
+
+| Command | Result |
+|---|---|
+| `pnpm prettier --check .`, `pnpm typecheck`, `pnpm lint` | ✅ pass (13/13 tasks each) |
+| `pnpm --filter @sailent/api test` (full) | ❌ 819 passed, **4 failed**, 9 skipped — only the 4 `me.spec.ts` drift failures (§5.1). Includes `donations.spec.ts` 60/60 and `rate-limit.spec.ts` 10/10. |
+| API unit (config guards, client IP, IST financial year) | ✅ included above; the IST tests also pass under `TZ=UTC` |
+| `pnpm --filter @sailent/worker test` | ✅ 8 passed |
+| `pnpm --filter @sailent/web test` / `@sailent/validation` / `@sailent/database` | ✅ 128 / 280 / 180 passed |
+| `pnpm build --force` (isolated copy) | ✅ 8/8 tasks |
+| Playwright campaign, donations, journeys, shell, admin-reports × 4 projects (isolated copy, `--workers=2`) | 391 passed, **1 failed**, 56 skipped. The failure is the pre-existing WebKit "featured campaigns rail › keyboard users can still pause it" (below). |
+| Mutation checks | The previous throttler guard fails both per-client tests; the previous checkout wrapper fails "payment after a failed attempt"; the previous financial-year code fails 5 boundary cases under `TZ=UTC`. |
 
 **Webhook hardening C1 + L1 (item 10), 2026-10-07:**
 
@@ -262,7 +292,7 @@ Statuses: COMPLETE · PARTIALLY COMPLETE · IN PROGRESS · NOT STARTED · BLOCKE
 | Programmes | PARTIALLY COMPLETE | Rollups `campaign_count`, `total_raised` and `beneficiaries_reached` are never written, yet the public listing reads `campaignCount`. |
 | Campaigns | COMPLETE | Lifecycle, FAQs, gallery, products, preview, admin-controlled featuring, and the optional end-date deadline (`dd64d41`). Public experience cleanup (open/closed filter, Other Ways to Support, in-page mobile card, own stories) implemented, **uncommitted** (§1, item 7). |
 | Products / campaign products | COMPLETE | |
-| One-time donations + Razorpay | PARTIALLY COMPLETE | Tested with a mocked client only. Missing: idempotency key, reconciliation and expiry of pending donations, currency check, total cap. Never run against live Razorpay. Local behaviour without keys: `DEPLOYMENT.md` §6. |
+| One-time donations + Razorpay | COMPLETE IN CODE / NOT VERIFIED LIVE | Phase 11 added reconciliation and expiry, checkout retry, idempotency, per-client limits, currency/order checks (committed locally, not pushed). Tested with a mocked client only; never run against live or sandbox Razorpay. Missing: total cap, receipt PDF. Local behaviour without keys: `DEPLOYMENT.md` §6. |
 | Receipts | PARTIALLY COMPLETE | No PDF; 80G fields null. |
 | Donor accounts | PARTIALLY COMPLETE | PAN stored in plaintext; email change unverified. |
 | Staff authentication | PARTIALLY COMPLETE | No 2FA in effect; no invite acceptance or password reset (CLI only). |
@@ -317,11 +347,11 @@ This is for a **human** to verify and remediate through the approved process (`D
 
 ### 5.3 Security (details in `SECURITY.md`)
 
-- **Global rate limits.** Every limit is effectively site-wide, because the API sees the BFF's IP. `X-Forwarded-For` is trusted for audit IPs.
+- **Rate limits.** Per real client since Phase 11 — once the web server's `CLIENT_IP_HEADER` and `INTERNAL_API_SECRET` are configured; until then site-wide, as before (`DEPLOYMENT.md` §6a). `X-Forwarded-For` is still trusted for **audit** IPs (Phase 12).
 - **No staff 2FA in effect.**
 - **Donor data:** PAN stored in plaintext; unverified donor email change; guest checkout can overwrite an existing donor's name and phone.
 - **Web defaults:** `FEATURE_MOCK_DATA` is treated as ON when unset; `webEnvSchema` is never loaded.
-- **Output and headers:** no CSP or HSTS on the web. (A forged Razorpay webhook now gets HTTP 401 — §1 item 10, uncommitted. JSON-LD escaping: fixed in `ed69d41`.)
+- **Output and headers:** no CSP or HSTS on the web. (A forged Razorpay webhook gets HTTP 401 since `e87864b`. JSON-LD escaping: fixed in `ed69d41`.)
 
 ### 5.4 Infrastructure and tooling
 
@@ -341,8 +371,14 @@ This is for a **human** to verify and remediate through the approved process (`D
 - **Programme rollups are never written.** Public reads of the campaign count now compute it live (§1 item 9); `total_raised` and `beneficiaries_reached` remain unwritten and unrendered.
 - **Historical `donor_count` values are not recounted.** New captures count distinct donors (§1 item 8); values written before 2026-10-06 may be overstated where a donor gave more than once. Recount is a human-only runbook (`DATABASE.md` §12).
 - **Orphan pending donations without Razorpay keys** (`DEPLOYMENT.md` §6).
-- **No reconciliation job** (payment audit H1). Since item 10, a webhook that failed transiently is retried by Razorpay, but only within its redelivery window; nothing recovers a `pending`/`failed` webhook row or a stuck `pending` donation after that, and nothing ever writes `cancelled`.
-- **Open payment-audit findings (2026-10-07):** H2 checkout failure/retry handling (a donor can pay twice); H3 throttling is site-wide; M1 receipt financial year uses server time, not IST; M2 no guard against Razorpay test keys in production; M3 international payments are kept (FCRA); M4 no admin view of webhook failures or amount mismatches; M6 guest checkout overwrites an existing donor's name and phone; L2–L5 (currency check, order-id check on the fetched payment, idempotency key/total cap, receipt PDF and superseding). Recommended order: H2, H1, H3, then the M1/M2/L2/L3 hardening batch, then M4.
+- **Payment items still open after Phase 11 (2026-10-07):**
+  - Reconciliation, per-client limits and the worker schedule need **deployment configuration** (`INTERNAL_API_SECRET` on API, web and worker; `API_INTERNAL_URL`; `CLIENT_IP_HEADER`), a human task (`DEPLOYMENT.md` §6a). Without it, limits stay site-wide and nothing is reconciled.
+  - **Never run against real Razorpay** (no keys): order payments endpoint, Checkout retry behaviour and the `Permissions-Policy` change are verified only against fakes — the sandbox trial (Phase 15) must cover them.
+  - M3 international payments are accepted and kept (FCRA) — disable in the Razorpay dashboard (human).
+  - M6 guest checkout overwrites an existing donor's name and phone (Phase 12).
+  - No total-value cap on a donation (custom amount is capped at ₹10 lakh); receipt PDF; receipt superseding (blocked by `receipts_donation_unique`).
+  - `payment_webhooks` rows left `failed`/`pending` are not replayed by any tool (reconciliation settles the donation directly; the rows stay visible in Payment exceptions).
+  - Reconciliation examines up to 100 donations per run, oldest first; stuck ones (authorised or mismatched payments) are re-examined every run until resolved by a human.
 - **Soft 404s.**
 - **The web build needs the API** for some routes.
 - **`campaigns.program_id` is nullable.** A live campaign can be detached by PATCH.
@@ -378,9 +414,9 @@ This is for a **human** to verify and remediate through the approved process (`D
 1. ~~Commit the featured/deadline work~~ (done: `dd64d41`). ~~Fix the CI target flag~~ (done: `0e94632`). ~~Turborepo test env~~ (done: `7fe6c25`). All pushed.
 2. ~~Commit the campaign cleanup~~ (done: `ed69d41`, pushed). **Commit the donor-count change** (§1 item 8) with owner approval; push only with a separate approval.
 3. CI (deferred by the owner, 2026-10-06): observe the GitHub Actions run and, with approval, the dependency overrides for `pnpm audit` (§5.4).
-4. ~~Programme campaign counts~~ (done: `f9816be`, pushed). **Commit the webhook hardening** (§1 item 10) with owner approval. Then the remaining payment-audit fixes (§5.5), soft 404s and the admin dashboard home, in the order the owner chooses.
+4. ~~Programme campaign counts~~ (`f9816be`) and ~~webhook hardening~~ (`e87864b`), pushed. Phase 11 committed locally (`feat(payments): complete payment production readiness`); **push it** with owner approval; then **Phase 12 — Accounts, Authentication & Security Hardening** (2026-10-07 roadmap).
 5. Resolve the local drift / PAN encryption (§5.1).
-6. Fix the security items that need no product decisions: rate-limit keying and trusted client IP; the web `FEATURE_MOCK_DATA` default and `webEnvSchema`; webhook 401. (JSON-LD escaping: done in `ed69d41`.)
+6. Fix the security items that need no product decisions (Phase 12): the web `FEATURE_MOCK_DATA` default and `webEnvSchema`; spoofable audit IPs. (Rate-limit keying: Phase 11. Webhook 401: `e87864b`. JSON-LD escaping: `ed69d41`.)
 7. Human-led production audit and hardening (§5.2).
 8. Then: PAN encryption and email verification; staff 2FA; CSP and HSTS.
 9. Notification retry consumer; reconciliation and pending expiry; programme rollups.
@@ -415,7 +451,7 @@ These are recorded here and **not** silently resolved in the source documents.
 | 7 | `docs/rbac*.md`: 6–7 roles; permissions in the token | One role; token carries `sub`/`aud`/`sid` only; permissions resolved per request |
 | 8 | `docs/README.md` index stops at Phase 9 | Phase 10.5–10.12 documents exist |
 | 9 | IA, user-flows, PRD: recurring giving, refunds, `/refund-policy`, `/transparency`, `/gallery`, `/account/*`, phone OTP, guest event registration and waitlist | Removed or changed |
-| 10 | `api-architecture.md`: `/donations/intent`, `/subscriptions`, `Idempotency-Key` | `POST /donations`; no subscriptions; no idempotency |
+| 10 | `api-architecture.md`: `/donations/intent`, `/subscriptions`, `Idempotency-Key` | `POST /donations`; no subscriptions; an optional `Idempotency-Key` on `POST /donations` since Phase 11 (Redis-held, not a column) |
 | 11 | `design-system.md`, `phase-1.md`: green brand hue, serif display font, 1200px container | Navy/blue/orange palette (hue 250); DM Sans + Plus Jakarta Sans + Caveat; 90rem container |
 | 12 | `development-setup.md`, `database-development.md`: `pnpm db:migrate` with no `--target` | `--target` is required |
 | 13 | `docs/database-development.md` "Development credentials": five per-role accounts with a required second factor | The current seed creates two `SUPER_ADMIN` accounts (`admin@sailent.local`, `staff@sailent.local`); TOTP is not enforced for `SUPER_ADMIN`. Older local databases may still hold the earlier accounts. |
@@ -427,7 +463,7 @@ These are recorded here and **not** silently resolved in the source documents.
 | 19 | Phase 8 code comments use both labels for the same hosted project | "production" in `rotate-admin-password.ts` (about line 56) and in the seed's `main()` comment; "staging" in `database-target.ts` (about line 199) and `prepare-e2e.ts`. Per the owner (2026-10-06), it is **production**. The comments are left unchanged (application code). |
 | 22 | Seed header comment (`packages/database/src/seed/index.ts`, near the top): `--reference` is "safe anywhere / safe in any environment" | It is **not** safe on production: it deletes and re-inserts the `SUPER_ADMIN` grants (a lockout window), prunes permissions and upserts category slugs. The seed's own `main()` comment says so, and so do `DATABASE.md` §10 and `DEPLOYMENT.md` §10. |
 | 23 | Seed `main()` comment: "five staff accounts with a known password" | The current seed creates **two** (`admin@sailent.local`, `staff@sailent.local`) |
-| 24 | `donations.service.ts` comment: a failed order leaves a pending donation "swept by the same reconciliation"; `razorpay.client.ts` comment: `isConfigured` is "checked by the donation endpoints" | No reconciliation job exists. `isConfigured` is checked only inside `RazorpayClient.call()`, after the donation has been committed (`DEPLOYMENT.md` §6). |
+| 24 | `donations.service.ts` comment: a failed order leaves a pending donation "swept by the same reconciliation"; `razorpay.client.ts` comment: `isConfigured` is "checked by the donation endpoints" | Since Phase 11 reconciliation exists and cancels such a donation after 24 h (when the worker is configured). `isConfigured` is still checked only inside `RazorpayClient.call()`, after the donation has been committed (`DEPLOYMENT.md` §6). |
 | 20 | The audit task mentioned Cloud Run | No Cloud Run, GCP or Docker deployment configuration exists |
 | 21 | Local databases | One applied migration is absent from the repo, and `0014` was edited after it was applied (§5.1) |
 
@@ -436,7 +472,7 @@ These are recorded here and **not** silently resolved in the source documents.
 ## THE NEXT AI AGENT SHOULD START HERE
 
 1. Read `AGENTS.md` in full, especially §8 (production is off limits), §9 (work directly on `main`; owner approval before every commit and every push) and §11 (must not change). Then read this file, and `CLAUDE.md` if you are Claude Code.
-2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-07, `main` = `origin/main` = `f9816be`, with the webhook hardening and its documentation **uncommitted** (§1 item 10). Ask the owner before committing it, and separately before pushing.
+2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-07, local `main` is 1 commit ahead of `origin/main` (`e87864b`): the Phase 11 commit `feat(payments): complete payment production readiness`, **not pushed** (§1 item 11). Ask the owner before pushing it.
 3. **CI (deferred by the owner on 2026-10-06; resume only when asked): watch CI.**
    - Observe the GitHub Actions run for the current `main` head (for example with `gh run list` / `gh run view`, or on GitHub). The `security` job is expected to fail at `pnpm audit` until the dependency fixes are approved (§5.4).
    - Report the `quality` and `security` job results with their failing step and log excerpt, if any.

@@ -10,7 +10,21 @@ Newest first.
 
 ---
 
-## 2026-10-07 — Razorpay webhook hardening, payment audit C1 + L1 (UNCOMMITTED as of 2026-10-07)
+## 2026-10-07 — Phase 11: Payment & Donation Production Readiness (`feat(payments): complete payment production readiness`; committed locally, NOT pushed as of 2026-10-07)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| Payment reconciliation and pending expiry: a worker-scheduled job (`payments` queue, every 10 min) calls `POST /internal/payments/reconcile` (shared `INTERNAL_API_SECRET`); the API checks pending donations older than 15 min against Razorpay's order payments, captures through the normal path (source `reconciliation`), and cancels unpaid donations after 24 h | Payment audit H1: a payment missed by browser and webhook stayed `pending` forever; nothing wrote `cancelled` | Captured money is recorded exactly once; abandoned checkouts expire; `cancelled` still captures a late payment | none |
+| Checkout: a failed attempt no longer ends the checkout; the same basket reopens the same donation and order; `POST /donations` accepts `Idempotency-Key` (Redis, 30 min) | H2: a successful retry after a failure was dropped and the donor could pay twice; every retry created another pending donation | No unnecessary duplicate donations or orders | none |
+| Rate limits keyed on the real client: the web server forwards the client address with the internal secret; the API trusts it only with the secret (never `X-Forwarded-For`) | H3: every limit was site-wide | Limits apply per donor once the web server is configured (`CLIENT_IP_HEADER`) | none |
+| Hardening: receipt financial year in IST; production rejects `rzp_test_` keys and requires `INTERNAL_API_SECRET`; the fetched payment's order and currency are checked before capture | M1, M2, L2, L3 | — | none |
+| Read-only admin **Payment exceptions** (`/admin/payments`, `payment.read`): failed/unfinished/needs-review webhooks and stuck donations; identifiers only | M4 | No write route; no "mark successful" | none |
+| `Permissions-Policy`: `payment` allowed for this origin and Razorpay's only (was `payment=()`) | It blocked the Payment Request API inside Razorpay Checkout | Other features still off | — |
+| Tests: reconciliation, retries on one order, idempotency, hardening, exceptions authorisation (API); per-client limits; config guards; IST boundary; worker processor; checkout wrapper, attempt reuse, client IP, policy (web); E2E header and admin page | Cover the phase | Tests only | — |
+
+Exactly-once capture, signatures, amount checks, distinct donor counts and campaign rules are unchanged. Human-only: production scheduling (worker env), web proxy configuration, Razorpay dashboard settings (`DEPLOYMENT.md` §6a).
+
+## 2026-10-07 — `e87864b` Razorpay webhook hardening, payment audit C1 + L1 (pushed 2026-10-07)
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|

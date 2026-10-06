@@ -70,6 +70,8 @@ export const adminNav: AdminNavGroup[] = [
     icon: Wallet,
     items: [
       { label: 'Reconciliation', href: '/admin/reconciliation' },
+      // Phase 11: what reconciliation could not settle on its own. Read-only.
+      { label: 'Payment exceptions', href: '/admin/payments' },
       { label: 'Tax compliance', href: '/admin/tax' },
       /*
         Phase 10.12. "Reports" sits under Finance rather than in a group of its

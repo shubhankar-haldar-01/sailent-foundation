@@ -28,6 +28,12 @@ import {
   type EventRegistrationConfirmedJob,
 } from './processors/event-notifications.processor.js';
 import {
+  PAYMENT_RECONCILE_JOB,
+  PAYMENT_RECONCILE_SCHEDULER,
+  processPaymentReconciliation,
+  type PaymentReconciliationJob,
+} from './processors/payment-reconciliation.processor.js';
+import {
   processVolunteerApplication,
   processVolunteerAssigned,
   processVolunteerCertificate,
@@ -257,6 +263,82 @@ emailWorker.on('failed', (job, error) => {
 });
 
 /**
+ * The PAYMENTS queue — reconciliation (Phase 11).
+ *
+ * A repeatable job every `PAYMENT_RECONCILE_INTERVAL_MS` (ten minutes by
+ * default) asks the API to reconcile pending donations against Razorpay and
+ * expire the ones nobody paid for. BullMQ keeps ONE schedule under a fixed id,
+ * so starting several workers does not multiply the runs, and concurrency 1
+ * means two runs never overlap on one worker.
+ *
+ * Without `API_INTERNAL_URL` and `INTERNAL_API_SECRET` (both required in
+ * production) the schedule is removed and the worker says so: reconciliation
+ * then does not run at all, which is visible, rather than failing every ten
+ * minutes, which is noise.
+ */
+const paymentsQueue = new Queue<PaymentReconciliationJob>(QUEUE_NAMES.PAYMENTS, {
+  connection,
+  defaultJobOptions: DEFAULT_JOB_OPTIONS,
+});
+
+const reconciliationConfigured = Boolean(env.INTERNAL_API_SECRET);
+const reconciliationApiUrl = env.API_INTERNAL_URL ?? 'http://localhost:4000';
+
+const paymentsWorker = new Worker<PaymentReconciliationJob>(
+  QUEUE_NAMES.PAYMENTS,
+  (job) => {
+    if (job.name !== PAYMENT_RECONCILE_JOB) {
+      throw new Error(`Unknown payments job: ${job.name}`);
+    }
+    if (!env.INTERNAL_API_SECRET) {
+      throw new Error('Reconciliation is not configured (INTERNAL_API_SECRET is unset)');
+    }
+    return processPaymentReconciliation(
+      job,
+      { apiUrl: reconciliationApiUrl, secret: env.INTERNAL_API_SECRET },
+      logger,
+    );
+  },
+  { connection, concurrency: 1 },
+);
+
+paymentsWorker.on('failed', (job, error) => {
+  const exhausted = job ? job.attemptsMade >= (job.opts.attempts ?? 1) : false;
+  logger[exhausted ? 'error' : 'warn'](
+    { jobId: job?.id, queue: QUEUE_NAMES.PAYMENTS, attempt: job?.attemptsMade, err: error.message },
+    exhausted
+      ? 'Payment reconciliation failed on every attempt — pending donations are not being settled'
+      : 'Payment reconciliation failed, will retry',
+  );
+});
+
+void (async () => {
+  try {
+    if (reconciliationConfigured) {
+      await paymentsQueue.upsertJobScheduler(
+        PAYMENT_RECONCILE_SCHEDULER,
+        { every: env.PAYMENT_RECONCILE_INTERVAL_MS },
+        { name: PAYMENT_RECONCILE_JOB, data: {} },
+      );
+      logger.info(
+        { everyMs: env.PAYMENT_RECONCILE_INTERVAL_MS },
+        'Payment reconciliation scheduled',
+      );
+    } else {
+      await paymentsQueue.removeJobScheduler(PAYMENT_RECONCILE_SCHEDULER);
+      logger.warn(
+        'Payment reconciliation is NOT scheduled: set INTERNAL_API_SECRET (and API_INTERNAL_URL) to enable it',
+      );
+    }
+  } catch (error) {
+    logger.error(
+      { err: error instanceof Error ? error.message : error },
+      'Could not register the payment reconciliation schedule',
+    );
+  }
+})();
+
+/**
  * Health endpoint.
  *
  * A worker with no HTTP surface is invisible to a platform health check and
@@ -311,6 +393,8 @@ async function shutdown(signal: string): Promise<void> {
   try {
     server.close();
     await emailWorker.close();
+    await paymentsWorker.close();
+    await paymentsQueue.close();
     await exampleWorker.close();
     await exampleQueue.close();
     await database.close();

@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 
 import { API_PREFIX } from '@sailent/config';
 
+import { actionForwardingHeaders } from '@/lib/api/forwarding';
+
 import { clearDonorSession, readDonorSession, writeDonorSession } from './donor-session';
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:4000';
@@ -59,7 +61,8 @@ export async function requestSignInCode(
   try {
     await fetch(`${API_BASE}/${API_PREFIX}/auth/donor/otp/request`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // The real client, so the API's limits apply per person (Phase 11).
+      headers: { 'Content-Type': 'application/json', ...(await actionForwardingHeaders()) },
       body: JSON.stringify({ email }),
       cache: 'no-store',
     });
@@ -113,7 +116,8 @@ export async function verifySignInCode(
   try {
     response = await fetch(`${API_BASE}/${API_PREFIX}/auth/donor/otp/verify`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // The real client, so the API's limits apply per person (Phase 11).
+      headers: { 'Content-Type': 'application/json', ...(await actionForwardingHeaders()) },
       body: JSON.stringify({ email, code }),
       cache: 'no-store',
     });

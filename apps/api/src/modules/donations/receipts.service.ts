@@ -25,9 +25,18 @@ type Tx = Parameters<Parameters<DatabaseClient['db']['transaction']>[0]>[0];
  * eventually feed is filed per financial year.
  */
 export function financialYearOf(date: Date): number {
-  // getMonth() is zero-based: 3 is April.
-  return date.getMonth() >= 3 ? date.getFullYear() : date.getFullYear() - 1;
+  /*
+    IN INDIA TIME, not the server's. The year turns at midnight on 1 April in
+    India; a server running in UTC would otherwise number a donation made at
+    00:30 on 1 April (18:30 UTC on 31 March) in the year that has just ended.
+    India has no daylight saving, so a fixed +05:30 is exact.
+  */
+  const india = new Date(date.getTime() + IST_OFFSET_MS);
+  // getUTCMonth() is zero-based: 3 is April.
+  return india.getUTCMonth() >= 3 ? india.getUTCFullYear() : india.getUTCFullYear() - 1;
 }
+
+const IST_OFFSET_MS = 330 * 60_000;
 
 /** SFL-2026-000001 */
 export function formatReceiptNumber(financialYear: number, sequence: number): string {

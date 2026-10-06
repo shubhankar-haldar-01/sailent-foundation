@@ -1,4 +1,4 @@
-import { createHmac } from 'node:crypto';
+import { createHmac, randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { sql } from 'drizzle-orm';
@@ -7,6 +7,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DATABASE } from '../src/modules/database/database.module.js';
 import { ServiceUnavailableException } from '../src/common/exceptions.js';
 import type { RazorpayPayment } from '../src/modules/donations/razorpay.client.js';
+import { PaymentReconciliationService } from '../src/modules/donations/payment-reconciliation.service.js';
+import { PasswordService } from '../src/modules/auth/password.service.js';
+import { INTERNAL_AUTH_HEADER } from '@sailent/config';
 import {
   TEST_PASSWORD,
   TEST_USERS,
@@ -39,6 +42,13 @@ import {
  * ══════════════════════════════════════════════════════════════════════════
  */
 
+/*
+  The internal secret the worker presents to run reconciliation (Phase 11).
+  Set before the app is built, because the API reads its config at startup.
+*/
+const INTERNAL_SECRET = 'internal-secret-for-donation-tests-0123456789';
+process.env.INTERNAL_API_SECRET = INTERNAL_SECRET;
+
 const KEY_SECRET = 'test_key_secret_abcdefghijklmnop';
 const WEBHOOK_SECRET = 'test_webhook_secret_qrstuvwxyz12';
 
@@ -62,7 +72,13 @@ const COUNTED_CAMPAIGNS = ['school-kits-jharkhand', 'flood-relief-balasore'] as 
 /** A fake provider whose ids are deterministic, so assertions can name them. */
 function fakeRazorpay(overrides: Partial<Record<string, unknown>> = {}) {
   const payments = new Map<string, RazorpayPayment>();
+  // Further attempts on an order, beyond the first (Phase 11): a declined card
+  // and then a payment that worked, or — in error — two captured payments.
+  const extraAttempts = new Map<string, RazorpayPayment[]>();
+  // Orders whose first payment never reached Razorpay at all.
+  const withoutFirstAttempt = new Set<string>();
   let counter = 0;
+  let attemptCounter = 0;
   // How many upcoming `fetchPayment` calls fail the way the real client does
   // when Razorpay cannot be reached.
   let failingFetches = 0;
@@ -104,7 +120,25 @@ function fakeRazorpay(overrides: Partial<Record<string, unknown>> = {}) {
       for (const payment of payments.values()) {
         if (payment.id === paymentId) return payment;
       }
+      for (const attempts of extraAttempts.values()) {
+        const found = attempts.find((payment) => payment.id === paymentId);
+        if (found) return found;
+      }
       throw new Error(`fake razorpay: unknown payment ${paymentId}`);
+    },
+
+    async fetchOrderPayments(orderId: string): Promise<RazorpayPayment[]> {
+      if (failingFetches > 0) {
+        failingFetches -= 1;
+        throw new ServiceUnavailableException(
+          'We could not reach the payment provider. Please try again in a moment.',
+        );
+      }
+      const first = payments.get(orderId);
+      return [
+        ...(first && !withoutFirstAttempt.has(orderId) ? [first] : []),
+        ...(extraAttempts.get(orderId) ?? []),
+      ];
     },
 
     verifyCheckoutSignature(input: { orderId: string; paymentId: string; signature: string }) {
@@ -130,6 +164,22 @@ function fakeRazorpay(overrides: Partial<Record<string, unknown>> = {}) {
     /** Test hook: the next `count` fetches fail as if Razorpay were unreachable. */
     __failNextFetches(count: number) {
       failingFetches = count;
+    },
+    /** Test hook: another payment attempt on the same order. */
+    __addAttempt(orderId: string, patch: Partial<RazorpayPayment>): RazorpayPayment {
+      attemptCounter += 1;
+      const first = payments.get(orderId)!;
+      const attempt: RazorpayPayment = {
+        ...first,
+        id: `pay_TESTX${String(attemptCounter).padStart(7, '0')}`,
+        ...patch,
+      };
+      extraAttempts.set(orderId, [...(extraAttempts.get(orderId) ?? []), attempt]);
+      return attempt;
+    },
+    /** Test hook: the order exists, but no payment was ever attempted on it. */
+    __noAttempts(orderId: string) {
+      withoutFirstAttempt.add(orderId);
     },
     ...overrides,
   };
@@ -630,6 +680,530 @@ describe('Donations (integration)', () => {
 
       expect(errorCode(response.body as Envelope)).toBe('CONFLICT');
       expect(await campaignState()).toEqual(before);
+    });
+  });
+
+  // =========================================================================
+  /**
+   * PHASE 11 — reconciliation, retries on the same order, idempotency, the
+   * order/currency checks, and the read-only payment exceptions view.
+   *
+   * Every test makes its own donations with its own donors (phones 98111…,
+   * removed in teardown), and ages them by moving `created_at` back, which is
+   * the only thing reconciliation reads the clock from.
+   */
+  describe('phase 11', () => {
+    type Db = { db: { execute(q: unknown): Promise<{ rows: Record<string, string>[] }> } };
+    const db = () => app.get<Db>(DATABASE).db;
+    const SCHOOL = 'school-kits-jharkhand';
+    let phone = 9811100100;
+    const freshDonor = (key: string) => {
+      phone += 1;
+      return donorFor(`p11-${key}`, String(phone));
+    };
+
+    async function pending(key: string, customAmount = 50_000) {
+      const { status, body } = await startDonation({
+        campaignSlug: SCHOOL,
+        items: [],
+        customAmount,
+        donor: freshDonor(key),
+      });
+      expect(status).toBe(201);
+      const orderId = body.data!.razorpayOrderId as string;
+      return {
+        donationId: body.data!.donationId as string,
+        reference: body.data!.reference as string,
+        amount: body.data!.amount as number,
+        orderId,
+        payment: razorpay.__paymentForOrder(orderId),
+      };
+    }
+
+    const age = (donationId: string, interval: string) =>
+      db().execute(
+        sql`UPDATE donations SET created_at = now() - ${interval}::interval WHERE id = ${donationId}::uuid`,
+      );
+
+    const reconcile = (...donationIds: string[]) =>
+      app.get(PaymentReconciliationService).run({ donationIds });
+
+    async function records(donationId: string) {
+      const result = await db().execute(sql`
+        SELECT
+          (SELECT status FROM donations WHERE id = ${donationId}::uuid) AS status,
+          (SELECT count(*) FROM receipts WHERE donation_id = ${donationId}::uuid)::int AS receipts,
+          (SELECT count(*) FROM payments WHERE donation_id = ${donationId}::uuid)::int AS payments,
+          (SELECT status FROM payments WHERE donation_id = ${donationId}::uuid LIMIT 1) AS payment_status,
+          (SELECT count(*) FROM payment_transactions t JOIN payments p ON p.id = t.payment_id
+            WHERE p.donation_id = ${donationId}::uuid AND t.to_status = 'successful')::int AS successes,
+          (SELECT string_agg(t.source, ',' ORDER BY t.occurred_at) FROM payment_transactions t
+             JOIN payments p ON p.id = t.payment_id
+            WHERE p.donation_id = ${donationId}::uuid) AS sources
+      `);
+      const row = result.rows[0]!;
+      return {
+        status: row.status,
+        receipts: Number(row.receipts),
+        payments: Number(row.payments),
+        paymentStatus: row.payment_status,
+        successes: Number(row.successes),
+        sources: row.sources ?? '',
+      };
+    }
+
+    const verify = (donationId: string, orderId: string, paymentId: string) =>
+      request(server)
+        .post(`${PREFIX}/donations/${donationId}/verify-payment`)
+        .send({
+          razorpayOrderId: orderId,
+          razorpayPaymentId: paymentId,
+          razorpaySignature: checkoutSignature(orderId, paymentId),
+        });
+
+    const deliver = (event: string, payment: RazorpayPayment, eventId: string) => {
+      const body = JSON.stringify({ event, payload: { payment: { entity: payment } } });
+      return request(server)
+        .post(`${PREFIX}/payments/razorpay/webhook`)
+        .set('x-razorpay-signature', webhookSignature(body))
+        .set('x-razorpay-event-id', eventId)
+        .set('Content-Type', 'application/json')
+        .send(body);
+    };
+
+    // -----------------------------------------------------------------------
+    describe('reconciliation', () => {
+      it('records a captured payment that neither the browser nor the webhook reported', async () => {
+        const donation = await pending('recon-capture');
+        await age(donation.donationId, '20 minutes');
+        const before = await campaignState();
+
+        const summary = await reconcile(donation.donationId);
+        expect(summary.captured).toBe(1);
+
+        const after = await campaignState();
+        expect(after.raised).toBe(before.raised + donation.amount);
+        expect(after.donors).toBe(before.donors + 1);
+        const record = await records(donation.donationId);
+        expect(record).toMatchObject({
+          status: 'successful',
+          receipts: 1,
+          payments: 1,
+          successes: 1,
+        });
+        expect(record.sources).toContain('reconciliation');
+
+        // Again: a successful donation is no longer a candidate at all.
+        const again = await reconcile(donation.donationId);
+        expect(again.examined).toBe(0);
+        expect(await campaignState()).toEqual(after);
+      });
+
+      it('leaves a donation younger than the reconcile window to the browser and webhook', async () => {
+        const donation = await pending('recon-young');
+        const summary = await reconcile(donation.donationId);
+        expect(summary.examined).toBe(0);
+        expect((await records(donation.donationId)).status).toBe('pending');
+      });
+
+      it('captures once when the webhook arrives after reconciliation', async () => {
+        const donation = await pending('recon-then-webhook');
+        await age(donation.donationId, '20 minutes');
+        await reconcile(donation.donationId);
+        const afterReconcile = await campaignState();
+
+        const response = await deliver(
+          'payment.captured',
+          donation.payment,
+          `evt_TEST_${donation.payment.id}_after_recon`,
+        );
+        expect(response.status).toBe(200);
+        expect(await campaignState()).toEqual(afterReconcile);
+        expect(await records(donation.donationId)).toMatchObject({ receipts: 1, successes: 1 });
+      });
+
+      it('captures once when reconciliation and the webhook race', async () => {
+        const donation = await pending('recon-race');
+        await age(donation.donationId, '20 minutes');
+        const before = await campaignState();
+
+        await Promise.all([
+          reconcile(donation.donationId),
+          deliver('payment.captured', donation.payment, `evt_TEST_${donation.payment.id}_race`),
+          verify(donation.donationId, donation.orderId, donation.payment.id),
+        ]);
+
+        const after = await campaignState();
+        expect(after.raised).toBe(before.raised + donation.amount);
+        expect(after.donors).toBe(before.donors + 1);
+        expect(await records(donation.donationId)).toMatchObject({
+          status: 'successful',
+          receipts: 1,
+          payments: 1,
+          successes: 1,
+        });
+      });
+
+      it('keeps an unpaid donation pending until the expiry cutoff', async () => {
+        const donation = await pending('recon-unpaid-young');
+        razorpay.__setPayment(donation.orderId, { status: 'failed' });
+        await age(donation.donationId, '2 hours');
+
+        const summary = await reconcile(donation.donationId);
+        expect(summary.skipped).toBe(1);
+        expect((await records(donation.donationId)).status).toBe('pending');
+      });
+
+      it('cancels a donation nobody paid for after the cutoff, without deleting anything', async () => {
+        const donation = await pending('recon-expire');
+        razorpay.__setPayment(donation.orderId, { status: 'failed' });
+        await age(donation.donationId, '25 hours');
+        const before = await campaignState();
+
+        const summary = await reconcile(donation.donationId);
+        expect(summary.cancelled).toBe(1);
+
+        const record = await records(donation.donationId);
+        expect(record).toMatchObject({
+          status: 'cancelled',
+          paymentStatus: 'cancelled',
+          receipts: 0,
+          payments: 1,
+        });
+        expect(record.sources).toContain('reconciliation');
+        expect(await campaignState()).toEqual(before);
+
+        // Run again: a cancelled donation is not a candidate; nothing moves.
+        expect((await reconcile(donation.donationId)).examined).toBe(0);
+      });
+
+      it('cancels a donation whose Razorpay order was never created', async () => {
+        const donation = await pending('recon-no-order');
+        await db().execute(
+          sql`UPDATE payments SET provider_order_id = NULL WHERE donation_id = ${donation.donationId}::uuid`,
+        );
+        await age(donation.donationId, '25 hours');
+
+        const summary = await reconcile(donation.donationId);
+        expect(summary.cancelled).toBe(1);
+        expect((await records(donation.donationId)).status).toBe('cancelled');
+      });
+
+      it('does not cancel while Razorpay holds an authorised payment', async () => {
+        const donation = await pending('recon-authorised');
+        razorpay.__setPayment(donation.orderId, { status: 'authorized' });
+        await age(donation.donationId, '25 hours');
+
+        const summary = await reconcile(donation.donationId);
+        expect(summary.heldForAuthorisation).toBe(1);
+        expect((await records(donation.donationId)).status).toBe('pending');
+      });
+
+      it('records money that arrives after a donation was cancelled, exactly once', async () => {
+        const donation = await pending('recon-late');
+        razorpay.__setPayment(donation.orderId, { status: 'failed' });
+        await age(donation.donationId, '25 hours');
+        await reconcile(donation.donationId);
+        expect((await records(donation.donationId)).status).toBe('cancelled');
+        const before = await campaignState();
+
+        // The donor kept the window open and paid.
+        razorpay.__setPayment(donation.orderId, { status: 'captured' });
+        const response = await verify(donation.donationId, donation.orderId, donation.payment.id);
+        expect(response.status).toBe(200);
+
+        expect((await campaignState()).raised).toBe(before.raised + donation.amount);
+        expect(await records(donation.donationId)).toMatchObject({
+          status: 'successful',
+          receipts: 1,
+          successes: 1,
+        });
+      });
+
+      it('never touches a successful donation, however old', async () => {
+        const donation = await pending('recon-successful');
+        await verify(donation.donationId, donation.orderId, donation.payment.id).expect(200);
+        await age(donation.donationId, '25 hours');
+
+        expect((await reconcile(donation.donationId)).examined).toBe(0);
+        expect((await records(donation.donationId)).status).toBe('successful');
+      });
+
+      it('never captures a payment whose amount does not match, and never cancels it either', async () => {
+        const donation = await pending('recon-mismatch');
+        razorpay.__setPayment(donation.orderId, { amount: 100 });
+        await age(donation.donationId, '25 hours');
+        const before = await campaignState();
+
+        const summary = await reconcile(donation.donationId);
+        expect(summary.mismatches).toBe(1);
+        expect((await records(donation.donationId)).status).toBe('pending');
+        expect(await campaignState()).toEqual(before);
+      });
+
+      it('carries on, and changes nothing, when Razorpay cannot be reached', async () => {
+        const donation = await pending('recon-unreachable');
+        await age(donation.donationId, '25 hours');
+        razorpay.__failNextFetches(1);
+
+        const summary = await reconcile(donation.donationId);
+        expect(summary.errors).toBe(1);
+        expect((await records(donation.donationId)).status).toBe('pending');
+      });
+
+      it('runs only for the worker, through the internal secret', async () => {
+        const endpoint = `${PREFIX}/internal/payments/reconcile`;
+        await request(server).post(endpoint).expect(401);
+        await request(server).post(endpoint).set(INTERNAL_AUTH_HEADER, 'wrong-secret').expect(401);
+
+        const response = await request(server)
+          .post(endpoint)
+          .set(INTERNAL_AUTH_HEADER, INTERNAL_SECRET)
+          .expect(200);
+        const summary = (response.body as Envelope<Record<string, number>>).data!;
+        expect(summary).toEqual(
+          expect.objectContaining({ examined: expect.any(Number), cancelled: expect.any(Number) }),
+        );
+      });
+    });
+
+    // -----------------------------------------------------------------------
+    describe('retrying on the same order', () => {
+      it('records a retry that succeeds after a failed attempt, exactly once', async () => {
+        const donation = await pending('retry-success');
+        const before = await campaignState();
+
+        // The first attempt fails, and Razorpay says so.
+        const failedAttempt = { ...donation.payment, status: 'failed' as const };
+        razorpay.__setPayment(donation.orderId, { status: 'failed' });
+        await deliver('payment.failed', failedAttempt, `evt_TEST_${donation.payment.id}_failed`);
+        expect((await records(donation.donationId)).status).toBe('failed');
+
+        // The donor tries again in the same window, on the same order, and pays.
+        const retry = razorpay.__addAttempt(donation.orderId, { status: 'captured' });
+        const verified = await verify(donation.donationId, donation.orderId, retry.id);
+        expect(verified.status).toBe(200);
+
+        // The webhook for it, and a reconciliation run, add nothing more.
+        await deliver('payment.captured', retry, `evt_TEST_${retry.id}_captured`);
+        await age(donation.donationId, '20 minutes');
+        await reconcile(donation.donationId);
+
+        const after = await campaignState();
+        expect(after.raised).toBe(before.raised + donation.amount);
+        expect(after.donors).toBe(before.donors + 1);
+        expect(await records(donation.donationId)).toMatchObject({
+          status: 'successful',
+          receipts: 1,
+          payments: 1,
+          successes: 1,
+        });
+      });
+
+      it('records one donation when an order somehow holds two captured payments', async () => {
+        const donation = await pending('retry-double');
+        razorpay.__addAttempt(donation.orderId, { status: 'captured' });
+        await age(donation.donationId, '20 minutes');
+        const before = await campaignState();
+
+        const summary = await reconcile(donation.donationId);
+        expect(summary.multipleCaptured).toBe(1);
+        expect(summary.captured).toBe(1);
+
+        const after = await campaignState();
+        expect(after.raised).toBe(before.raised + donation.amount);
+        expect(after.donors).toBe(before.donors + 1);
+        expect(await records(donation.donationId)).toMatchObject({ receipts: 1, successes: 1 });
+      });
+
+      it('leaves a failed donation failed when nothing was paid', async () => {
+        const donation = await pending('retry-still-failed');
+        razorpay.__setPayment(donation.orderId, { status: 'failed' });
+        await deliver(
+          'payment.failed',
+          { ...donation.payment, status: 'failed' },
+          `evt_TEST_${donation.payment.id}_failed_only`,
+        );
+        await age(donation.donationId, '25 hours');
+
+        await reconcile(donation.donationId);
+        expect((await records(donation.donationId)).status).toBe('failed');
+      });
+    });
+
+    // -----------------------------------------------------------------------
+    describe('create idempotency', () => {
+      const body = (key: string, customAmount = 50_000) => ({
+        campaignSlug: SCHOOL,
+        items: [],
+        customAmount,
+        donor: donorFor(`p11-idem-${key}`, `98111009${key.length}${key.charCodeAt(0) % 10}`),
+      });
+      const create = (payload: unknown, key?: string) => {
+        const call = request(server).post(`${PREFIX}/donations`);
+        return (key ? call.set('Idempotency-Key', key) : call).send(payload as object);
+      };
+      const newKey = () => `test-${randomUUID()}`;
+
+      it('returns the same donation and order for a repeated request', async () => {
+        const key = newKey();
+        const payload = body('same');
+        const first = await create(payload, key);
+        const second = await create(payload, key);
+
+        expect(first.status).toBe(201);
+        expect(second.status).toBe(201);
+        expect(second.body.data.donationId).toBe(first.body.data.donationId);
+        expect(second.body.data.razorpayOrderId).toBe(first.body.data.razorpayOrderId);
+      });
+
+      it('creates one donation when the same request arrives twice at once', async () => {
+        const key = newKey();
+        const payload = body('race');
+        const [a, b] = await Promise.all([create(payload, key), create(payload, key)]);
+
+        const created = [a, b].filter((response) => response.status === 201);
+        const ids = new Set(created.map((response) => response.body.data.donationId));
+        expect(ids.size).toBe(1);
+        // The other either got the same donation or was told to wait.
+        expect([a.status, b.status].every((status) => status === 201 || status === 409)).toBe(true);
+      });
+
+      it('refuses a key reused for a different donation', async () => {
+        const key = newKey();
+        await create(body('diff'), key).expect(201);
+        const reused = await create(body('diff', 70_000), key);
+        expect(reused.status).toBe(422);
+      });
+
+      it('still allows separate donations without a key', async () => {
+        const payload = body('nokey');
+        const first = await create(payload);
+        const second = await create(payload);
+        expect(first.status).toBe(201);
+        expect(second.status).toBe(201);
+        expect(second.body.data.donationId).not.toBe(first.body.data.donationId);
+      });
+
+      it('starts nothing new under a key whose donation was already paid', async () => {
+        const key = newKey();
+        const payload = body('paid');
+        const first = await create(payload, key);
+        const orderId = first.body.data.razorpayOrderId as string;
+        const payment = razorpay.__paymentForOrder(orderId);
+        await verify(first.body.data.donationId as string, orderId, payment.id).expect(200);
+
+        const again = await create(payload, key);
+        expect(again.status).toBe(409);
+      });
+
+      it('refuses a malformed key', async () => {
+        await create(body('bad'), 'short').expect(422);
+      });
+    });
+
+    // -----------------------------------------------------------------------
+    describe('payment hardening', () => {
+      it('refuses a payment in another currency, and sends the webhook to review', async () => {
+        const donation = await pending('hard-currency');
+        razorpay.__setPayment(donation.orderId, { currency: 'USD' });
+        const before = await campaignState();
+
+        const verified = await verify(donation.donationId, donation.orderId, donation.payment.id);
+        expect(errorCode(verified.body as Envelope)).toBe('CONFLICT');
+
+        const eventId = `evt_TEST_${donation.payment.id}_currency`;
+        const response = await deliver(
+          'payment.captured',
+          { ...donation.payment, currency: 'USD' },
+          eventId,
+        );
+        expect(response.status).toBe(200);
+        const flagged = await db().execute(
+          sql`SELECT processing_status FROM payment_webhooks WHERE provider_event_id = ${eventId}`,
+        );
+        expect(flagged.rows[0]?.processing_status).toBe('needs_review');
+        expect((await records(donation.donationId)).status).toBe('pending');
+        expect(await campaignState()).toEqual(before);
+      });
+
+      it('refuses a payment that belongs to a different order', async () => {
+        const donation = await pending('hard-order');
+        razorpay.__setPayment(donation.orderId, { order_id: 'order_SOMEONE_ELSE' });
+
+        const verified = await verify(donation.donationId, donation.orderId, donation.payment.id);
+        expect(errorCode(verified.body as Envelope)).toBe('CONFLICT');
+        expect((await records(donation.donationId)).status).toBe('pending');
+      });
+    });
+
+    // -----------------------------------------------------------------------
+    describe('payment exceptions (admin)', () => {
+      const EXCEPTIONS = `${PREFIX}/admin/payments/exceptions`;
+
+      it('lists flagged webhooks and stuck donations to an administrator, read-only', async () => {
+        const donation = await pending('exceptions-stuck');
+        await age(donation.donationId, '2 hours');
+
+        const flagged = await pending('exceptions-flagged');
+        razorpay.__setPayment(flagged.orderId, { amount: 100 });
+        const eventId = `evt_TEST_${flagged.payment.id}_exceptions`;
+        await deliver('payment.captured', { ...flagged.payment, amount: 100 }, eventId);
+
+        const response = await request(server).get(EXCEPTIONS).set(auth(superAdmin)).expect(200);
+        const data = (
+          response.body as Envelope<{
+            summary: Record<string, number>;
+            webhooks: {
+              providerEventId: string;
+              processingStatus: string;
+              donationReference: string;
+            }[];
+            stuckDonations: { reference: string }[];
+          }>
+        ).data!;
+
+        const webhook = data.webhooks.find((row) => row.providerEventId === eventId);
+        expect(webhook?.processingStatus).toBe('needs_review');
+        expect(webhook?.donationReference).toBe(flagged.reference);
+        expect(data.stuckDonations.map((row) => row.reference)).toContain(donation.reference);
+        expect(data.summary.needsReview).toBeGreaterThanOrEqual(1);
+
+        // Identifiers only: no raw payload, no donor details.
+        const text = JSON.stringify(data);
+        expect(text).not.toContain('rawBody');
+        expect(text).not.toContain('@example.test');
+      });
+
+      it('is refused without a staff session', async () => {
+        await request(server).get(EXCEPTIONS).expect(401);
+      });
+
+      it('is refused to a staff account without payment.read', async () => {
+        const email = `no-role-${randomUUID()}@sailent.test`;
+        const hash = await app.get(PasswordService).hash(TEST_PASSWORD);
+        await db().execute(sql`
+          INSERT INTO users (email, password_hash, first_name, last_name, status, email_verified_at)
+          VALUES (${email}, ${hash}, 'No', 'Role', 'active', now())
+        `);
+        try {
+          const token = await login(email);
+          expect(token).toBeTruthy();
+          await request(server).get(EXCEPTIONS).set(auth(token)).expect(403);
+        } finally {
+          await db().execute(sql`
+            DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE email = ${email})
+          `);
+          await db().execute(sql`DELETE FROM users WHERE email = ${email}`);
+        }
+      });
+
+      it('offers no way to change a payment from there', async () => {
+        for (const method of ['post', 'patch', 'put', 'delete'] as const) {
+          const response = await request(server)[method](EXCEPTIONS).set(auth(superAdmin));
+          expect(response.status).toBe(404);
+        }
+      });
     });
   });
 

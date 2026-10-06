@@ -41,6 +41,23 @@ test.describe('public shell', () => {
     await expect(page.getByRole('link', { name: 'Donate' }).first()).toBeVisible();
   });
 
+  /**
+   * Phase 11. `payment=()` blocked the Payment Request API inside Razorpay
+   * Checkout's frame (wallet and UPI-intent payments). Payment is allowed for
+   * this origin and Razorpay only; the other browser features stay off.
+   */
+  test('lets Razorpay Checkout use payments, and nothing else new', async ({ page }) => {
+    const campaignPage = await page.goto('/campaigns/school-kits-jharkhand');
+    const policy = campaignPage?.headers()['permissions-policy'] ?? '';
+    expect(policy).toContain(
+      'payment=(self "https://api.razorpay.com" "https://checkout.razorpay.com")',
+    );
+    expect(policy).toContain('camera=()');
+    expect(policy).toContain('microphone=()');
+    expect(policy).toContain('geolocation=()');
+    expect(campaignPage?.headers()['x-frame-options']).toBe('DENY');
+  });
+
   test('never scrolls horizontally', async ({ page }) => {
     // The most common responsive defect, and the easiest to regress.
     await page.goto('/');

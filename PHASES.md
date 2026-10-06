@@ -47,6 +47,8 @@ See `DEVELOPMENT_STATUS.md`.
 | 10.11 | Notifications | 🟡 |
 | 10.12 | Reports & analytics | ✅ |
 | post-10.12 | Design & campaign presentation | 🔵 |
+| 11 | Payment & Donation Production Readiness | ✅ implemented; committed locally, not pushed (2026-10-07) |
+| 12–15 | Accounts & security · Admin, CMS & communications · Infrastructure · Final launch readiness (2026-10-07 roadmap review) | ⚪ |
 | — | Not yet scheduled | ⚪ |
 
 ---
@@ -109,7 +111,7 @@ See `DEVELOPMENT_STATUS.md`.
 |---|---|
 | **Goal** | Donation create, verify, webhook, capture, receipts, confirmation email |
 | **Completed** | Migration `0009`; `POST /donations`; `/donations/:id/verify-payment`; `/payments/razorpay/webhook`; capture transaction; `SFL-<FY>-NNNNNN` receipts; Brevo confirmation |
-| **Remaining** | Reconciliation job and pending expiry (`cancelled` is never written); idempotency key; currency check; 401 for a bad webhook signature; receipt PDF; **live Razorpay test** |
+| **Remaining** | ~~Reconciliation job and pending expiry; idempotency key; currency check; 401 for a bad webhook signature~~ (401: `e87864b`; the rest: Phase 11, 2026-10-07). Still: receipt PDF; **live Razorpay test** |
 | **Validation** | API `donations.spec.ts` (mocked Razorpay); E2E donations spec (no real checkout) |
 
 ## Phase 7 — Donor accounts & dashboard  🟡 PARTIAL
@@ -204,11 +206,22 @@ Reports (donations, campaigns, volunteers, impact, reconciliation, tax readiness
 | **Committed, not yet pushed** | 2026-10-06 `d7f42e3`: documentation/context system. 2026-10-06 `0e94632`: CI migrate/seed `--target=local` fix (not verified on GitHub yet) |
 | **Next** | With owner approval, push `main` and verify the first GitHub Actions run (`DEVELOPMENT_STATUS.md` "START HERE"). Work happens directly on `main`. |
 
+## Phase 11 — Payment & Donation Production Readiness  ✅ IMPLEMENTED (committed locally as `feat(payments): complete payment production readiness`, not pushed, 2026-10-07)
+
+| | |
+|---|---|
+| **Goal** | Make donations and Razorpay production-ready from the application side (payment audit of 2026-10-07: H1, H2, H3, M1, M2, M4, L2–L4) |
+| **Completed** | Reconciliation and 24-hour pending expiry (worker-scheduled, API-run); checkout retry on the same order and attempt reuse; `Idempotency-Key` on create; per-client rate limits via a trusted forwarded address; IST receipt financial year; live-key guard; order and currency checks before capture; read-only admin Payment exceptions; `Permissions-Policy` allowing payment for Razorpay. No migration. |
+| **Remaining (human)** | Deployment configuration (`INTERNAL_API_SECRET`, `API_INTERNAL_URL`, `CLIENT_IP_HEADER`), Razorpay dashboard settings, a sandbox trial — `DEPLOYMENT.md` §6a |
+| **Validation** | `DEVELOPMENT_STATUS.md` §2 |
+
+Phases 12–15 (accounts and security hardening; admin, CMS and communications; infrastructure and operations; final launch readiness) come from the 2026-10-07 roadmap review and are not started.
+
 ## Not yet scheduled  ⚪ NOT STARTED
 
 Documented as needed, or deferred:
 - **Operations:** deployment configuration and hosting; a human-led verification and hardening of the existing production database; backups.
-- **Scheduled jobs:** reconciliation and counter drift.
+- **Scheduled jobs:** counter-drift checks. (Payment reconciliation: Phase 11.)
 - **Monitoring:** Sentry; GA4.
 - **Staff accounts:** staff 2FA enrolment; invite and password reset.
 - **Receipts and tax:** receipt PDF; Form 10BD export.

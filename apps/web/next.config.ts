@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next';
 
+import { PERMISSIONS_POLICY } from './src/lib/security/permissions-policy';
+
 const config: NextConfig = {
   reactStrictMode: true,
 
@@ -27,10 +29,8 @@ const config: NextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'X-Frame-Options', value: 'DENY' },
-          {
-            key: 'Permissions-Policy',
-            value: 'geolocation=(), microphone=(), camera=(), payment=()',
-          },
+          // Payment is allowed for Razorpay Checkout's frame only — see the module.
+          { key: 'Permissions-Policy', value: PERMISSIONS_POLICY },
         ],
       },
     ];

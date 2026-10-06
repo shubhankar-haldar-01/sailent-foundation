@@ -159,6 +159,31 @@ test.describe('reconciliation', () => {
   });
 });
 
+/**
+ * Phase 11. What reconciliation could not settle on its own — read-only, and
+ * with no way to mark anything successful.
+ */
+test.describe('payment exceptions', () => {
+  test('lists what needs a human, and offers no way to change a payment', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'One project is enough.');
+
+    await page.goto('/admin/payments');
+    await expect(page.getByRole('heading', { level: 1, name: 'Payment exceptions' })).toBeVisible();
+    await expect(page.getByText('Needs review', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Webhook events' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Stuck donations' })).toBeVisible();
+
+    // Reachable from the Finance menu.
+    await expect(page.getByRole('link', { name: 'Payment exceptions' })).toBeVisible();
+
+    await expect(
+      page.getByRole('button', { name: /mark|capture|settle|resolve|retry|replay/i }),
+    ).toHaveCount(0);
+  });
+});
+
 test.describe('tax readiness', () => {
   test('counts what could not go on the return, and files nothing', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'One project is enough.');
@@ -195,7 +220,12 @@ test.describe('reports are staff-only', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test('redirects a signed-out visitor away from every screen', async ({ page }) => {
-    for (const path of ['/admin/reports', '/admin/reconciliation', '/admin/tax']) {
+    for (const path of [
+      '/admin/reports',
+      '/admin/reconciliation',
+      '/admin/payments',
+      '/admin/tax',
+    ]) {
       await page.goto(path);
       await expect(page).toHaveURL(/\/admin\/login/);
     }

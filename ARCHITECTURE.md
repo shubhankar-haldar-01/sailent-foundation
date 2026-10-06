@@ -120,7 +120,8 @@ sequenceDiagram
   B->>W: /donation/[reference] polls status
 ```
 
-- **Not implemented:** a webhook queue (it is processed inline), reconciliation, pending expiry, refunds, and an idempotency key.
+- **Reconciliation and expiry (Phase 11):** the worker schedules `payments.reconcile`, which calls the API's internal `POST /internal/payments/reconcile` (shared `INTERNAL_API_SECRET`); the API checks pending donations against Razorpay's order payments, captures through the same path, and cancels unpaid ones after 24 h. `POST /donations` accepts an `Idempotency-Key` (Redis). The web server forwards the real client address for rate limiting (`DEPLOYMENT.md` §6a).
+- **Not implemented:** a webhook queue (it is processed inline) and refunds (by decision).
 - **Ended campaigns:** `hasEnded()` (`packages/validation`) closes a campaign at the end of its `end_date` (IST), both at checkout and in the API's `donation` state. With no `end_date`, a campaign is ongoing.
 - **Without Razorpay keys** (local development): the pending donation is committed first, then order creation fails with HTTP 503 and the row stays `pending`. See `DEPLOYMENT.md` §6.
 

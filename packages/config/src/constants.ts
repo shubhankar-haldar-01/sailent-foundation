@@ -9,6 +9,17 @@ export const API_PREFIX = 'api/v1';
 /** Header carrying the correlation id across web → API → worker. */
 export const REQUEST_ID_HEADER = 'x-request-id';
 
+/**
+ * Headers between our own services (Phase 11).
+ *
+ * `INTERNAL_AUTH_HEADER` carries `INTERNAL_API_SECRET`; `CLIENT_IP_HEADER` is
+ * the real client address the web server determined. The API believes the
+ * second ONLY alongside a valid first — the web server strips both from
+ * anything a browser sends, so neither can be supplied from outside.
+ */
+export const INTERNAL_AUTH_HEADER = 'x-sailent-internal-auth';
+export const CLIENT_IP_HEADER = 'x-sailent-client-ip';
+
 /** Pagination defaults, shared so the client and server cannot disagree. */
 export const PAGINATION = {
   DEFAULT_PAGE: 1,

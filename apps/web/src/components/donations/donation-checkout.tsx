@@ -7,6 +7,7 @@ import { AlertTriangle, ArrowLeft, Loader2, ShieldCheck } from 'lucide-react';
 import { Alert, Button, Card, Input, Label, Switch, cn, formatCurrency } from '@sailent/ui';
 import { emailSchema, phoneSchema } from '@sailent/validation';
 
+import { attemptFor, basketKey, type CheckoutAttempt } from '@/lib/payments/checkout-attempt';
 import {
   loadRazorpayScript,
   openRazorpayCheckout,
@@ -65,6 +66,11 @@ export function DonationCheckout({
   const [stage, setStage] = React.useState<Stage>({ kind: 'form' });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [isAnonymous, setIsAnonymous] = React.useState(false);
+  /*
+    The current attempt: the donation and order already created for this exact
+    request, reused when the donor tries again (Phase 11, `checkout-attempt.ts`).
+  */
+  const attemptRef = React.useRef<CheckoutAttempt | null>(null);
 
   const busy = stage.kind === 'creating' || stage.kind === 'paying' || stage.kind === 'verifying';
 
@@ -98,46 +104,57 @@ export function DonationCheckout({
 
     setStage({ kind: 'creating' });
 
-    let handoff: CheckoutHandoff;
-    try {
-      const response = await fetch('/api/bff/donations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          campaignSlug: selection.campaignSlug,
-          items: selection.items,
-          // Omitted rather than sent as zero, so a pure product donation is
-          // typed `product` and not `hybrid`.
-          ...(selection.customAmount > 0 ? { customAmount: selection.customAmount } : {}),
-          donor,
-        }),
-      });
+    const requestBody = {
+      campaignSlug: selection.campaignSlug,
+      items: selection.items,
+      // Omitted rather than sent as zero, so a pure product donation is
+      // typed `product` and not `hybrid`.
+      ...(selection.customAmount > 0 ? { customAmount: selection.customAmount } : {}),
+      donor,
+    };
+    const attempt = attemptFor(attemptRef.current, basketKey(requestBody));
+    attemptRef.current = attempt;
 
-      const payload = (await response.json()) as {
-        success: boolean;
-        data?: CheckoutHandoff;
-        error?: { message: string; details?: { message?: string }[] };
-      };
+    // The same request as last time reopens its order rather than creating a
+    // second donation for it; otherwise the donation is created now.
+    if (!attempt.handoff) {
+      try {
+        const response = await fetch('/api/bff/donations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': attempt.idempotencyKey,
+          },
+          body: JSON.stringify(requestBody),
+        });
 
-      if (!response.ok || !payload.success || !payload.data) {
-        const detail = payload.error?.details?.[0]?.message;
+        const payload = (await response.json()) as {
+          success: boolean;
+          data?: CheckoutHandoff;
+          error?: { message: string; details?: { message?: string }[] };
+        };
+
+        if (!response.ok || !payload.success || !payload.data) {
+          const detail = payload.error?.details?.[0]?.message;
+          setStage({
+            kind: 'error',
+            message: detail ?? payload.error?.message ?? 'We could not start this donation.',
+            retryable: true,
+          });
+          return;
+        }
+
+        attempt.handoff = payload.data;
+      } catch {
         setStage({
           kind: 'error',
-          message: detail ?? payload.error?.message ?? 'We could not start this donation.',
+          message: 'We could not reach our server. Nothing has been charged.',
           retryable: true,
         });
         return;
       }
-
-      handoff = payload.data;
-    } catch {
-      setStage({
-        kind: 'error',
-        message: 'We could not reach our server. Nothing has been charged.',
-        retryable: true,
-      });
-      return;
     }
+    const handoff: CheckoutHandoff = attempt.handoff;
 
     try {
       await loadRazorpayScript();

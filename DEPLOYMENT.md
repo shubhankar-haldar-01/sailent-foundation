@@ -157,11 +157,29 @@ This is **development behaviour**, and it **never represents a successful paymen
 
 1. `POST /api/v1/donations` validates the campaign and prices, then **commits** a `pending` donation, its line items and a payment row in one transaction (`apps/api/src/modules/donations/donations.service.ts`).
 2. **After** that commit, it asks Razorpay for an order. With no `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET`, `RazorpayClient` (`razorpay.client.ts`) throws `ServiceUnavailableException`, so the request returns **HTTP 503**: "Online payments are not configured on this server. No money has been taken."
-3. The donation **stays `pending`**. Nothing expires it or sweeps it; no reconciliation job exists.
+3. The donation **stays `pending`** until payment reconciliation (Phase 11) cancels it: with no Razorpay order there is nothing to look up, so once it is older than 24 hours it becomes `cancelled` — provided the worker is running with `INTERNAL_API_SECRET` set (§6a). Without that, it stays pending.
 4. If the donation included **limited-quantity campaign products**, those units count as **held for 30 minutes** (`HOLD_MINUTES = 30`) against availability. Custom-amount-only donations hold nothing.
 5. No receipt is issued, no counters change, and no email is sent. A donation becomes successful only through checkout verification or the webhook, which both need Razorpay.
 
 The API tests mock the Razorpay client. A live test-mode payment has never been run.
+
+## 6a. Payment reconciliation, retries and per-client limits (Phase 11, 2026-10-07)
+
+**Reconciliation and pending expiry.** The worker schedules a repeatable BullMQ job (`payments.reconcile` on the `payments` queue, schedule id `payments-reconcile`, every `PAYMENT_RECONCILE_INTERVAL_MS`, default 10 minutes). The job calls the API's internal endpoint `POST /api/v1/internal/payments/reconcile` with `INTERNAL_API_SECRET` in `x-sailent-internal-auth`; the API does the work (`PaymentReconciliationService`), so capture logic exists in one place.
+- Pending donations older than **15 minutes** are checked against Razorpay (`GET /orders/:id/payments`). A captured payment is recorded through the normal capture path (source `reconciliation`), exactly once.
+- Pending donations with nothing paid after **24 hours** become **`cancelled`** (never deleted). Not if Razorpay holds an `authorized` payment, or a captured payment that does not match (those stay pending and appear under **Finance → Payment exceptions**).
+- `failed` donations from the last 72 hours are re-checked for a later successful retry on the same order; they are never cancelled.
+- A late payment on a cancelled donation is still recorded (capture moves any non-successful state forward).
+- **Scheduling requirement (human, at deployment):** run the worker with `API_INTERNAL_URL` (the API's address as the worker reaches it) and `INTERNAL_API_SECRET` (the same value as the API). Both are required in production by `workerEnvSchema`; without them the worker removes the schedule and logs a warning. BullMQ keeps one schedule under a fixed id, so several worker instances do not multiply runs.
+
+**Per-client rate limits.** The web server sends the real client address to the API in `x-sailent-client-ip`, with `INTERNAL_API_SECRET` in `x-sailent-internal-auth` (both stripped from anything a browser sends). The API believes the address only with the secret; otherwise it falls back to the connecting address (the old, site-wide behaviour). **Configure the web server (human, at deployment):**
+- `INTERNAL_API_SECRET`: the same value as the API.
+- `CLIENT_IP_HEADER`: the header your hosting puts the client address in (for example `x-forwarded-for`, `x-real-ip`, `cf-connecting-ip`). **Unset means no address is derived**, deliberately: a guess would believe what the browser wrote.
+- `TRUSTED_PROXY_HOPS`: for `x-forwarded-for` only, how many proxies you control append to it (default 1). The client is that many entries from the end.
+
+**Checkout retries.** A failed attempt in Razorpay's window no longer ends the checkout; the donor can retry on the same order, and pressing Donate again for the same basket reopens the same donation and order. `POST /donations` accepts an optional `Idempotency-Key` (16–128 of `A–Z a–z 0–9 - _`), held in Redis for 30 minutes.
+
+**Razorpay dashboard (human only):** live keys in production (`rzp_live_…`; a test key fails validation); the webhook at `{API}/api/v1/payments/razorpay/webhook` with its own secret, subscribed to `payment.captured`, `payment.failed`, `refund.created` and `refund.processed`; automatic capture on; **international payments disabled** (the organisation is not FCRA-registered). Verify Checkout on a real Android device during the sandbox trial — `Permissions-Policy` now allows `payment` for Razorpay's origins only.
 
 ## 7. External services
 
@@ -170,7 +188,7 @@ The API tests mock the Razorpay client. A live test-mode payment has never been 
 | PostgreSQL / Supabase | api, worker, scripts | `DATABASE_URL`, `DATABASE_MIGRATION_URL`, `DATABASE_CA_CERT`, `DATABASE_INSECURE_TLS`, `PRODUCTION_DATABASE_HOST` | Local in use. **The production Supabase project exists**: session pooler on 5432 (6543 is refused), CA at `infrastructure/certs/supabase-prod-ca-2021.crt`. |
 | Redis | api, worker | `REDIS_URL`, `TEST_REDIS_URL`, `E2E_REDIS_URL` | Local. Upstash planned. |
 | Cloudflare R2 | api only | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_PUBLIC`, `R2_BUCKET_PRIVATE`, `R2_PUBLIC_BASE_URL` | Implemented. Not set locally. The web needs `images.remotePatterns` before R2 images can render. |
-| Razorpay | api (the web loads `checkout.js`) | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Implemented; no keys anywhere. Webhook: `POST {API}/api/v1/payments/razorpay/webhook` |
+| Razorpay | api (the web loads `checkout.js`) | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Implemented; no keys anywhere. Webhook: `POST {API}/api/v1/payments/razorpay/webhook`. Production requires a live key (§6a). |
 | Brevo | worker | `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`, `APP_PUBLIC_URL` | Implemented; optional |
 | SMS / Sentry / GA4 | — | `SMS_*`, `SENTRY_*`, `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Declared, unused |
 
@@ -178,14 +196,17 @@ Other variable names:
 
 | Scope | Variables |
 |---|---|
-| Web | `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_APP_NAME`, `API_URL`, `FEATURE_MOCK_DATA` |
-| API | `API_PORT`, `API_HOST`, `CORS_ORIGINS`, `SWAGGER_ENABLED`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (unused), `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL_DONOR`, `JWT_REFRESH_TTL_STAFF`, `FIELD_ENCRYPTION_KEY` (unused), `FEATURE_FCRA_ENABLED` (unused) |
-| Worker | `WORKER_CONCURRENCY`, `WORKER_PORT` |
+| Web | `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_APP_NAME`, `API_URL`, `FEATURE_MOCK_DATA`, `INTERNAL_API_SECRET`, `CLIENT_IP_HEADER`, `TRUSTED_PROXY_HOPS` |
+| API | `API_PORT`, `API_HOST`, `CORS_ORIGINS`, `SWAGGER_ENABLED`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (unused), `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL_DONOR`, `JWT_REFRESH_TTL_STAFF`, `FIELD_ENCRYPTION_KEY` (unused), `FEATURE_FCRA_ENABLED` (unused), `INTERNAL_API_SECRET` |
+| Worker | `WORKER_CONCURRENCY`, `WORKER_PORT`, `API_INTERNAL_URL`, `INTERNAL_API_SECRET`, `PAYMENT_RECONCILE_INTERVAL_MS` |
 | Scripts and tests | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_FIRST_NAME`, `ADMIN_LAST_NAME`, `ALLOW_REMOTE_TEST_DB`, `DRIZZLE_AUTHORISED_URL`, `PLAYWRIGHT_BASE_URL`, `CI` |
 
 **Production requirements enforced by `apiEnvSchema`:**
-- `JWT_*`, `RAZORPAY_*` and `R2_*` are required;
+- `JWT_*`, `RAZORPAY_*`, `R2_*` and `INTERNAL_API_SECRET` are required;
+- `RAZORPAY_KEY_ID` must be a live key (`rzp_live_…`);
 - `SWAGGER_ENABLED`, `DATABASE_INSECURE_TLS` and `FEATURE_MOCK_DATA` must be false.
+
+**Enforced by `workerEnvSchema` in production:** `API_INTERNAL_URL` and `INTERNAL_API_SECRET`. The web server does not validate its environment yet (Phase 12); set its three variables by hand.
 
 ## 8. Planned hosting (documented intent; not configured)
 

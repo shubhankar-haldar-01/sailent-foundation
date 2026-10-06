@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Param, Post, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
@@ -6,6 +6,7 @@ import type { Request } from 'express';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { DonationsService } from './donations.service.js';
+import { DonationIdempotencyService } from './donation-idempotency.service.js';
 import { PaymentVerificationService } from './payment-verification.service.js';
 import { ReceiptsService } from './receipts.service.js';
 import {
@@ -38,6 +39,7 @@ import {
 export class PublicDonationsController {
   constructor(
     private readonly donations: DonationsService,
+    private readonly idempotency: DonationIdempotencyService,
     private readonly verification: PaymentVerificationService,
     private readonly receipts: ReceiptsService,
   ) {}
@@ -65,15 +67,26 @@ export class PublicDonationsController {
     description: 'The campaign is closed, or units are no longer available',
   })
   @ApiResponse({ status: 422, description: 'The donation is not valid as composed' })
-  create(@Body(new ZodValidationPipe(createDonationSchema)) body: never, @Req() request: Request) {
-    return this.donations.create({
-      ...(body as object),
-      source: 'web',
-      // Recorded for the FCRA guard: the organisation is not registered to
-      // accept foreign contributions, so one received in error must be
-      // identifiable and returnable.
-      ipCountry: (request.headers['cf-ipcountry'] as string | undefined)?.slice(0, 2),
-    } as never);
+  create(
+    @Body(new ZodValidationPipe(createDonationSchema)) body: never,
+    @Req() request: Request,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
+  ) {
+    /*
+      Optional `Idempotency-Key` (Phase 11): a retried request with the same
+      key and body returns the donation already made instead of a second one.
+      See DonationIdempotencyService for the rules.
+    */
+    return this.idempotency.run(idempotencyKey, body, () =>
+      this.donations.create({
+        ...(body as object),
+        source: 'web',
+        // Recorded for the FCRA guard: the organisation is not registered to
+        // accept foreign contributions, so one received in error must be
+        // identifiable and returnable.
+        ipCountry: (request.headers['cf-ipcountry'] as string | undefined)?.slice(0, 2),
+      } as never),
+    );
   }
 
   /**

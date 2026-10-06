@@ -130,6 +130,23 @@ export const apiEnvSchema = baseSchema
     RAZORPAY_WEBHOOK_SECRET: optional(z.string().min(8)),
 
     /*
+      THE SHARED SECRET BETWEEN OUR OWN SERVICES (Phase 11).
+
+      The web server and the worker present it to the API to prove a request
+      is theirs. Two things depend on it:
+        - the client IP the web server forwards (`x-sailent-client-ip`) is
+          believed only alongside this secret, so rate limits apply per real
+          donor rather than to the whole site;
+        - the worker's payment reconciliation calls an internal endpoint that
+          refuses anything without it.
+
+      Optional in development (limits then fall back to the connecting
+      address, and the internal endpoint answers 503); required in
+      production, below. Never logged, never sent to a browser.
+    */
+    INTERNAL_API_SECRET: optional(z.string().min(32)),
+
+    /*
       BREVO, for the donor's confirmation email.
 
       Optional everywhere, including production, and that is deliberate: a
@@ -191,6 +208,8 @@ export const apiEnvSchema = baseSchema
       'RAZORPAY_KEY_ID',
       'RAZORPAY_KEY_SECRET',
       'RAZORPAY_WEBHOOK_SECRET',
+      // Without it, rate limits are site-wide and reconciliation cannot run.
+      'INTERNAL_API_SECRET',
       /*
         Without these an administrator can reach the upload form, choose a
         file, and have it fail after the validation has passed — or worse,
@@ -210,6 +229,20 @@ export const apiEnvSchema = baseSchema
           message: `${key} is required when APP_ENV=production`,
         });
       }
+    }
+
+    /*
+      LIVE RAZORPAY KEYS ONLY. A test key in production takes sandbox
+      payments, and every one of them would be recorded as a real donation
+      with a real receipt number. The message names the variable, never the
+      value.
+    */
+    if (env.RAZORPAY_KEY_ID && !env.RAZORPAY_KEY_ID.startsWith('rzp_live_')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['RAZORPAY_KEY_ID'],
+        message: 'RAZORPAY_KEY_ID must be a live key (rzp_live_…) in production',
+      });
     }
 
     if (env.SWAGGER_ENABLED) {
@@ -244,19 +277,49 @@ export type ApiEnv = z.infer<typeof apiEnvSchema>;
 // Worker
 // ---------------------------------------------------------------------------
 
-export const workerEnvSchema = baseSchema.extend({
-  DATABASE_URL: postgresUrl,
-  REDIS_URL: redisUrl,
-  BREVO_API_KEY: optional(z.string().min(8)),
-  BREVO_SENDER_EMAIL: optional(z.string().email()),
-  BREVO_SENDER_NAME: z.string().default('Sailent Foundation'),
-  APP_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
+export const workerEnvSchema = baseSchema
+  .extend({
+    DATABASE_URL: postgresUrl,
+    REDIS_URL: redisUrl,
+    BREVO_API_KEY: optional(z.string().min(8)),
+    BREVO_SENDER_EMAIL: optional(z.string().email()),
+    BREVO_SENDER_NAME: z.string().default('Sailent Foundation'),
+    APP_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
 
-  WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(100).default(5),
-  WORKER_PORT: port.default(4001),
-  SENTRY_DSN: optional(z.string()),
-  SENTRY_ENVIRONMENT: z.string().default('development'),
-});
+    WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(100).default(5),
+    WORKER_PORT: port.default(4001),
+    SENTRY_DSN: optional(z.string()),
+    SENTRY_ENVIRONMENT: z.string().default('development'),
+
+    /*
+      PAYMENT RECONCILIATION (Phase 11). The worker schedules it and calls the
+      API's internal endpoint, which owns the capture logic, with the shared
+      secret. Without both, the schedule is not registered and the worker says
+      so at startup; production requires them, below.
+    */
+    API_INTERNAL_URL: optional(z.string().url()),
+    INTERNAL_API_SECRET: optional(z.string().min(32)),
+    /** How often reconciliation runs. Ten minutes by default. */
+    PAYMENT_RECONCILE_INTERVAL_MS: z.coerce
+      .number()
+      .int()
+      .min(60_000)
+      .max(3_600_000)
+      .default(600_000),
+  })
+  .superRefine((env, ctx) => {
+    if (env.APP_ENV !== 'production') return;
+    // Without these, no pending donation is ever reconciled or expired.
+    for (const key of ['API_INTERNAL_URL', 'INTERNAL_API_SECRET'] as const) {
+      if (!env[key]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [key],
+          message: `${key} is required when APP_ENV=production`,
+        });
+      }
+    }
+  });
 
 export type WorkerEnv = z.infer<typeof workerEnvSchema>;
 

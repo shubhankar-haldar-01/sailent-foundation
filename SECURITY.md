@@ -54,14 +54,14 @@ The original design is in `docs/security-architecture.md`. Parts of it describe 
 ### API protection
 | Control | Status | Evidence / gap |
 |---|---|---|
-| Rate limiting | **NEEDS REVIEW (HIGH)** | Redis-backed throttler, but it keys on `req.ip`. All traffic arrives via the Next.js BFF and server actions with no forwarded client IP, so **every limit is site-wide**: staff login 5/min, OTP request 3/15 min. **Fix:** the BFF sets a trusted client-IP header and strips the client's own; the API sets `trust proxy` and a custom `getTracker`; key login and OTP on email+IP. |
+| Rate limiting | IMPLEMENTED (Phase 11, 2026-10-07) — needs deployment configuration | Redis-backed throttler keyed on the REAL client (`ClientThrottlerGuard`). The BFF and the rate-limited server actions (staff login, OTP request/verify, volunteer apply) send `x-sailent-client-ip` with `INTERNAL_API_SECRET` in `x-sailent-internal-auth`, and strip both from browser requests; the API believes the address only with the secret (timing-safe), never `X-Forwarded-For`, and otherwise falls back to `req.ip` (site-wide, as before). Trusted and direct keys use separate namespaces. Limits unchanged. **Until the web server's `CLIENT_IP_HEADER` and `INTERNAL_API_SECRET` are set at deployment, limits remain site-wide** (`DEPLOYMENT.md` §6a). Login and OTP are not yet keyed on email+IP as well (OTP keeps its per-email service limit). |
 | Client IP for audit | NEEDS REVIEW | `clientIp()` trusts `X-Forwarded-For` unconditionally, so it is spoofable. |
 | Brute force | PARTIAL | Lockout plus throttling, both weakened by the above. Add backoff or CAPTCHA, and alert on lockouts. |
-| CORS | IMPLEMENTED | Allow-list via `CORS_ORIGINS`, with credentials. It allows an `Idempotency-Key` header that nothing implements. |
+| CORS | IMPLEMENTED | Allow-list via `CORS_ORIGINS`, with credentials. Allows the `Idempotency-Key` header, now used by `POST /donations` (Phase 11). |
 | CSRF | PARTIAL | `SameSite=Lax` only. The BFF has no Origin / `Sec-Fetch-Site` check; server actions get Next.js's built-in Origin check. **Fix:** check Origin on non-GET requests in the BFF. |
 | Input validation | IMPLEMENTED | Zod on every route (422 with field details). Shared schemas live in `packages/validation`. Gap: no cap on a donation's total quantity value (custom amount is capped at ₹10L). |
 | SQL injection | IMPLEMENTED | Drizzle parameterised queries; no `sql.raw`; sort allow-list. |
-| Idempotency | PARTIAL | Webhook event-ID uniqueness, conditional capture, and the receipt job ID are idempotent. **Missing:** an `Idempotency-Key` on `POST /donations`. |
+| Idempotency | IMPLEMENTED (Phase 11) | Webhook event-ID uniqueness (failed/pending events reprocessed on redelivery), conditional capture and cancellation, and the receipt job ID are idempotent. `POST /donations` accepts an optional `Idempotency-Key` (Redis, 30 min): same key and body → the same donation and order while unpaid; a different body → 422; in progress → 409; paid or cancelled → 409. Fails open (no idempotency) if Redis is down. |
 
 ### Output and browser security
 | Control | Status | Evidence / gap |
@@ -70,7 +70,7 @@ The original design is in `docs/security-architecture.md`. Parts of it describe 
 | XSS — JSON-LD | **MISSING (HIGH)** | `jsonLd()` (`apps/web/src/lib/seo/structured-data.ts`) is a bare `JSON.stringify` written into `<script>` via `dangerouslySetInnerHTML`. Staff-authored content can break out of the tag. **Fix:** escape `<`, `>`, `&`, U+2028 and U+2029. |
 | Email template output | IMPLEMENTED | `{{x}}` is HTML-escaped; raw output is allowed only per slug. |
 | Security headers — API | IMPLEMENTED | helmet; HSTS in production; no CSP (JSON API). |
-| Security headers — web | PARTIAL | `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`, `Permissions-Policy`. **No CSP, no HSTS.** **Fix:** a nonce-based CSP that allows `checkout.razorpay.com`, plus HSTS. Also check that `payment=()` does not break Razorpay. |
+| Security headers — web | PARTIAL | `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`, `Permissions-Policy`. `payment` is allowed for this origin and Razorpay's (`api.razorpay.com`, `checkout.razorpay.com`) only — `payment=()` blocked the Payment Request API in Checkout's frame (Phase 11; confirm on a real device in the sandbox trial). **No CSP, no HSTS.** **Fix:** a nonce-based CSP that allows `checkout.razorpay.com`, plus HSTS. |
 | Error disclosure | PARTIAL | 5xx messages are masked only when `APP_ENV=production`; every other `APP_ENV` returns raw database errors. `/health/ready` returns raw error messages to anonymous callers. |
 
 ### Files and storage
@@ -85,11 +85,11 @@ The original design is in `docs/security-architecture.md`. Parts of it describe 
 | Control | Status | Evidence / gap |
 |---|---|---|
 | Server-side pricing | IMPLEMENTED | Prices come from the database; the client sends IDs and quantities only. |
-| Checkout signature verification | IMPLEMENTED | HMAC-SHA256 with a timing-safe comparison, an order-ID match, and a re-fetch of the payment from Razorpay (must be `captured`, and the amount must equal the database amount). **Gap:** the currency is not compared. |
-| Webhook verification | PARTIAL | HMAC over the raw body; deduplication on `provider_event_id`. **Gap:** an invalid signature returns HTTP 200 `{status:'rejected'}`. **Fix:** return 401. The raw body (containing payer PII) is stored in `payment_webhooks`. |
+| Checkout signature verification | IMPLEMENTED | HMAC-SHA256 with a timing-safe comparison, an order-ID match, and a re-fetch of the payment from Razorpay. Before any capture (browser, webhook or reconciliation) the fetched payment must belong to the donation's order, be `captured`, be in the donation's currency (INR) and match its amount (Phase 11 added the order and currency checks); a mismatch is refused and, from the webhook, flagged `needs_review`. |
+| Webhook verification | IMPLEMENTED | HMAC over the raw body; deduplication on `provider_event_id`. An invalid signature gets **401** and nothing is stored (`e87864b`). Transient processing failures answer 503 and are reprocessed on redelivery; only `processed`, `ignored` and `needs_review` are terminal. The raw body (containing payer PII) is stored in `payment_webhooks`; the admin exceptions view shows identifiers only. |
 | Capture integrity | IMPLEMENTED | Conditional status update, `FOR UPDATE` counters, and the receipt, all in one transaction. |
-| Reconciliation | MISSING | Read-only report only. No sweep; `cancelled` is never written; pending donations never expire. |
-| Orphan pending rows | NEEDS REVIEW | The donation commits before the Razorpay order is created. If the order fails (including when Razorpay keys are missing locally: HTTP 503), the row is left pending, and any limited-quantity products in it stay held for 30 minutes (`DEPLOYMENT.md` §6). |
+| Reconciliation | IMPLEMENTED (Phase 11) | Worker-scheduled job → internal API endpoint (shared secret). Pending donations older than 15 minutes are checked against Razorpay's order payments and captured through the normal path; unpaid ones are `cancelled` after 24 hours (never deleted, never a successful one); a late payment on a cancelled donation is still recorded. Read-only admin **Payment exceptions** view (`payment.read`; no write route, no "mark successful"). Needs the worker running with `INTERNAL_API_SECRET` (`DEPLOYMENT.md` §6a). |
+| Orphan pending rows | IMPLEMENTED (Phase 11) | A donation whose Razorpay order was never created is cancelled by reconciliation after 24 hours. Checkout retries reuse the same pending donation and order instead of creating more. Limited-quantity holds still last 30 minutes. |
 
 ### Data protection
 | Control | Status | Evidence / gap |
@@ -145,8 +145,9 @@ The original design is in `docs/security-architecture.md`. Parts of it describe 
 - [ ] Staff 2FA is enforced for every staff account.
 - [ ] PAN encryption is implemented and migrated; the email-change verification and donor-overwrite fixes are in.
 - [ ] JSON-LD is escaped; a CSP and HSTS are on the web app.
-- [ ] A forged webhook returns 401; currency is checked on verify.
-- [ ] A reconciliation job and expiry of stuck pending donations exist.
+- [x] A forged webhook returns 401 (`e87864b`); currency and order are checked before capture (Phase 11).
+- [ ] A reconciliation job and expiry of stuck pending donations exist — implemented in Phase 11; **running in production needs the worker deployed with `API_INTERNAL_URL` and `INTERNAL_API_SECRET`** (`DEPLOYMENT.md` §6a).
+- [ ] Rate limits are per client in production: `INTERNAL_API_SECRET` and `CLIENT_IP_HEADER` set on the web server (Phase 11 code; deployment configuration pending).
 - [ ] A human has verified the production database: its schema version against the repo journal, and that no `@sailent.local` accounts with published credentials, `*@sailent.test` test accounts or `DNR-E2E` donors remain. `db:harden --confirm` has run, and a real administrator exists.
 - [ ] The demo seed has never run on production, and the seed's demo gate refuses `--target=production`.
 - [ ] `JWT_*`, `RAZORPAY_*`, `R2_*` and `BREVO_*` are set as platform secrets; Swagger is off; `DATABASE_INSECURE_TLS=false`.

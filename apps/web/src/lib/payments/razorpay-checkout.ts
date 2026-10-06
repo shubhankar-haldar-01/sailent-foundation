@@ -111,6 +111,9 @@ export function openRazorpayCheckout(handoff: CheckoutHandoff): Promise<Checkout
     // Guards against the modal reporting twice — a dismiss firing after a
     // success would otherwise overwrite a completed payment with a cancellation.
     let settled = false;
+    // The most recent failed attempt, if any. NOT an outcome on its own: see
+    // the `payment.failed` handler below.
+    let lastFailure: string | null = null;
     const settle = (outcome: CheckoutOutcome) => {
       if (settled) return;
       settled = true;
@@ -144,7 +147,10 @@ export function openRazorpayCheckout(handoff: CheckoutHandoff): Promise<Checkout
         });
       },
       modal: {
-        ondismiss: () => settle({ kind: 'dismissed' }),
+        // Closing after a failed attempt reports that failure; closing without
+        // one is an ordinary dismissal.
+        ondismiss: () =>
+          settle(lastFailure ? { kind: 'failed', reason: lastFailure } : { kind: 'dismissed' }),
         // Razorpay's own confirmation prompt on close. One fewer accidental
         // abandonment, at the cost of one extra tap for a deliberate one.
         confirm_close: true,
@@ -152,12 +158,23 @@ export function openRazorpayCheckout(handoff: CheckoutHandoff): Promise<Checkout
       },
     });
 
+    /*
+      A FAILED ATTEMPT IS NOT THE END OF THE CHECKOUT (Phase 11).
+
+      Razorpay keeps its modal open after a failed attempt and offers the donor
+      another try — a different card, UPI instead — on the SAME order. This used
+      to settle as "failed" at the first failure, so a successful retry inside
+      the still-open modal fired `handler` into an already-settled promise and
+      was ignored: the page showed an error, the donor pressed Donate again, and
+      a second donation was created for someone who had just paid.
+
+      Now a failure is only remembered. The checkout settles when the donor
+      pays (`handler`) or closes the modal (`ondismiss`, which reports the
+      remembered failure).
+    */
     razorpay.on('payment.failed', (payload: unknown) => {
       const error = (payload as { error?: { description?: string } } | undefined)?.error;
-      settle({
-        kind: 'failed',
-        reason: error?.description ?? 'The payment did not go through.',
-      });
+      lastFailure = error?.description ?? 'The payment did not go through.';
     });
 
     razorpay.open();

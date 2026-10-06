@@ -148,9 +148,9 @@ POST /donations
 
 **Local development without Razorpay keys:** creating a donation returns HTTP 503 and leaves a `pending` donation. No payment occurs. Details are in `DEPLOYMENT.md` §6.
 
+**Built in Phase 11 (2026-10-07):** reconciliation of pending donations against Razorpay and expiry (`cancelled`) after 24 hours, run by the worker; an `Idempotency-Key` on create; checkout retries on the same order; per-client rate limits; a read-only admin Payment exceptions page. See `DEPLOYMENT.md` §6a.
+
 **PLANNED, not built:**
-- A reconciliation job and expiry of stuck pending donations.
-- An idempotency key on create.
 - Receipt PDF.
 - Form 10BD export.
 

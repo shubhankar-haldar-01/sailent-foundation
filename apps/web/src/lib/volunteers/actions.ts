@@ -2,6 +2,8 @@
 
 import { API_PREFIX } from '@sailent/config';
 
+import { actionForwardingHeaders } from '@/lib/api/forwarding';
+
 /**
  * Submitting a volunteer application.
  *
@@ -76,7 +78,8 @@ export async function submitVolunteerApplication(
   try {
     response = await fetch(`${API_BASE}/${API_PREFIX}/volunteers/apply`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // The real client, so the API's limits apply per person (Phase 11).
+      headers: { 'Content-Type': 'application/json', ...(await actionForwardingHeaders()) },
       body: JSON.stringify(body),
       cache: 'no-store',
     });

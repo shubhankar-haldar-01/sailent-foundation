@@ -1,9 +1,14 @@
 import { Module } from '@nestjs/common';
 
 import { AdminDonationsController } from './admin-donations.controller.js';
+import { AdminPaymentsController } from './admin-payments.controller.js';
 import { AdminDonationsService } from './admin-donations.service.js';
 import { DonationCaptureService } from './donation-capture.service.js';
 import { DonationsService } from './donations.service.js';
+import { DonationIdempotencyService } from './donation-idempotency.service.js';
+import { InternalPaymentsController } from './internal-payments.controller.js';
+import { PaymentExceptionsService } from './payment-exceptions.service.js';
+import { PaymentReconciliationService } from './payment-reconciliation.service.js';
 import { PaymentVerificationService } from './payment-verification.service.js';
 import { PublicDonationsController } from './public-donations.controller.js';
 import { RazorpayClient } from './razorpay.client.js';
@@ -37,7 +42,13 @@ import { ReceiptsService } from './receipts.service.js';
  * ══════════════════════════════════════════════════════════════════════════
  */
 @Module({
-  controllers: [PublicDonationsController, RazorpayWebhookController, AdminDonationsController],
+  controllers: [
+    PublicDonationsController,
+    RazorpayWebhookController,
+    AdminDonationsController,
+    AdminPaymentsController,
+    InternalPaymentsController,
+  ],
   providers: [
     RazorpayClient,
     DonationsService,
@@ -45,6 +56,9 @@ import { ReceiptsService } from './receipts.service.js';
     PaymentVerificationService,
     ReceiptsService,
     AdminDonationsService,
+    PaymentReconciliationService,
+    PaymentExceptionsService,
+    DonationIdempotencyService,
   ],
   exports: [ReceiptsService, DonationCaptureService],
 })

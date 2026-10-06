@@ -24,8 +24,9 @@ function defaultRange(): { from: string; to: string } {
  * arrived and was never recorded — and from here those look identical, which
  * is exactly why somebody has to look rather than the platform guessing.
  *
- * Nothing on this screen changes a payment. Moving money is the webhook's job
- * and only the webhook's; a button here that marked a donation successful
+ * Nothing on this screen changes a payment. Moving money is the job of a
+ * payment Razorpay confirms — through the browser, the webhook, or the
+ * automatic reconciliation (Phase 11); a button here that marked a donation successful
  * would be a button that takes an unverified word for it.
  * ══════════════════════════════════════════════════════════════════════════
  */
@@ -59,9 +60,10 @@ export default async function AdminReconciliationPage({
       <header>
         <h1 className="font-display text-h1 font-bold tracking-tight">Reconciliation</h1>
         <p className="text-body-sm text-muted-foreground mt-1 max-w-2xl">
-          What is unresolved. A donation only becomes successful on a verified webhook, so anything
-          still pending is either an abandoned checkout or money that needs chasing — and nothing on
-          this page can tell them apart for you.
+          What is unresolved. A donation becomes successful only on a payment Razorpay confirms — by
+          the donor&apos;s browser, the webhook, or the automatic reconciliation that checks pending
+          donations with Razorpay and cancels the ones nobody paid for. What it cannot settle is
+          listed under Payment exceptions.
         </p>
       </header>
 

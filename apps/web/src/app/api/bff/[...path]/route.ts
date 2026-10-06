@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { API_PREFIX, REQUEST_ID_HEADER } from '@sailent/config';
 
+import { clientForwardingHeaders, INTERNAL_HEADERS } from '@/lib/api/forwarding';
 import { getDonorAccessToken } from '@/lib/auth/donor-session';
 import { getAccessToken } from '@/lib/auth/session';
 
@@ -45,6 +46,9 @@ const STRIPPED_REQUEST_HEADERS = new Set([
   // The browser's cookies are for THIS origin. The API gets a bearer token
   // attached below, never the raw cookie jar.
   'cookie',
+  // Ours to set, never the browser's: the API believes the client address
+  // only alongside the internal secret, and both are added below (Phase 11).
+  ...INTERNAL_HEADERS,
 ]);
 
 async function proxy(request: NextRequest, path: string[]): Promise<NextResponse> {
@@ -59,6 +63,9 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
     }
   });
   headers.set(REQUEST_ID_HEADER, requestId);
+  for (const [key, value] of Object.entries(clientForwardingHeaders(request.headers))) {
+    headers.set(key, value);
+  }
 
   /**
    * The token is attached HERE, server-side, from the httpOnly cookie — the

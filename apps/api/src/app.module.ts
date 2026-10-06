@@ -1,6 +1,6 @@
 import { Module, type MiddlewareConsumer, type NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'node:crypto';
 
@@ -37,6 +37,7 @@ import { ImpactModule } from './modules/impact/impact.module.js';
 import { MeModule } from './modules/me/me.module.js';
 import { DonorsModule } from './modules/donors/donors.module.js';
 import { AuthGuard } from './common/guards/auth.guard.js';
+import { ClientThrottlerGuard } from './common/guards/client-throttler.guard.js';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware.js';
 
 @Module({
@@ -172,7 +173,9 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware.j
      * it costs a token verification or a database round trip — otherwise the
      * rate limiter is doing its work after the expensive part.
      */
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    // Keyed on the real client the web server vouched for, not on the web
+    // server's own address (Phase 11). See ClientThrottlerGuard.
+    { provide: APP_GUARD, useClass: ClientThrottlerGuard },
     { provide: APP_GUARD, useClass: AuthGuard },
   ],
 })

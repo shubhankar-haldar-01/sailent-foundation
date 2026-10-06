@@ -208,6 +208,21 @@ export class RazorpayClient {
     return this.call<RazorpayPayment>(`/payments/${encodeURIComponent(paymentId)}`);
   }
 
+  /**
+   * Every payment attempt made against an order (Phase 11, reconciliation).
+   *
+   * An order can carry several attempts — a failed card, then a UPI payment
+   * that worked — and this is how a donation whose browser and webhook both
+   * went missing is found to have been paid after all. Each item is the same
+   * payment object `fetchPayment` returns, and is checked the same way.
+   */
+  async fetchOrderPayments(orderId: string): Promise<RazorpayPayment[]> {
+    const collection = await this.call<{ items?: RazorpayPayment[] }>(
+      `/orders/${encodeURIComponent(orderId)}/payments`,
+    );
+    return collection.items ?? [];
+  }
+
   // -------------------------------------------------------------------------
   // Signatures
   // -------------------------------------------------------------------------

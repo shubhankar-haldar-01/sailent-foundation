@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { apiEnvSchema, loadEnv } from '@sailent/config';
+import { apiEnvSchema, loadEnv, workerEnvSchema } from '@sailent/config';
 
 import { AppConfig } from './app.config.js';
 
@@ -91,4 +91,81 @@ const baseEnv: Record<string, string> = {
   R2_SECRET_ACCESS_KEY: 'g'.repeat(64),
   R2_PUBLIC_BASE_URL: 'https://media.sailent.example',
   SWAGGER_ENABLED: 'false',
+  // Phase 11: the secret the web server and worker present to the API.
+  INTERNAL_API_SECRET: 'h'.repeat(40),
 };
+
+/**
+ * Phase 11 production guards: live payment keys only, and the internal secret
+ * present wherever per-client limits and reconciliation depend on it. The
+ * messages name variables, never values.
+ */
+describe('production payment configuration', () => {
+  it('accepts a complete production environment with a live Razorpay key', () => {
+    expect(() =>
+      loadEnv(apiEnvSchema, 'api', {
+        ...baseEnv,
+        APP_ENV: 'production',
+        FEATURE_MOCK_DATA: 'false',
+      }),
+    ).not.toThrow();
+  });
+
+  it('refuses a Razorpay TEST key in production, without printing it', () => {
+    const testKey = 'rzp_test_AbCdEf123456';
+    let message = '';
+    try {
+      loadEnv(apiEnvSchema, 'api', {
+        ...baseEnv,
+        APP_ENV: 'production',
+        FEATURE_MOCK_DATA: 'false',
+        RAZORPAY_KEY_ID: testKey,
+      });
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message).toMatch(/RAZORPAY_KEY_ID must be a live key/);
+    expect(message).not.toContain(testKey);
+  });
+
+  it('allows a test key outside production', () => {
+    expect(() =>
+      loadEnv(apiEnvSchema, 'api', {
+        APP_ENV: 'development',
+        DATABASE_URL: 'postgres://u:p@localhost:5432/sailent_dev',
+        REDIS_URL: 'redis://localhost:6379',
+        RAZORPAY_KEY_ID: 'rzp_test_AbCdEf123456',
+      }),
+    ).not.toThrow();
+  });
+
+  it('requires INTERNAL_API_SECRET for the API in production', () => {
+    const { INTERNAL_API_SECRET: _omitted, ...withoutSecret } = baseEnv;
+    expect(() =>
+      loadEnv(apiEnvSchema, 'api', {
+        ...withoutSecret,
+        APP_ENV: 'production',
+        FEATURE_MOCK_DATA: 'false',
+      }),
+    ).toThrow(/INTERNAL_API_SECRET/);
+  });
+
+  it('requires the worker to know where the API is and how to authenticate in production', () => {
+    const worker = {
+      APP_ENV: 'production',
+      NODE_ENV: 'production',
+      DATABASE_URL: 'postgres://user:pass@db.example.test:5432/sailent',
+      REDIS_URL: 'redis://redis.example.test:6379',
+    };
+    expect(() => loadEnv(workerEnvSchema, 'worker', worker)).toThrow(
+      /API_INTERNAL_URL[\s\S]*INTERNAL_API_SECRET/,
+    );
+    expect(() =>
+      loadEnv(workerEnvSchema, 'worker', {
+        ...worker,
+        API_INTERNAL_URL: 'https://api.internal.example',
+        INTERNAL_API_SECRET: 'h'.repeat(40),
+      }),
+    ).not.toThrow();
+  });
+});
