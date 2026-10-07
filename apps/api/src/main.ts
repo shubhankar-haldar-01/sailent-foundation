@@ -18,6 +18,11 @@ import { AppModule } from './app.module.js';
 import { AppConfig } from './config/app.config.js';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor.js';
+import {
+  flushErrorReporting,
+  initErrorReporting,
+  reportError,
+} from './common/observability/error-reporting.js';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -31,6 +36,8 @@ async function bootstrap(): Promise<void> {
 
   const config = app.get(AppConfig);
   app.useLogger(app.get(Logger));
+  // Error tracking (Phase 14): a no-op unless SENTRY_DSN is set.
+  initErrorReporting(config.env, 'sailent-api');
 
   // ---- Security headers ----------------------------------------------------
   app.use(
@@ -101,7 +108,18 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-bootstrap().catch((error: unknown) => {
+bootstrap().catch(async (error: unknown) => {
   console.error('[api] failed to start:', error instanceof Error ? error.message : error);
+  reportError(error, { tags: { phase: 'bootstrap' } });
+  await flushErrorReporting();
   process.exit(1);
+});
+
+/*
+  Cloud Run sends SIGTERM and allows ten seconds before SIGKILL (Phase 14).
+  `enableShutdownHooks()` closes the HTTP server, Redis and the database pool;
+  this only makes sure queued error reports are sent first.
+*/
+process.once('beforeExit', () => {
+  void flushErrorReporting();
 });

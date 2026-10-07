@@ -10,7 +10,29 @@ Newest first.
 
 ---
 
-## 2026-10-07 — Phase 13: Admin, CMS & Communications Completeness (`feat(admin): complete cms and communications workflows`; committed locally, NOT pushed as of 2026-10-07)
+## 2026-10-07 — Phase 14: Infrastructure & Production Operations (`feat(infra): complete production operations readiness`; committed locally, NOT pushed; NOTHING DEPLOYED)
+
+**Owner decisions:** Google Cloud Run; Supabase production; web, API and worker as separate services; production database, secrets, migrations, seeds, deployment, DNS/TLS and Razorpay configuration are human-only; SEO and the legal audit stay in Phase 15. Standing decisions unchanged: Campaign Gallery kept, SUPER_ADMIN only, no staff 2FA, no recurring giving.
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| Dockerfiles for the API, worker and web; `.dockerignore` | There were no images | Multi-stage, production dependencies only (`pnpm deploy --prod` / Next standalone), non-root, port 8080, exec-form start; no `.env`, secret, migration or seed. **Not built here** (no Docker on this machine) | — |
+| Web: `NEXT_OUTPUT=standalone` support; `start-standalone.cjs` runs the environment check before serving | Next's standalone server validates lazily, so a misconfigured container served 500s instead of failing | A bad production configuration now stops the container (exit 1) | — |
+| Web build no longer calls the API: slug `generateStaticParams` removed; `loadContent`/`getOrganisation` call `connection()` during `next build` only (`requestTimeOnly()`) | A production build without a reachable API failed at `/impact/[slug]` | Images build with no API, database or secret; `/admin/login`, `_not-found` and the content sitemaps now render per request. A first version also called `connection()` at request time; E2E showed it stalling renders after server actions (Next resolves it on a timer under `NODE_ENV=development`), so it is limited to the build | — |
+| `turbo.json`: `build` hashes `NEXT_PUBLIC_APP_URL`, `MEDIA_PUBLIC_BASE_URL`, `NEXT_OUTPUT` | Turborepo stripped them and could reuse a build made with other public values | Correct caching per site | — |
+| Cloud Run service templates and a build-only `cloudbuild.yaml` (`infrastructure/cloud-run/`) | No deployment configuration existed | Secrets only as Secret Manager references; worker internal, one instance, CPU always on; no deploy step anywhere | — |
+| `PORT` honoured by the API and worker; `DATABASE_POOL_MAX`; the API closes its database pool on shutdown | Cloud Run sets `PORT`; connection budgeting; the pool was never closed | Rolling deploys release connections | — |
+| Health: API readiness returns 503 when the database is down and never the error text; worker `/ready` (Redis + database); web `/api/health` no-store; 2 s timeouts, 5 s cache | Probes need a real signal; the old endpoint echoed driver errors | Startup/liveness probes for all three services | — |
+| Error tracking: a dependency-free Sentry-compatible reporter in `packages/config` with a scrubber; wired into the API (5xx, start-up), worker (exhausted jobs, unhandled errors) and web (`onRequestError`) | Failures were visible only in logs | Off unless `SENTRY_DSN` is set; no body, cookie, query, user, token, PAN or email leaves the process. `SENTRY_TRACES_SAMPLE_RATE` removed | — |
+| Logs carry Cloud Logging `severity`; the API no longer logs the internal-secret and idempotency-key headers; the worker redacts token fields | Security fix and operability | — | — |
+| `MEDIA_PUBLIC_BASE_URL` / `R2_PUBLIC_BASE_URL` validated (exact host, https in production, no credentials/query/fragment/wildcard) | Image optimiser allow-list hardening | An invalid value fails the build or start-up | — |
+| `pnpm.overrides` for vulnerable transitive packages | `pnpm audit --prod`: 30 advisories (15 high) | 4 remain (drizzle-orm high, file-type ×2 and @nestjs/core moderate), each needing a major upgrade — `SECURITY.md` §2 | — |
+| `pnpm check:deploy` (45 static rules) and `pnpm check:web-build-isolation` | Keep the container and Cloud Run rules from regressing | — | — |
+| Docs: `DEPLOYMENT.md` §8 and §11–§21 (architecture, release, containers, Cloud Run settings, sizing, env checklist, secrets, monitoring, jobs, backups/restore, rollback); `SECURITY`, `ARCHITECTURE`, `DATABASE`, `PROJECT`, `PHASES`, `infrastructure/README.md` | Phase 14 scope | GA4 not wired (no consent mechanism; the privacy policy's analytics claim is recorded for Phase 15) | — |
+
+**Not done (by scope):** no deployment, no production database access, no secrets created, no DNS/TLS, no Razorpay changes, no SEO. **Validation:** `DEVELOPMENT_STATUS.md` §2.
+
+## 2026-10-07 — Phase 13: Admin, CMS & Communications Completeness (`feat(admin): complete cms and communications workflows`, `84e77ad`; pushed)
 
 **Owner decisions:** contact messages stored + inbox + emailed; newsletter double opt-in; organisation settings drive the public site; new permissions inserted by migration with their SUPER_ADMIN grant. Standing decisions unchanged: SUPER_ADMIN only, no staff 2FA, Campaign Gallery kept (no standalone gallery), no refunds or recurring giving, SEO in Phase 15, Cloud Run hosting in Phase 14.
 

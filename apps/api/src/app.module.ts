@@ -4,7 +4,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'node:crypto';
 
-import { REQUEST_ID_HEADER } from '@sailent/config';
+import { REQUEST_ID_HEADER, cloudLoggingSeverity } from '@sailent/config';
 
 import { AppConfig } from './config/app.config.js';
 import { ConfigModule } from './config/config.module.js';
@@ -60,6 +60,20 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware.j
             : undefined,
           genReqId: (req) => (req.headers[REQUEST_ID_HEADER] as string) || randomUUID(),
           customProps: () => ({ environment: config.env.APP_ENV, service: 'sailent-api' }),
+          /*
+            Cloud Logging reads `severity` (Phase 14); pino writes a number.
+            Not in development, where pino-pretty does the formatting.
+          */
+          ...(config.isDevelopment
+            ? {}
+            : {
+                formatters: {
+                  level: (label: string, number: number) => ({
+                    level: number,
+                    severity: cloudLoggingSeverity(label),
+                  }),
+                },
+              }),
           /**
            * REDACTION.
            *
@@ -74,6 +88,10 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware.j
               'req.headers.authorization',
               'req.headers.cookie',
               'req.headers["x-razorpay-signature"]',
+              // Phase 14: the shared secret between our own services, and the
+              // donation idempotency key, were logged in clear until now.
+              'req.headers["x-sailent-internal-auth"]',
+              'req.headers["idempotency-key"]',
               'res.headers["set-cookie"]',
               'req.body.password',
               'req.body.otp',

@@ -1,6 +1,6 @@
 # DATABASE.md — actual database
 
-Verified on 2026-10-06 (updated for Phase 13 on 2026-10-07) against:
+Verified on 2026-10-06 (updated for Phase 13 and Phase 14 on 2026-10-07) against:
 - the Drizzle schema in `packages/database/src/schema/*.ts`;
 - the SQL migrations `packages/database/drizzle/0000`–`0023`;
 - the seed;
@@ -346,6 +346,7 @@ These ID columns have **no FK at all**:
 | `E2E_DATABASE_URL` | Playwright database |
 | `DRIZZLE_AUTHORISED_URL` | Used by `db:push`/`db:studio` |
 | `DATABASE_CA_CERT`, `DATABASE_INSECURE_TLS` | TLS |
+| `DATABASE_POOL_MAX` | API pool size per process (Phase 14; default 20 in production, 5 elsewhere) |
 | `APP_ENV`, `NODE_ENV` | Environment |
 | `PRODUCTION_DATABASE_HOST` | Target guard (a shared regional pooler host; it cannot distinguish two projects in the same region) |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_FIRST_NAME`, `ADMIN_LAST_NAME` | Admin CLI scripts |
@@ -440,3 +441,16 @@ COMMIT;
 ```
 
 **3. Afterwards:** re-run the dry run (it should return no rows), and record the date, the operator and the row count in `DEVELOPMENT_STATUS.md` and `CHANGELOG.md`. `amount_raised` is not touched by this runbook.
+
+## 13. Runtime connections and backups (Phase 14)
+
+**Connections.**
+- The API and worker connect with `DATABASE_URL` through the Supabase **session pooler** (port 5432), TLS verified against `DATABASE_CA_CERT`. The CA certificate (public) is copied into the API and worker images at `/app/certs/supabase-prod-ca-2021.crt`, and the images set `DATABASE_CA_CERT` to that path.
+- **Pool sizes:** API `DATABASE_POOL_MAX` per instance (default 20 in production, 5 elsewhere; the Cloud Run template sets 10); worker 4; migration scripts 1. The sum across all running instances must stay below the pooler's limit for the project's compute size: `DEPLOYMENT.md` §14 has the formula.
+- **The API now closes its pool on shutdown** (`DatabaseModule.onModuleDestroy`). Before Phase 14 it never did, so every rolling deploy left the old instance's connections to time out at the pooler.
+- **Readiness:** the API's `/api/v1/health/ready` and the worker's `/ready` run `SELECT 1` with a 2-second timeout, at most once every 5 seconds per instance.
+
+**No container runs a migration or seed.** Migrations stay a separate human step (§5, `DEPLOYMENT.md` §9).
+
+**Backups and restore** are human-only and documented in `DEPLOYMENT.md` §19: Supabase daily backups (and the PITR add-on, recommended), an independent encrypted `pg_dump` before every migration, restores always into a new database first and validated there, and the `FIELD_ENCRYPTION_KEY` kept offline — without it the encrypted tax-id column in any backup is unreadable. **No backup or restore has been performed.**
+

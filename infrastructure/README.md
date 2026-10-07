@@ -17,16 +17,20 @@ Data persists in named volumes. To reset completely:
 docker compose -f infrastructure/docker-compose.yml down -v
 ```
 
-## Deployment targets
+## Deployment targets (Phase 14 — prepared, NOT deployed)
 
 | Service | Target | Why |
 |---|---|---|
-| `apps/web` | Vercel | Edge network and image optimisation suit a photography-led public site |
-| `apps/api` | Render / Railway | **Must be a persistent process** — decision A12 depends on a real connection pool and multi-statement transactions |
-| `apps/worker` | Render / Railway | Long-running BullMQ consumer |
+| `apps/web` | Google Cloud Run `sailent-web` (public) | Request-time rendering; standalone Next.js image |
+| `apps/api` | Google Cloud Run `sailent-api` (public) | **Must be a persistent process** — decision A12 depends on a real connection pool and multi-statement transactions |
+| `apps/worker` | Google Cloud Run `sailent-worker` (internal, 1 instance, CPU always allocated) | Long-running BullMQ consumer |
 | Database | Supabase PostgreSQL | Production runs behind the **session pooler** (port 5432). The transaction pooler on 6543 cannot hold the session state DDL needs, so `db:migrate` refuses it. |
-| Cache/queues | Upstash Redis | Managed, and the same protocol as the local container |
+| Cache/queues | Memorystore for Redis (private VPC) | Same protocol as the local container; BullMQ needs `noeviction` |
 | Storage | Cloudflare R2 | Two buckets — `sailent-public` and `sailent-private`. Public access is per-bucket, not per-prefix, so there is no third. Credentials go on the **API service only**. |
+
+Images: `apps/*/Dockerfile`. Service templates and the build-only Cloud Build
+file: [`cloud-run/`](cloud-run/README.md). The procedures — release, secrets,
+sizing, monitoring, backups, rollback — are in `DEPLOYMENT.md` §8 and §11–§21.
 
 **Do not move the API to serverless functions.** The HTTP serverless driver
 cannot run multi-statement transactions, which would make the donation-capture
@@ -47,7 +51,8 @@ see `docs/environment.md`. **The production URL never belongs in a local
 
 ## Not yet provisioned
 
-Terraform/Pulumi definitions, backup automation, and the restore runbook land
-alongside the modules that need them. Phase 0 specifies a 30-day PITR window,
-daily logical backups to a separate region, and **quarterly restore tests** —
-an untested backup is a hypothesis, not a backup.
+Nothing in Google Cloud exists yet, and there is no Terraform/Pulumi: the
+Cloud Run templates are applied by hand (`DEPLOYMENT.md` §12). Backups and the
+restore procedure are documented in `DEPLOYMENT.md` §19 (Supabase backups and
+PITR, an independent `pg_dump`, R2 copies, quarterly restore drills) and are
+human work — an untested backup is a hypothesis, not a backup.

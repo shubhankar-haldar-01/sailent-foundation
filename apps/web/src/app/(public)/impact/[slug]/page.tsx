@@ -11,11 +11,6 @@ import { buildMetadata } from '@/lib/seo/metadata';
 import { getImpact, getImpactRecord } from '@/lib/content';
 import { localMedia } from '@/lib/media/public-asset';
 
-export async function generateStaticParams() {
-  const { updates } = await getImpact();
-  return updates.filter((update) => update.slug).map((update) => ({ slug: update.slug }));
-}
-
 export async function generateMetadata({
   params,
 }: {

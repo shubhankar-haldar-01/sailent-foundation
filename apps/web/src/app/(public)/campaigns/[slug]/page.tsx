@@ -22,11 +22,6 @@ import { StoriesStrip } from '@/components/campaigns/stories-strip';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { getCampaign, getCampaignDonors, getCampaigns, getStories } from '@/lib/content';
 
-export async function generateStaticParams() {
-  const campaigns = await getCampaigns();
-  return campaigns.map((campaign) => ({ slug: campaign.slug }));
-}
-
 export async function generateMetadata({
   params,
 }: {

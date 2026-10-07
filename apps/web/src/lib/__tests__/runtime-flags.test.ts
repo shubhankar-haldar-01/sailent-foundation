@@ -47,7 +47,32 @@ describe('webEnvSchema in production', () => {
       { NEXT_PUBLIC_APP_URL: 'http://localhost:3000' },
       /NEXT_PUBLIC_APP_URL/,
     ],
+    // Phase 14: the public media origin is printed into every image tag.
+    ['an http media URL', { MEDIA_PUBLIC_BASE_URL: 'http://media.sailent.example' }, /MEDIA/],
+    [
+      'credentials in the media URL',
+      { MEDIA_PUBLIC_BASE_URL: 'https://k:s@media.sailent.example' },
+      /MEDIA_PUBLIC_BASE_URL/,
+    ],
+    ['a malformed Sentry DSN', { SENTRY_DSN: 'nope' }, /SENTRY_DSN/],
   ])('refuses %s', (_label, override, message) => {
     expect(() => loadEnv(webEnvSchema, 'web', { ...production, ...override })).toThrow(message);
+  });
+});
+
+describe('webEnvSchema accepts the Phase 14 production values', () => {
+  it('takes a public https media URL and a Sentry DSN', () => {
+    expect(() =>
+      loadEnv(webEnvSchema, 'web', {
+        APP_ENV: 'production',
+        NODE_ENV: 'production',
+        FEATURE_MOCK_DATA: 'false',
+        INTERNAL_API_SECRET: 'w'.repeat(40),
+        CLIENT_IP_HEADER: 'x-forwarded-for',
+        NEXT_PUBLIC_APP_URL: 'https://sailent.example',
+        MEDIA_PUBLIC_BASE_URL: 'https://media.sailent.example',
+        SENTRY_DSN: 'https://publickey@o1.ingest.example.io/42',
+      }),
+    ).not.toThrow();
   });
 });

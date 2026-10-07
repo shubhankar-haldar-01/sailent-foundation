@@ -14,15 +14,9 @@ import { buildMetadata } from '@/lib/seo/metadata';
 import {
   getCampaignsByProgram,
   getEvents,
-  getPrograms,
   getProgramPage,
   getStoriesByProgram,
 } from '@/lib/content';
-
-export async function generateStaticParams() {
-  const programs = await getPrograms();
-  return programs.map((program) => ({ slug: program.slug }));
-}
 
 export async function generateMetadata({
   params,

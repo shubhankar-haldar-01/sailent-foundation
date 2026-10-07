@@ -12,11 +12,6 @@ import { buildMetadata } from '@/lib/seo/metadata';
 import { blogPostingSchema, jsonLd } from '@/lib/seo/structured-data';
 import { getCampaign, getStories, getStory } from '@/lib/content';
 
-export async function generateStaticParams() {
-  const stories = await getStories();
-  return stories.map((story) => ({ slug: story.slug }));
-}
-
 export async function generateMetadata({
   params,
 }: {

@@ -202,3 +202,68 @@ describe('production payment configuration', () => {
     ).not.toThrow();
   });
 });
+
+/**
+ * Phase 14: Cloud Run and production media. `PORT` (set by Cloud Run) wins
+ * over API_PORT; the pool size is configurable; the public media URL must be
+ * a public https URL with nothing secret in it.
+ */
+describe('Cloud Run and media configuration (Phase 14)', () => {
+  const development = {
+    ...baseEnv,
+    APP_ENV: 'development',
+    NODE_ENV: 'development',
+    DATABASE_URL: 'postgres://u:p@localhost:5432/sailent_dev',
+  };
+
+  it('listens on Cloud Run’s PORT when it is set, and on API_PORT otherwise', () => {
+    expect(configWith(loadEnv(apiEnvSchema, 'api', { ...development, PORT: '8080' })).port).toBe(
+      8080,
+    );
+    expect(configWith(loadEnv(apiEnvSchema, 'api', development)).port).toBe(4000);
+    expect(() => loadEnv(apiEnvSchema, 'api', { ...development, PORT: '0' })).toThrow(/PORT/);
+  });
+
+  it('takes the pool size from DATABASE_POOL_MAX, with 20/5 defaults', () => {
+    const production = { ...baseEnv, APP_ENV: 'production', FEATURE_MOCK_DATA: 'false' };
+    expect(configWith(loadEnv(apiEnvSchema, 'api', production)).databasePoolMax).toBe(20);
+    expect(
+      configWith(loadEnv(apiEnvSchema, 'api', { ...production, DATABASE_POOL_MAX: '8' }))
+        .databasePoolMax,
+    ).toBe(8);
+    expect(configWith(loadEnv(apiEnvSchema, 'api', development)).databasePoolMax).toBe(5);
+  });
+
+  it.each([
+    ['http, not https', 'http://media.sailent.example'],
+    ['credentials in the URL', 'https://key:secret@media.sailent.example'],
+    ['a query string', 'https://media.sailent.example/?token=abc'],
+    ['a loopback host', 'https://localhost:9000'],
+  ])('refuses an R2_PUBLIC_BASE_URL with %s in production', (_label, value) => {
+    expect(() =>
+      loadEnv(apiEnvSchema, 'api', {
+        ...baseEnv,
+        APP_ENV: 'production',
+        FEATURE_MOCK_DATA: 'false',
+        R2_PUBLIC_BASE_URL: value,
+      }),
+    ).toThrow(/R2_PUBLIC_BASE_URL/);
+  });
+
+  it('gives the worker’s health server Cloud Run’s PORT', () => {
+    const worker = loadEnv(workerEnvSchema, 'worker', {
+      APP_ENV: 'development',
+      DATABASE_URL: 'postgres://u:p@localhost:5432/sailent_dev',
+      REDIS_URL: 'redis://localhost:6379',
+      PORT: '8080',
+    });
+    expect(worker.PORT ?? worker.WORKER_PORT).toBe(8080);
+  });
+
+  it('refuses a malformed SENTRY_DSN, and accepts none at all', () => {
+    expect(() => loadEnv(apiEnvSchema, 'api', { ...development, SENTRY_DSN: 'not a url' })).toThrow(
+      /SENTRY_DSN/,
+    );
+    expect(() => loadEnv(apiEnvSchema, 'api', development)).not.toThrow();
+  });
+});

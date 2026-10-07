@@ -25,8 +25,14 @@ export class AppConfig {
     return this.env.APP_ENV === 'development';
   }
 
+  /** Cloud Run's `PORT` when set (Phase 14), otherwise `API_PORT`. */
   get port(): number {
-    return this.env.API_PORT;
+    return this.env.PORT ?? this.env.API_PORT;
+  }
+
+  /** Database connections per instance (Phase 14: `DATABASE_POOL_MAX`). */
+  get databasePoolMax(): number {
+    return this.env.DATABASE_POOL_MAX ?? (this.isProduction ? 20 : 5);
   }
 
   get host(): string {

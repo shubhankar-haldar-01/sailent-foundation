@@ -16,10 +16,10 @@ Reconstructed from `docs/phase-*.md`, the migrations, the git history and the co
 | 🔴 | BLOCKED |
 | ⚫ | REMOVED |
 
-**Where development stopped (as of 2026-10-07):** Phase 13 (Admin, CMS & Communications Completeness).
-- Phases 11 (`5170ce0`) and 12 (`3941ee7`) are committed and pushed.
-- Phase 13 is committed locally as `feat(admin): complete cms and communications workflows`, and is not pushed.
-- Next: push Phase 13 with the owner's approval; then Phase 14 (infrastructure and production operations).
+**Where development stopped (as of 2026-10-07):** Phase 14 (Infrastructure & Production Operations).
+- Phases 11 (`5170ce0`), 12 (`3941ee7`) and 13 (`84e77ad`) are committed and pushed.
+- Phase 14 is committed locally as `feat(infra): complete production operations readiness`, and is not pushed. **Nothing is deployed.**
+- Next: push Phase 14 with the owner's approval; the human provisioning and first deployment (`DEPLOYMENT.md` §11–§16); then Phase 15 (final launch readiness, including SEO and the legal review).
 
 See `DEVELOPMENT_STATUS.md`.
 
@@ -49,8 +49,9 @@ See `DEVELOPMENT_STATUS.md`.
 | post-10.12 | Design & campaign presentation | 🔵 |
 | 11 | Payment & Donation Production Readiness | ✅ implemented; pushed (`5170ce0`, 2026-10-07) |
 | 12 | Accounts, Authentication & Security Hardening | ✅ implemented; pushed (`3941ee7`, 2026-10-07) |
-| 13 | Admin, CMS & Communications Completeness | ✅ implemented; committed locally, not pushed (2026-10-07) |
-| 14–15 | Infrastructure & production operations · Final launch readiness (2026-10-07 roadmap review) | ⚪ |
+| 13 | Admin, CMS & Communications Completeness | ✅ implemented; pushed (`84e77ad`, 2026-10-07) |
+| 14 | Infrastructure & Production Operations | ✅ implemented (deployment-ready, **not deployed**); committed locally, not pushed (2026-10-07) |
+| 15 | Final launch readiness (2026-10-07 roadmap review) | ⚪ |
 | — | Not yet scheduled | ⚪ |
 
 ---
@@ -228,7 +229,7 @@ Reports (donations, campaigns, volunteers, impact, reconciliation, tax readiness
 | **Not in scope** | Staff invite and password reset (Phase 13); SEO (Phase 15) |
 | **Validation** | `DEVELOPMENT_STATUS.md` §2 |
 
-## Phase 13 — Admin, CMS & Communications Completeness  ✅ IMPLEMENTED (committed locally as `feat(admin): complete cms and communications workflows`, not pushed, 2026-10-07)
+## Phase 13 — Admin, CMS & Communications Completeness  ✅ IMPLEMENTED (`84e77ad`, pushed, 2026-10-07)
 
 | | |
 |---|---|
@@ -239,14 +240,26 @@ Reports (donations, campaigns, volunteers, impact, reconciliation, tax readiness
 | **Not in scope** | Hosting and deployment (Phase 14); SEO (Phase 15); testimonials CMS (kept static); sending newsletters |
 | **Validation** | `DEVELOPMENT_STATUS.md` §2 |
 
-Phases 14–15 (infrastructure and production operations on Google Cloud Run; final launch readiness, including SEO) come from the 2026-10-07 roadmap review and are not started.
+## Phase 14 — Infrastructure & Production Operations  ✅ IMPLEMENTED (committed locally as `feat(infra): complete production operations readiness`, not pushed, 2026-10-07) — **NOT DEPLOYED**
+
+| | |
+|---|---|
+| **Goal** | Make the platform deployable to Google Cloud Run and operable in production, without touching production |
+| **Owner decisions** | Cloud Run; Supabase production; web, API and worker as separate services; production database, secrets, migrations, seeds, deployment, DNS/TLS and Razorpay configuration are human-only; SEO and the legal audit are Phase 15; Campaign Gallery intact; only SUPER_ADMIN; staff TOTP off; no recurring donations |
+| **Completed** | Dockerfiles for the API, worker and web (multi-stage, production dependencies, non-root, no `.env`, no migrations at start) and `.dockerignore`; Next standalone output and a start wrapper that validates the environment first; the web build no longer calls the API; Cloud Run service templates and a build-only Cloud Build file; `PORT` support and `DATABASE_POOL_MAX`; the API's database pool closed on shutdown; health endpoints that never disclose error text (API readiness 503 when the database is down; worker `/ready`); structured logs with `severity`; a scrubbed, dependency-free Sentry-compatible error reporter for all three services; the internal secret and idempotency key no longer logged; media base URL validated (exact host, https); production dependency advisories 30 → 4 by overrides; `pnpm check:deploy` and `pnpm check:web-build-isolation`; runbooks for release, secrets, sizing, monitoring, jobs, backups/restore and rollback (`DEPLOYMENT.md` §8, §11–§21) |
+| **Deferred / decided** | GA4 not wired (no consent mechanism; Phase 15 legal); browser error tracking not added; no new scheduled jobs (audit found none needed); remaining advisories need major upgrades (drizzle-orm 0.45, Nest 11, vitest 3+) |
+| **Remaining (human)** | Everything in `DEPLOYMENT.md` §11–§17 and §19: Google Cloud project, Artifact Registry, Secret Manager entries and service accounts, VPC and Memorystore, the first image build (Docker was not available, so the images have **not** been built yet), deploy, DNS/TLS, Razorpay webhook URL, alerts, backups and a restore drill |
+| **Not in scope** | SEO, legal audit, Razorpay trial, R2 migration, DNS/TLS changes (Phase 15 or human) |
+| **Validation** | `DEVELOPMENT_STATUS.md` §2 |
+
+Phase 15 (final launch readiness, including SEO and the legal review) comes from the 2026-10-07 roadmap review and is not started.
 
 ## Not yet scheduled  ⚪ NOT STARTED
 
 Documented as needed, or deferred:
-- **Operations (Phase 14):** deployment configuration and hosting on Google Cloud Run; a human-led verification and hardening of the existing production database; backups.
-- **Scheduled jobs:** counter-drift checks. (Payment reconciliation: Phase 11.)
-- **Monitoring:** Sentry; GA4.
+- **Operations (human):** provisioning and the first deployment on Cloud Run (prepared in Phase 14); a human-led verification and hardening of the existing production database; turning on backups and rehearsing a restore.
+- **Scheduled jobs:** counter-drift checks (reviewed in Phase 14: not needed yet). (Payment reconciliation: Phase 11.)
+- **Monitoring:** GA4 and browser error tracking (both need a consent decision). (Server-side error tracking: Phase 14.)
 - **Staff accounts:** a session-management UI. (Invite and reset: Phase 13. Staff 2FA is not required, by owner decision.)
 - **Receipts and tax:** receipt PDF; Form 10BD export.
 - **Volunteers and events:** certificate PDF; event reminders.

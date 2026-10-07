@@ -6,17 +6,17 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-10-07 (Phase 13 — Admin, CMS & Communications Completeness, **committed locally, not pushed**, as `feat(admin): complete cms and communications workflows` on top of `3941ee7`). Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
+**Last updated:** 2026-10-07 (Phase 14 — Infrastructure & Production Operations, **committed locally, not pushed**, as `feat(infra): complete production operations readiness` on top of `84e77ad`). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-06, and the git history.
 
 | | |
 |---|---|
-| **Overall status** | Feature-rich build, **not deployed to any hosting.** Phases 0–10.12 are implemented in the API, admin and public site. |
-| **Current phase** | **Phase 13 — Admin, CMS & Communications Completeness** (§1, item 13), third phase of the 2026-10-07 roadmap (Phases 11–15). Implemented, validated and **committed locally** as `feat(admin): complete cms and communications workflows`; **not pushed**. Phase 12 (`3941ee7`) and everything before it is committed and pushed. |
-| **Current feature** | Campaign/programme covers, Campaign Gallery and progress-update admin; live admin dashboard; settings consumed by the public site and receipts; staff invitations and password reset; document deletion; `story.archive`; EXIF/GPS stripping; working notification retry and four new email processors; contact inbox; double-opt-in newsletter; database-backed FAQ and search; monthly-giving remnants removed. Migration `0023` (local only). **Staff TOTP/2FA is not required (owner decision).** |
-| **Branch / HEAD** (as of 2026-10-07) | Local `main` is **1 commit ahead** of `origin/main` (`3941ee7`, Phase 12): the Phase 13 commit `feat(admin): complete cms and communications workflows`, **not pushed**. Run `git log --oneline -1` for its hash. The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
-| **Working tree** (as of 2026-10-07) | Clean of project changes: Phase 13 (database, API, worker, web, config, validation, tests) and its documentation are all in the Phase 13 commit. Locally ignored via `.git/info/exclude` (never committed): the brag-slim skill install and its `brag-output/` (2026-10-07). Run `git status` for the live state. |
+| **Overall status** | Feature-rich build, **deployment-ready but not deployed to any hosting.** Phases 0–14 are implemented; Phase 14 added container images, Cloud Run templates and the operations runbooks. |
+| **Current phase** | **Phase 14 — Infrastructure & Production Operations** (§1, item 14), fourth phase of the 2026-10-07 roadmap (Phases 11–15). Implemented, validated and **committed locally** as `feat(infra): complete production operations readiness`; **not pushed**. Phase 13 (`84e77ad`) and everything before it is committed and pushed. |
+| **Current feature** | Phase 14: Dockerfiles (API, worker, web), Cloud Run templates and a build-only Cloud Build file, a web build that needs no API, `PORT`/pool configuration, non-disclosing health endpoints, scrubbed error tracking, structured logs, media URL validation, dependency overrides, and the release/secrets/monitoring/backup/rollback runbooks (`DEPLOYMENT.md` §8, §11–§21). Phase 13 (previous): campaign/programme covers, Campaign Gallery and progress-update admin; live admin dashboard; settings consumed by the public site and receipts; staff invitations and password reset; document deletion; `story.archive`; EXIF/GPS stripping; working notification retry and four new email processors; contact inbox; double-opt-in newsletter; database-backed FAQ and search; monthly-giving remnants removed. Migration `0023` (local only). **Staff TOTP/2FA is not required (owner decision).** |
+| **Branch / HEAD** (as of 2026-10-07) | Local `main` is **1 commit ahead** of `origin/main` (`84e77ad`, Phase 13): the Phase 14 commit `feat(infra): complete production operations readiness`, **not pushed**. Run `git log --oneline -1` for its hash. The first commit (`2ba2b43`, 2026-09-26) contains everything through Phase 10.12. Development happens directly on `main` (`AGENTS.md` §9). A leftover local branch `feat/featured-campaigns-and-deadlines` (= `dd64d41`, never pushed, already contained in `main`) is not used. |
+| **Working tree** (as of 2026-10-07) | Phase 14 and its documentation are all in the Phase 14 commit. **Not in that commit, and not Phase 14 work:** an About-page redesign made in a separate session (`apps/web/src/app/(public)/about/page.tsx`, `components/about/`, `components/media/media-frame.tsx`, `components/team/team-member-card.tsx`, `public/images/about-story-village.webp`, and its own `CHANGELOG.md` entry), left uncommitted for its owner. Locally ignored via `.git/info/exclude` (never committed): the brag-slim skill install and its `brag-output/` (2026-10-07). Run `git status` for the live state. |
 | **Production database** | The **production Supabase project** exists (owner confirmed, 2026-10-06). Its schema and data state were **not inspected** and are **unknown**. Agents must not access it (`AGENTS.md` §8). |
-| **Application hosting** | None. No Dockerfiles, IaC or deploy workflow exist. |
+| **Application hosting** | **None deployed.** Prepared for Google Cloud Run (Phase 14): Dockerfiles, service templates and runbooks exist; no Google Cloud project, secret, image, DNS record or deployment exists. The images have **not been built** (Docker is not installed on the development machine). |
 | **Local databases** | `sailent_dev` has `0000`–`0023` applied (`0023` on 2026-10-07); `sailent_e2e` gets `0023` from `db:prepare-e2e`. Both also carry **one migration that is not in the repository** (§5.1). |
 | **CI** | **Not passing as of the last observed run.** Run #4 (at `166b70c`): the `quality` job passed lint, typecheck, migrate and seed, then failed at tests (`EnvValidationError`: Turborepo strict env mode stripped `DATABASE_URL`/`REDIS_URL`); the `security` job failed at `pnpm audit` (30 vulnerabilities: 2 low, 13 moderate, 15 high), so gitleaks was skipped. `7fe6c25` (pushed) adds `passThroughEnv` for the test task; **its GitHub Actions run has not been observed**. The audit failure is **unresolved** (dependency upgrades not approved yet), so the `security` job is expected to keep failing (§5.4). Do not describe CI as passing until a passing run has been observed. The owner has **deferred CI work** for now (2026-10-06). |
 
@@ -39,7 +39,8 @@
 | `e87864b` | fix(payments): make razorpay webhooks retry-safe (item 10) | ✅ yes |
 | `5170ce0` | feat(payments): complete payment production readiness — Phase 11 (item 11), with its documentation | ✅ yes (pushed by the owner) |
 | `3941ee7` | feat(auth): complete account and security hardening — Phase 12 (item 12) | ✅ yes (pushed by the owner) |
-| `feat(admin): complete cms and communications workflows` | Phase 13 (item 13), with its documentation | ❌ **committed locally, not pushed** |
+| `84e77ad` | feat(admin): complete cms and communications workflows — Phase 13 (item 13), with its documentation | ✅ yes (pushed by the owner) |
+| `feat(infra): complete production operations readiness` | Phase 14 (item 14), with its documentation | ❌ **committed locally, not pushed** |
 
 Also on 2026-10-06, local `main` (`8dae087`, `d569fcf`, `ae1520b`) was pushed to `origin/main` with a fast-forward push; until then `origin/main` held only `2ba2b43`.
 
@@ -216,7 +217,7 @@ No password, code, token or PAN is written. An address with no account is record
 
 All in `DEPLOYMENT.md` §6b.
 
-**13. Phase 13 — Admin, CMS & Communications Completeness (2026-10-07, committed locally as `feat(admin): complete cms and communications workflows`, NOT pushed)**
+**13. Phase 13 — Admin, CMS & Communications Completeness (2026-10-07, `84e77ad`, pushed)**
 
 **Owner decisions for this phase (2026-10-07):**
 - Contact messages are **stored**, shown in an admin inbox and emailed to the organisation.
@@ -259,9 +260,45 @@ All in `DEPLOYMENT.md` §6b.
 
 **Human-only follow-ups:** apply `0023` in production; enter the organisation details; set `MEDIA_PUBLIC_BASE_URL` at web build; optionally strip metadata from pre-Phase-13 images (`DEPLOYMENT.md` §6c).
 
+**14. Phase 14 — Infrastructure & Production Operations (2026-10-07, committed locally as `feat(infra): complete production operations readiness`, NOT pushed; NOTHING DEPLOYED)**
+
+Owner decisions: Google Cloud Run; Supabase production; web, API and worker as separate services; production database, secrets, migrations, seeds, deployment, DNS/TLS and Razorpay configuration are human-only; SEO and the legal audit are Phase 15. Unchanged: Campaign Gallery, SUPER_ADMIN only, no staff 2FA, no recurring giving.
+
+**A. Architecture.** Three Cloud Run services in `asia-south1` (web and API public, worker internal with one always-on instance), Supabase, Memorystore over a private VPC, R2, Brevo, optional Sentry — `DEPLOYMENT.md` §8, `ARCHITECTURE.md` §1, §10.
+
+**B. Containers.** `apps/{api,worker,web}/Dockerfile` (Node 22 slim, pnpm 9.15.4, `pnpm deploy --prod` / Next standalone, `USER node`, `PORT=8080`, exec-form `CMD`, no `.env`, no migration or seed) and `.dockerignore`. The web image starts through `apps/web/start-standalone.cjs`, which runs the environment check first (Next's standalone server validates lazily). Runtime trees measured locally: API 117 MB, worker 47 MB, web 127 MB (plus the Node base). **Docker is not installed here, so `docker build` has never run**; the runtime layouts were exercised directly (§2).
+
+**C. Build independence.** Removed the six slug `generateStaticParams`; `loadContent` and `getOrganisation` call `connection()` only while `next build` runs (`requestTimeOnly()`, `lib/content/source.ts`). `pnpm check:web-build-isolation` builds with production settings against a stand-in API and requires zero requests. Before: the production build failed at `/impact/[slug]` without an API. `turbo.json` `build.env` gains the three public build variables.
+
+**D. Cloud Run.** `infrastructure/cloud-run/{api,worker,web}.service.yaml` (placeholders only, Secret Manager references, per-service service accounts, probes) and `cloudbuild.yaml` (build and push; no deploy step).
+
+**E. Worker.** Listens on `PORT` (or `WORKER_PORT`) on all interfaces; `/health` and `/ready` (Redis + database, 503, no error text); exhausted jobs and unhandled errors are logged and reported; uncaught exceptions exit 1 after flushing; shutdown flushes reports. Duplicate protection and retries unchanged (deterministic job ids, state re-read, 3 attempts with backoff).
+
+**F–G. Redis and media.** Memorystore guidance (`noeviction`, private IP, AUTH + TLS) in `DEPLOYMENT.md` §14. `R2_PUBLIC_BASE_URL` (API) and `MEDIA_PUBLIC_BASE_URL` (web) validated in production; the web makes one exact remote pattern (`lib/security/media-remote-patterns.ts`).
+
+**H. Health.** API readiness: database down → 503 `unavailable`; Redis/queues down → 200 `degraded`; no error text; 2 s timeouts, 5 s cache. Web `/api/health` is `force-dynamic` and `no-store`.
+
+**I. Monitoring.** `packages/config/src/observability.ts` (scrubber, `severity` mapping) and `error-reporter.ts` (Sentry envelope API, no SDK, rate-limited, never throws). Wired into the API (5xx, bootstrap), worker and web (`onRequestError`). Pino `severity` outside development. **Security fix:** the API no longer logs the `x-sailent-internal-auth` and `idempotency-key` headers.
+
+**J. GA4.** Not wired: there is no consent mechanism and the privacy policy promises consent-based analytics (§9 #25).
+
+**K. Scheduled jobs.** Audited: reconciliation is the only schedule; no new jobs needed (`DEPLOYMENT.md` §18).
+
+**L. CI.** Unchanged (not required). The build step no longer needs an API; the audit step still fails on drizzle-orm (§5.4).
+
+**M. Dependencies.** `pnpm.overrides` (multer, body-parser 1.x, qs, lodash, js-yaml under @nestjs/swagger, sharp, postcss under next, source-map-js): `pnpm audit --prod` 30 → 4 (`SECURITY.md` §2).
+
+**N–S. Runbooks.** Backups/restore (§19), rollback (§20), environment checklist (§15), secrets (§16), database connections and pool formula (§14, `DATABASE.md` §13), sizing (§14) — all human-executed, none performed.
+
+**Configuration:** `PORT` (API and worker), `DATABASE_POOL_MAX`, `SENTRY_DSN`/`SENTRY_ENVIRONMENT`/`SENTRY_RELEASE` (all three services; `SENTRY_TRACES_SAMPLE_RATE` removed), `NEXT_OUTPUT` and `MEDIA_PUBLIC_BASE_URL` at web build. The API's database pool is now closed on shutdown.
+
+**Tests:** config `observability.test.ts` + `error-reporter.test.ts` (41), API health spec (9) and filter spec (+2) and `app.config.spec.ts` Phase 14 block, worker `health.spec.ts` (6), web `media-remote-patterns.test.ts` (9), `health/route.test.ts` (2), `runtime-flags.test.ts` additions, `scripts/check-deploy-config.test.mjs` (45).
+
+**Human-only follow-ups:** everything in `DEPLOYMENT.md` §11–§17 and §19 — Google Cloud project, Artifact Registry, Secret Manager and service accounts, VPC and Memorystore, the first image build, deploying in order, DNS/TLS, the Razorpay webhook URL, uptime checks and alerts, Supabase backups/PITR and a restore drill, an offline copy of `FIELD_ENCRYPTION_KEY`.
+
 ### What was being worked on
 
-Phase 13 (item 13) is implemented, validated (§2) and committed locally as one commit, `feat(admin): complete cms and communications workflows`. It is **not pushed**; pushing needs the owner's approval. CI is deferred by the owner.
+Phase 14 (item 14) is implemented, validated (§2) and committed locally as one commit, `feat(infra): complete production operations readiness`. It is **not pushed**; pushing needs the owner's approval. Nothing was deployed and production was not touched. CI is deferred by the owner.
 
 ### Reverted by the owner on 2026-10-06 (do not redo unless asked)
 
@@ -278,6 +315,26 @@ See **`AGENTS.md` §11**, the permanent list of owner-approved designs and decis
 ---
 
 ## 2. LAST VALIDATION — snapshot as of 2026-10-07 (local only)
+
+**Phase 14 (item 14), 2026-10-07:**
+
+| Command | Result |
+|---|---|
+| `pnpm prettier --check .` | ✅ every project file; the only warnings are 6 files under `brag-output/` (a locally excluded tool install, never committed) |
+| `pnpm typecheck`, `pnpm lint` | ✅ 13/13 tasks each |
+| `pnpm --filter @sailent/api test` (full, final tree) | ✅ **925 passed, 0 failed**, 9 skipped |
+| `@sailent/web` / `@sailent/config` / `@sailent/worker` / `@sailent/validation` / `@sailent/database` | ✅ 177 / 41 / 26 / 292 / 180 passed |
+| `pnpm check:deploy` (Dockerfiles, `.dockerignore`, Cloud Run templates, Cloud Build) | ✅ 45/45 |
+| `pnpm check:web-build-isolation` (production settings, stand-in API) | ✅ build exit 0, **0 requests** to the API, standalone output produced. Before Phase 14 the same build failed at `/impact/[slug]` after 3 requests. Static routes now: `/icon.svg`, `/robots.txt`, `/sitemap-pages.xml`; everything else renders per request |
+| `pnpm build --force` (isolated copy) | ✅ 8/8 tasks |
+| **Docker / `docker build` / Cloud Build** | ❌ **Not run: Docker and `gcloud` are not installed on this machine.** No image has been built. Substitutes below |
+| Runtime dry runs (the images' runtime layouts, run directly) | **API** (`pnpm deploy --prod` tree, `PORT`): `/health` 200, `/health/ready` 200 and 503 `unavailable` (no error text) with the database down, SIGTERM exits; refuses `APP_ENV=production` with missing secrets (names only). A full production boot was not attempted: it would connect to the production database host. **Worker:** `/health` 200, `/ready` 200 / 503, `severity` in logs, no secret in logs, reconciliation scheduled only when configured, clean shutdown. **Web** (standalone + `start-standalone.cjs`, production settings, final code): `/api/health` 200 `no-store`; `/`, `/campaigns`, `/faq`, `/admin/login`, `/sitemap.xml` 200; unknown route 404; HSTS present; SIGTERM stops it; **exit 1** without `INTERNAL_API_SECRET` |
+| Runtime tree sizes | API 117 MB, worker 47 MB, web 127 MB (before the Node base image) |
+| `pnpm audit --prod` | 4 (1 high drizzle-orm, 3 moderate) — was 30 (15 high). Full audit incl. dev tooling: 27 (`SECURITY.md` §2) |
+| Playwright, **full suite** × 4 projects (792 tests, isolated copy, `--workers=2`), first run | 596 passed, 4 failed, 192 skipped. **Found a Phase 14 regression:** `admin-blog` "creates a draft … then archives it" timed out — `connection()` at request time stalled renders after a server action under the harness's `NODE_ENV=development`. Fixed (`requestTimeOnly()`); the test then passed 2/2 alone and in the next full run |
+| Playwright, full suite, after the fix | 596 passed, 4 failed, 192 skipped: the 2 **pre-existing WebKit failures**; `admin-auth` sign-in (below); `shell` accessibility on mobile-xs (44 `color-contrast` nodes on `/`), which **passed on rerun** (desktop and mobile-xs). Another session ran its own E2E suite on the same ports and `sailent_e2e` database during part of this work, so some runs overlapped |
+| `admin-auth.spec.ts` "a super admin signs in … in one step" | ❌ **intermittent, also at `84e77ad`** in the same environment (HEAD: passed 1 of 3). Phase 14 tree: 0 of 6; with `/admin/login` static again: 1 of 3. The server finishes the action response in ~0.4 s; the browser does not apply the streamed redirect (it does when the same response is delivered whole). **Not resolved** (§5.5) |
+| Mutation checks (23, all caught; files restored byte-identical) | Web production mock-data guard; web missing-secret guard; R2 URL validation; media URL credentials; media https in production; scrubber body, JWT and key-redaction rules; reporter scrubbing; API readiness leak and 503; worker 503; API 5xx reporting; web health no-store; Dockerfile non-root, baked secret and migrations; `.dockerignore` excluding `.env`; Cloud Run secret literal; worker ingress; worker CPU throttling; web start wrapper; **build-only `connection()`** (made a no-op: the isolation check saw 2 API requests and failed) |
 
 **Phase 13 (item 13), 2026-10-07:**
 
@@ -492,8 +549,10 @@ This is for a **human** to verify and remediate through the approved process (`D
 ### 5.4 Infrastructure and tooling
 
 - **CI migrate/seed target: fixed in `0e94632` and confirmed** — run #4 passed "Apply migrations" and the seed step.
-- **CI tests: env stripped by Turborepo strict mode.** Fixed in `7fe6c25` (`passThroughEnv`); **the run for `7fe6c25` has not been observed**. Later steps may still fail (for example, `docs/phase-9.md` §9 notes that some web routes fail to build without a running API, and CI starts none). Unverified.
-- **CI security job: `pnpm audit` fails** (30 vulnerabilities as of run #4: 2 low, 13 moderate, 15 high — sharp, postcss and source-map-js via next; multer via `@nestjs/platform-express`; lodash; js-yaml via swagger; drizzle-orm 0.38.4). Gitleaks is skipped as a result. Proposed `pnpm.overrides` and a separate drizzle upgrade are **not approved or applied**.
+- **CI tests: env stripped by Turborepo strict mode.** Fixed in `7fe6c25` (`passThroughEnv`); **the run for `7fe6c25` has not been observed**. The web build no longer needs a running API (Phase 14), which removes one known reason the build step could fail. Unverified on GitHub.
+- **CI security job: `pnpm audit --prod --audit-level high` still fails**, now on **one** high advisory: drizzle-orm 0.38.4 (needs ≥ 0.45.2, a major-range upgrade for the owner to approve). Phase 14 applied `pnpm.overrides` for the transitive ones (as of 2026-10-07, production advisories 30 → 4: drizzle-orm high; file-type ×2 and @nestjs/core moderate, which need Nest 11). Gitleaks stays skipped until the audit step passes. **Development-only tooling** has 23 further advisories (vitest 2 and its pool/mocker, vite/esbuild, @nestjs/cli 10 and its glob/picomatch/braces/tmp/ajv/webpack, drizzle-kit's shell-quote, react-query-devtools' seroval) — not in any image; fixing them needs vitest 3+, Nest CLI 11 and a newer drizzle-kit (`SECURITY.md` §2).
+- **Container images never built** (Docker and `gcloud` are not installed on the development machine, 2026-10-07). The Dockerfiles are checked statically (`pnpm check:deploy`) and the runtime layouts were run directly; the first `gcloud builds submit` is the first real build.
+- **E2E harness runs `next start` with `NODE_ENV=development`** (`apps/web/playwright.config.ts`). Next.js warns about it, and under it `cookies()`/`connection()` resolve on a timer. Phase 14 found that this stalled server-action renders when `connection()` ran at request time (fixed by limiting it to the build). It may also be behind the intermittent admin sign-in failure (§5.5).
 - **Drizzle snapshots stop at `0007`.** Migrations are hand-written; `db:generate` and `db:push` are not used (`AGENTS.md` §5).
 - **Inner `BEGIN`/`COMMIT`** in migrations `0018`–`0022`.
 - **Hand-assigned journal timestamps** on `0017`–`0022`.
@@ -516,9 +575,10 @@ This is for a **human** to verify and remediate through the approved process (`D
   - `payment_webhooks` rows left `failed`/`pending` are not replayed by any tool (reconciliation settles the donation directly; the rows stay visible in Payment exceptions).
   - Reconciliation examines up to 100 donations per run, oldest first; stuck ones (authorised or mismatched payments) are re-examined every run until resolved by a human.
 - **Soft 404s.**
-- **The web build needs the API** for some routes.
+- ~~The web build needs the API~~ — fixed in Phase 14 (build makes no API request).
 - **`campaigns.program_id` is nullable.** A live campaign can be detached by PATCH.
 - **2 pre-existing WebKit E2E failures** (§2).
+- **Intermittent E2E failure: "a super admin signs in with email and password, in one step"** (`admin-auth.spec.ts`, desktop only), first seen 2026-10-07 during Phase 14. It also fails at `84e77ad` in the same environment (2 of 3 runs). The server completes the sign-in action's response in about 0.4 s, but the browser intermittently does not apply the streamed redirect; the same response delivered in one piece always navigates. At `84e77ad` it passed 1 of 3 runs; on the Phase 14 tree it passed 0 of 6, and 1 of 3 with `/admin/login` made static again as at `84e77ad`. So Phase 14's dynamic `/admin/login` may raise its failure rate. Not resolved; see §2.
 - **Intermittent API test failures in full parallel runs** (seen 2026-10-06): `rbac.spec.ts` "ignores an unknown sort field" compares two consecutive `/admin/users` responses while other suites sign users in; `blog.spec.ts` "stamps publishedAt once" failed once. Both pass alone. Not investigated.
 - **No E2E coverage for paused or past-deadline campaigns.** The E2E seed has none, so the `open`/`closed` split is covered by API integration tests only.
 - **Featured band** still requests `status=active` and filters with `acceptsDonationsNow()` in the web (edge case in §1 item 1); it does not use `status=open`.
@@ -542,7 +602,8 @@ This is for a **human** to verify and remediate through the approved process (`D
 | No real registration data (PAN, 12A, 80G, address) | Go-live; 80G receipts | Enter them in Admin → Settings (Phase 13) |
 | Migration `0023` not applied in production | Contact, newsletter, new admin screens in production | A human applies it (`DEPLOYMENT.md` §6c, §9) |
 | No Razorpay keys in any environment | Live payment testing | Provide test-mode keys |
-| No application hosting configured | Deployment | Owner's choice is Google Cloud Run; deployment artefacts are Phase 14. |
+| Nothing provisioned in Google Cloud | Deployment | Phase 14 prepared the images, templates and runbooks; a human provisions and deploys (`DEPLOYMENT.md` §11–§16) |
+| drizzle-orm upgrade not approved | CI `security` job (audit) | Approve the drizzle-orm ≥ 0.45.2 upgrade (and later Nest 11) |
 | `FIELD_ENCRYPTION_KEY` not generated for production; production PANs possibly plaintext | Storing PANs in production | Generate and store the key; re-encrypt existing PANs (`DEPLOYMENT.md` §6b) |
 | Unknown production database state | Any production work | A human verifies the production schema version and residue (§5.2) |
 | No refund/cancellation policy page (Razorpay requires one) | Razorpay activation | Supply the policy text |
@@ -554,25 +615,25 @@ This is for a **human** to verify and remediate through the approved process (`D
 1. ~~Commit the featured/deadline work~~ (done: `dd64d41`). ~~Fix the CI target flag~~ (done: `0e94632`). ~~Turborepo test env~~ (done: `7fe6c25`). All pushed.
 2. ~~Commit the campaign cleanup~~ (done: `ed69d41`, pushed). **Commit the donor-count change** (§1 item 8) with owner approval; push only with a separate approval.
 3. CI (deferred by the owner, 2026-10-06): observe the GitHub Actions run and, with approval, the dependency overrides for `pnpm audit` (§5.4).
-4. ~~Programme campaign counts~~ (`f9816be`), ~~webhook hardening~~ (`e87864b`), ~~Phase 11~~ (`5170ce0`) and ~~Phase 12~~ (`3941ee7`), pushed. Phase 13 committed locally (`feat(admin): complete cms and communications workflows`); **push it** with owner approval; then **Phase 14 — Infrastructure & Production Operations** (Google Cloud Run).
+4. ~~Programme campaign counts~~ (`f9816be`), ~~webhook hardening~~ (`e87864b`), ~~Phase 11~~ (`5170ce0`), ~~Phase 12~~ (`3941ee7`) and ~~Phase 13~~ (`84e77ad`), pushed. Phase 14 committed locally (`feat(infra): complete production operations readiness`); **push it** with owner approval.
 5. Owner decision on the leftover local migration row (§5.1); no longer blocks tests.
 6. ~~Web `FEATURE_MOCK_DATA` default and `webEnvSchema`; spoofable audit IPs; PAN encryption; email verification; CSP and HSTS~~ (Phase 12). Staff 2FA: not required (owner decision).
 7. Human-led production audit and hardening (§5.2), including `FIELD_ENCRYPTION_KEY` and re-encrypting existing PANs (`DEPLOYMENT.md` §6b).
-8. Phase 14 (infrastructure and operations) and Phase 15 (final launch readiness, including SEO).
+8. Human provisioning and first deployment (`DEPLOYMENT.md` §11–§17), backups and a restore drill (§19); then Phase 15 (final launch readiness: SEO, legal review including the analytics/consent wording, Razorpay sandbox trial).
 9. Programme rollups. (Notification retry: Phase 13. Reconciliation and pending expiry: Phase 11.)
-10. Deployment artefacts and hosting on Google Cloud Run (Phase 14).
+10. ~~Deployment artefacts~~ (Phase 14). Dependency majors: drizzle-orm 0.45, Nest 11, vitest 3+ (owner approval).
 11. Enter the real organisation details in Admin → Settings (Phase 13 made the site read them).
 12. Optional, owner-approved: rebuild the Drizzle snapshot baseline so `db:generate` becomes usable. **This is not required for hand-written migrations.**
 13. Soft-404 fix; receipt PDF. (R2 `remotePatterns`: `MEDIA_PUBLIC_BASE_URL`, Phase 13.)
 
 ---
 
-## 8. PRODUCTION / DATABASE / DEPLOYMENT STATUS — as of 2026-10-06
+## 8. PRODUCTION / DATABASE / DEPLOYMENT STATUS — as of 2026-10-07
 
 - **Production database:** the hosted Supabase project that the production guard targets. The guard's `PRODUCTION_DATABASE_HOST` (`packages/database/src/lib/database-target.ts`) is a **shared regional pooler host**, so the host alone does not uniquely identify the project; the owner confirmed which project it is on 2026-10-06. It exists; its state is **not verified** (§5.2). **No agent access** (`AGENTS.md` §8).
 - **Staging:** there is no separate staging environment. Older documents call the Supabase project "staging"; it is production (owner, 2026-10-06).
 - **Local:** `sailent_dev`, `sailent_e2e`.
-- **Hosting:** none. See `DEPLOYMENT.md`.
+- **Hosting:** none deployed. Prepared for Google Cloud Run in Phase 14 (images, templates, runbooks — `DEPLOYMENT.md` §8, §11–§21). No agent deployed anything or touched production.
 
 ---
 
@@ -604,20 +665,21 @@ These are recorded here and **not** silently resolved in the source documents.
 | 22 | Seed header comment (`packages/database/src/seed/index.ts`, near the top): `--reference` is "safe anywhere / safe in any environment" | It is **not** safe on production: it deletes and re-inserts the `SUPER_ADMIN` grants (a lockout window), prunes permissions and upserts category slugs. The seed's own `main()` comment says so, and so do `DATABASE.md` §10 and `DEPLOYMENT.md` §10. |
 | 23 | Seed `main()` comment: "five staff accounts with a known password" | The current seed creates **two** (`admin@sailent.local`, `staff@sailent.local`) |
 | 24 | `donations.service.ts` comment: a failed order leaves a pending donation "swept by the same reconciliation"; `razorpay.client.ts` comment: `isConfigured` is "checked by the donation endpoints" | Since Phase 11 reconciliation exists and cancels such a donation after 24 h (when the worker is configured). `isConfigured` is still checked only inside `RazorpayClient.call()`, after the donation has been committed (`DEPLOYMENT.md` §6). |
-| 20 | Owner decision: Google Cloud Run is the intended host | No Cloud Run, GCP or Docker deployment configuration exists yet (Phase 14). Older docs that named Vercel/Render were updated on 2026-10-07 |
+| 20 | Owner decision: Google Cloud Run is the intended host | **Resolved in Phase 14:** Dockerfiles and Cloud Run templates exist (`infrastructure/cloud-run/`); nothing is deployed. Older docs that named Vercel/Render were updated on 2026-10-07 |
 | 21 | Local databases | One applied migration is absent from the repo, and `0014` was edited after it was applied (§5.1) |
+| 25 | `/privacy-policy` ("Cookies and analytics"): "Analytics load only after you consent, and declining is remembered"; analytics data kept fourteen months | No analytics and no consent mechanism exist (GA4 not wired, Phase 14 decision). For the Phase 15 legal review; the page is unchanged |
 
 ---
 
 ## THE NEXT AI AGENT SHOULD START HERE
 
 1. Read `AGENTS.md` in full, especially §8 (production is off limits), §9 (work directly on `main`; owner approval before every commit and every push) and §11 (must not change). Then read this file, and `CLAUDE.md` if you are Claude Code.
-2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-07, local `main` is 1 commit ahead of `origin/main` (`3941ee7`): the Phase 13 commit `feat(admin): complete cms and communications workflows`, **not pushed** (§1 item 13). Ask the owner before pushing it. Staff TOTP/2FA is **not required** (owner decision); do not add it.
+2. Run `git status`, `git log --oneline -5` and `git status -sb`. As of 2026-10-07, local `main` is 1 commit ahead of `origin/main` (`84e77ad`): the Phase 14 commit `feat(infra): complete production operations readiness`, **not pushed** (§1 item 14). Ask the owner before pushing it. The About-page redesign in the working tree belongs to a separate session; do not commit it with anything else. Staff TOTP/2FA is **not required** (owner decision); do not add it.
 3. **CI (deferred by the owner on 2026-10-06; resume only when asked): watch CI.**
    - Observe the GitHub Actions run for the current `main` head (for example with `gh run list` / `gh run view`, or on GitHub). The `security` job is expected to fail at `pnpm audit` until the dependency fixes are approved (§5.4).
    - Report the `quality` and `security` job results with their failing step and log excerpt, if any.
    - **Do not claim CI passes until that run has been observed.**
    - If a later step fails (build, tests, format, audit, gitleaks), report it and wait for the owner. Do not fix it unprompted.
-4. **Then:** Phase 14 (Infrastructure & Production Operations, Google Cloud Run) when the owner starts it. Recommend a **human-led** review of the production database (§5.2) and the human-only steps of Phases 12 and 13 (`DEPLOYMENT.md` §6b, §6c — including applying migration `0023`). The §5.1 leftover migration row still needs an owner decision.
+4. **Then:** the human provisioning and first deployment (`DEPLOYMENT.md` §11–§17) — agents prepare, humans run. Recommend a **human-led** review of the production database (§5.2), the human-only steps of Phases 12 and 13 (`DEPLOYMENT.md` §6b, §6c — including applying migration `0023`), and turning on backups (§19). Then Phase 15 when the owner starts it. The §5.1 leftover migration row still needs an owner decision.
 
 Do not create feature branches or pull requests unless the owner explicitly asks (`AGENTS.md` §9).

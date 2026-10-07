@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — implemented architecture
 
-Verified against the code on 2026-10-06 (a snapshot). Everything below is **IMPLEMENTED** unless it is labelled **PLANNED**. The original design documents are `docs/architecture.md`, `docs/api-architecture.md` and `docs/phase-0-decisions.md`. Several of their statements are outdated; see `DEVELOPMENT_STATUS.md` §9.
+Verified against the code on 2026-10-06, with §1, §7–§11 updated for Phase 14 on 2026-10-07 (a snapshot). Everything below is **IMPLEMENTED** unless it is labelled **PLANNED**. The original design documents are `docs/architecture.md`, `docs/api-architecture.md` and `docs/phase-0-decisions.md`. Several of their statements are outdated; see `DEVELOPMENT_STATUS.md` §9.
 
 ---
 
@@ -28,6 +28,8 @@ There are three deployables and one shared database. The packages are consumed a
 - `packages/types`: money, API envelope and auth contracts.
 - `packages/config`: environment schemas, constants, ESLint and tsconfig presets.
 - `packages/ui`: tokens and components.
+
+**Production topology (Phase 14, prepared, NOT deployed):** three Google Cloud Run services in `asia-south1` — `sailent-web` (public), `sailent-api` (public: the web server and Razorpay's webhook call it) and `sailent-worker` (internal ingress, exactly one instance, CPU always allocated because it consumes queues outside any request). Supabase Postgres (session pooler, TLS verified), Memorystore Redis over a private VPC, Cloudflare R2, Brevo, optional Sentry. Each service has its own container image (`apps/*/Dockerfile`) and service template (`infrastructure/cloud-run/`); secrets come from Secret Manager. The full diagram, settings and procedures are in `DEPLOYMENT.md` §8 and §11–§21.
 
 ## 2. Frontend — `apps/web`
 
@@ -155,7 +157,7 @@ sequenceDiagram
   - size limits of 10 MB (media) and 25 MB (documents);
   - random object keys.
 - **No local fallback.** When R2 is not configured, uploads return 503.
-- **Web limitation:** `images.remotePatterns` is empty in `apps/web/next.config.ts`, so R2-hosted images cannot be rendered by `next/image` yet. Local images live under `apps/web/public/images`.
+- **Web:** `MEDIA_PUBLIC_BASE_URL` (equal to the API's `R2_PUBLIC_BASE_URL`) becomes one exact `images.remotePatterns` entry at build time (Phase 13); since Phase 14 it is validated — https in production, no credentials, query, fragment or wildcard — and an invalid value fails the build. Unset, no remote image is allowed. Local images live under `apps/web/public/images`.
 
 ## 8. Email, notifications, queues
 
@@ -168,12 +170,16 @@ sequenceDiagram
 - **Declared but unconsumed:** `notifications`, `reports`, `cleanup`. Nothing enqueues to them: since Phase 13 the admin "retry" enqueues to `email` under the original job name (it used to go to `notifications` and send nothing). Retry is offered for `contact.received` and the Phase 10.11 set; never for jobs whose link held a token (`newsletter.confirm`, `staff.*`, `donor.login_code`).
 - **Job defaults:** 3 attempts with exponential backoff; only `unreachable` provider errors throw (and retry), permanent ones are recorded `failed` and raise the in-app staff alert. Every attempt writes a `notifications` row (ids only — no token, link, address or message body). A contact message already recorded as sent is not emailed again.
 - **Templates:** the `notification_templates` table, versioned, with HTML-escaped placeholders.
-- **Health:** the worker serves `/health` on `WORKER_PORT` (default 4001).
-- **PLANNED / out of scope:** scheduled jobs beyond reconciliation (counter drift, cleanup, reminders — Phase 14), SMS, and SENDING newsletters (the platform records double-opt-in consent only).
+- **Health:** the worker serves `/health` (liveness) and `/ready` (Redis and database, 503 when either fails; no error text) on `PORT` or `WORKER_PORT` (default 4001), on all interfaces (Phase 14).
+- **Failure visibility (Phase 14):** a job that exhausts its attempts is logged at error level and reported to error tracking (queue, job name, attempts — no payload); unhandled rejections are reported; an uncaught exception is logged, reported and ends the process (Cloud Run restarts it).
+- **Shutdown:** SIGTERM stops the workers taking jobs, waits for running ones (30 s cap), flushes error reports and closes Redis and the database.
+- **Scheduled jobs (audited in Phase 14):** reconciliation is the only schedule. Counter drift, cleanup and reminders were reviewed and are not needed now: expired sessions, codes and tokens are refused at use. `DEPLOYMENT.md` §18 has the table.
+- **Out of scope:** SMS, and SENDING newsletters (the platform records double-opt-in consent only).
 
 ## 9. Caching
 
-- **Next.js data cache:** `revalidate: 300` with tags, revalidated by admin actions. Sitemaps are cached for 3600s.
+- **Next.js data cache:** `revalidate: 300` with tags, revalidated by admin actions. Since Phase 14 the content sitemaps render per request (their fetches use the same 300 s cache); `sitemap-pages.xml` is static for 3600 s.
+- **Build independence (Phase 14):** the web build fetches nothing — `loadContent` and `getOrganisation` call `connection()` while `next build` runs, which makes the route render per request instead (`requestTimeOnly()` in `lib/content/source.ts`). The six slug `generateStaticParams` were removed for the same reason.
 - **Redis:** throttler counters (Lua script) and BullMQ.
 - **No application-level cache** in the API.
 
@@ -183,16 +189,21 @@ sequenceDiagram
   - the **production Supabase database** (owner, 2026-10-06). Its state is unverified; agents have no access (`AGENTS.md` §8);
   - local Postgres and Redis;
   - CI.
-- **Does not exist:** any staging environment; application hosting.
-- **Intended hosting (owner decision): Google Cloud Run** for the web, API and worker (persistent processes, decision A12), with the Supabase Postgres database, Redis and R2. Earlier documents named Vercel and Render/Railway; those are superseded. Deployment work is Phase 14.
-- **Not in the repo yet:** Dockerfiles, IaC, a deployment workflow (Phase 14).
+- **Does not exist:** any staging environment; any deployed application.
+- **Hosting (owner decision): Google Cloud Run** for the web, API and worker (persistent processes, decision A12). Earlier documents named Vercel and Render/Railway; those are superseded.
+- **In the repo since Phase 14:** a Dockerfile per service (multi-stage, production dependencies, non-root, no migrations at start); the web uses Next's standalone output and `start-standalone.cjs` (validates the environment before serving); Cloud Run service templates and a Cloud Build file that builds and pushes but never deploys (`infrastructure/cloud-run/`); `pnpm check:deploy` (static rules) and `pnpm check:web-build-isolation`.
+- **Runtime port:** each service listens on `PORT` when set (Cloud Run), else its own `API_PORT` / `WORKER_PORT`.
+- **Not provisioned (human):** the Google Cloud project, Secret Manager entries, Memorystore, the VPC, DNS and TLS, uptime checks.
 - **Local development:** `infrastructure/docker-compose.yml` (Postgres 17 + Redis 7). See `DEPLOYMENT.md`.
 
 ## 11. Monitoring and logging
 
-- **API:** `nestjs-pino` with redaction (auth headers, cookies, password, OTP, token, PAN, phone and email paths). Request IDs are propagated.
+- **API:** `nestjs-pino` with redaction (auth headers, cookies, the internal-secret and idempotency headers since Phase 14, password, OTP, token, PAN, phone and email paths). Request IDs are propagated.
 - **Worker:** its own pino logger with redaction.
-- **Sentry:** PLANNED; the variables exist and no SDK is installed.
+- **Log format (Phase 14):** JSON lines on stdout; outside development each carries `severity` (Cloud Logging's level), `service` and `environment`.
+- **Health (Phase 14):** API `/api/v1/health` (liveness) and `/api/v1/health/ready` (database → 503 when down; Redis/queues → `degraded`); worker `/health` and `/ready`; web `/api/health` (no-store). No endpoint returns error text.
+- **Error tracking (Phase 14):** a Sentry-compatible reporter in `packages/config` (no SDK), used by the API (5xx and start-up failures), the worker (exhausted jobs, unhandled errors) and the web server (`onRequestError`). Off unless `SENTRY_DSN` is set; every event is scrubbed (`SECURITY.md` §2 "Error tracking"). Browser errors are not collected.
+- **Analytics:** none (GA4 deferred to a consent decision).
 - **Audit trail:** the `audit_logs` table records about 60 mutation actions (see `SECURITY.md`).
 
 ## 12. Testing architecture

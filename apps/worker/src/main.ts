@@ -3,9 +3,10 @@ import { createServer } from 'node:http';
 import { Queue, Worker, type Job } from 'bullmq';
 import IORedis from 'ioredis';
 
-import { loadEnv, workerEnvSchema } from '@sailent/config';
+import { createErrorReporter, describeError, loadEnv, workerEnvSchema } from '@sailent/config';
 import { loadRootEnvFile } from '@sailent/config/dotenv';
 
+import { createHealthHandler } from './lib/health.js';
 import { createLogger } from './lib/logger.js';
 import { DEFAULT_JOB_OPTIONS, QUEUE_NAMES } from './queues/index.js';
 import {
@@ -75,6 +76,25 @@ loadRootEnvFile();
 const env = loadEnv(workerEnvSchema, 'worker');
 const logger = createLogger(env);
 
+/*
+  Error tracking (Phase 14): Sentry-compatible, scrubbed, OFF unless
+  SENTRY_DSN is set. Reports jobs that failed on every attempt and crashes —
+  never job data, which can hold tokens and addresses.
+*/
+const errorReporter = createErrorReporter({
+  dsn: env.SENTRY_DSN,
+  environment: env.SENTRY_ENVIRONMENT ?? env.APP_ENV,
+  release: env.SENTRY_RELEASE,
+  service: 'sailent-worker',
+});
+
+/** A job that has used its last attempt: logged at error and reported. */
+function reportExhausted(queue: string, job: Job | undefined, error: Error): void {
+  errorReporter.capture(error, {
+    tags: { queue, jobName: job?.name, attempts: job?.attemptsMade },
+  });
+}
+
 // BullMQ requires this setting on its blocking connection.
 const connection = new IORedis(env.REDIS_URL, {
   maxRetriesPerRequest: null,
@@ -143,9 +163,15 @@ exampleWorker.on('failed', (job, error) => {
   // in later phases this is where a dead-lettered webhook raises an alert.
   const exhausted = job ? job.attemptsMade >= (job.opts.attempts ?? 1) : false;
   logger[exhausted ? 'error' : 'warn'](
-    { jobId: job?.id, queue: QUEUE_NAMES.EXAMPLE, attempt: job?.attemptsMade, err: error.message },
+    {
+      jobId: job?.id,
+      queue: QUEUE_NAMES.EXAMPLE,
+      attempt: job?.attemptsMade,
+      err: describeError(error),
+    },
     exhausted ? 'Job failed permanently — dead-lettered' : 'Job failed, will retry',
   );
+  if (exhausted) reportExhausted(QUEUE_NAMES.EXAMPLE, job, error);
 });
 
 /**
@@ -291,12 +317,13 @@ emailWorker.on('failed', (job, error) => {
       jobName: job?.name,
       queue: QUEUE_NAMES.EMAIL,
       attempt: job?.attemptsMade,
-      err: error.message,
+      err: describeError(error),
     },
     exhausted
       ? `Email job ${job?.name ?? 'unknown'} failed permanently — somebody is waiting for it`
       : `Email job ${job?.name ?? 'unknown'} failed, will retry`,
   );
+  if (exhausted) reportExhausted(QUEUE_NAMES.EMAIL, job, error);
 });
 
 /**
@@ -342,12 +369,31 @@ const paymentsWorker = new Worker<PaymentReconciliationJob>(
 paymentsWorker.on('failed', (job, error) => {
   const exhausted = job ? job.attemptsMade >= (job.opts.attempts ?? 1) : false;
   logger[exhausted ? 'error' : 'warn'](
-    { jobId: job?.id, queue: QUEUE_NAMES.PAYMENTS, attempt: job?.attemptsMade, err: error.message },
+    {
+      jobId: job?.id,
+      queue: QUEUE_NAMES.PAYMENTS,
+      attempt: job?.attemptsMade,
+      err: describeError(error),
+    },
     exhausted
       ? 'Payment reconciliation failed on every attempt — pending donations are not being settled'
       : 'Payment reconciliation failed, will retry',
   );
+  if (exhausted) reportExhausted(QUEUE_NAMES.PAYMENTS, job, error);
 });
+
+/*
+  A worker that loses Redis emits 'error' and keeps retrying the connection
+  (ioredis). Logged so the outage is visible; not reported per occurrence,
+  which during an outage would be thousands of identical events (Phase 14).
+*/
+for (const [queue, worker] of [
+  [QUEUE_NAMES.EXAMPLE, exampleWorker],
+  [QUEUE_NAMES.EMAIL, emailWorker],
+  [QUEUE_NAMES.PAYMENTS, paymentsWorker],
+] as const) {
+  worker.on('error', (error) => logger.error({ queue, err: describeError(error) }, 'Worker error'));
+}
 
 void (async () => {
   try {
@@ -379,33 +425,36 @@ void (async () => {
  * Health endpoint.
  *
  * A worker with no HTTP surface is invisible to a platform health check and
- * gets restarted on a schedule instead of on a signal. This is the minimum
- * needed for Render/Railway to know the process is alive.
+ * gets restarted on a schedule instead of on a signal. Cloud Run also requires
+ * every service to listen on `PORT` (Phase 14): `/health` is the liveness
+ * probe and `/ready` the startup probe (`lib/health.ts`).
  */
-const server = createServer((req, res) => {
-  if (req.url === '/health') {
-    res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(
-      JSON.stringify({
-        status: 'ok',
-        service: 'sailent-worker',
-        environment: env.APP_ENV,
-        uptimeSeconds: Math.floor(process.uptime()),
-        queues: Object.values(QUEUE_NAMES),
-      }),
-    );
-    return;
-  }
-  res.writeHead(404, { 'content-type': 'application/json' });
-  res.end(JSON.stringify({ error: 'Not found' }));
-});
+const server = createServer(
+  createHealthHandler({
+    service: 'sailent-worker',
+    environment: env.APP_ENV,
+    queues: Object.values(QUEUE_NAMES),
+    checks: {
+      redis: () => connection.ping(),
+      database: () => database.ping(),
+    },
+    onCheckFailed: (name, error) =>
+      logger.warn({ check: name, err: describeError(error) }, 'Readiness check failed'),
+  }),
+);
 
-server.listen(env.WORKER_PORT, () => {
+/*
+  Cloud Run gives the port in `PORT` (Phase 14) and requires listening on all
+  interfaces; locally WORKER_PORT (4001) applies.
+*/
+const healthPort = env.PORT ?? env.WORKER_PORT;
+server.listen(healthPort, '0.0.0.0', () => {
   logger.info(
     {
-      port: env.WORKER_PORT,
+      port: healthPort,
       concurrency: env.WORKER_CONCURRENCY,
       queues: Object.values(QUEUE_NAMES),
+      errorReporting: errorReporter.enabled,
     },
     'Worker started',
   );
@@ -436,6 +485,8 @@ async function shutdown(signal: string): Promise<void> {
     await exampleQueue.close();
     await database.close();
     await connection.quit();
+    // Error reports still in flight are sent before exit (Phase 14).
+    await errorReporter.flush();
     clearTimeout(timeout);
     logger.info('Shutdown complete');
     process.exit(0);
@@ -450,7 +501,19 @@ process.on('SIGTERM', () => void shutdown('SIGTERM'));
 process.on('SIGINT', () => void shutdown('SIGINT'));
 
 process.on('unhandledRejection', (reason) => {
-  logger.error({ err: reason instanceof Error ? reason.message : reason }, 'Unhandled rejection');
+  logger.error({ err: describeError(reason) }, 'Unhandled rejection');
+  errorReporter.capture(reason, { tags: { kind: 'unhandledRejection' } });
+});
+
+/*
+  A crash is reported before the process dies (Phase 14). Exiting is still
+  right: state after an uncaught exception cannot be trusted, and Cloud Run
+  starts a fresh instance.
+*/
+process.on('uncaughtException', (error) => {
+  logger.fatal({ err: describeError(error) }, 'Uncaught exception — exiting');
+  errorReporter.capture(error, { tags: { kind: 'uncaughtException' } });
+  void errorReporter.flush().finally(() => process.exit(1));
 });
 
 export { exampleQueue };

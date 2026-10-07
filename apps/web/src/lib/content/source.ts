@@ -1,5 +1,8 @@
 import 'server-only';
 
+import { PHASE_PRODUCTION_BUILD } from 'next/constants';
+import { connection } from 'next/server';
+
 import { createServerApiClient } from '@/lib/api/server';
 import { publicAssetExists } from '@/lib/media/public-asset';
 import type { ApiClient } from '@/lib/api/client';
@@ -49,6 +52,28 @@ export interface LoadOptions<T> {
 }
 
 /**
+ * Never call the API while `next build` runs (Phase 14).
+ *
+ * During the build, `connection()` bails the route out of static
+ * prerendering instead of letting it fetch, so a production image builds with
+ * no API, database or secrets. Every public page already rendered per request
+ * (the layout reads the session cookie), so nothing that used to be static
+ * becomes dynamic beyond the few routes that had been prerendered from API
+ * data at build time.
+ *
+ * ONLY during the build. At request time `connection()` is not needed — the
+ * route is already dynamic — and it is not free: under `NODE_ENV=development`,
+ * which the E2E stack uses with `next start`, Next.js resolves it on a timer,
+ * and that stalled renders triggered by a server action (a sign-in redirect
+ * never arrived; a page revalidated by an action never finished loading).
+ * Calling it only in the build phase keeps request-time behaviour exactly as
+ * it was before Phase 14.
+ */
+export async function requestTimeOnly(): Promise<void> {
+  if (process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD) await connection();
+}
+
+/**
  * Fetch content, with a development fallback.
  *
  * Errors are deliberately NOT swallowed in production: a page that renders
@@ -56,6 +81,7 @@ export interface LoadOptions<T> {
  * worse than a page that fails, because nobody finds out.
  */
 export async function loadContent<T>(options: LoadOptions<T>): Promise<T> {
+  await requestTimeOnly();
   const api = createServerApiClient();
 
   try {

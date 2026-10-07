@@ -1,9 +1,12 @@
+import path from 'node:path';
+
 import type { NextConfig } from 'next';
 
 import {
   STRICT_TRANSPORT_SECURITY,
   contentSecurityPolicy,
 } from './src/lib/security/content-security-policy';
+import { mediaRemotePatterns } from './src/lib/security/media-remote-patterns';
 import { PERMISSIONS_POLICY } from './src/lib/security/permissions-policy';
 
 /*
@@ -14,26 +17,18 @@ import { PERMISSIONS_POLICY } from './src/lib/security/permissions-policy';
 const isProductionDeployment = process.env.APP_ENV === 'production';
 const isDevelopmentServer = process.env.NODE_ENV === 'development';
 
-/** `https://media.example.org/base` → a next/image remote pattern for everything under it. */
-function mediaRemotePatterns(base: string | undefined) {
-  if (!base) return [];
-  try {
-    const url = new URL(base);
-    return [
-      {
-        protocol: url.protocol.replace(':', '') as 'http' | 'https',
-        hostname: url.hostname,
-        ...(url.port ? { port: url.port } : {}),
-        pathname: `${url.pathname.replace(/\/$/, '')}/**`,
-      },
-    ];
-  } catch {
-    return [];
-  }
-}
+/*
+  The container build (apps/web/Dockerfile, Phase 14) sets NEXT_OUTPUT=standalone:
+  a self-contained server (`server.js`) with only the files it needs, traced
+  from the monorepo root. Local `next start` and the E2E suite are unchanged.
+*/
+const standalone = process.env.NEXT_OUTPUT === 'standalone';
 
 const config: NextConfig = {
   reactStrictMode: true,
+  ...(standalone
+    ? { output: 'standalone' as const, outputFileTracingRoot: path.join(__dirname, '../..') }
+    : {}),
 
   // The design system is consumed as TypeScript source rather than a build
   // artefact, so a token change is visible without a rebuild step.
@@ -51,9 +46,12 @@ const config: NextConfig = {
       The media library's public bucket (Phase 13). `MEDIA_PUBLIC_BASE_URL` is
       the same value as the API's `R2_PUBLIC_BASE_URL`; unset, no remote image
       is allowed (as before), and library covers and gallery images cannot be
-      rendered by next/image. Read at BUILD time.
+      rendered by next/image. Read at BUILD time; validated (Phase 14) — one
+      exact host, no credentials, https in production — or the build fails.
     */
-    remotePatterns: mediaRemotePatterns(process.env.MEDIA_PUBLIC_BASE_URL),
+    remotePatterns: mediaRemotePatterns(process.env.MEDIA_PUBLIC_BASE_URL, {
+      production: isProductionDeployment,
+    }),
   },
 
   async headers() {

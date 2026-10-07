@@ -10,12 +10,7 @@ import { MediaFrame, MediaFigure } from '@/components/media/media-frame';
 import { EventRegistrationPanel } from '@/components/events/event-registration-panel';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { jsonLd } from '@/lib/seo/structured-data';
-import { getCampaign, getEvent, getEvents, getProgram } from '@/lib/content';
-
-export async function generateStaticParams() {
-  const events = [...(await getEvents('upcoming')), ...(await getEvents('past'))];
-  return events.map((event) => ({ slug: event.slug }));
-}
+import { getCampaign, getEvent, getProgram } from '@/lib/content';
 
 export async function generateMetadata({
   params,

@@ -1,0 +1,154 @@
+# Cloud Run service: sailent-api (Phase 14). A TEMPLATE — nothing here deploys.
+#
+# Fill the ${PLACEHOLDERS} (e.g. with `envsubst`) and apply BY HAND, with the
+# owner's approval:   gcloud run services replace api.service.yaml --region "$REGION"
+# DEPLOYMENT.md §12–§16 has the full procedure, the variable list and sizing.
+#
+# Secrets are NEVER written here: each one is a Secret Manager reference
+# (`secretKeyRef`), created and rotated by a human (DEPLOYMENT.md §16).
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: sailent-api
+  annotations:
+    # Public: the web server calls it, and so does Razorpay's webhook.
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: '1'
+        # Max instances × DATABASE_POOL_MAX must fit the Supabase pooler.
+        autoscaling.knative.dev/maxScale: '3'
+        run.googleapis.com/startup-cpu-boost: 'true'
+        run.googleapis.com/execution-environment: gen2
+        # Private path to Memorystore Redis (Direct VPC egress).
+        run.googleapis.com/network-interfaces: '[{"network":"${VPC_NETWORK}","subnetwork":"${VPC_SUBNET}"}]'
+        run.googleapis.com/vpc-access-egress: private-ranges-only
+    spec:
+      serviceAccountName: sailent-api@${PROJECT_ID}.iam.gserviceaccount.com
+      containerConcurrency: 40
+      # The admin CSV export (up to 50,000 rows) can take longer than a minute.
+      timeoutSeconds: 300
+      containers:
+        - image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/sailent/api:${IMAGE_TAG}
+          ports:
+            - name: http1
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: '1'
+              memory: 1Gi
+          env:
+            - name: APP_ENV
+              value: production
+            - name: NODE_ENV
+              value: production
+            - name: SWAGGER_ENABLED
+              value: 'false'
+            - name: FEATURE_MOCK_DATA
+              value: 'false'
+            - name: CORS_ORIGINS
+              value: ${SITE_URL}
+            - name: DATABASE_POOL_MAX
+              value: '10'
+            - name: R2_BUCKET_PUBLIC
+              value: ${R2_BUCKET_PUBLIC}
+            - name: R2_BUCKET_PRIVATE
+              value: ${R2_BUCKET_PRIVATE}
+            - name: R2_PUBLIC_BASE_URL
+              value: ${MEDIA_PUBLIC_BASE_URL}
+            - name: BREVO_SENDER_EMAIL
+              value: ${BREVO_SENDER_EMAIL}
+            - name: BREVO_SENDER_NAME
+              value: Sailent Foundation
+            - name: SENTRY_ENVIRONMENT
+              value: production
+            - name: SENTRY_RELEASE
+              value: ${IMAGE_TAG}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-database-url
+                  key: latest
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-redis-url
+                  key: latest
+            - name: JWT_ACCESS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-jwt-access-secret
+                  key: latest
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-jwt-refresh-secret
+                  key: latest
+            - name: INTERNAL_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-internal-api-secret
+                  key: latest
+            - name: FIELD_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-field-encryption-key
+                  key: latest
+            - name: RAZORPAY_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-razorpay-key-id
+                  key: latest
+            - name: RAZORPAY_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-razorpay-key-secret
+                  key: latest
+            - name: RAZORPAY_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-razorpay-webhook-secret
+                  key: latest
+            - name: R2_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-r2-account-id
+                  key: latest
+            - name: R2_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-r2-access-key-id
+                  key: latest
+            - name: R2_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-r2-secret-access-key
+                  key: latest
+            - name: BREVO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-brevo-api-key
+                  key: latest
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: sailent-sentry-dsn
+                  key: latest
+          # Startup: the database must answer before the revision takes traffic.
+          startupProbe:
+            httpGet:
+              path: /api/v1/health/ready
+              port: 8080
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          # Liveness: the process answers; never a dependency.
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3

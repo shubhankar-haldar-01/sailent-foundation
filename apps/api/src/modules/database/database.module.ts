@@ -1,4 +1,4 @@
-import { Global, Logger, Module, type OnModuleDestroy } from '@nestjs/common';
+import { Global, Inject, Logger, Module, type OnModuleDestroy } from '@nestjs/common';
 
 import {
   announceConnection,
@@ -60,9 +60,10 @@ export const DATABASE = Symbol('DATABASE');
            * shared. Supabase's session pooler allows far more client
            * connections than a direct one, but they are still finite and the
            * worker holds its own pool — two processes at 20 each is the number
-           * that matters, not 20.
+           * that matters, not 20. On Cloud Run multiply by the instance count
+           * (`DATABASE_POOL_MAX`, Phase 14; DEPLOYMENT.md §14).
            */
-          maxConnections: config.isProduction ? 20 : 5,
+          maxConnections: config.databasePoolMax,
           // Statement logging can contain PII, so it is development-only.
           logger: config.isDevelopment,
           insecureTls: config.env.DATABASE_INSECURE_TLS,
@@ -102,9 +103,15 @@ export const DATABASE = Symbol('DATABASE');
   exports: [DATABASE],
 })
 export class DatabaseModule implements OnModuleDestroy {
-  constructor() {}
+  constructor(@Inject(DATABASE) private readonly client: DatabaseClient) {}
 
+  /**
+   * Close the pool on shutdown (Phase 14). Cloud Run sends SIGTERM before it
+   * stops an instance; `enableShutdownHooks()` turns that into this call, so
+   * open connections are returned to the Supabase pooler instead of being
+   * cut. Until Phase 14 nothing closed the pool.
+   */
   async onModuleDestroy(): Promise<void> {
-    // The client is disposed by the Nest container via the provider below.
+    await this.client.close();
   }
 }

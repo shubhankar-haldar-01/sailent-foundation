@@ -13,11 +13,6 @@ import { jsonLd } from '@/lib/seo/structured-data';
 import { siteConfig } from '@/lib/site-config';
 import { getTeam, getTeamMember } from '@/lib/content';
 
-export async function generateStaticParams() {
-  const team = await getTeam();
-  return team.map((member) => ({ slug: member.slug }));
-}
-
 export async function generateMetadata({
   params,
 }: {

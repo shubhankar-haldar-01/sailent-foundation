@@ -1,0 +1,47 @@
+# Docker build context for the three production images (Phase 14).
+# Build from the repository root:  docker build -f apps/<service>/Dockerfile .
+#
+# NEVER IN AN IMAGE: environment files (secrets live in Secret Manager), local
+# build output (stale `dist/` with a matching `*.tsbuildinfo` makes tsc skip
+# emitting — the image must build from source), dependencies installed for
+# another OS, test output, git history, editor and agent state.
+
+# Secrets and local configuration
+.env
+.env.*
+**/.env
+**/.env.*
+*.pem
+*.key
+
+# Dependencies and build output (rebuilt inside the image)
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/*.tsbuildinfo
+**/coverage
+**/out
+
+# Tests and their output
+**/test-results
+**/playwright-report
+**/blob-report
+apps/web/e2e/.auth
+
+# Repository and tooling state
+.git
+.github
+.kilo
+.kilocode
+.claude
+.agents
+.playwright-cli
+.vscode
+.idea
+brag-output
+**/*.log
+package-lock.json
+
+# Documentation is not needed to run anything
+docs

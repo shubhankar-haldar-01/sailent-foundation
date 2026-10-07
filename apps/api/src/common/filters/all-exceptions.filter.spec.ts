@@ -1,5 +1,10 @@
 import { HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const reportError = vi.fn();
+vi.mock('../observability/error-reporting.js', () => ({
+  reportError: (...args: unknown[]) => reportError(...args),
+}));
 
 import { AllExceptionsFilter } from './all-exceptions.filter.js';
 import { NotFoundException, ValidationException } from '../exceptions.js';
@@ -94,5 +99,37 @@ describe('AllExceptionsFilter', () => {
     expect(status).toHaveBeenCalledWith(HttpStatus.FORBIDDEN);
     const body = json.mock.calls[0]?.[0] as { error: { code: string } };
     expect(body.error.code).toBe('FORBIDDEN');
+  });
+
+  /*
+    Phase 14: every 5xx — and only 5xx — goes to error tracking, tagged so it
+    can be matched to the log line; the query string never travels.
+  */
+  describe('error reporting', () => {
+    beforeEach(() => reportError.mockReset());
+
+    it('reports an unexpected error with the request id, method and path without query', () => {
+      const filter = new AllExceptionsFilter(true);
+      const { host } = createHost('req-500');
+      (host as unknown as { switchToHttp: () => { getRequest: () => Record<string, unknown> } })
+        .switchToHttp()
+        .getRequest().originalUrl = '/api/v1/me?token=abc';
+      const error = new Error('database exploded');
+
+      filter.catch(error, host);
+
+      expect(reportError).toHaveBeenCalledTimes(1);
+      const [reported, context] = reportError.mock.calls[0]!;
+      expect(reported).toBe(error);
+      expect(context.tags).toMatchObject({ requestId: 'req-500', method: 'GET', status: 500 });
+      expect(JSON.stringify(context)).not.toContain('token=abc');
+    });
+
+    it('does not report a 4xx — a refusal is not an incident', () => {
+      const filter = new AllExceptionsFilter(true);
+      filter.catch(new NotFoundException('Campaign'), createHost().host);
+      filter.catch(new ValidationException([]), createHost().host);
+      expect(reportError).not.toHaveBeenCalled();
+    });
   });
 });

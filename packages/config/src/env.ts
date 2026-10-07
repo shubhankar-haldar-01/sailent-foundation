@@ -37,13 +37,29 @@ function isFieldKey(value: string): boolean {
 }
 
 /** A public URL a production deployment may use: HTTPS and not a loopback host. */
-function isPublicHttpsUrl(value: string): boolean {
+export function isPublicHttpsUrl(value: string): boolean {
   try {
     const url = new URL(value);
     return (
       url.protocol === 'https:' &&
       !['localhost', '127.0.0.1', '[::1]', '0.0.0.0'].includes(url.hostname)
     );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A public base URL for media (Phase 14): https, not a loopback host, and
+ * nothing in it but scheme, host, optional port and path — no user name or
+ * password (a credential in a URL is printed into every image tag that uses
+ * it), no query string and no fragment.
+ */
+export function isSafePublicBaseUrl(value: string): boolean {
+  if (!isPublicHttpsUrl(value)) return false;
+  try {
+    const url = new URL(value);
+    return url.username === '' && url.password === '' && url.search === '' && url.hash === '';
   } catch {
     return false;
   }
@@ -63,6 +79,14 @@ function isPublicHttpsUrl(value: string): boolean {
  */
 const optional = <T extends z.ZodTypeAny>(schema: T) =>
   z.preprocess((value) => (value === '' ? undefined : value), schema.optional());
+
+/** Error tracking (Phase 14). Optional everywhere: unset, nothing is sent. */
+const sentrySchema = {
+  SENTRY_DSN: optional(z.string().url()),
+  SENTRY_ENVIRONMENT: optional(z.string().min(1)),
+  /** The deployed version (e.g. the image tag or commit), shown on each event. */
+  SENTRY_RELEASE: optional(z.string().min(1)),
+};
 
 /** Postgres URL. Rejects the Neon HTTP driver form — see decision A12. */
 const postgresUrl = z
@@ -108,7 +132,20 @@ export const apiEnvSchema = baseSchema
     REDIS_URL: redisUrl,
 
     API_PORT: port.default(4000),
+    /*
+      Cloud Run tells a container which port to listen on through `PORT`
+      (Phase 14). When it is set it wins over API_PORT; locally it is unset
+      and API_PORT (4000) applies.
+    */
+    PORT: optional(port),
     API_HOST: z.string().default('0.0.0.0'),
+    /*
+      Database connections per API instance (Phase 14). Default 20 in
+      production and 5 elsewhere. Every instance holds up to this many
+      Supabase session-pooler connections, so (max instances × this) must
+      stay inside the pooler's limit — DEPLOYMENT.md §14.
+    */
+    DATABASE_POOL_MAX: optional(z.coerce.number().int().min(1).max(100)),
     CORS_ORIGINS: z
       .string()
       .default('http://localhost:3000')
@@ -141,10 +178,7 @@ export const apiEnvSchema = baseSchema
           'FIELD_ENCRYPTION_KEY must be 32 bytes, as base64 or 64 hex characters',
         ),
     ),
-
-    SENTRY_DSN: optional(z.string()),
-    SENTRY_ENVIRONMENT: z.string().default('development'),
-    SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
+    ...sentrySchema,
 
     FEATURE_FCRA_ENABLED: booleanFromString.default(false),
     FEATURE_MOCK_DATA: booleanFromString.default(true),
@@ -312,6 +346,16 @@ export const apiEnvSchema = baseSchema
         message: 'FEATURE_MOCK_DATA must be false in production',
       });
     }
+
+    // Every public image URL starts with this (Phase 14).
+    if (env.R2_PUBLIC_BASE_URL && !isSafePublicBaseUrl(env.R2_PUBLIC_BASE_URL)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['R2_PUBLIC_BASE_URL'],
+        message:
+          'R2_PUBLIC_BASE_URL must be a public https:// URL with no credentials, query or fragment in production',
+      });
+    }
   });
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>;
@@ -331,8 +375,9 @@ export const workerEnvSchema = baseSchema
 
     WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(100).default(5),
     WORKER_PORT: port.default(4001),
-    SENTRY_DSN: optional(z.string()),
-    SENTRY_ENVIRONMENT: z.string().default('development'),
+    /* Cloud Run's port for the health server (Phase 14); wins over WORKER_PORT. */
+    PORT: optional(port),
+    ...sentrySchema,
 
     /*
       PAYMENT RECONCILIATION (Phase 11). The worker schedules it and calls the
@@ -385,7 +430,13 @@ export const webEnvSchema = baseSchema
     NEXT_PUBLIC_APP_NAME: z.string().default('Sailent Foundation'),
     /** Server-side only. The browser never calls the API directly (decision A1). */
     API_URL: z.string().url().default('http://localhost:4000'),
+    /*
+      Browser error capture is NOT wired (Phase 14 decision: it would need a
+      public DSN, a CSP change and a consent decision). Server-side errors use
+      SENTRY_DSN below.
+    */
     NEXT_PUBLIC_SENTRY_DSN: optional(z.string()),
+    ...sentrySchema,
     NEXT_PUBLIC_GA_MEASUREMENT_ID: optional(z.string()),
     FEATURE_MOCK_DATA: booleanFromString.default(true),
 
@@ -432,6 +483,13 @@ export const webEnvSchema = baseSchema
       issue(
         'NEXT_PUBLIC_APP_URL',
         'NEXT_PUBLIC_APP_URL must be a public https:// URL in production',
+      );
+    }
+    // Phase 14: the same rule as the API's R2_PUBLIC_BASE_URL.
+    if (env.MEDIA_PUBLIC_BASE_URL && !isSafePublicBaseUrl(env.MEDIA_PUBLIC_BASE_URL)) {
+      issue(
+        'MEDIA_PUBLIC_BASE_URL',
+        'MEDIA_PUBLIC_BASE_URL must be a public https:// URL with no credentials, query or fragment in production',
       );
     }
   });

@@ -6,7 +6,7 @@ import { phoneHref } from '@sailent/validation';
 
 import { demoOrg } from '@/lib/demo-org';
 
-import { loadContent, publicCache, fixturesEnabled } from './source';
+import { loadContent, publicCache, fixturesEnabled, requestTimeOnly } from './source';
 
 /**
  * The organisation's public details, from Admin → Settings (Phase 13).
@@ -169,6 +169,9 @@ export function toOrganisation(settings: ApiOrganisationSettings, useDemo: boole
  * failure the details are simply absent (and logged).
  */
 export const getOrganisation = cache(async (): Promise<Organisation> => {
+  // Outside the try: during `next build` this must bail the route out of
+  // prerendering, not be caught as a failure (Phase 14, see requestTimeOnly).
+  await requestTimeOnly();
   try {
     const settings = await loadContent<ApiOrganisationSettings>({
       label: 'organisation settings',

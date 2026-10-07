@@ -12,13 +12,15 @@ import { API_ERROR_CODE, type ApiError, type ApiErrorDetail } from '@sailent/typ
 
 import { AppException } from '../exceptions.js';
 import { REQUEST_ID } from '../middleware/request-id.middleware.js';
+import { reportError } from '../observability/error-reporting.js';
 
 /**
  * Global exception filter.
  *
  * Two rules govern everything here:
  *   1. Every error leaves as the same envelope, carrying the requestId that
- *      correlates to the logs, Sentry and the audit trail.
+ *      correlates to the logs, Sentry (5xx only, scrubbed — Phase 14) and the
+ *      audit trail.
  *   2. Internal detail NEVER reaches the client in production. A stack trace
  *      or a database message tells an attacker about our schema and tells a
  *      donor nothing useful.
@@ -53,6 +55,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
         },
         'Unhandled exception',
       );
+      // Phase 14: to Sentry when configured, scrubbed. Path only, no query.
+      reportError(exception, {
+        tags: {
+          requestId,
+          method: request.method,
+          route: (request.originalUrl ?? request.url).split('?')[0] ?? '',
+          status,
+          errorCode: code,
+        },
+      });
     } else {
       this.logger.warn(
         { requestId, method: request.method, path: request.url, status, code },

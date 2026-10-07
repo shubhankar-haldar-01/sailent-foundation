@@ -1,3 +1,5 @@
+import type { ErrorReporter } from '@sailent/config';
+
 /**
  * Web server startup checks (Phase 12).
  *
@@ -25,4 +27,46 @@ export async function register(): Promise<void> {
 
   const { loadEnv, webEnvSchema } = await import('@sailent/config');
   loadEnv(webEnvSchema, 'web');
+}
+
+/*
+  SERVER-SIDE ERROR TRACKING (Phase 14). Next.js calls this for every error
+  thrown while rendering a page, a route handler or a server action. It goes
+  to the same Sentry-compatible reporter as the API and worker
+  (`@sailent/config`), scrubbed, and only when SENTRY_DSN is set.
+
+  What is sent: the error, the route PATTERN (`/campaigns/[slug]`, never the
+  real path, which can carry a slug or a token), the method and the kind of
+  route. No headers, no body, no cookies, no search params.
+
+  Browser-side errors are NOT reported: that would need a public DSN in the
+  page, a CSP change and a consent decision (Phase 14 decision, DEPLOYMENT.md).
+*/
+let reporter: ErrorReporter | null = null;
+
+async function getReporter(): Promise<ErrorReporter> {
+  if (reporter) return reporter;
+  const { createErrorReporter } = await import('@sailent/config');
+  reporter = createErrorReporter({
+    dsn: process.env.SENTRY_DSN || undefined,
+    environment: process.env.SENTRY_ENVIRONMENT || process.env.APP_ENV || 'development',
+    release: process.env.SENTRY_RELEASE || undefined,
+    service: 'sailent-web',
+  });
+  return reporter;
+}
+
+export async function onRequestError(
+  error: unknown,
+  request: { method: string },
+  context: { routePath: string; routeType: string; routerKind?: string },
+): Promise<void> {
+  if (process.env.NEXT_RUNTIME !== 'nodejs') return;
+  try {
+    (await getReporter()).capture(error, {
+      tags: { route: context.routePath, method: request.method, routeType: context.routeType },
+    });
+  } catch {
+    // Reporting never becomes the failure.
+  }
 }

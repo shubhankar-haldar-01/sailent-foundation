@@ -1,6 +1,6 @@
 import pino from 'pino';
 
-import { type WorkerEnv } from '@sailent/config';
+import { cloudLoggingSeverity, type WorkerEnv } from '@sailent/config';
 
 export function createLogger(env: WorkerEnv) {
   return pino({
@@ -10,6 +10,17 @@ export function createLogger(env: WorkerEnv) {
         ? { target: 'pino-pretty', options: { singleLine: true, translateTime: 'HH:MM:ss' } }
         : undefined,
     base: { service: 'sailent-worker', environment: env.APP_ENV },
+    // Cloud Logging reads `severity` (Phase 14). Not with pino-pretty.
+    ...(env.APP_ENV === 'development'
+      ? {}
+      : {
+          formatters: {
+            level: (label: string, number: number) => ({
+              level: number,
+              severity: cloudLoggingSeverity(label),
+            }),
+          },
+        }),
     // Same redaction contract as the API: secrets and donor PII never reach a log.
     redact: {
       paths: [
@@ -21,6 +32,9 @@ export function createLogger(env: WorkerEnv) {
         '*.otp',
         '*.phone',
         '*.email',
+        '*.secret',
+        '*.confirmToken',
+        '*.unsubscribeToken',
       ],
       censor: '[redacted]',
     },
