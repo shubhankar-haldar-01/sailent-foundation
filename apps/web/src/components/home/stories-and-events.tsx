@@ -71,7 +71,7 @@ function EventRow({ event }: { event: SailentEvent }) {
         aria-hidden="true"
         className="bg-wash-amber text-foreground grid size-10 shrink-0 place-content-center rounded-lg text-center"
       >
-        <span data-numeric="" className="text-body block font-extrabold tabular-nums leading-none">
+        <span data-numeric="" className="text-body block font-bold tabular-nums leading-none">
           {date.toLocaleDateString('en-IN', { day: '2-digit' })}
         </span>
         <span className="text-caption mt-0.5 block font-bold uppercase leading-none">

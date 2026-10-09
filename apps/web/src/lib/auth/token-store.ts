@@ -4,6 +4,10 @@ import { cookies } from 'next/headers';
 
 import { API_PREFIX } from '@sailent/config';
 
+import { parseSession, sessionCookieOptions, type StoredSession } from './session-refresh';
+
+export type { StoredSession } from './session-refresh';
+
 /**
  * One httpOnly session cookie, and the refresh that keeps it alive.
  *
@@ -31,14 +35,6 @@ import { API_PREFIX } from '@sailent/config';
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:4000';
 
-export interface StoredSession<TActor> {
-  accessToken: string;
-  refreshToken: string;
-  /** Epoch ms. Used to refresh slightly early rather than on a 401. */
-  expiresAt: number;
-  actor: TActor;
-}
-
 export interface SessionStore<TActor> {
   read(): Promise<StoredSession<TActor> | null>;
   write(session: StoredSession<TActor>): Promise<void>;
@@ -53,32 +49,36 @@ export function createSessionStore<TActor>(options: {
   /** Seconds. Match the audience's refresh-token lifetime. */
   maxAgeSeconds: number;
 }): SessionStore<TActor> {
-  async function read(): Promise<StoredSession<TActor> | null> {
-    const raw = (await cookies()).get(options.cookieName)?.value;
-    if (!raw) return null;
+  async function readRaw(): Promise<string | undefined> {
+    return (await cookies()).get(options.cookieName)?.value;
+  }
 
-    try {
-      const parsed = JSON.parse(raw) as StoredSession<TActor>;
-      return parsed.accessToken && parsed.refreshToken ? parsed : null;
-    } catch {
-      // A malformed cookie is a signed-out user, not a crash.
-      return null;
-    }
+  async function read(): Promise<StoredSession<TActor> | null> {
+    // A malformed cookie is a signed-out user, not a crash.
+    return parseSession<TActor>(await readRaw());
   }
 
   async function write(session: StoredSession<TActor>): Promise<void> {
-    (await cookies()).set(options.cookieName, JSON.stringify(session), {
-      httpOnly: true,
-      // Lax, not Strict: Strict would drop the cookie when someone follows a
-      // link from an email, which looks exactly like being logged out. Lax
-      // still blocks the cross-site POSTs that CSRF depends on.
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      // A cookie outliving the session it points at just produces confusing
-      // 401s, so this matches the refresh-token lifetime.
-      maxAge: options.maxAgeSeconds,
-    });
+    // The same attributes the middleware writes (`sessionCookieOptions`).
+    (await cookies()).set(
+      options.cookieName,
+      JSON.stringify(session),
+      sessionCookieOptions(options.maxAgeSeconds),
+    );
+  }
+
+  /**
+   * Can this code save a cookie? Only a server action or a route handler can;
+   * during a page render `cookies().set` throws. Asked by re-setting the
+   * cookie to the value it already has, which changes nothing where it works.
+   */
+  async function canSaveCookie(raw: string): Promise<boolean> {
+    try {
+      (await cookies()).set(options.cookieName, raw, sessionCookieOptions(options.maxAgeSeconds));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async function clear(): Promise<void> {
@@ -125,10 +125,25 @@ export function createSessionStore<TActor>(options: {
   const inFlight = new Map<string, Promise<string | null>>();
 
   async function accessToken(): Promise<string | null> {
-    const session = await read();
-    if (!session) return null;
+    const raw = await readRaw();
+    const session = parseSession<TActor>(raw);
+    if (!raw || !session) return null;
 
     if (Date.now() < session.expiresAt - 60_000) return session.accessToken;
+
+    /*
+      NEVER ROTATE A TOKEN THAT CANNOT BE SAVED (2026-10-09).
+
+      In a page render the new cookie cannot be written. Rotating anyway spends
+      the old refresh token and loses the new one, and the next request's
+      replay of the spent token revokes the whole session — which signed donors
+      out about fifteen minutes into every visit. The middleware refreshes two
+      minutes early, before any render, so a render only gets here if that
+      failed; it then uses the token while it lasts and never calls the API.
+    */
+    if (!(await canSaveCookie(raw))) {
+      return Date.now() < session.expiresAt ? session.accessToken : null;
+    }
 
     // Someone is already rotating THIS token. Wait for their result.
     const existing = inFlight.get(session.refreshToken);
@@ -164,13 +179,15 @@ export function createSessionStore<TActor>(options: {
         };
       };
 
+      const previous = (await read())?.actor;
       const refreshed: StoredSession<TActor> = {
         accessToken: body.data.accessToken,
         refreshToken: body.data.refreshToken,
         expiresAt: Date.now() + body.data.expiresIn * 1000,
         // The actor is re-read on every refresh, so a permission change takes
-        // effect without signing out.
-        actor: body.data.actor,
+        // effect without signing out; anything the API does not send (the
+        // donor's display name, stored at sign-in) is kept.
+        actor: { ...previous, ...body.data.actor } as TActor,
       };
 
       await write(refreshed);

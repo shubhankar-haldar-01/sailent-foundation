@@ -153,7 +153,7 @@ export function HeroSection({ metrics }: { metrics: ImpactMetric[] }) {
               onto its own line. Below `sm` the blocks are allowed to wrap
               normally, because forcing these breaks at 320px overflows.
             */}
-            <h1 className="font-display text-display-hero tracking-(--text-display-hero--letter-spacing) mt-2.5 text-balance font-extrabold sm:text-pretty">
+            <h1 className="font-display text-display-hero tracking-(--text-display-hero--letter-spacing) mt-2.5 text-balance font-bold sm:text-pretty">
               <span className="sm:block">Sailent Foundation</span>{' '}
               <span className="sm:block">Empowering People,</span>{' '}
               {/* Colour, not meaning — the sentence reads the same without it. */}

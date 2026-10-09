@@ -62,7 +62,7 @@ export default async function FaqPage() {
               aria-label="FAQ categories"
               className="lg:sticky lg:top-24 lg:col-span-3 lg:self-start"
             >
-              <h2 className="text-overline tracking-(--text-overline--letter-spacing) text-muted-foreground uppercase">
+              <h2 className="text-overline tracking-(--text-overline--letter-spacing) text-muted-foreground font-sans uppercase">
                 Categories
               </h2>
               <ul className="mt-3 space-y-1">
@@ -91,7 +91,7 @@ export default async function FaqPage() {
 
                 return (
                   <section key={category.id} id={category.id} className="scroll-mt-24">
-                    <h2 className="text-h2 font-semibold">{category.label}</h2>
+                    <h2 className="text-h2 font-bold">{category.label}</h2>
                     <p className="text-body-sm text-muted-foreground mt-1">
                       {category.description}
                     </p>

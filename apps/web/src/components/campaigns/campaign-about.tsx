@@ -150,7 +150,7 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
               <p className="text-muted-foreground text-body-sm">To raise</p>
               <p
                 data-numeric=""
-                className="text-h2 text-foreground font-extrabold tabular-nums leading-tight tracking-tight"
+                className="text-h2 text-foreground font-bold tabular-nums leading-tight tracking-tight"
               >
                 {formatCurrency(campaign.goalAmount)}
               </p>
@@ -178,7 +178,7 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
                   <p className="leading-tight">
                     <span
                       data-numeric=""
-                      className="text-h2 text-wash-violet-ink font-extrabold tabular-nums tracking-tight"
+                      className="text-h2 text-wash-violet-ink font-bold tabular-nums tracking-tight"
                     >
                       {formatNumber(reached)}
                     </span>{' '}
@@ -330,7 +330,7 @@ function AboutCard({
         >
           <Icon className="size-5" />
         </span>
-        <h3 id={id} className="text-h4 font-extrabold leading-tight tracking-tight">
+        <h3 id={id} className="text-h4 font-bold leading-tight tracking-tight">
           {title}
         </h3>
       </div>

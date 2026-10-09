@@ -69,7 +69,7 @@ export default async function ImpactPage() {
         <PageShell>
           <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
             <div className="lg:col-span-4">
-              <h2 className="text-h1 text-balance font-semibold">How we count</h2>
+              <h2 className="text-h1 text-balance font-bold">How we count</h2>
               <p className="text-body text-muted-foreground mt-4">
                 Most impact pages present a number without saying where it came from. These are the
                 rules we apply, including what we deliberately leave out.
@@ -91,7 +91,7 @@ export default async function ImpactPage() {
 
       <Section>
         <PageShell>
-          <h2 className="text-h1 font-semibold">Geographic reach</h2>
+          <h2 className="text-h1 font-bold">Geographic reach</h2>
           <StatBand metrics={reachMetrics} size="sm" className="mt-8" />
 
           {/* Focusable so the scroll region is reachable by keyboard. */}
@@ -144,7 +144,7 @@ export default async function ImpactPage() {
 
       <Section className="border-border bg-surface-sunken border-t">
         <PageShell>
-          <h2 className="text-h1 font-semibold">By program</h2>
+          <h2 className="text-h1 font-bold">By program</h2>
           <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {programs.map((program) => (
               <li key={program.slug}>
@@ -185,7 +185,7 @@ export default async function ImpactPage() {
 
       <Section>
         <PageShell>
-          <h2 className="text-h1 font-semibold">Dated updates from the field</h2>
+          <h2 className="text-h1 font-bold">Dated updates from the field</h2>
           {/*
             Rendered rather than hidden when there is nothing.
 
@@ -268,7 +268,7 @@ export default async function ImpactPage() {
       <Section className="border-border bg-surface-sunken border-t">
         <PageShell>
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="text-h1 font-semibold">What this looks like for one person</h2>
+            <h2 className="text-h1 font-bold">What this looks like for one person</h2>
             <Button asChild variant="secondary">
               <Link href="/stories">All stories</Link>
             </Button>
@@ -290,7 +290,7 @@ export default async function ImpactPage() {
               went with it rather than being left pointing at a 404. What the
               page can still honestly offer is the work behind the figures.
             */}
-            <h2 className="text-h1 text-balance font-semibold">See the work behind the figures</h2>
+            <h2 className="text-h1 text-balance font-bold">See the work behind the figures</h2>
             <p className="text-body-lg text-muted-foreground mx-auto mt-3 max-w-prose">
               Every number here comes from a programme running on the ground. Read what they do, or
               ask us anything you want to check.

@@ -96,7 +96,7 @@ export default async function ImpactRecordPage({ params }: { params: Promise<{ s
               </Link>
             ) : null}
 
-            <h1 className="text-display mt-3 text-balance font-semibold">{record.title}</h1>
+            <h1 className="text-display mt-3 text-balance font-bold">{record.title}</h1>
 
             <p className="text-caption text-muted-foreground mt-5 flex flex-wrap items-center gap-x-4 gap-y-1">
               <span className="flex items-center gap-1.5">

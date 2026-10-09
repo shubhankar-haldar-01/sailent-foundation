@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button, Skeleton, cn, formatCurrency, formatNumber, percentOf } from '@sailent/ui';
 
 import { SaveCampaignHeart } from '@/components/dashboard/save-campaign-button';
-import { categoryTone } from '@/components/home/category-icon';
+import { CategoryIcon, categoryTone } from '@/components/home/category-icon';
 import { CoinsSolid, PeopleSolid, TargetSolid } from '@/components/home/focus-icons';
 import {
   CAMPAIGN_STATE_NAMES,
@@ -78,27 +78,29 @@ export function CampaignCard({
   return (
     <article
       className={cn(
-        'border-border bg-surface group relative flex flex-col rounded-2xl border shadow-sm',
+        // `@container`: the figures size themselves to the card, not the screen.
+        'bg-surface @container group relative flex flex-col rounded-2xl shadow-[0_8px_28px_-14px_rgb(15_23_42/0.22)]',
+        'border-border/50 dark:border-border border',
         /*
           Lifts on hover AND when anything inside it has keyboard focus, so a
           keyboard user sees which card they are in as clearly as a pointer
           user does. Movement only when the reader has not asked for less;
-          the deeper shadow and firmer border carry the state either way.
+          the deeper shadow carries the state either way.
         */
         'duration-(--duration-slow) ease-(--ease-out-soft) transition-[translate,box-shadow,border-color]',
-        'hover:border-border-strong focus-within:border-border-strong focus-within:shadow-lg hover:shadow-lg',
+        'focus-within:shadow-lg hover:shadow-lg',
         'motion-safe:focus-within:-translate-y-1.5 motion-safe:hover:-translate-y-1.5',
         className,
       )}
     >
       <div className="relative">
         {/*
-          `overflow-hidden` on this wrapper, not the card, so the hover zoom
-          stays inside the rounded top corners without also clipping the focus
-          ring of everything else on the card.
+          The photograph is rounded at all four corners (owner's card design,
+          2026-10-08). `overflow-hidden` here, not on the card, so the hover
+          zoom stays inside the corners without clipping any focus ring.
+          A soft shade rises from its foot on hover, for depth.
         */}
-        {/* A soft shade rises from the foot of the photograph on hover, for depth. */}
-        <div className="duration-(--duration-slow) relative overflow-hidden rounded-t-2xl after:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-t after:from-black/25 after:to-transparent after:opacity-0 after:transition-opacity group-hover:after:opacity-100">
+        <div className="duration-(--duration-slow) relative overflow-hidden rounded-2xl after:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-t after:from-black/25 after:to-transparent after:opacity-0 after:transition-opacity group-hover:after:opacity-100">
           <MediaFrame
             media={campaign.cover}
             aspect="video"
@@ -110,22 +112,19 @@ export function CampaignCard({
 
         {state && stateBadge ? (
           /*
-            The same mark and colour as the matching choice in the "Show"
-            menu, on a solid white pill so it reads over any photograph. The
-            word is always there — the colour is never the only signal.
+            A filled pill in the state's own wash and ink — the same mark and
+            colour as the matching choice in the "Show" menu. The wash is
+            opaque, so it reads over any photograph, and the word is always
+            there: the colour is never the only signal.
           */
           <p
             className={cn(
-              'bg-surface text-caption absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full py-1 pl-1 pr-2.5 font-bold leading-none shadow-sm',
+              'absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8125rem] font-bold leading-none shadow-sm',
+              stateBadge.wash,
               stateBadge.ink,
             )}
           >
-            <span
-              aria-hidden="true"
-              className={cn('grid size-5 place-items-center rounded-full', stateBadge.wash)}
-            >
-              <stateBadge.icon className="size-3" />
-            </span>
+            <stateBadge.icon className="size-4" aria-hidden="true" />
             <span className="sr-only">Status: </span>
             {CAMPAIGN_STATE_NAMES[state]}
           </p>
@@ -145,36 +144,34 @@ export function CampaignCard({
 
         {campaign.category ? (
           /*
-            On a white backing so the wash is a known colour whatever the
-            photograph does underneath — the ink is measured against wash over
-            white, and clears 4.5:1 there.
+            The category's icon and name in its own ink, on its wash over a
+            white backing, so the colours are known whatever the photograph
+            does underneath — the ink is measured against wash over white.
           */
-          <span className="bg-surface absolute bottom-2.5 left-3 rounded-full shadow-sm">
+          <span className="bg-surface absolute bottom-4 left-3 rounded-full shadow-sm">
             <span
               className={cn(
-                'text-caption block rounded-full px-2.5 py-0.5 font-bold leading-snug',
+                'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8125rem] font-bold leading-none',
+                // The 60% wash over white, not the full wash: at full strength
+                // the blue and gold inks fall to 4.36:1 and 4.24:1.
                 tone.chip,
               )}
             >
+              <CategoryIcon category={campaign.category} className="size-4" />
               {campaign.category}
             </span>
           </span>
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col px-4 pb-3.5 pt-3.5">
         {/*
-          DM Sans Bold, 14px on a 21px line — the approved card title, matched
-          against the reference by line width and letterforms. The site's body
-          face, set explicitly: headings default to the display face.
-
-          `text-wrap`, not the base layer's `balance`: balancing evens the two
-          lines out, so a title broke halfway across the card and left the
-          right of it empty. Ordinary wrapping fills each line, and anything
-          past two lines ends in an ellipsis rather than pushing the figures
-          down.
+          The display face, large, as the owner's card design sets it. Ordinary
+          wrapping rather than the base layer's `balance` (which evens two lines
+          out and leaves the right of the card empty), and anything past two
+          lines ends in an ellipsis rather than pushing the figures down.
         */}
-        <h3 className="text-body-sm text-wrap font-sans font-bold leading-normal [&>a]:line-clamp-2">
+        <h3 className="font-display text-wrap text-[1.125rem] font-bold leading-snug tracking-[-0.01em] [&>a]:line-clamp-2">
           <Link
             href={detailHref}
             className="hover:text-info-action focus-visible:outline-ring rounded-sm after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -189,55 +186,71 @@ export function CampaignCard({
           the row lands on the same line however long each title runs — the bar
           is what a reader compares ACROSS cards.
         */}
-        <div className="mt-auto pt-4">
-          <dl className="flex items-start justify-between gap-2">
+        <div className="mt-auto pt-3.5">
+          {/*
+            Equal columns, each figure centred in its own, with the dividers
+            between them (owner request, 2026-10-08: smaller, evenly aligned).
+            Without a donor count the two remaining figures share the row.
+          */}
+          <dl
+            className={cn(
+              'grid items-stretch gap-x-1.5',
+              campaign.donorCount >= 5
+                ? 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]'
+                : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]',
+            )}
+          >
             {campaign.donorCount >= 5 ? (
-              <Figure
-                label="Donors"
-                value={formatNumber(campaign.donorCount)}
-                icon={PeopleSolid}
-                iconClassName="text-wash-rose-ink size-5"
-              />
+              <>
+                <Figure
+                  label="Donors"
+                  value={formatNumber(campaign.donorCount)}
+                  icon={PeopleSolid}
+                  iconClassName="text-wash-coral-ink"
+                  discClassName="bg-wash-coral"
+                />
+                <FigureDivider />
+              </>
             ) : null}
             <Figure
               label="Raised"
               value={formatCurrency(raised)}
               valueClassName="text-success"
               icon={CoinsSolid}
-              iconClassName="text-success size-5"
-              align={campaign.donorCount >= 5 ? 'center' : 'start'}
+              iconClassName="text-success"
+              discClassName="bg-wash-mint"
             />
+            <FigureDivider />
             <Figure
               label="Goal"
               value={formatCurrency(goal)}
               icon={TargetSolid}
-              iconClassName="text-wash-rose-ink size-[1.125rem]"
-              align="end"
+              iconClassName="text-wash-coral-ink"
+              discClassName="bg-wash-coral"
             />
           </dl>
 
           {goal > 0 ? (
             <>
               {/*
-                Drawn in the category's own colour — the same ink as the label
-                on the photograph — so a row of cards reads cause by cause. The
-                percentage beside it carries the meaning; the hue is a cue.
+                The brand orange, as the owner's card design draws it. The
+                percentage beside it carries the meaning; the bar is the cue.
               */}
               <div
                 role="img"
                 aria-label={`${percent}% of the ${formatCurrency(goal)} goal raised`}
-                className="bg-muted mt-3 h-2 overflow-hidden rounded-full"
+                className="bg-muted mt-3.5 h-2.5 overflow-hidden rounded-full"
               >
                 <span
                   aria-hidden="true"
                   // Grows from empty to its value as the card lands.
-                  className={cn('fill-in block h-full rounded-full', tone.fill)}
+                  className="fill-in bg-primary block h-full rounded-full"
                   style={{ width: `${barWidth}%` }}
                 />
               </div>
-              <p className="text-caption text-muted-foreground mt-1.5 flex items-baseline justify-between gap-3">
+              <p className="text-muted-foreground mt-1.5 flex items-baseline justify-between gap-3 text-[0.8125rem]">
                 <span data-numeric="">
-                  <span className={cn('font-bold', tone.ink)}>{percent}%</span> Complete
+                  <span className="text-primary font-bold">{percent}%</span> Complete
                 </span>
                 <span data-numeric="">
                   {percent >= 100 ? 'Goal reached' : `${100 - percent}% to go`}
@@ -247,9 +260,13 @@ export function CampaignCard({
           ) : null}
 
           {/* z-10 lifts the action above the card-wide overlay link. */}
-          <div className="relative z-10 mt-4">
+          <div className="relative z-10 -mx-1 mt-3">
             {isOpen ? (
-              <Button asChild fullWidth className={cn('h-10 font-bold', CTA_MOTION)}>
+              <Button
+                asChild
+                fullWidth
+                className={cn('h-10 text-[0.875rem] font-bold', CTA_MOTION)}
+              >
                 <Link href={`${detailHref}#give`}>
                   Donate Now
                   <ArrowRight aria-hidden="true" className={CTA_ARROW} />
@@ -260,7 +277,7 @@ export function CampaignCard({
                 asChild
                 variant="secondary"
                 fullWidth
-                className={cn('h-10 font-bold', CTA_MOTION)}
+                className={cn('h-10 text-[0.875rem] font-bold', CTA_MOTION)}
               >
                 <Link href={detailHref}>
                   {campaign.status === 'completed' ? 'See What Happened' : 'View Campaign'}
@@ -276,13 +293,12 @@ export function CampaignCard({
 }
 
 /**
- * Icon and value over label, visually; label first in the DOM, so a screen
- * reader says "Raised, ₹4,67,400" rather than a bare amount followed by what
- * it was. The icon is decorative — the label already names the figure.
+ * One figure, stacked and centred: a tinted disc with the icon, the value,
+ * then the label (owner's card design, 2026-10-08).
  *
- * Label placement follows the approved card: at the start it sits under the
- * icon's centre, in the middle it is centred under icon and value together,
- * and at the end it lines up with the value's last digit.
+ * The label comes FIRST in the DOM — `order` puts it last on screen — so a
+ * screen reader says "Raised, ₹4,67,400" rather than a bare amount followed by
+ * what it was. The icon is decorative: the label already names the figure.
  */
 function Figure({
   label,
@@ -290,47 +306,33 @@ function Figure({
   valueClassName,
   icon: Icon,
   iconClassName,
-  align = 'start',
+  discClassName,
 }: {
   label: string;
   value: string;
   valueClassName?: string;
   icon: typeof PeopleSolid;
   iconClassName?: string;
-  align?: 'start' | 'center' | 'end';
+  discClassName?: string;
 }) {
   return (
-    <div
-      className={cn(
-        'flex min-w-0 flex-col-reverse',
-        align === 'center' && 'text-center',
-        align === 'end' && 'text-right',
-      )}
-    >
-      <dt
-        className={cn(
-          'text-caption text-muted-foreground leading-tight',
-          align === 'start' && 'pl-2.5',
-        )}
-      >
-        {label}
-      </dt>
-      <dd
-        className={cn(
-          'flex items-center gap-1.5',
-          align === 'center' && 'justify-center',
-          align === 'end' && 'justify-end',
-        )}
-      >
+    <div className="flex min-w-0 flex-col items-center text-center">
+      <dt className="text-muted-foreground order-last text-[0.6875rem] leading-tight">{label}</dt>
+      <dd className="flex flex-col items-center">
         {/* Each mark pops a little when the card is hovered. */}
-        <Icon
+        <span
           aria-hidden="true"
-          className={cn('hover-pop motion-safe:group-hover:scale-115 shrink-0', iconClassName)}
-        />
+          className={cn(
+            'hover-pop motion-safe:group-hover:scale-115 grid size-[1.375rem] place-items-center rounded-full',
+            discClassName,
+          )}
+        >
+          <Icon aria-hidden="true" className={cn('size-3', iconClassName)} />
+        </span>
         <span
           data-numeric=""
           className={cn(
-            'text-body-sm whitespace-nowrap font-bold tabular-nums leading-snug',
+            'text-foreground @[20rem]:text-[0.8125rem] mt-1 whitespace-nowrap text-[0.75rem] font-bold tabular-nums leading-snug',
             valueClassName,
           )}
         >
@@ -341,6 +343,11 @@ function Figure({
   );
 }
 
+/** The rule between two figures — decoration, so hidden from assistive tech. */
+function FigureDivider() {
+  return <div role="none" aria-hidden="true" className="bg-border/80 my-1 w-px shrink-0" />;
+}
+
 /**
  * The card's loading shape, block for block.
  *
@@ -349,24 +356,28 @@ function Figure({
  */
 export function CampaignCardSkeleton() {
   return (
-    <div className="border-border bg-surface flex w-full flex-col rounded-2xl border shadow-sm">
+    <div className="border-border/50 bg-surface flex w-full flex-col rounded-2xl border shadow-sm">
       <div className="relative">
-        <Skeleton className="aspect-[2/1] w-full rounded-none rounded-t-2xl" />
-        <Skeleton className="bg-surface absolute bottom-2.5 left-3 h-5 w-20 rounded-full" />
+        <Skeleton className="aspect-[2/1] w-full rounded-2xl" />
+        <Skeleton className="bg-surface absolute bottom-4 left-3 h-7 w-28 rounded-full" />
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <Skeleton className="h-5 w-4/5" />
-        <div className="mt-6 flex justify-between gap-2">
-          <Skeleton className="h-9 w-12" />
-          <Skeleton className="h-9 w-16" />
-          <Skeleton className="h-9 w-16" />
+      <div className="flex flex-1 flex-col px-4 pb-3.5 pt-3.5">
+        <Skeleton className="h-6 w-4/5" />
+        <div className="mt-6 grid grid-cols-3 gap-2">
+          {[0, 1, 2].map((key) => (
+            <div key={key} className="flex flex-col items-center gap-1.5">
+              <Skeleton className="size-[1.375rem] rounded-full" />
+              <Skeleton className="h-4 w-14" />
+              <Skeleton className="h-3 w-10" />
+            </div>
+          ))}
         </div>
-        <Skeleton className="mt-3 h-2 w-full rounded-full" />
+        <Skeleton className="mt-5 h-2.5 w-full rounded-full" />
         <div className="mt-2 flex justify-between">
-          <Skeleton className="h-3.5 w-24" />
-          <Skeleton className="h-3.5 w-16" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-16" />
         </div>
-        <Skeleton className="mt-4 h-10 w-full rounded-full" />
+        <Skeleton className="-mx-1 mt-3 h-10 rounded-full" />
       </div>
     </div>
   );

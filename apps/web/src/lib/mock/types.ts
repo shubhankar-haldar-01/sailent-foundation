@@ -58,6 +58,11 @@ export interface Program extends Omit<ProgramCardModel, 'coverImage'> {
   /** Demo metrics — rendered with a demo marker, never as verified fact. */
   metrics: { label: string; value: number; unit?: string }[];
   accentIcon: 'book' | 'heart' | 'shield' | 'sprout' | 'briefcase' | 'leaf' | 'paw';
+  /**
+   * The programme's area, as the CMS names it — "Women Empowerment". The
+   * programs listing builds its filter from these. Null when none is set.
+   */
+  category?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -154,6 +159,11 @@ export interface Campaign extends Omit<CampaignCardModel, 'coverImage'> {
 
 export interface Story extends Omit<StoryCardModel, 'coverImage'> {
   cover: MediaRef;
+  /**
+   * The story's category — its own, or its programme's when it has none
+   * (the API resolves this). Absent on the fixtures.
+   */
+  category?: string | null;
   /** The five-part structure Phase 0 specifies for success stories. */
   challenge: string;
   intervention: string;

@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { DONOR_SESSION } from './session-refresh';
 import { createSessionStore, type StoredSession } from './token-store';
 
 /**
@@ -55,10 +56,7 @@ export interface DonorActor {
 
 export type DonorSession = StoredSession<DonorActor>;
 
-const store = createSessionStore<DonorActor>({
-  cookieName: 'sailent_donor_session',
-  maxAgeSeconds: 30 * 24 * 60 * 60,
-});
+const store = createSessionStore<DonorActor>(DONOR_SESSION);
 
 export const readDonorSession = store.read;
 export const writeDonorSession = store.write;

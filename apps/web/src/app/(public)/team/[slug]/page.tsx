@@ -166,7 +166,7 @@ export default async function TeamMemberPage({ params }: { params: Promise<{ slu
           </div>
 
           <div className="prose-measure">
-            <h1 className="text-display text-balance font-semibold">{member.name}</h1>
+            <h1 className="text-display text-balance font-bold">{member.name}</h1>
             <p className="text-body-lg text-primary mt-2 font-medium">{member.designation}</p>
             {member.department ? (
               <p className="text-caption text-muted-foreground mt-1">{member.department}</p>

@@ -133,7 +133,7 @@ export function ImpactStats({ metrics }: { metrics: ImpactMetric[] }) {
                   <span className="min-w-0">
                     <span
                       data-numeric=""
-                      className="font-display text-h4 lg:text-h3 block font-extrabold tabular-nums leading-none"
+                      className="font-display text-h4 lg:text-h3 block font-bold tabular-nums leading-none"
                     >
                       {formatNumber(metric.value)}
                       {metric.unit ? (

@@ -50,6 +50,7 @@ function toStory(row: ApiStorySummary | ApiStoryDetail): Story {
      */
     subjectName: row.subjectName ?? null,
     location: row.location,
+    category: row.category,
     programName: detail.programTitle ?? null,
     publishedAt: row.publishedAt,
     cover: toMedia(row.coverImage, `story-${row.slug}`, row.title),
@@ -101,12 +102,19 @@ export async function getStories(): Promise<Story[]> {
  */
 export async function getStoriesPage(
   page = 1,
+  options: { category?: string; limit?: number } = {},
 ): Promise<{ stories: Story[]; page: number; totalPages: number; total: number }> {
+  const limit = options.limit ?? 12;
   return loadContent({
-    label: `stories?page=${page}`,
+    label: `stories?page=${page}&limit=${limit}&category=${options.category ?? ''}`,
     fromApi: async (api) => {
       const result = await api.get<Paginated<ApiStorySummary>>('stories', {
-        query: { page, limit: 12, sort: '-publishedAt' },
+        query: {
+          page,
+          limit,
+          sort: '-publishedAt',
+          ...(options.category ? { category: options.category } : {}),
+        },
         ...publicCache('stories'),
       });
       return {
@@ -149,6 +157,24 @@ export async function getStory(slug: string): Promise<Story | null> {
  * story — a defensible rule rather than an arbitrary one, and it means the
  * page always has a lead without an editor having to remember to set a flag.
  */
+/**
+ * The categories that published stories are filed under, for the listing's
+ * filter — only ones with at least one story, so no filter leads to an empty
+ * page. Ordered as `order` lists them (the programmes' display order), then
+ * alphabetically for any category no programme carries.
+ */
+export async function getStoryCategories(order: string[] = []): Promise<string[]> {
+  const stories = await getStories();
+  const present = [
+    ...new Set(stories.map((story) => story.category).filter((c): c is string => Boolean(c))),
+  ];
+  const rank = (category: string) => {
+    const index = order.findIndex((name) => name.toLowerCase() === category.toLowerCase());
+    return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+  };
+  return present.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+}
+
 export async function getFeaturedStory(): Promise<Story | undefined> {
   const stories = await getStories();
   return stories[0];

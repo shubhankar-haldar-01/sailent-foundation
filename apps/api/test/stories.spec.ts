@@ -299,6 +299,71 @@ describe('Success stories (integration)', () => {
   });
 
   // =========================================================================
+  describe('the public API — category (owner decision, 2026-10-08)', () => {
+    /** A programme with a category, to file stories under. */
+    async function programmeWithCategory() {
+      const result = await db().execute(
+        sql`SELECT id, category FROM programs WHERE category IS NOT NULL AND deleted_at IS NULL LIMIT 1`,
+      );
+      const row = result.rows?.[0] as { id: string; category: string } | undefined;
+      if (!row) throw new Error('The test database has no programme with a category.');
+      return row;
+    }
+
+    async function published(overrides: Record<string, unknown>) {
+      const story = await draft(overrides);
+      const { id, slug } = (story.body as Envelope<{ id: string; slug: string }>).data!;
+      expect((await setStatus(id, 'published')).status).toBe(200);
+      return slug;
+    }
+
+    type Item = { slug: string; category: string | null };
+    async function list(query: string) {
+      const response = await request(server).get(`${PREFIX}/stories?limit=100&${query}`);
+      expect(response.status).toBe(200);
+      return (response.body as Envelope<{ items: Item[] }>).data!.items;
+    }
+
+    it("takes the programme's category when the story has none", async () => {
+      const programme = await programmeWithCategory();
+      const slug = await published({ programId: programme.id });
+
+      const all = await list('');
+      expect(all.find((item) => item.slug === slug)?.category).toBe(programme.category);
+
+      const filtered = await list(`category=${encodeURIComponent(programme.category)}`);
+      expect(filtered.map((item) => item.slug)).toContain(slug);
+      expect(filtered.every((item) => item.category === programme.category)).toBe(true);
+    });
+
+    it("prefers the story's own category, and files it ONLY there", async () => {
+      const programme = await programmeWithCategory();
+      const own = `Own ${STAMP}`;
+      const slug = await published({ programId: programme.id, category: own });
+
+      expect((await list(`category=${encodeURIComponent(own)}`)).map((i) => i.slug)).toEqual([
+        slug,
+      ]);
+      const underProgramme = await list(`category=${encodeURIComponent(programme.category)}`);
+      expect(underProgramme.map((item) => item.slug)).not.toContain(slug);
+    });
+
+    it('matches the category without regard to case', async () => {
+      const own = `Case ${STAMP}`;
+      const slug = await published({ category: own });
+      const filtered = await list(`category=${encodeURIComponent(own.toUpperCase())}`);
+      expect(filtered.map((item) => item.slug)).toEqual([slug]);
+    });
+
+    it('returns nothing for a category no story has, and refuses an absurd one', async () => {
+      expect(await list(`category=${encodeURIComponent(`Nothing ${STAMP}`)}`)).toEqual([]);
+      const tooLong = await request(server).get(`${PREFIX}/stories?category=${'x'.repeat(81)}`);
+      // 422, the API's status for a query that fails validation.
+      expect(tooLong.status).toBe(422);
+    });
+  });
+
+  // =========================================================================
   describe('the public API', () => {
     it('does NOT list a draft', async () => {
       const story = await draft();

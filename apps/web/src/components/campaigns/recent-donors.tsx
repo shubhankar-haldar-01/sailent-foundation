@@ -179,7 +179,7 @@ export function RecentDonors({ donors }: { donors: CampaignDonor[] }) {
 
             <span
               data-numeric=""
-              className="text-body text-success shrink-0 font-extrabold tabular-nums"
+              className="text-body text-success shrink-0 font-bold tabular-nums"
             >
               {/* Paise only when there are any: "₹500", but "₹319.50". */}
               {formatCurrency(donor.amount)}

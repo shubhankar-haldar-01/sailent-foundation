@@ -52,7 +52,7 @@ export function LegalPage({
           <div className="mt-8 space-y-10">
             {sections.map((section) => (
               <section key={section.heading}>
-                <h2 className="text-h2 font-semibold">{section.heading}</h2>
+                <h2 className="text-h2 font-bold">{section.heading}</h2>
                 {section.paragraphs?.map((paragraph, index) => (
                   <p key={index} className="text-body text-muted-foreground mt-3 leading-relaxed">
                     {paragraph}

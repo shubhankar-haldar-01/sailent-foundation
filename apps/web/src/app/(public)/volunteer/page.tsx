@@ -103,7 +103,7 @@ export default async function VolunteerPage() {
 
           <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
             <div className="prose-measure space-y-5 lg:col-span-7">
-              <h2 className="text-h1 text-balance font-semibold">Why volunteer with us</h2>
+              <h2 className="text-h1 text-balance font-bold">Why volunteer with us</h2>
               <p className="text-body-lg leading-relaxed">
                 Volunteer recruitment material tends to promise transformation. Ours used to. We
                 changed it after too many people arrived expecting one thing and found another.
@@ -135,7 +135,7 @@ export default async function VolunteerPage() {
 
       <Section className="border-border bg-surface-sunken border-y">
         <PageShell>
-          <h2 className="text-h1 font-semibold">Ways to contribute</h2>
+          <h2 className="text-h1 font-bold">Ways to contribute</h2>
           <ul className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {OPPORTUNITIES.map((opportunity) => (
               <li key={opportunity.title}>
@@ -156,7 +156,7 @@ export default async function VolunteerPage() {
 
       <Section id="how-it-works" className="scroll-mt-24">
         <PageShell>
-          <h2 className="text-h1 font-semibold">How volunteering works</h2>
+          <h2 className="text-h1 font-bold">How volunteering works</h2>
           <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {PROCESS.map((stage, index) => (
               <li key={stage.title} className="flex gap-4">
@@ -179,7 +179,7 @@ export default async function VolunteerPage() {
       {volunteerTestimonials.length > 0 ? (
         <Section className="border-border bg-surface-sunken border-t">
           <PageShell>
-            <h2 className="text-h1 font-semibold">From our volunteers</h2>
+            <h2 className="text-h1 font-bold">From our volunteers</h2>
             <div className="mt-8 grid gap-8 md:grid-cols-2">
               {volunteerTestimonials.map((testimonial) => (
                 <Card key={testimonial.id} className="p-6">
@@ -195,7 +195,7 @@ export default async function VolunteerPage() {
         <Section>
           <PageShell>
             <div className="flex flex-wrap items-end justify-between gap-4">
-              <h2 className="text-h1 font-semibold">Opportunities coming up</h2>
+              <h2 className="text-h1 font-bold">Opportunities coming up</h2>
               <Button asChild variant="secondary">
                 <Link href="/events">All events</Link>
               </Button>
@@ -213,7 +213,7 @@ export default async function VolunteerPage() {
         <PageShell>
           <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
             <div className="lg:col-span-4">
-              <h2 className="text-h1 text-balance font-semibold">Apply to volunteer</h2>
+              <h2 className="text-h1 text-balance font-bold">Apply to volunteer</h2>
               <p className="text-body text-muted-foreground mt-4">
                 Six short steps. Your application is reviewed within two weeks, and approved
                 volunteers receive a permanent volunteer ID.

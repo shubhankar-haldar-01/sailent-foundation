@@ -67,6 +67,11 @@ export interface MediaFrameProps {
    * plain background, where cropping cuts the product itself.
    */
   fit?: 'cover' | 'contain';
+  /**
+   * Which part of a real photograph stays in view when `cover` crops it, as a
+   * CSS `object-position` ("left center", "30% 50%"). Centre by default.
+   */
+  focus?: string;
 }
 
 /** Small deterministic hash, so a seed always renders the same picture. */
@@ -99,6 +104,7 @@ export function MediaFrame({
   priority = false,
   sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
   fit = 'cover',
+  focus,
 }: MediaFrameProps) {
   const seed = hash(media.seed);
   const scene = sceneFor(media.seed);
@@ -134,6 +140,7 @@ export function MediaFrame({
           fill
           sizes={sizes}
           className={fit === 'contain' ? 'object-contain' : 'object-cover'}
+          {...(focus ? { style: { objectPosition: focus } } : {})}
           {...(priority ? { priority: true } : {})}
         />
       ) : (

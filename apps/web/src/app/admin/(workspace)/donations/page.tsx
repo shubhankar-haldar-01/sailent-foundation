@@ -139,7 +139,7 @@ export default async function AdminDonationsPage({
                     <Link
                       href={`/admin/donations/${donation.id}`}
                       data-numeric=""
-                      className="text-body-sm focus-visible:outline-ring rounded-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2"
+                      className="text-body-sm focus-visible:outline-ring whitespace-nowrap rounded-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2"
                     >
                       {donation.reference}
                     </Link>

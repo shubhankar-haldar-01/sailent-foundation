@@ -21,9 +21,12 @@ export const SelectTrigger = React.forwardRef<
       className={cn(
         'bg-surface text-body flex h-11 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2',
         'data-[placeholder]:text-muted-foreground',
-        'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
+        // Form focus is the brand orange (owner decision, 2026-10-07): the border
+        // turns #EB6A1F and a 2px #EB6A1F ring hugs it — 3.18:1 against the
+        // white field. An error keeps its red border while focused.
+        'focus-visible:outline-primary focus-visible:outline-2 focus-visible:outline-offset-0',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        hasError ? 'border-destructive' : 'border-input',
+        hasError ? 'border-destructive' : 'border-input focus-visible:border-primary',
         className,
       )}
       {...props}

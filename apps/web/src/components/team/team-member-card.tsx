@@ -29,7 +29,64 @@ import type { TeamMember } from '@/lib/mock/types';
  * the detail page could never show more than the card did.
  * ══════════════════════════════════════════════════════════════════════════
  */
-export function TeamMemberCard({ member, className }: { member: TeamMember; className?: string }) {
+export function TeamMemberCard({
+  member,
+  className,
+  layout = 'portrait',
+}: {
+  member: TeamMember;
+  className?: string;
+  /**
+   * `portrait` for the directory on /team. `card` for a short row of people —
+   * the About page — where a bordered card with a wide photograph across its
+   * top keeps three or thirty of them compact and level.
+   */
+  layout?: 'portrait' | 'card';
+}) {
+  if (layout === 'card') {
+    return (
+      <div
+        className={cn(
+          'border-border bg-surface group relative flex h-full flex-col overflow-hidden rounded-xl border shadow-sm transition-shadow hover:shadow-md',
+          className,
+        )}
+      >
+        <MediaFrame
+          media={member.photo}
+          aspect="landscape"
+          rounded={false}
+          // Head and shoulders: a real portrait is cropped wide from its upper
+          // part, as the design shows. The drawn placeholder keeps a taller
+          // crop, because a wide one cuts its face off at the chin.
+          focus="center 22%"
+          className={member.photo.url ? 'aspect-[2/1]' : 'aspect-[16/10]'}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+        />
+        <div className="flex flex-1 flex-col p-4">
+          <h3 className="text-body-lg font-display font-bold leading-tight">
+            <Link
+              href={`/team/${member.slug}`}
+              className="focus-visible:outline-ring rounded-sm after:absolute after:inset-0 after:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 group-hover:underline group-hover:underline-offset-4"
+            >
+              {member.name}
+            </Link>
+          </h3>
+          <p className="text-body-sm text-primary mt-0.5 font-semibold">{member.designation}</p>
+          {member.department ? (
+            <p className="text-caption text-muted-foreground-strong font-medium">
+              {member.department}
+            </p>
+          ) : null}
+          {member.bio ? (
+            <p className="text-body-sm text-muted-foreground mt-2 line-clamp-3 leading-relaxed">
+              {member.bio}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={cn('group relative flex flex-col', className)}>
       <MediaFrame media={member.photo} aspect="portrait" />

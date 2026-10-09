@@ -94,7 +94,7 @@ export function CampaignHero({ campaign }: { campaign: Campaign }) {
 
       <h1
         id="campaign-title"
-        className="text-h1 mt-3 text-balance font-extrabold leading-tight tracking-tight"
+        className="text-h1 mt-3 text-balance font-bold leading-tight tracking-tight"
       >
         {campaign.title}
       </h1>

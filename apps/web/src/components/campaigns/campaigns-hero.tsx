@@ -89,6 +89,13 @@ export function CampaignsHero() {
           ground except the green, which is large bold text and clears 3:1.
         */
         '[--hero-eyebrow:#253b74] [--hero-green:#2f855a] [--hero-ink:#0d1258] [--hero-lead:#4d5b87]',
+        /*
+          Dark mode (2026-10-07): the same four roles, lightened — the cream
+          ground turns near-black there and the inks above all but vanished.
+          Each is at least 7:1 on the dark ground and its mint tint. The light
+          banner is unchanged.
+        */
+        'dark:[--hero-eyebrow:#a9bceb] dark:[--hero-green:#6dd49b] dark:[--hero-ink:#eef1fb] dark:[--hero-lead:#bac4de]',
       )}
     >
       <script
@@ -162,7 +169,7 @@ export function CampaignsHero() {
 
             <h1
               id="campaigns-hero-title"
-              className="font-display text-(--hero-ink) mt-1.5 text-[clamp(1.75rem,0.75rem+1.25vw,2.25rem)] font-extrabold leading-[1.05] tracking-tight"
+              className="font-display text-(--hero-ink) mt-1.5 text-[clamp(1.75rem,0.75rem+1.25vw,2.25rem)] font-bold leading-[1.05] tracking-tight"
             >
               <span className="sm:block">Support Causes</span>{' '}
               <span className="sm:block">

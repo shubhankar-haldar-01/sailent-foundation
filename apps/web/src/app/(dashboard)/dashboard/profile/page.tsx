@@ -93,18 +93,22 @@ function Row({
   hint?: string;
   mono?: boolean;
 }) {
+  // A `<dl>` may hold `<div>`s, and each must contain only its `<dt>` and
+  // `<dd>`; the hint therefore lives inside the `<dd>` (WCAG 1.3.1 — axe's
+  // `definition-list` rule flagged the earlier `<p>` beside them).
   return (
-    <div className="px-4 py-3">
-      <div className="flex items-baseline justify-between gap-4">
-        <dt className="text-caption text-muted-foreground shrink-0">{label}</dt>
-        <dd
-          {...(mono ? { 'data-numeric': '' } : {})}
-          className="text-body-sm min-w-0 break-words text-right font-medium"
-        >
+    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-3">
+      <dt className="text-caption text-muted-foreground shrink-0">{label}</dt>
+      <dd className="text-body-sm min-w-0 flex-1 text-right font-medium">
+        <span {...(mono ? { 'data-numeric': '' } : {})} className="break-words">
           {value}
-        </dd>
-      </div>
-      {hint ? <p className="text-caption text-muted-foreground mt-1">{hint}</p> : null}
+        </span>
+        {hint ? (
+          <span className="text-caption text-muted-foreground mt-1 block text-left font-normal">
+            {hint}
+          </span>
+        ) : null}
+      </dd>
     </div>
   );
 }

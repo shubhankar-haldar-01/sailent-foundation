@@ -106,7 +106,7 @@ Always **integer paise** (decision A2). `45000000` is ₹4,50,000. No endpoint a
 | GET | `/campaigns` | — | Filters: `status`, `programSlug`, `category`, `state`, `q` |
 | GET | `/campaigns/:slug` | — | With products and related stories |
 | GET | `/campaigns/:slug/products` | — | Active products only |
-| GET | `/stories` | — | Published only |
+| GET | `/stories` | — | Published only. Paginated. `category` filter (case-insensitive); each row's `category` is the story's own, else its programme's |
 | GET | `/stories/:slug` | — | Consent enforced at the database |
 | GET | `/events` | — | `when=upcoming\|past` |
 | GET | `/events/:slug` | — | `meetingUrl` stripped |

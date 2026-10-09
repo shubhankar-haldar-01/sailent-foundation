@@ -14,10 +14,9 @@ import { currentDonor } from '@/lib/auth/donor-session';
  * element is handed down. The header stays interactive and the session stays
  * where sessions belong.
  *
- * RENDERS NOTHING FOR A VISITOR WHO IS NOT SIGNED IN. No "Sign in" link beside
- * the Donate button: the header carries exactly one call to action by design,
- * and a second one competing with it costs more than an account link is worth.
- * Signed-out people reach their account from the footer.
+ * RENDERS NOTHING FOR A VISITOR WHO IS NOT SIGNED IN. The header shows its
+ * "Login / Sign Up" button in that case (owner request, 2026-10-08); the
+ * layouts tell it which with `signedIn`.
  *
  * THE NAME COMES FROM THE SESSION, NOT FROM AN API CALL.
  *
@@ -52,7 +51,7 @@ export async function AccountBadge() {
       // The accessible name is the person, not the letters — "SK" read aloud is
       // two letters, and the initials are decorative once the name is there.
       aria-label={name ? `Your account — ${name}` : 'Your account'}
-      className="bg-success focus-visible:outline-ring grid size-10 shrink-0 place-items-center rounded-full text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
+      className="bg-success focus-visible:outline-ring text-success-foreground grid size-10 shrink-0 place-items-center rounded-full transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
     >
       <span aria-hidden="true" className="text-caption font-semibold">
         {initials}

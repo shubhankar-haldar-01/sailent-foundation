@@ -9,10 +9,11 @@ import { ThemeProvider as NextThemesProvider } from 'next-themes';
  * `attribute="class"` matches the `@custom-variant dark (&:where(.dark, .dark *))`
  * declared in the token stylesheet.
  *
- * `defaultTheme="light"` for the public site: it is photography-led, and a dark
- * variant that compromises the images would cost more than it gains. The admin
- * layout opts into system preference, where dark mode genuinely helps people
- * who are in the tool all day.
+ * DARK MODE (owner decision, 2026-10-07): the public site and the admin
+ * follow the device's setting until the visitor chooses, and the choice is
+ * remembered (next-themes, localStorage key `theme`). The toggle is
+ * `components/layout/theme-toggle.tsx`. next-themes sets the class before
+ * the first paint, so a dark device never flashes the light theme.
  */
 export function ThemeProvider({
   children,
@@ -21,8 +22,8 @@ export function ThemeProvider({
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="light"
-      enableSystem={false}
+      defaultTheme="system"
+      enableSystem
       disableTransitionOnChange
       {...props}
     >

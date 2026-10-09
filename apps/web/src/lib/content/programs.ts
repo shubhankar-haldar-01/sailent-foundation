@@ -57,6 +57,8 @@ function accentIcon(value: string | null): AccentIcon {
 function fromFixture(fixture: ProgramFixture): Program {
   return {
     ...fixture,
+    // The fixtures carry no area; in the database each programme's is its name.
+    category: fixture.category ?? fixture.name,
     activeCampaignCount: countOpenCampaigns(fixture.slug, campaignFixtures),
   };
 }
@@ -77,6 +79,7 @@ function toProgram(row: ApiProgramSummary | ApiProgramDetail): Program {
     activeCampaignCount: row.campaignCount,
     cover: toMedia(row.coverImage, `program-${row.slug}`, `${row.title} program`),
     accentIcon: accentIcon(row.accentIcon),
+    category: row.category?.trim() || null,
 
     // Editorial fields. A program the CMS has not filled in yet renders the
     // section empty rather than inventing one — decision A14 applies to prose

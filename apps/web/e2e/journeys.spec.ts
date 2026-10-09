@@ -663,6 +663,47 @@ test.describe('journey: homepage → programs', () => {
   });
 });
 
+test.describe('programs listing', () => {
+  const grid = (page: Page) => page.getByRole('list', { name: 'Programs' }).getByRole('listitem');
+
+  test('an area pill narrows the grid, and "All Programs" brings everything back', async ({
+    page,
+  }) => {
+    await page.goto('/programs');
+    const pills = page.getByRole('navigation', { name: 'Filter programs by area' });
+    await expect(pills.getByRole('link', { name: 'All Programs' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+
+    await pills.getByRole('link', { name: 'Healthcare' }).click();
+    await page.waitForURL(/\/programs\?category=healthcare$/);
+    await expect(grid(page)).toHaveCount(1);
+    await expect(grid(page).first()).toContainText('Healthcare');
+    await expect(pills.getByRole('link', { name: 'Healthcare' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+
+    await pills.getByRole('link', { name: 'All Programs' }).click();
+    await page.waitForURL(/\/programs$/);
+    await expect(grid(page).first()).toBeVisible();
+    expect(await grid(page).count()).toBeGreaterThan(1);
+  });
+
+  test('"View More Programs" adds the rest below, then goes away', async ({ page }) => {
+    await page.goto('/programs');
+    // Six at a time; the seed has more than six, so the button is there.
+    await expect(grid(page)).toHaveCount(6);
+    const more = page.getByRole('link', { name: 'View More Programs' });
+
+    await more.click();
+    await page.waitForURL(/\/programs\?page=2$/);
+    await expect.poll(() => grid(page).count()).toBeGreaterThan(6);
+    await expect(more).toHaveCount(0);
+  });
+});
+
 test.describe('journey: homepage → stories', () => {
   test('a story renders the five-part structure', async ({ page }) => {
     await page.goto('/stories');

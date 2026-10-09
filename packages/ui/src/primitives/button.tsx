@@ -21,7 +21,7 @@ import { cn } from '../lib/cn';
 const buttonVariants = cva(
   [
     'inline-flex items-center justify-center gap-2 whitespace-nowrap',
-    'font-medium transition-colors duration-(--duration-fast)',
+    'font-semibold transition-colors duration-(--duration-fast)',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
     'disabled:pointer-events-none disabled:opacity-50',
     '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4',
@@ -32,9 +32,11 @@ const buttonVariants = cva(
         /**
          * ACTION. Orange, and scarce: donate, volunteer, fundraise, register.
          * A page where three things are orange is a page where nothing is.
+         * #EB6A1F with a navy label; white only while pressed, on the darker
+         * #C5531A, where it has the contrast (tokens.css, ORANGE).
          */
         primary:
-          'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active shadow-sm',
+          'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-sm',
         /**
          * TRUST AND INFORMATION. Blue: learn more, explore, read, view details.
          * It is a real button, not a lesser one — it simply is not the ask.

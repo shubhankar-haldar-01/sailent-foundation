@@ -46,7 +46,7 @@ export default async function ContactPage() {
 
           <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
             <div className="lg:col-span-5">
-              <h2 className="text-h2 font-semibold">Where to find us</h2>
+              <h2 className="text-h2 font-bold">Where to find us</h2>
 
               {/*
                 Only organizational contact details are published. Individual

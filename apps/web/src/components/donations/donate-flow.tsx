@@ -32,7 +32,7 @@ export function DonateFlow({ campaigns }: { campaigns: Campaign[] }) {
   if (stage === 'choose' || !selected) {
     return (
       <div>
-        <h2 className="text-h2 font-semibold">Where would you like to give?</h2>
+        <h2 className="text-h2 font-bold">Where would you like to give?</h2>
         <p className="text-body text-muted-foreground mt-2 max-w-prose">
           Each campaign lists exactly what it funds. If you would rather not choose, pick the one
           closest to its deadline — that is usually where money is most useful.

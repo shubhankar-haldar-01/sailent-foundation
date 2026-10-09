@@ -134,10 +134,10 @@ Seven items is the practical ceiling before a nav becomes a menu nobody reads.
 Logo   About   Programs   Campaigns   Impact   Volunteer   Blog        [ Donate ]
 ```
 
-- **Donate** is a filled button, visually distinct from the links, present at every breakpoint. It is the only button in the header.
+- **Login / Sign Up** is the header's filled button from tablet width up (owner request, 2026-10-08; it replaced Donate there). It goes to `/sign-in`: a donor account is created by the first donation, so there is no separate sign-up. A signed-in donor sees their initials instead. On a phone it is a row in the menu ("My account" when signed in), below the menu's **Donate Now** button, which stays.
 - **Programs** and **Campaigns** open a dropdown on desktop listing the top-level programmes and featured campaigns respectively, each with a "View all" link.
 - **Stories**, **Events**, **Team**, **Transparency**, **Gallery**, **Contact**, **FAQ** live in the footer and in contextual links — a nav of thirteen items serves nobody.
-- On scroll the header condenses (reduced height, subtle border) and the Donate button remains. It does not hide and re-appear.
+- On scroll the header condenses (reduced height, subtle border) and its button remains. It does not hide and re-appear.
 
 ### 2.2 Mobile navigation
 
@@ -179,7 +179,7 @@ The proposed eighteen sections would produce a page most visitors never reach th
 
 | # | Section | Purpose | Primary CTA |
 |---|---|---|---|
-| 1 | Header | Navigation, persistent Donate | Donate |
+| 1 | Header | Navigation, sign-in | Login / Sign Up |
 | 2 | **Hero** | Who we are, what we do, one image that carries emotional weight | Donate Now / See our work |
 | 3 | **Verified stats band** | Thin strip, 3–4 live figures with sources | — |
 | 4 | **Mission** | What Sailent exists to do, in plain language | About us |
@@ -209,7 +209,7 @@ The verified-stats band sits immediately below, catching the first scroll. Nothi
 
 | Level | CTA | Treatment | Where |
 |---|---|---|---|
-| Primary | **Donate Now** | Filled accent, largest target | Header, hero, campaign cards, closing block, mobile sticky bar |
+| Primary | **Donate Now** | Filled accent, largest target | Hero, campaign cards, closing block, mobile sticky bar, phone menu |
 | Secondary | **Become a Volunteer** | Outline | Get-involved section, `/volunteer`, footer |
 | Tertiary | Learn More · View Campaign · See Impact · Read Story · Join Event | Text link with arrow | Contextual, within cards and sections |
 

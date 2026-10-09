@@ -28,7 +28,7 @@
      THREE colours, each with a job:
        navy    identity and text        #102A43
        blue    trust and information    #1976D2   Learn more · Explore · Read
-       orange  action                   #C2410C   Donate · Volunteer · Register
+       orange  action                   #EB6A1F   Donate · Volunteer · Register
 
      Orange is scarce on purpose. It means "do this", and a page where three
      things are orange is a page where nothing is.
@@ -58,51 +58,45 @@
   /* ---------------------------------------------------------------------
      ORANGE — action only.
 
-     MEASURED, not picked by eye. White on the reference #FF8A00 is 2.36:1,
-     which fails WCAG AA badly, and the Donate button is the single most
-     important control on this site. So the scale splits by job:
+     OWNER DECISION (2026-10-07): the brand orange is #EB6A1F. It is brighter
+     than the #BA4503 it replaces, so it is MEASURED into roles rather than
+     used for everything:
 
-       --cta         #C2410C   5.18:1 with white — button fills
-       --cta-bright  #E36209   3.49:1 with white — large display text only
-       --cta-glow    #FF8A00   decoration only: underline rules, icon washes,
-                               and anything with no text on it
+       --cta         #EB6A1F  button fills, borders, active indicators, focus
+                              borders, progress — with a NAVY label (4.61:1).
+                              White on it is 3.18:1, which fails WCAG AA for
+                              button-size text; the owner chose the navy
+                              label over a darker orange.
+       --cta-hover   #F57C3A  hover fill, navy label (5.46:1)
+       --cta-active  #C5531A  pressed fill, WHITE label (4.54:1) — navy on it
+                              is only 3.2:1
+       --cta-ink     #B74500  orange TEXT: eyebrows, active nav labels,
+                              orange links. #EB6A1F as small text is about
+                              3:1 on the off-white grounds; this shade of the
+                              same hue is at least 4.5:1 on every light
+                              surface it sits on, wash-amber included
+                              (owner decision). `text-primary` resolves to it.
+       --cta-glow    #EB6A1F  icons and decoration — anything with no text on
+                              it (3.18:1 on white clears the 3:1 for graphics)
+       --cta-light   #FFEFCC  light accent and icon washes
+       --cta-soft    #FFF7ED  very light grounds, selected rows
 
-     The result is a deeper orange than the reference at button size. That is
-     a deliberate, measured change: the alternative is a call to action a
-     significant number of people cannot read.
+     If a future change needs white button labels, the fill has to be at
+     least #C5531A; that is a decision, not a tweak.
      --------------------------------------------------------------------- */
   --cta-50: oklch(0.965 0.025 55);
   --cta-100: oklch(0.93 0.05 55);
   --cta-200: oklch(0.87 0.09 55);
   --cta-300: oklch(0.8 0.13 55);
-  --cta-glow: oklch(0.755 0.175 58);
-  --cta-bright: oklch(0.63 0.175 48);
-  /*
-     THE CTA ORANGE SERVES TWO ROLES, AND THE DARKER ONE SETS THE VALUE.
-
-     As a BACKGROUND it carries white text on the Donate button. As TEXT it is
-     the eyebrow above a page title and the label on a nav control, sitting on
-     off-white grounds like #F0F5F9. Both need 4.5:1, and the text role is the
-     harder of the two because the ground is lighter than the button's white
-     label is dark.
-
-     The approved design's orange is around #F5821F. With white text that
-     measures 2.59:1 — a Donate button nobody with low vision can read, on the
-     one control the whole page exists to get pressed.
-
-     Brightening this to oklch(0.58) to close some of that gap was tried and
-     reverted: the button reached 4.59:1, but the eyebrow text fell to 4.18:1
-     and a nav button to 4.4:1, breaking the contrast check on every page
-     including the admin shell. The half-step was not worth a second token and
-     a site-wide regression when it still would not have matched the reference.
-
-     #BA4503, 5.33:1 on white. If the reference's exact orange is wanted, the
-     button label has to go near-black (about 6.6:1 on #F5821F) rather than
-     white — that is a real option, and it is a decision, not a tweak.
-  */
-  --cta: oklch(0.545 0.163 42);
-  --cta-hover: oklch(0.475 0.15 40);
-  --cta-active: oklch(0.42 0.135 38);
+  --cta-light: oklch(0.956 0.049 86.4);
+  --cta-soft: oklch(0.98 0.016 73.7);
+  --cta: oklch(0.6721 0.1784 45.43);
+  --cta-hover: oklch(0.715 0.168 46.4);
+  --cta-active: oklch(0.582 0.16 42.9);
+  --cta-ink: oklch(0.54 0.164 45.4);
+  --cta-glow: var(--cta);
+  /* Large display text only (3.18:1 on white). */
+  --cta-bright: var(--cta);
 
   --neutral-0: oklch(1 0 0);
   --neutral-50: oklch(0.985 var(--neutral-chroma) var(--neutral-hue));
@@ -121,15 +115,16 @@
      SEMANTIC TOKENS — what components actually reference.
      No component ever contains a raw colour value.
      --------------------------------------------------------------------- */
-  /* Off-white page, navy ink. */
-  --background: var(--neutral-50);
+  /* A tinted page, navy ink. Owner decision (2026-10-08): the page is a
+     light blue-grey and the header is pure white (`--surface`), so the two
+     read as different surfaces — at `--neutral-50` they were the same. */
+  --background: oklch(0.958 0.016 245);
   --foreground: var(--accent-950);
   /* The warm cream behind the hero and the impact strip. */
   --surface-warm: oklch(0.982 0.016 72);
-  /* The light blue band behind "Who we are". Distinct from `--background`,
-     which is near-white — in the reference these two are clearly different
-     bands, and at 0.008 chroma they were not. */
-  --surface-tint: oklch(0.968 0.018 250);
+  /* The light blue band behind "Who we are". A step below `--background`,
+     so it still reads as a band now that the page itself is tinted. */
+  --surface-tint: oklch(0.94 0.028 250);
 
   --surface: var(--neutral-0);
   --surface-foreground: var(--neutral-900);
@@ -158,17 +153,26 @@
   /**
    * PRIMARY IS ORANGE, because primary means "donate".
    *
-   * `--cta` measures 5.18:1 against white, so button labels are legible at
-   * ordinary size. See the ORANGE block above for why this is deeper than the
-   * reference's #FF8A00.
+   * #EB6A1F (owner decision, 2026-10-07). The label on it is NAVY — white
+   * on #EB6A1F is 3.18:1 — except while pressed, on the darker #C5531A,
+   * where white reads at 4.54:1. `text-primary` is the darker `--primary-ink`
+   * (see `--text-color-primary` in @theme) so orange TEXT stays legible,
+   * while fills, borders and indicators use #EB6A1F itself. See the ORANGE
+   * block above for every measurement.
    */
   --primary: var(--cta);
-  --primary-foreground: var(--neutral-0);
+  --primary-foreground: var(--accent-950);
   --primary-hover: var(--cta-hover);
   --primary-active: var(--cta-active);
+  --primary-active-foreground: var(--neutral-0);
+  --primary-ink: var(--cta-ink);
+  --primary-light: var(--cta-light);
+  --primary-soft: var(--cta-soft);
 
   /* Blue: trust and information. 4.60:1 with white. */
-  --info-action: var(--accent-600);
+  /* A step below --accent-600: small blue links sit directly on the tinted
+     page (2026-10-08), where --accent-600 measured 4.43:1. */
+  --info-action: oklch(0.515 0.155 250);
   --info-action-foreground: var(--neutral-0);
   --info-action-hover: var(--accent-700);
 
@@ -186,6 +190,9 @@
      an icon sits on them, never text. */
   --wash-blue: oklch(0.945 0.035 250);
   --wash-rose: oklch(0.945 0.035 15);
+  /* Coral: the campaign card's Donors and Goal marks (owner's card design,
+     2026-10-08) — a peach disc under a red-orange icon, between rose and amber. */
+  --wash-coral: oklch(0.96 0.025 50);
   --wash-amber: oklch(0.95 0.045 70);
   --wash-violet: oklch(0.945 0.04 300);
   --wash-pink: oklch(0.945 0.04 345);
@@ -207,6 +214,8 @@
   --wash-blue-ink: oklch(0.54 0.18 255);
   --wash-mint-ink: oklch(0.52 0.15 155);
   --wash-rose-ink: oklch(0.53 0.19 18);
+  /* An icon on --wash-coral, 3.7:1 there — a graphic, so 3:1 is its floor. */
+  --wash-coral-ink: oklch(0.6 0.22 32);
   /**
    * The one wash ink that carries TEXT rather than a mark.
    *
@@ -267,6 +276,14 @@
   --surface: var(--neutral-0);
 }
 
+/* Dark mode in the admin (2026-10-07). The two grounds above are declared on
+   the admin root, below <html>, so without this they would override the
+   dark theme's and leave white panels under light text (1.09:1). */
+.dark [data-surface='admin'] {
+  --background: var(--neutral-950);
+  --surface: var(--neutral-900);
+}
+
 /* -----------------------------------------------------------------------
    DARK THEME
    Only the semantic tokens are redefined. Because they are defined here
@@ -298,6 +315,11 @@
   --primary-foreground: var(--accent-950);
   --primary-hover: var(--cta-300);
   --primary-active: var(--cta-200);
+  --primary-active-foreground: var(--accent-950);
+  /* Orange text on a dark ground is the light end of the scale. */
+  --primary-ink: var(--cta-300);
+  --primary-light: oklch(0.34 0.07 50);
+  --primary-soft: oklch(0.28 0.04 50);
 
   --info-action: var(--accent-400);
   --info-action-foreground: var(--neutral-950);
@@ -310,6 +332,7 @@
 
   --wash-blue: oklch(0.32 0.04 250);
   --wash-rose: oklch(0.32 0.04 15);
+  --wash-coral: oklch(0.32 0.05 35);
   --wash-amber: oklch(0.32 0.045 70);
   --wash-violet: oklch(0.32 0.04 300);
   --wash-pink: oklch(0.32 0.04 345);
@@ -323,6 +346,7 @@
   --wash-blue-ink: oklch(0.82 0.12 255);
   --wash-mint-ink: oklch(0.82 0.12 155);
   --wash-rose-ink: oklch(0.82 0.13 18);
+  --wash-coral-ink: oklch(0.76 0.16 35);
   /* Already 7.48:1 on the dark wash, so the strong variant is the same value
      here — it exists for the light theme's text floor, not for this one. */
   --wash-mint-ink-strong: oklch(0.82 0.12 155);
@@ -338,7 +362,12 @@
   --success-subtle: oklch(0.28 0.05 150);
 
   --warning: oklch(0.8 0.14 75);
-  --warning-foreground: oklch(0.18 0.03 75);
+  /* LIGHT amber, not dark: every `text-warning-foreground` in the app is
+     warning-coloured text or an icon on a page, card or `bg-warning-subtle`
+     ground — none sits on a solid `bg-warning`. Dark text here measured
+     1.37:1 on the dark subtle ground (dark mode, 2026-10-07). If a solid
+     `bg-warning` ever carries text, give it its own foreground token. */
+  --warning-foreground: oklch(0.88 0.1 80);
   --warning-subtle: oklch(0.3 0.06 75);
 
   --destructive: oklch(0.65 0.19 27);
@@ -408,9 +437,21 @@
   --color-info-action-foreground: var(--info-action-foreground);
   --color-info-action-hover: var(--info-action-hover);
   --color-primary-active: var(--primary-active);
+  --color-primary-active-foreground: var(--primary-active-foreground);
+  --color-primary-ink: var(--primary-ink);
+  --color-primary-light: var(--primary-light);
+  --color-primary-soft: var(--primary-soft);
+  /*
+    `text-primary` is orange TEXT, so it uses the legible ink rather than the
+    #EB6A1F fill. Tailwind looks up `--text-color-*` before `--color-*` for
+    text utilities only, so `bg-`, `border-`, `fill-`, `stroke-` and `ring-
+    primary` still read #EB6A1F. Icons and decoration use `text-cta-glow`.
+  */
+  --text-color-primary: var(--primary-ink);
   --color-cta-glow: var(--cta-glow);
   --color-wash-blue: var(--wash-blue);
   --color-wash-rose: var(--wash-rose);
+  --color-wash-coral: var(--wash-coral);
   --color-wash-amber: var(--wash-amber);
   --color-wash-violet: var(--wash-violet);
   --color-wash-pink: var(--wash-pink);
@@ -423,6 +464,7 @@
   --color-wash-mint-ink: var(--wash-mint-ink);
   --color-wash-mint-ink-strong: var(--wash-mint-ink-strong);
   --color-wash-rose-ink: var(--wash-rose-ink);
+  --color-wash-coral-ink: var(--wash-coral-ink);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-success-subtle: var(--success-subtle);
@@ -450,7 +492,7 @@
   /* Type scale — public (editorial). Clamped so a hero never overwhelms a 390px screen. */
   --text-display-lg: clamp(2.5rem, 1.8rem + 3.5vw, 3.75rem);
   --text-display-lg--line-height: 1.05;
-  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--letter-spacing: -0.03em;
   /**
    * The homepage hero headline.
    *
@@ -462,13 +504,13 @@
    */
   --text-display-hero: clamp(2rem, 1.4rem + 2.2vw, 3.125rem);
   --text-display-hero--line-height: 1.08;
-  --text-display-hero--letter-spacing: -0.022em;
+  --text-display-hero--letter-spacing: -0.028em;
   --text-display: clamp(2rem, 1.5rem + 2.5vw, 3rem);
   --text-display--line-height: 1.1;
-  --text-display--letter-spacing: -0.02em;
+  --text-display--letter-spacing: -0.025em;
   --text-h1: clamp(1.75rem, 1.4rem + 1.75vw, 2.375rem);
   --text-h1--line-height: 1.15;
-  --text-h1--letter-spacing: -0.015em;
+  --text-h1--letter-spacing: -0.02em;
   /**
    * BAND HEADING — the homepage section titles.
    *
@@ -485,6 +527,7 @@
   --text-section--letter-spacing: -0.015em;
   --text-h2: clamp(1.5rem, 1.3rem + 1vw, 1.875rem);
   --text-h2--line-height: 1.2;
+  --text-h2--letter-spacing: -0.015em;
   --text-h3: 1.5rem;
   --text-h3--line-height: 1.3;
   --text-h4: 1.25rem;
@@ -500,6 +543,8 @@
   --text-overline: 0.75rem;
   --text-overline--line-height: 1.4;
   --text-overline--letter-spacing: 0.08em;
+  /* Eyebrows are Inter 600, wherever they appear. */
+  --text-overline--font-weight: 600;
 
   /* Radius scale */
   --radius-sm: calc(var(--radius) - 4px);
@@ -574,6 +619,8 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* Manrope for headings: 700 for page and section titles, 600 below. A
+     weight class on the element still wins, as utilities always do. */
   h1,
   h2,
   h3,
@@ -583,6 +630,18 @@
     font-family: var(--font-display);
     font-weight: 600;
     text-wrap: balance;
+  }
+
+  h1,
+  h2 {
+    font-weight: 700;
+  }
+
+  /* The admin reads as a tool: its small headings — panel and field-group
+     titles — are Inter. Page titles, section headings and figures keep
+     Manrope through their own classes. */
+  [data-surface='admin'] :is(h4, h5, h6) {
+    font-family: var(--font-sans);
   }
 
   /* Visible focus everywhere. `outline: none` without a replacement is a

@@ -84,7 +84,6 @@ const OPEN_EVENT = 'animal-care-awareness';
 const PROTECTED = [
   '/dashboard',
   '/dashboard/donations',
-  '/dashboard/campaigns',
   '/dashboard/saved',
   '/dashboard/events',
   '/dashboard/updates',
@@ -105,7 +104,7 @@ test.describe('signed out', () => {
       // Where they were going, so sign-in could return them there.
       expect(page.url()).toContain(`next=${encodeURIComponent(path)}`);
       // And nothing from the dashboard leaked into the response on the way.
-      await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Login to Continue' })).toBeVisible();
     });
   }
 
@@ -115,7 +114,25 @@ test.describe('signed out', () => {
     await expect(page.getByLabel('Email address')).toBeVisible();
     // There is no password anywhere in this flow, by design (decision A8).
     await expect(page.locator('input[type="password"]')).toHaveCount(0);
-    await expect(page.getByText(/no separate sign-up, and no password/i)).toBeVisible();
+    await expect(page.getByText(/email address and OTP/i)).toBeVisible();
+    // The code step appears only after "Send OTP" (owner request, 2026-10-08).
+    await expect(page.getByLabel('OTP', { exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Login', exact: true })).toHaveCount(0);
+
+    // "Sign Up" explains that there is no separate sign-up (owner decision,
+    // 2026-10-08), rather than offering a form that could never send a code.
+    // In the page, not the header's "Login / Sign Up". Settled first, like every
+    // other click in this file: on the tablet (WebKit) project a click that lands
+    // while the page is still hydrating could be lost.
+    await settle(page);
+    await page
+      .getByRole('main')
+      .getByRole('link', { name: /Sign Up/ })
+      .click();
+    await page.waitForURL('**/sign-up');
+    await expect(page.getByText(/no separate sign-up form/i)).toBeVisible();
+    await expect(page.getByText(/nothing to set or remember/i)).toBeVisible();
+    await expect(page.locator('input[type="password"]')).toHaveCount(0);
   });
 
   /**
@@ -126,15 +143,41 @@ test.describe('signed out', () => {
   test('asking for a code reveals nothing about whether the address is known', async ({ page }) => {
     await page.goto('/sign-in');
     await page.getByLabel('Email address').fill('nobody-signin-probe@example.test');
-    await page.getByRole('button', { name: /send me a code/i }).click();
+    await page.getByRole('button', { name: /send otp/i }).click();
 
-    await expect(page.getByLabel('Six-digit code')).toBeVisible();
     await expect(page.getByText(/if .* matches a donation/i)).toBeVisible();
+    await expect(page.getByLabel('OTP', { exact: true })).toBeFocused();
   });
 
   test('the sign-in page has no accessibility violations', async ({ page }) => {
     await page.goto('/sign-in');
     await expectNoAxeViolations(page);
+  });
+
+  /**
+   * Owner request, 2026-10-08: the header's button is "Login / Sign Up", not
+   * Donate. There is no separate sign-up, so it goes to /sign-in. On a phone
+   * it is a row in the menu, under the menu's Donate button, which stays.
+   */
+  test('the header offers Login / Sign Up in place of Donate', async ({ page }) => {
+    await page.goto('/');
+    const header = page.getByRole('banner');
+    const phone = (page.viewportSize()?.width ?? 0) < 640;
+
+    if (phone) {
+      await page.getByRole('button', { name: 'Open menu' }).click();
+      const menu = page.getByRole('dialog');
+      await expect(menu.getByRole('link', { name: 'Login / Sign Up' })).toHaveAttribute(
+        'href',
+        '/sign-in',
+      );
+      await expect(menu.getByRole('link', { name: /Donate/ })).toBeVisible();
+    } else {
+      const login = header.getByRole('link', { name: 'Login / Sign Up' });
+      await expect(login).toBeVisible();
+      await expect(login).toHaveAttribute('href', '/sign-in');
+    }
+    await expect(header.getByRole('link', { name: /Donate/ })).toBeHidden();
   });
 
   test('/account still reaches the dashboard, for old links', async ({ page }) => {
@@ -165,14 +208,37 @@ test.describe('signed in as a donor', () => {
     const donor = donorFor(testInfo.project.name);
     await page.goto('/dashboard');
 
-    await expect(page.getByRole('heading', { name: `Hello, ${donor.firstName}` })).toBeVisible();
+    // The welcome banner greets the donor by name (design, 2026-10-08).
+    await expect(
+      page.getByRole('heading', { name: new RegExp(`Good to see you again.*${donor.firstName}`) }),
+    ).toBeVisible();
     // ₹1,800 from the fixture's single confirmed donation.
-    await expect(page.getByText('Total given')).toBeVisible();
-    await expect(page.getByText('Campaigns funded')).toBeVisible();
+    await expect(page.getByText('Total Donations')).toBeVisible();
+    await expect(page.getByText('Campaigns Supported', { exact: true })).toBeVisible();
 
     // Counted from the donor's own product lines: two school kits.
     await expect(page.getByRole('heading', { name: 'What you funded' })).toBeVisible();
     await expect(page.getByText('School kit')).toBeVisible();
+  });
+
+  test('the header shows the donor’s account, not Login / Sign Up', async ({ page }) => {
+    await page.goto('/');
+    const header = page.getByRole('banner');
+    await expect(header.getByRole('link', { name: /^Your account/ })).toHaveAttribute(
+      'href',
+      '/dashboard',
+    );
+    await expect(header.getByRole('link', { name: 'Login / Sign Up' })).toHaveCount(0);
+
+    if ((page.viewportSize()?.width ?? 0) < 640) {
+      await page.getByRole('button', { name: 'Open menu' }).click();
+      const menu = page.getByRole('dialog');
+      await expect(menu.getByRole('link', { name: 'My account' })).toHaveAttribute(
+        'href',
+        '/dashboard',
+      );
+      await expect(menu.getByRole('link', { name: 'Login / Sign Up' })).toHaveCount(0);
+    }
   });
 
   test('the donation history lists the donation and opens its detail', async ({
@@ -451,15 +517,83 @@ test.describe('signed in as a donor', () => {
    * projects in three different places. Serial ordering inside this block is
    * what actually puts it last.
    */
-  test('signing out revokes the session, not just the cookie', async ({ page }) => {
+  test('signing out revokes the session, not just the cookie', async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    /*
+      FIRST, THE SESSION OUTLIVES ITS FIFTEEN-MINUTE ACCESS TOKEN (2026-10-09).
+
+      Donors were signed out about fifteen minutes into a visit: the token was
+      refreshed during a page render, which cannot save the new cookie, and the
+      next use of the spent token revoked the session. Here the stored session
+      is made to look expired, then the donor browses public pages and the
+      dashboard and must still be signed in on every one.
+
+      It lives in THIS test because the refresh rotates the session, which ends
+      the one every other test in this block shares — and this test ends it
+      anyway, right after.
+    */
+    const [stored] = (await context.cookies()).filter((c) => c.name === 'sailent_donor_session');
+    expect(stored, 'the donor session cookie').toBeTruthy();
+    const session = JSON.parse(decodeURIComponent(stored!.value)) as {
+      refreshToken: string;
+      expiresAt: number;
+    };
+    const spent = session.refreshToken;
+    // Replaced as the server sets it — host-only, on this origin — so the
+    // server's renewal overwrites it. (Added with an explicit domain, WebKit
+    // keeps it as a second cookie of the same name beside the server's.)
+    await context.clearCookies({ name: 'sailent_donor_session' });
+    await context.addCookies([
+      {
+        name: 'sailent_donor_session',
+        value: encodeURIComponent(JSON.stringify({ ...session, expiresAt: Date.now() - 1000 })),
+        url: baseURL!,
+        httpOnly: true,
+        sameSite: 'Lax',
+      },
+    ]);
+
+    /*
+      The server renews the session on the first page and says so in its
+      Set-Cookie. Checked there rather than in the browser's cookie jar: the
+      production build marks the cookie Secure, and WebKit (the tablet project)
+      will not store a Secure cookie over this suite's plain http://localhost,
+      while Chromium will. On the real site (https) every browser stores it.
+    */
+    const first = await page.goto('/');
+    const setCookie = (await first!.headersArray()).find(
+      (header) =>
+        header.name.toLowerCase() === 'set-cookie' &&
+        header.value.startsWith('sailent_donor_session='),
+    );
+    expect(setCookie, 'the server renews the session').toBeTruthy();
+    const renewedValue = decodeURIComponent(
+      setCookie!.value.split(';')[0]!.slice('sailent_donor_session='.length),
+    );
+    expect(JSON.parse(renewedValue).refreshToken).not.toBe(spent);
+
+    // The first page is already open; then a campaign page, the dashboard and home again.
+    for (const [index, path] of ['/', '/campaigns', '/dashboard', '/'].entries()) {
+      if (index > 0) await page.goto(path);
+      await expect(
+        page.getByRole('banner').getByRole('link', { name: /^Your account/ }),
+        `still signed in on ${path}`,
+      ).toBeVisible();
+    }
+
     await page.goto('/dashboard');
     await settle(page);
-    await expect(page.getByRole('heading', { name: /hello|your account/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /good to see you|your account/i }),
+    ).toBeVisible();
 
     // Keyboard again, for the same reason as the forms above — the sign-out
     // control sits at the end of a long page on mobile.
     await page
-      .getByRole('button', { name: /sign out/i })
+      .getByRole('button', { name: /sign out|logout/i })
       .first()
       .press('Enter');
     await expect(page).toHaveURL(/\/sign-in/);

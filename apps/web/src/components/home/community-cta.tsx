@@ -109,7 +109,7 @@ export function CommunityCta() {
           <div className="text-center">
             <h2
               id="community-title"
-              className="font-display text-h2 text-balance font-extrabold tracking-tight text-white"
+              className="font-display text-h2 text-balance font-bold tracking-tight text-white"
             >
               Join Our Community
             </h2>

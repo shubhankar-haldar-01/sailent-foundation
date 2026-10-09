@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { UserRound } from 'lucide-react';
 
-import { Card } from '@sailent/ui';
+import { cn } from '@sailent/ui';
 
+import { AuthBrand, AuthShell, OrDivider } from '@/components/auth/auth-shell';
 import { DonorSignInForm } from '@/components/dashboard/sign-in-form';
-import { PageShell } from '@/components/layout/page-shell';
 import { currentDonor } from '@/lib/auth/donor-session';
+import { headingExtraBold } from '@/lib/fonts';
 import { buildMetadata } from '@/lib/seo/metadata';
 
 export const metadata: Metadata = buildMetadata({
@@ -19,7 +21,7 @@ export const metadata: Metadata = buildMetadata({
 });
 
 /**
- * Donor sign-in.
+ * Donor sign-in, laid out to the owner's login design (2026-10-08).
  *
  * Separate from `/admin/login`, and deliberately not linked to it. They are
  * different audiences with different credentials — staff sign in with a
@@ -45,28 +47,31 @@ export default async function SignInPage({
   if (await currentDonor()) redirect(next ?? '/dashboard');
 
   return (
-    <PageShell className="py-12 md:py-20">
-      <div className="mx-auto max-w-md">
-        <h1 className="text-h1 text-center font-bold">Sign in</h1>
-        <p className="text-body text-muted-foreground mt-3 text-center">
-          See your giving history, download receipts, and follow the work you have funded.
-        </p>
+    <AuthShell>
+      <AuthBrand />
+      <h1
+        className={cn(
+          headingExtraBold.className,
+          'text-foreground mt-4 text-[clamp(1.625rem,1.3rem+1vw,1.875rem)] leading-tight tracking-[-0.025em]',
+        )}
+      >
+        Login to Continue
+      </h1>
+      <p className="text-muted-foreground mt-1 text-[0.875rem] leading-relaxed">
+        Enter your email address and OTP to access your account.
+      </p>
 
-        <Card className="mt-8 p-6 md:p-8">
-          <DonorSignInForm next={next} />
-        </Card>
+      <DonorSignInForm next={next} />
 
-        <p className="text-body-sm text-muted-foreground mt-6 text-center">
-          Not donated yet?{' '}
-          <Link
-            href="/campaigns"
-            className="text-info-action focus-visible:outline-ring rounded-sm font-semibold underline underline-offset-4 focus-visible:outline-2"
-          >
-            Find a campaign
-          </Link>
-          .
-        </p>
-      </div>
-    </PageShell>
+      <OrDivider className="mt-3" />
+      <Link
+        href="/sign-up"
+        className="border-cta-glow/60 bg-primary-soft/60 focus-visible:outline-ring hover:bg-primary-soft hover:border-cta-glow mt-3 flex min-h-11 flex-wrap items-center justify-center gap-x-2.5 gap-y-1 rounded-xl border-[1.5px] px-4 py-2 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
+        <UserRound aria-hidden="true" className="text-cta-glow size-5 shrink-0" strokeWidth={1.8} />
+        <span className="text-foreground text-[0.9375rem]">Don&rsquo;t have an account?</span>
+        <span className="text-primary text-base font-semibold">Sign Up</span>
+      </Link>
+    </AuthShell>
   );
 }

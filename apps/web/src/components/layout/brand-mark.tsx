@@ -41,22 +41,38 @@ export function BrandLockup({
   className,
   tone = 'default',
   href = '/',
+  tagline = 'responsive',
+  variant = 'default',
 }: {
   className?: string;
   /** `inverse` for the dark footer, where the mark sits on green. */
   tone?: 'default' | 'inverse';
   /** Omit the link when the lockup is already inside one. */
   href?: string | null;
+  /**
+   * `responsive` hides the tagline on a phone, where the header bar has no
+   * room for it; `always` keeps it, for the full-screen mobile menu.
+   */
+  tagline?: 'responsive' | 'always';
+  /**
+   * `header`: the owner's phone header design (2026-10-07). Below `sm` the
+   * mark is a smaller circle with an orange glyph, the name stays on one
+   * line and the navy tagline sits under it. From `sm` up it is the default
+   * lockup.
+   */
+  variant?: 'default' | 'header';
 }) {
+  const header = variant === 'header';
   const content = (
     <span className={cn('flex min-w-0 items-center gap-2.5', className)}>
       <span
         className={cn(
           'grid size-9 shrink-0 place-items-center rounded-full',
           tone === 'inverse' ? 'bg-white/12' : 'bg-accent',
+          header && 'max-sm:text-cta-glow max-sm:size-8',
         )}
       >
-        <BrandGlyph className="size-5" />
+        <BrandGlyph className={cn('size-5', header && 'max-sm:size-[1.375rem]')} />
       </span>
       <span className="min-w-0">
         {/* WRAPS below `sm` rather than truncating: beside the Donate button and
@@ -66,7 +82,13 @@ export function BrandLockup({
         <span
           className={cn(
             'font-display text-body sm:text-h4 block font-bold leading-tight tracking-tight sm:truncate',
-            tone === 'inverse' ? 'text-white' : 'text-foreground',
+            // One step smaller in the header between `lg` and `xl`, where the
+            // full navigation sits beside it and Manrope's wider wordmark would
+            // otherwise be cut to "Sailent Foundati…".
+            tone === 'inverse' ? 'text-white' : 'text-foreground lg:max-xl:text-body-lg',
+            // One line on a phone: the header there holds only the menu
+            // beside it, so the name has the room it needs.
+            header && 'max-sm:whitespace-nowrap',
           )}
         >
           {siteConfig.name}
@@ -76,8 +98,12 @@ export function BrandLockup({
             whole page to scroll sideways. */}
         <span
           className={cn(
-            'hidden truncate text-[0.6875rem] leading-tight sm:block',
+            tagline === 'always'
+              ? 'block truncate text-[0.6875rem] leading-tight'
+              : 'hidden truncate text-[0.6875rem] leading-tight sm:block',
             tone === 'inverse' ? 'text-white/70' : 'text-muted-foreground',
+            header &&
+              'max-sm:text-accent-900 max-sm:dark:text-muted-foreground max-sm:mt-0.5 max-sm:text-[0.5625rem] max-sm:font-medium max-sm:tracking-[-0.005em]',
           )}
         >
           {siteConfig.tagline}

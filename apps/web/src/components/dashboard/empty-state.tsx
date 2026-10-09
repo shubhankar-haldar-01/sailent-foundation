@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 
 import { Button, cn } from '@sailent/ui';
 
@@ -22,15 +23,25 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn('border-border rounded-lg border border-dashed px-6 py-10', className)}>
-      <p className="text-body-sm text-center font-semibold">{title}</p>
+    <div
+      className={cn(
+        'border-border bg-muted/30 rounded-2xl border border-dashed px-6 py-10',
+        className,
+      )}
+    >
+      <p className="font-display text-foreground text-center text-[1.0625rem] font-semibold">
+        {title}
+      </p>
       <p className="text-body-sm text-muted-foreground mx-auto mt-2 max-w-prose text-center">
         {description}
       </p>
       {action ? (
         <div className="mt-5 text-center">
-          <Button asChild size="md" variant="secondary">
-            <Link href={action.href}>{action.label}</Link>
+          <Button asChild size="md" className="h-11 rounded-full px-6">
+            <Link href={action.href}>
+              {action.label}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
           </Button>
         </div>
       ) : null}

@@ -89,7 +89,7 @@ export function StatsCard({
         <p className="text-body-sm text-muted-foreground">{label}</p>
         {Icon ? <Icon className="text-muted-foreground size-4" aria-hidden="true" /> : null}
       </div>
-      <p data-numeric="" className="text-h2 mt-2 font-semibold tabular-nums">
+      <p data-numeric="" className="font-display text-h2 mt-2 font-bold tabular-nums">
         {value}
       </p>
       {delta ? (

@@ -133,7 +133,7 @@ export function ProductSelector({
                   className={cn(
                     'flex w-full items-start gap-3 px-4 py-3 text-left transition-colors',
                     'focus-visible:outline-ring focus-visible:outline-2 focus-visible:-outline-offset-2',
-                    isSelected ? 'bg-accent' : 'hover:bg-muted',
+                    isSelected ? 'bg-primary-soft' : 'hover:bg-muted',
                   )}
                 >
                   <span

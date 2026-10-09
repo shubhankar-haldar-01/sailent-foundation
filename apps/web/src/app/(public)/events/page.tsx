@@ -34,7 +34,7 @@ export default async function EventsPage() {
             ]}
           />
 
-          <h2 className="text-h1 font-semibold">Upcoming</h2>
+          <h2 className="text-h1 font-bold">Upcoming</h2>
           {upcoming.length === 0 ? (
             <EmptyState
               kind="no-content"
@@ -55,7 +55,7 @@ export default async function EventsPage() {
       {past.length > 0 ? (
         <Section className="border-border bg-surface-sunken border-t">
           <PageShell>
-            <h2 className="text-h1 font-semibold">Past events</h2>
+            <h2 className="text-h1 font-bold">Past events</h2>
             <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {past.map((event) => (
                 <EventCard key={event.slug} event={event} />

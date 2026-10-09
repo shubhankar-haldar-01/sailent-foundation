@@ -16,6 +16,8 @@ import {
   cn,
 } from '@sailent/ui';
 
+import { ThemeToggle } from '@/components/layout/theme-toggle';
+
 /**
  * Admin header.
  *
@@ -57,6 +59,8 @@ export function AdminHeader({
       </Link>
 
       <div className="ml-auto flex items-center gap-1">
+        {/* Light / dark, as on the public site (owner decision, 2026-10-07). */}
+        <ThemeToggle className="size-9" />
         <Button
           asChild
           variant="ghost"

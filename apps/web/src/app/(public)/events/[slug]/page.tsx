@@ -119,7 +119,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 ) : null}
               </div>
 
-              <h1 className="text-display mt-3 text-balance font-semibold">{event.title}</h1>
+              <h1 className="text-display mt-3 text-balance font-bold">{event.title}</h1>
               <p className="text-body-lg text-muted-foreground mt-4 max-w-prose">{event.summary}</p>
             </div>
 
@@ -133,7 +133,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
             {event.schedule.length > 0 ? (
               <section className="mt-10">
-                <h2 className="text-h2 font-semibold">Schedule</h2>
+                <h2 className="text-h2 font-bold">Schedule</h2>
                 <ol className="prose-measure divide-border border-border mt-4 divide-y border-y">
                   {event.schedule.map((item) => (
                     <li key={item.time} className="flex gap-4 py-3">
@@ -152,7 +152,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
             {event.gallery.length > 0 ? (
               <section className="mt-10">
-                <h2 className="text-h2 font-semibold">From this event</h2>
+                <h2 className="text-h2 font-bold">From this event</h2>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   {event.gallery.map((media) => (
                     <MediaFigure key={media.seed} media={media} aspect="photo" />

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Youtube } from 'lucide-react';
+import { Mail, MapPin, Phone } from 'lucide-react';
 
 import { getOrganisation } from '@/lib/content/organisation';
 import { footerNav, legalNav, siteConfig } from '@/lib/site-config';
@@ -7,21 +7,8 @@ import { HeartDoodle } from '@/components/home/focus-icons';
 import { ScriptAccent } from '@/components/sections/script-accent';
 
 import { BrandLockup } from './brand-mark';
-
-/**
- * Social icons, by label.
- *
- * A lookup rather than a field in the settings, because the icon is a property of
- * the network and the URL is a property of the organization — putting a
- * component reference in the data file would make that file un-serialisable
- * the day it comes from an API.
- */
-const SOCIAL_ICONS: Record<string, typeof Instagram> = {
-  Instagram,
-  LinkedIn: Linkedin,
-  Facebook,
-  YouTube: Youtube,
-};
+import { MobileFooter } from './mobile-footer';
+import { SOCIAL_ICONS } from './social-icons';
 
 /**
  * Site footer.
@@ -51,7 +38,9 @@ export async function SiteFooter() {
 
   return (
     <footer className="bg-accent-950 mt-auto text-white/85">
-      <div className="container-page py-9 md:py-10">
+      {/* Below `md` the phone layout; from `md` up, the footer below, unchanged. */}
+      <MobileFooter organisation={organisation} year={year} />
+      <div className="container-page py-9 max-md:hidden md:py-10">
         <div className="grid gap-8 lg:grid-cols-12 lg:gap-6">
           {/* Brand ---------------------------------------------------------- */}
           <div className="space-y-4 lg:col-span-3">
@@ -93,15 +82,16 @@ export async function SiteFooter() {
               const id = `footer-${group.label.replace(/\s+/g, '-').toLowerCase()}`;
               return (
                 <nav key={group.label} aria-labelledby={id}>
-                  <h2 id={id} className="text-body-sm font-bold text-white">
+                  <h2 id={id} className="text-body-sm font-sans font-semibold text-white">
                     {group.label}
                   </h2>
-                  <ul className="mt-2.5 space-y-1.5">
+                  {/* Each link a 24px target (WCAG 2.5.8): 16px of text sat 23px apart. */}
+                  <ul className="mt-2 space-y-0.5">
                     {group.items.map((item) => (
                       <li key={item.href} className="text-caption">
                         <Link
                           href={item.href}
-                          className="focus-visible:outline-ring rounded-sm text-white/75 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
+                          className="focus-visible:outline-ring inline-flex min-h-6 items-center rounded-sm text-white/75 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
                         >
                           {item.label}
                         </Link>
@@ -113,7 +103,7 @@ export async function SiteFooter() {
             })}
 
             <div>
-              <h2 id="footer-contact" className="text-body-sm font-bold text-white">
+              <h2 id="footer-contact" className="text-body-sm font-sans font-semibold text-white">
                 Contact
               </h2>
               <address

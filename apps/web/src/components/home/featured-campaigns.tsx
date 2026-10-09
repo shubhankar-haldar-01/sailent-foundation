@@ -120,7 +120,7 @@ export function FeaturedCampaigns({
         <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
           <h2
             id="campaigns-title"
-            className="font-display text-h2 tracking-(--text-section--letter-spacing) font-extrabold"
+            className="font-display text-h2 tracking-(--text-section--letter-spacing) font-bold"
           >
             Make a Real Difference
           </h2>

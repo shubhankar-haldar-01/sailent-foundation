@@ -46,7 +46,7 @@ export default function NotFound() {
           <p className="text-overline tracking-(--text-overline--letter-spacing) text-muted-foreground uppercase">
             404
           </p>
-          <h1 className="text-display mt-2 font-semibold">We couldn&rsquo;t find that page</h1>
+          <h1 className="text-display mt-2 font-bold">We couldn&rsquo;t find that page</h1>
           <p className="text-body-lg text-muted-foreground mx-auto mt-3 max-w-prose">
             The link may be out of date, or the page may have moved.
           </p>

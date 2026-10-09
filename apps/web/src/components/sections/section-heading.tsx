@@ -62,7 +62,7 @@ export function SectionHeading({
         <Heading
           id={id}
           className={cn(
-            'font-display text-balance font-extrabold tracking-tight',
+            'font-display text-balance font-bold tracking-tight',
             size === 'lg' ? 'text-h1' : 'text-h2 leading-tight',
             eyebrow ? 'mt-2' : null,
           )}

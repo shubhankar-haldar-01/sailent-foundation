@@ -21,7 +21,14 @@ export function PaymentLogos({ className }: { className?: string }) {
   return (
     <ul
       aria-label="Accepted payment methods"
-      className={cn('flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-1', className)}
+      className={cn(
+        'flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-1',
+        // Dark mode: the marks keep their brand colours, on a white chip, as
+        // payment marks are shown on dark sites — recolouring them is not ours
+        // to do, and on a dark ground they drop to 1.2–1.7:1.
+        'dark:rounded-lg dark:bg-white dark:px-3 dark:py-2',
+        className,
+      )}
     >
       <li className="flex items-center gap-1">
         <svg aria-hidden="true" viewBox="0 0 10 16" className="h-4 w-auto">
@@ -32,12 +39,12 @@ export function PaymentLogos({ className }: { className?: string }) {
       </li>
 
       <li className="flex items-center gap-0.5">
-        <span className="text-[0.8125rem] font-extrabold tracking-tight text-[#3a3f51]">UPI</span>
+        <span className="text-[0.8125rem] font-bold tracking-tight text-[#3a3f51]">UPI</span>
         <TwinArrows />
       </li>
 
       <li>
-        <span className="text-[1.0625rem] font-black italic leading-none tracking-tight text-[#1a1f71]">
+        <span className="text-[1.0625rem] font-bold italic leading-none tracking-tight text-[#1a1f71]">
           VISA
         </span>
       </li>
@@ -51,7 +58,7 @@ export function PaymentLogos({ className }: { className?: string }) {
       </li>
 
       <li className="flex items-center gap-0.5">
-        <span className="text-[0.8125rem] font-extrabold tracking-tight text-[#097939]">RuPay</span>
+        <span className="text-[0.8125rem] font-bold tracking-tight text-[#097939]">RuPay</span>
         <TwinArrows />
       </li>
     </ul>

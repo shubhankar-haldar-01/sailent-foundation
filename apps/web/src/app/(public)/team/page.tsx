@@ -55,7 +55,7 @@ export default async function TeamPage() {
                 <section key={department} aria-labelledby={`dept-${department.toLowerCase()}`}>
                   <h2
                     id={`dept-${department.toLowerCase()}`}
-                    className="border-border text-h2 border-b pb-3 font-semibold"
+                    className="border-border text-h2 border-b pb-3 font-bold"
                   >
                     {department}
                   </h2>

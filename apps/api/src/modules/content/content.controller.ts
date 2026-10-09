@@ -8,6 +8,11 @@ import { z } from 'zod';
 import { ContentService } from './content.service.js';
 import { SlugService } from '../catalog/slug.service.js';
 
+/** The public story listing: pagination plus an optional category filter. */
+const storyListQuerySchema = paginationQuerySchema.extend({
+  category: z.string().trim().min(1).max(80).optional(),
+});
+
 const campaignQuerySchema = paginationQuerySchema.extend({
   programSlug: z.string().max(200).optional(),
   /** Category display name. Kept for links already in the wild. */
@@ -237,7 +242,13 @@ export class ContentController {
   @ApiOperation({ summary: 'List published success stories' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  listStories(@Query(new ZodValidationPipe(paginationQuerySchema)) query: never) {
+  @ApiQuery({
+    name: 'category',
+    required: false,
+    type: String,
+    description: "The story's category, or its programme's when it has none (case-insensitive).",
+  })
+  listStories(@Query(new ZodValidationPipe(storyListQuerySchema)) query: never) {
     return this.content.listStories(query);
   }
 

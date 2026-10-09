@@ -34,7 +34,7 @@ export function PageHero({
                 {eyebrow}
               </p>
             ) : null}
-            <h1 className="text-display mt-2 font-semibold">{title}</h1>
+            <h1 className="text-display mt-2 font-bold">{title}</h1>
             {lead ? <p className="text-body-lg text-muted-foreground mt-4">{lead}</p> : null}
           </div>
           {children ? <div className="mt-8">{children}</div> : null}

@@ -52,6 +52,12 @@ export const siteConfig = {
  */
 export interface NavEntry extends NavItem {
   children?: NavItem[];
+  /**
+   * The group's links in the phone menu, where they differ from the desktop
+   * dropdown — the owner's mobile menu design (2026-10-07) lists its own.
+   * Falls back to `children`.
+   */
+  mobileChildren?: NavItem[];
 }
 
 export const primaryNav: NavEntry[] = [
@@ -80,6 +86,12 @@ export const primaryNav: NavEntry[] = [
       { label: 'Events', href: '/events', description: 'Field days and open sessions' },
       { label: 'Our team', href: '/team', description: 'Who runs the organization' },
     ],
+    mobileChildren: [
+      { label: 'Donate', href: '/donate' },
+      { label: 'Volunteer with Us', href: '/volunteer' },
+      // The same destination the footer's "Partner With Us" uses.
+      { label: 'Partner with Us', href: '/contact' },
+    ],
   },
   {
     label: 'Resources',
@@ -87,6 +99,11 @@ export const primaryNav: NavEntry[] = [
     children: [
       { label: 'Blog', href: '/blog', description: 'Field notes and program thinking' },
       { label: 'FAQ', href: '/faq', description: 'Common questions' },
+    ],
+    mobileChildren: [
+      { label: 'Stories', href: '/stories' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'FAQ', href: '/faq' },
     ],
   },
 ];
@@ -157,6 +174,22 @@ export const footerNav: NavGroup[] = [
     ],
   },
 ];
+
+/**
+ * The mobile footer's "Campaigns" group.
+ *
+ * The phone design adds this fifth group; the desktop footer's column grid has
+ * no slot for it, so it is kept apart from `footerNav`. Each link is a real
+ * view of the campaign listing — its status filter — not a page of its own.
+ */
+export const footerCampaignsGroup: NavGroup = {
+  label: 'Campaigns',
+  items: [
+    { label: 'All Campaigns', href: '/campaigns' },
+    { label: 'Closed Campaigns', href: '/campaigns?status=closed' },
+    { label: 'Completed Campaigns', href: '/campaigns?status=completed' },
+  ],
+};
 
 /**
  * The footer's legal row.

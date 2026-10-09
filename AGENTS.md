@@ -188,13 +188,12 @@ Production database actions require **explicit human approval** for that specifi
 ## 11. Owner-approved designs and decisions — must NOT be changed without explicit owner instruction
 
 1. **The `/campaigns` banner** (`apps/web/src/components/campaigns/campaigns-hero.tsx`) and the listing layout: search, status menu (Active/Closed/Completed/All), cause tiles, "View More".
-2. **The campaign card** (`components/campaigns/campaign-card.tsx`):
-   - 14px DM Sans bold title with a 2-line clamp;
-   - solid Donors/Raised/Goal icons;
-   - status badge;
-   - category-coloured progress bar;
-   - white heart (save) button;
-   - pill-shaped "Donate Now".
+2. **The campaign card** (`components/campaigns/campaign-card.tsx`), as redesigned by the owner on 2026-10-08:
+   - photograph rounded at all four corners, with a filled status pill (icon + word) top-left, the white heart (save) button top-right, and a category pill (icon + name) bottom-left;
+   - large Manrope bold title (18px) with a 2-line clamp;
+   - Donors / Raised / Goal stacked and centred in three columns with dividers: a tinted disc with a solid icon (coral, mint, coral), the value, then the label;
+   - brand-orange progress bar with "N% Complete" and "N% to go";
+   - pill-shaped "Donate Now" (navy label on `#EB6A1F`, the owner's contrast decision).
 3. **Homepage Featured Campaigns and Testimonials rails:**
    - they autoplay;
    - **no visible arrows and no visible pause button**;
@@ -208,6 +207,7 @@ Production database actions require **explicit human approval** for that specifi
 8. **Every campaign belongs to a programme** in the seed and demo data.
 9. **The Campaign Gallery** (`apps/web/src/components/campaigns/campaign-gallery.tsx`, rendered first in the campaign page's "About This Campaign" section by `campaign-about.tsx`) is an approved part of the campaign detail page. **Do not remove it, or any gallery functionality, without explicit owner approval** — including during cleanup or de-duplication work.
 10. **Approval-gated changes:** colours, fonts, spacing scale and container widths are design decisions. Ask before changing them globally.
+11. **Header and page surfaces (2026-10-08):** the header bar is pure white (`--surface`) and the light page background is a tinted blue-grey (`--background`, `oklch(0.958 0.016 245)`), so the two read as different surfaces. Do not set them back to one colour.
 
 ## 12. Working process (mandatory)
 

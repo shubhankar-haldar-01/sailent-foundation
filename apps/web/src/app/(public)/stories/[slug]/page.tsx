@@ -95,7 +95,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
                 {story.programName}
               </Link>
             ) : null}
-            <h1 className="text-display mt-3 text-balance font-semibold">{story.title}</h1>
+            <h1 className="text-display mt-3 text-balance font-bold">{story.title}</h1>
             <p className="text-body-lg text-muted-foreground mt-4">{story.summary}</p>
             <p className="text-caption text-muted-foreground mt-5 flex flex-wrap items-center gap-x-3 gap-y-1">
               {story.location ? (
@@ -118,7 +118,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
               <div className="prose-measure space-y-10 lg:col-span-2">
                 {SECTIONS.map((section) => (
                   <section key={section.key}>
-                    <h2 className="text-h2 font-semibold">{section.heading}</h2>
+                    <h2 className="text-h2 font-bold">{section.heading}</h2>
                     <p className="text-body text-muted-foreground mt-3 leading-relaxed">
                       {story[section.key]}
                     </p>
@@ -177,7 +177,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
 
       <Section className="border-border bg-surface-sunken border-t">
         <PageShell>
-          <h2 className="text-h1 font-semibold">More stories</h2>
+          <h2 className="text-h1 font-bold">More stories</h2>
           <div className="mt-8 grid gap-5 md:grid-cols-3">
             {moreStories.map((item) => (
               <StoryCard key={item.slug} story={item} />

@@ -72,7 +72,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
             <p className="text-overline tracking-(--text-overline--letter-spacing) text-primary uppercase">
               Program
             </p>
-            <h1 className="text-display mt-3 text-balance font-semibold">{program.name}</h1>
+            <h1 className="text-display mt-3 text-balance font-bold">{program.name}</h1>
             <p className="text-body-lg text-muted-foreground mt-4">{program.tagline}</p>
             <ul className="mt-6 flex flex-wrap gap-x-4 gap-y-2">
               {program.locations.map((location) => (
@@ -111,13 +111,13 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
         <PageShell>
           <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
             <div className="lg:col-span-5">
-              <h2 className="text-h1 text-balance font-semibold">The problem</h2>
+              <h2 className="text-h1 text-balance font-bold">The problem</h2>
               <p className="text-body text-muted-foreground mt-4 leading-relaxed">
                 {program.problem}
               </p>
             </div>
             <div className="lg:col-span-7">
-              <h2 className="text-h1 text-balance font-semibold">What we do about it</h2>
+              <h2 className="text-h1 text-balance font-bold">What we do about it</h2>
               <p className="text-body text-muted-foreground mt-4 leading-relaxed">
                 {program.approach}
               </p>
@@ -130,7 +130,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
         <PageShell>
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
             <div>
-              <h2 className="text-h1 font-semibold">Goals</h2>
+              <h2 className="text-h1 font-bold">Goals</h2>
               <ol className="mt-6 space-y-5">
                 {program.goals.map((goal, index) => (
                   <li key={goal.title} className="flex gap-4">
@@ -150,7 +150,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
             </div>
 
             <div>
-              <h2 className="text-h1 font-semibold">Activities</h2>
+              <h2 className="text-h1 font-bold">Activities</h2>
               <ul className="mt-6 space-y-4">
                 {program.activities.map((activity) => (
                   <li key={activity.title} className="border-border border-b pb-4 last:border-0">
@@ -174,7 +174,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
       {program.metrics.length > 0 ? (
         <Section>
           <PageShell>
-            <h2 className="text-h1 font-semibold">Where this program stands</h2>
+            <h2 className="text-h1 font-bold">Where this program stands</h2>
             <div className="mt-8 grid grid-cols-2 gap-8 md:grid-cols-4">
               {program.metrics.map((metric) => (
                 <ImpactStat
@@ -197,7 +197,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
       {relatedCampaigns.length > 0 ? (
         <Section className="border-border border-t">
           <PageShell>
-            <h2 className="text-h1 font-semibold">Campaigns in this program</h2>
+            <h2 className="text-h1 font-bold">Campaigns in this program</h2>
             <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {relatedCampaigns.map((campaign) => (
                 <CampaignCard key={campaign.slug} campaign={campaign} />
@@ -210,7 +210,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
       {updates.length > 0 ? (
         <Section className="border-border bg-surface-sunken border-t">
           <PageShell>
-            <h2 className="text-h1 font-semibold">Latest updates</h2>
+            <h2 className="text-h1 font-bold">Latest updates</h2>
             <ol className="mt-8 grid gap-5 md:grid-cols-2">
               {updates.map((update) => (
                 <li key={update.id}>
@@ -239,7 +239,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
       {relatedStories.length > 0 ? (
         <Section className="border-border border-t">
           <PageShell>
-            <h2 className="text-h1 font-semibold">Stories from this program</h2>
+            <h2 className="text-h1 font-bold">Stories from this program</h2>
             <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {relatedStories.map((story) => (
                 <StoryCard key={story.slug} story={story} />
@@ -252,7 +252,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
       {relatedEvents.length > 0 ? (
         <Section className="border-border bg-surface-sunken border-t">
           <PageShell>
-            <h2 className="text-h1 font-semibold">Upcoming events</h2>
+            <h2 className="text-h1 font-bold">Upcoming events</h2>
             <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {relatedEvents.map((event) => (
                 <EventCard key={event.slug} event={event} />
@@ -265,9 +265,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
       <Section className="border-border border-t">
         <PageShell>
           <div className="border-border bg-surface rounded-xl border px-6 py-12 text-center md:px-12">
-            <h2 className="text-h1 text-balance font-semibold">
-              Support the {program.name} program
-            </h2>
+            <h2 className="text-h1 text-balance font-bold">Support the {program.name} program</h2>
             <p className="text-body-lg text-muted-foreground mx-auto mt-3 max-w-prose">
               Fund a specific item in an active campaign, or give to the program and let the team
               allocate it.

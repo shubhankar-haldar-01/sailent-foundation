@@ -55,7 +55,7 @@ export function PostCard({
           </p>
         ) : null}
 
-        <h2 className={cn('font-semibold', featured ? 'text-h2' : 'text-h4')}>
+        <h2 className={cn('font-bold', featured ? 'text-h2' : 'text-h4')}>
           {/*
             The whole card is clickable through this stretched link, so there is
             exactly one link in the accessibility tree rather than one per

@@ -557,8 +557,25 @@ export class ContentService {
   // Stories, events, team, impact
   // -------------------------------------------------------------------------
 
-  async listStories(query: PaginationQuery): Promise<PaginatedResult<unknown>> {
-    const where = and(eq(successStories.status, 'published'), isNull(successStories.deletedAt));
+  async listStories(
+    query: PaginationQuery & { category?: string },
+  ): Promise<PaginatedResult<unknown>> {
+    /*
+      A story's CATEGORY is its own when staff set one, and otherwise its
+      programme's (owner decision, 2026-10-08) — every published story belongs
+      to a programme, and every programme has a category, so the listing's
+      filter and tags work without asking staff to repeat what the programme
+      already says. The same expression feeds the filter and the column, so a
+      filtered page never shows a card tagged with something else.
+    */
+    const effectiveCategory = sql<
+      string | null
+    >`coalesce(${successStories.category}, ${programs.category})`;
+    const where = and(
+      eq(successStories.status, 'published'),
+      isNull(successStories.deletedAt),
+      query.category ? sql`lower(${effectiveCategory}) = lower(${query.category})` : undefined,
+    );
 
     const sortable = {
       publishedAt: successStories.publishedAt,
@@ -575,7 +592,7 @@ export class ContentService {
           slug: successStories.slug,
           excerpt: successStories.excerpt,
           coverImage: successStories.coverImage,
-          category: successStories.category,
+          category: effectiveCategory,
           location: successStories.location,
           publishedAt: successStories.publishedAt,
           programId: successStories.programId,
@@ -601,6 +618,8 @@ export class ContentService {
       this.db
         .select({ value: sql<number>`count(*)::int` })
         .from(successStories)
+        // The count needs the programme for the category filter, too.
+        .leftJoin(programs, eq(programs.id, successStories.programId))
         .where(where),
     ]);
 

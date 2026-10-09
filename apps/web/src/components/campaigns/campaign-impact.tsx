@@ -84,7 +84,7 @@ export function CampaignImpact({ campaign }: { campaign: Campaign }) {
                 <span className="min-w-0">
                   <span
                     data-numeric=""
-                    className="text-h3 block font-extrabold leading-tight tracking-tight"
+                    className="text-h3 block font-bold leading-tight tracking-tight"
                   >
                     {card.value}
                     {card.unit ? (

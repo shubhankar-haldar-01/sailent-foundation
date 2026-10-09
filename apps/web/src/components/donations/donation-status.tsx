@@ -294,7 +294,7 @@ export function DonationStatus({ reference }: { reference: string }) {
 
   return (
     <Card className="p-10 text-center">
-      <Loader2 className="text-primary mx-auto size-7 animate-spin" aria-hidden="true" />
+      <Loader2 className="text-cta-glow mx-auto size-7 animate-spin" aria-hidden="true" />
       <h1 className="text-h3 mt-4 font-semibold">Confirming your payment</h1>
       <p className="text-body-sm text-muted-foreground mx-auto mt-3 max-w-prose">
         We are waiting for our payment provider to confirm this with our server. It usually takes a

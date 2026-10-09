@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { STAFF_SESSION } from './session-refresh';
 import { createSessionStore, type StoredSession } from './token-store';
 
 /**
@@ -22,10 +23,7 @@ export interface StaffActor {
 
 export type StaffSession = StoredSession<StaffActor>;
 
-const store = createSessionStore<StaffActor>({
-  cookieName: 'sailent_staff_session',
-  maxAgeSeconds: 7 * 24 * 60 * 60,
-});
+const store = createSessionStore<StaffActor>(STAFF_SESSION);
 
 export const readSession = store.read;
 export const writeSession = store.write;

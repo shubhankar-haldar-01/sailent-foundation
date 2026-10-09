@@ -103,6 +103,8 @@ export interface DonorProfile {
   donationCount: number;
   firstDonatedAt: string | null;
   lastDonatedAt: string | null;
+  /** When the account was opened — "Member since" on the dashboard. The API has always sent it. */
+  createdAt?: string | null;
 }
 
 export interface DonorDonation {

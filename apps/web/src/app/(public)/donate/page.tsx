@@ -41,7 +41,7 @@ export default async function DonatePage() {
 
       <Section className="border-border bg-surface-sunken border-t">
         <PageShell>
-          <h2 className="text-h1 font-semibold">How your donation works</h2>
+          <h2 className="text-h1 font-bold">How your donation works</h2>
           <HowDonationsWork className="mt-10" />
         </PageShell>
       </Section>

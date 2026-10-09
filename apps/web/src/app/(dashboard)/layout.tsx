@@ -5,13 +5,16 @@ import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { AccountBadge } from '@/components/layout/account-badge';
 import { PageShell } from '@/components/layout/page-shell';
-import { DashboardNav } from '@/components/dashboard/dashboard-nav';
+import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar';
+import { donorDisplayName } from '@/components/dashboard/format';
 import { SignOutButton } from '@/components/dashboard/sign-out-button';
 import { currentDonor } from '@/lib/auth/donor-session';
+import { getOrganisation } from '@/lib/content/organisation';
 import { donorFetch, type DonorProfile } from '@/lib/donor/api';
 
 /**
- * The donor dashboard shell.
+ * The donor dashboard shell: the public header and footer, and between them
+ * the account sidebar beside the page (design, 2026-10-08).
  *
  * ══════════════════════════════════════════════════════════════════════════
  * NAMED `/dashboard`, NOT `/account`.
@@ -36,14 +39,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const donor = await currentDonor();
   if (!donor) redirect('/sign-in');
 
-  // The name in the greeting. A failure here must not take the page down —
-  // being unable to say "Hello Asha" is not a reason to show an error.
+  // The name and address in the sidebar. A failure here must not take the
+  // page down — being unable to say who is signed in is not a reason to show
+  // an error; the session's own name stands in.
   let profile: DonorProfile | null = null;
   try {
     profile = await donorFetch<DonorProfile>('me');
   } catch {
     profile = null;
   }
+  const name = (profile ? donorDisplayName(profile) : '') || (donor.name ?? '').trim();
+  // For the mobile menu's social row, as on the public site.
+  const organisation = await getOrganisation();
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -53,36 +60,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
       >
         Skip to content
       </a>
-      <SiteHeader accountSlot={<AccountBadge />} />
-      <main id="main-content" className="flex-1 py-8 md:py-12">
+      <SiteHeader
+        accountSlot={<AccountBadge />}
+        signedIn={Boolean(donor)}
+        socialLinks={organisation.social}
+      />
+      <main id="main-content" className="flex-1 py-6 md:py-8 xl:pb-8 xl:pt-5">
         <PageShell>
-          <div className="grid gap-8 lg:grid-cols-[15rem_1fr]">
-            <div className="lg:sticky lg:top-24 lg:self-start">
-              <div className="border-border mb-4 hidden rounded-lg border p-4 lg:block">
-                <p className="text-caption text-muted-foreground">Signed in as</p>
-                <p className="text-body-sm mt-0.5 truncate font-semibold">
-                  {profile?.firstName
-                    ? `${profile.firstName} ${profile.lastName ?? ''}`.trim()
-                    : 'Your account'}
-                </p>
-                {profile?.donorCode ? (
-                  <p data-numeric="" className="text-caption text-muted-foreground mt-1">
-                    {profile.donorCode}
-                  </p>
-                ) : null}
-              </div>
-
-              <DashboardNav />
-
-              <div className="mt-4 hidden lg:block">
-                <SignOutButton />
-              </div>
-            </div>
-
+          <div className="grid gap-5 lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:gap-6 xl:gap-5">
+            <DashboardSidebar name={name} email={profile?.email ?? null} />
             <div className="min-w-0">{children}</div>
           </div>
 
-          <div className="mt-8 lg:hidden">
+          {/* Logout at the foot of the page on a phone; the sidebar carries it from `lg`. */}
+          <div className="border-border/60 bg-surface mt-6 rounded-2xl border p-2 lg:hidden">
             <SignOutButton />
           </div>
         </PageShell>
