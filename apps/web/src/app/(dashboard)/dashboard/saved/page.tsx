@@ -40,7 +40,7 @@ function getCampaignImageUrl(campaign: { coverImage: string | null; slug: string
     return '/images/campaign-flood-relief-balasore.webp';
   }
   if (campaign.slug.includes('health') || campaign.slug.includes('clinic')) {
-    return '/images/05_healthcare.webp';
+    return '/images/campaign-mobile-health-clinic-bastar.webp';
   }
   if (campaign.slug.includes('skill')) {
     return '/images/campaign-skills-training-second-cohort.webp';
@@ -48,7 +48,7 @@ function getCampaignImageUrl(campaign: { coverImage: string | null; slug: string
   if (campaign.slug.includes('nutrition') || campaign.slug.includes('child')) {
     return '/images/campaign-child-nutrition-gaya.webp';
   }
-  return '/images/02_about_group.webp';
+  return '/images/campaign-school-kits-jharkhand.webp';
 }
 
 /**

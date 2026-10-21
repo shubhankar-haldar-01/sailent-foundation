@@ -28,7 +28,9 @@ import path from 'node:path';
  * ══════════════════════════════════════════════════════════════════════════
  */
 export function publicAssetExists(publicPath: string): boolean {
-  const root = path.join(process.cwd(), 'public');
+  const root = existsSync(path.join(process.cwd(), 'apps', 'web', 'public'))
+    ? path.join(process.cwd(), 'apps', 'web', 'public')
+    : path.join(process.cwd(), 'public');
   const resolved = path.resolve(root, `.${path.posix.normalize(`/${publicPath}`)}`);
 
   // `path.resolve` collapses any `..`, so this is the check that the result

@@ -35,18 +35,18 @@ async function expectNoAxeViolations(page: Page) {
 test.describe('the public pages', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test("About's Our Team is the public team directory", async ({ page }) => {
+  test("About's Our Team is visible and the dedicated /team page renders", async ({ page }) => {
     await page.goto('/about');
 
-    // The team is listed on About now; the /team directory and its detail
-    // pages were retired (owner, 2026-10-21).
     const team = page.locator('section[aria-labelledby="team-heading"]');
     await expect(team.getByText('OUR TEAM')).toBeVisible();
     await expect(team.getByRole('heading', { level: 2, name: 'Who runs it' })).toBeVisible();
     await expect(team.getByRole('heading', { level: 3 }).first()).toBeVisible();
 
-    const response = await page.goto('/team');
-    expect(response?.status()).toBe(404);
+    await page.goto('/team');
+    await expect(page.getByRole('heading', { level: 1, name: /Meet Our Team/i })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Leadership Team' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Our Team' })).toBeVisible();
   });
 
   test('an impact record shows its figure and how it was counted', async ({ page }) => {

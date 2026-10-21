@@ -109,7 +109,12 @@ export async function getTeamByDepartment(department: string): Promise<TeamMembe
  * last), and deriving it from the data would sort the board above the people
  * who run the organization day to day.
  */
-export const teamDepartments = ['Leadership', 'Programs', 'Operations', 'Board'] as const;
+export const teamDepartments = [
+  'Leadership',
+  'Programmes',
+  'Community Outreach',
+  'Operations',
+] as const;
 
 /** Group the directory once, so a page renders every department in one pass. */
 export async function getTeamGrouped(): Promise<{ department: string; members: TeamMember[] }[]> {
@@ -119,7 +124,12 @@ export async function getTeamGrouped(): Promise<{ department: string; members: T
     .map((department) => ({
       department,
       members: team
-        .filter((member) => member.department === department)
+        .filter((member) => {
+          if (department === 'Programmes') {
+            return member.department === 'Programmes' || member.department === 'Programs';
+          }
+          return member.department === department;
+        })
         .sort((a, b) => a.displayOrder - b.displayOrder),
     }))
     .filter((group) => group.members.length > 0);

@@ -50,6 +50,7 @@ export interface SitemapEntry {
 const STATIC_ROUTES = [
   '/',
   '/about',
+  '/team',
   '/programs',
   '/campaigns',
   '/impact',

@@ -236,12 +236,15 @@ function toCampaign(row: ApiCampaignSummary | ApiCampaignDetail): Campaign {
     // Gallery images now come from `media` joined through `campaign_gallery`.
     // The storage key doubles as the placeholder seed until real uploads land,
     // so the deterministic artwork stays stable per image.
-    gallery: (detail.gallery ?? []).map((item) => ({
-      seed: item.storageKey,
-      alt: item.altText,
-      caption: item.caption ?? undefined,
-      ...(item.url ? { url: item.url } : {}),
-    })),
+    gallery: (detail.gallery ?? []).map((item) => {
+      const media = toMedia(item.url, item.storageKey, item.altText);
+      return {
+        seed: item.storageKey,
+        alt: item.altText,
+        caption: item.caption ?? undefined,
+        ...(media.url ? { url: media.url } : {}),
+      };
+    }),
     products: (detail.products ?? []).map((product) => toProduct(product, row.slug)),
     // Progress updates are `impact_updates` rows from Phase 4 onward, so they
     // carry a verified figure and the basis for it rather than loose prose.

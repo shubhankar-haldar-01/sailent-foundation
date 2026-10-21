@@ -157,9 +157,35 @@ export function toMedia(
 const IMAGE_EXTENSIONS = ['.webp', '.jpg', '.jpeg', '.png'] as const;
 
 function findLocalImage(seed: string): string | null {
-  for (const extension of IMAGE_EXTENSIONS) {
-    const path = `/images/${seed}${extension}`;
-    if (publicAssetExists(path)) return path;
+  const cleanSeed = seed.replace(/\.(webp|jpg|jpeg|png)$/i, '');
+  const candidates: string[] = [cleanSeed];
+
+  if (cleanSeed.startsWith('product-')) {
+    const parts = cleanSeed.split('-');
+    for (let i = 1; i < parts.length; i++) {
+      const sub = `product-${parts.slice(i).join('-')}`;
+      if (!candidates.includes(sub)) candidates.push(sub);
+    }
+  }
+
+  if (cleanSeed.includes('campaigns/') || cleanSeed.includes('/')) {
+    const match = cleanSeed.match(/campaigns\/([^/]+)(?:\/(\d+))?/);
+    if (match) {
+      const campaignSlug = match[1];
+      const index = match[2];
+      if (index) {
+        candidates.push(`campaign-${campaignSlug}-${index}`);
+        candidates.push(`campaign-${campaignSlug}-gallery-${index}`);
+      }
+      candidates.push(`campaign-${campaignSlug}`);
+    }
+  }
+
+  for (const candidate of candidates) {
+    for (const extension of IMAGE_EXTENSIONS) {
+      const path = `/images/${candidate}${extension}`;
+      if (publicAssetExists(path)) return path;
+    }
   }
   return null;
 }

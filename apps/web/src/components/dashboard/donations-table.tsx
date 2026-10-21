@@ -33,7 +33,7 @@ function getCampaignThumbnailUrl(donation: DonorDonation): string {
     return '/images/campaign-flood-relief-balasore.webp';
   }
   if (text.includes('health') || text.includes('clinic') || text.includes('medical')) {
-    return '/images/05_healthcare.webp';
+    return '/images/campaign-mobile-health-clinic-bastar.webp';
   }
   if (text.includes('tailor') || text.includes('women') || text.includes('livelihood')) {
     return '/images/campaign-women-livelihoods-ranchi.webp';
@@ -45,12 +45,12 @@ function getCampaignThumbnailUrl(donation: DonorDonation): string {
     return '/images/campaign-child-nutrition-gaya.webp';
   }
   if (text.includes('water') || text.includes('clean')) {
-    return '/images/community-volunteers.webp';
+    return '/images/campaign-water.webp';
   }
   if (text.includes('forest') || text.includes('environment') || text.includes('tree')) {
     return '/images/campaign-greener-communities-bhopal.webp';
   }
-  return '/images/02_about_group.webp';
+  return '/images/campaign-school-kits-jharkhand.webp';
 }
 
 function CampaignThumbnail({ donation }: { donation: DonorDonation }) {
