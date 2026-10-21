@@ -34,6 +34,8 @@ export const createStorySchema = z
       .max(200)
       .optional(),
     excerpt: optionalText(500),
+    /** The subject's own words, one sentence; the public page shows it on the photograph. */
+    pullQuote: optionalText(300),
     content: optionalText(50_000),
     ...narrative,
 

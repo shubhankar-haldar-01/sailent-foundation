@@ -448,6 +448,7 @@ export class StoriesService {
     const columns = [
       'title',
       'excerpt',
+      'pullQuote',
       'content',
       'challenge',
       'intervention',

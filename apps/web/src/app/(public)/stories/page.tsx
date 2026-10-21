@@ -3,9 +3,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 import { PageShell } from '@/components/layout/page-shell';
-import { Breadcrumbs } from '@/components/sections/breadcrumbs';
 import { FeaturedStory } from '@/components/stories/featured-story';
-import { StoriesCta } from '@/components/stories/stories-cta';
 import { LeafFan } from '@/components/stories/stories-decor';
 import { StoriesHero } from '@/components/stories/stories-hero';
 import { StoryCard } from '@/components/stories/story-card';
@@ -70,17 +68,10 @@ export default async function StoriesPage({
     <>
       <StoriesHero />
 
-      <PageShell className="pb-12 pt-1.5">
+      {/* The breadcrumb is in the hero's card (owner's design, 2026-10-14). */}
+      <PageShell className="pb-16 pt-8 lg:pb-20 lg:pt-10">
         {/* A little inside the page width, as the design sets the listing. */}
         <div className="lg:px-2.5">
-          <Breadcrumbs
-            className="mb-0 text-[0.75rem]"
-            entries={[
-              { name: 'Home', path: '/' },
-              { name: 'Stories', path: '/stories' },
-            ]}
-          />
-
           {categories.length > 0 ? (
             <StoryFilters categories={categories} current={category} />
           ) : null}
@@ -90,11 +81,11 @@ export default async function StoriesPage({
               <FeaturedStory story={lead} />
 
               {rest.length > 0 ? (
-                <section aria-labelledby="more-stories" className="mt-5">
+                <section aria-labelledby="more-stories" className="mt-6 lg:mt-8">
                   <h2 id="more-stories" className="sr-only">
                     More stories
                   </h2>
-                  <div className="grid gap-[1.125rem] sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-6">
                     {rest.map((story) => (
                       <StoryCard key={story.slug} story={story} />
                     ))}
@@ -103,7 +94,7 @@ export default async function StoriesPage({
               ) : null}
 
               {hasMore ? (
-                <div className="mt-4 flex justify-center">
+                <div className="mt-8 flex justify-center lg:mt-10">
                   <span className="relative">
                     <Link
                       href={moreHref}
@@ -134,8 +125,6 @@ export default async function StoriesPage({
           )}
         </div>
       </PageShell>
-
-      <StoriesCta />
     </>
   );
 }

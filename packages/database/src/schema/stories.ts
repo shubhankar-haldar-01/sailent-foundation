@@ -35,6 +35,8 @@ export const successStories = pgTable(
     title: varchar('title', { length: 240 }).notNull(),
     slug: varchar('slug', { length: 240 }).notNull(),
     excerpt: text('excerpt'),
+    /** The subject's own words, one sentence, shown on the photograph at the top of the public page (`0025`). */
+    pullQuote: text('pull_quote'),
     content: text('content'),
     coverImage: text('cover_image'),
     /** [{ url, alt, caption }] */

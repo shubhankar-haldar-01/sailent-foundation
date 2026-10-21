@@ -1667,33 +1667,93 @@ async function seedDemoContent(db: Database): Promise<void> {
       excerpt:
         'From a small village to a brighter future — Meera’s journey shows what’s possible with education.',
       subjectName: 'Meera',
+      category: 'Education',
       location: 'Ranchi, Jharkhand',
       programSlug: 'education',
       campaignSlug: 'school-kits-jharkhand',
+      pullQuote:
+        'Receiving my school kit and uniform meant my parents didn’t have to choose between my sister and me.',
+      challenge:
+        'Meera passed class eight near the top of her class in rural Ranchi. But the nearest secondary school was eleven kilometres away, requiring daily bus fare, books, and uniforms that her family could not afford on a daily wage. Facing rising household expenses, her parents were on the verge of pulling her out of school so her younger sister could continue instead.',
+      intervention:
+        'Through our Educate Rural Children initiative, our field workers provided Meera with a comprehensive school kit, textbooks, sturdy uniform sets, and covered her transportation pass for the entire academic term. Our mentors also met with her parents to ensure her study hours at home were protected.',
+      journey:
+        'The first term required resilience as Meera caught up with advanced mathematics while balancing household chores. With dedicated after-school remedial sessions and encouragement from volunteer teachers, her confidence surged. She maintained a 92% attendance rate throughout the monsoon and examination terms.',
+      outcome:
+        'Meera sat for her class ten board examinations and cleared them with distinction in the first division. Today, she is enrolled in higher secondary school preparing for state entrance tests, becoming the first girl in her extended family to reach class eleven.',
+      impact:
+        'Supporting one child’s education shifts the trajectory of an entire household. Meera’s younger sister is now enrolled in the same program, proving that education is the most enduring path out of poverty.',
     },
     {
       title: 'A Healthier Tomorrow for Ramesh',
       slug: 'a-healthier-season-for-ramesh',
       excerpt: 'The medical support I received changed my life.',
       subjectName: 'Ramesh',
+      category: 'Healthcare',
       location: 'Bastar, Chhattisgarh',
       programSlug: 'healthcare',
       campaignSlug: 'mobile-health-clinic-bastar',
+      pullQuote: 'Now I can work, spend time with my family and look forward to the future.',
+      challenge:
+        'Ramesh lives in a small village in Bastar, where the nearest government hospital is more than four hours away. For a long time, he suffered from severe joint pain and breathing difficulties, but regular check-ups and medicines were not accessible. Traveling to the city was expensive and difficult, so his health continued to decline, making it hard for him to work and support his family.',
+      intervention:
+        'Through our mobile health clinic, our medical team started visiting Ramesh’s village regularly. He received a thorough health check-up, necessary medicines, and guidance on managing his condition. Our team also educated his family about nutrition, hygiene and preventive care, ensuring he gets continued support even between the visits.',
+      journey:
+        'With regular treatment and follow-ups, Ramesh’s health gradually improved. He started feeling more energetic and was able to resume his daily activities. The support from our healthcare team and the encouragement from his community gave him confidence and hope for the future.',
+      outcome:
+        'Today, Ramesh is healthier, more active and able to spend quality time with his family. He no longer has to travel long distances for basic medical care, and he feels more confident about his future. His story is a reminder of how accessible healthcare can create a real and lasting change in people’s lives.',
+      impact:
+        'Stories like Ramesh’s inspire us to keep going. Every contribution helps us reach more families with essential healthcare.',
     },
     {
       title: 'From Struggle to Self-Reliance',
       slug: 'from-training-to-a-shop-of-her-own',
       excerpt: 'How skills training helped Sita build a better future for her family.',
       subjectName: 'Sita',
+      category: 'Women Empowerment',
       location: 'Ranchi, Jharkhand',
       programSlug: 'women-empowerment',
       campaignSlug: 'tailoring-training-centre',
+      pullQuote:
+        'Now I run my own tailoring shop, earn every month, and provide for my children with dignity.',
+      challenge:
+        'After losing her husband’s income, Sita was left alone to care for three young children in Ranchi with no steady livelihood. She took on intermittent agricultural labour, often earning less than 150 rupees a day. Without specialized vocational skills or collateral to secure a loan, finding sustainable work seemed impossible.',
+      intervention:
+        'Sita enrolled in the 6-month intensive tailoring and garment construction course at our Women’s Livelihood Training Centre. In addition to pattern making, machine maintenance, and finishing, she received practical training in bookkeeping, market pricing, and customer relations.',
+      journey:
+        'Balancing daily household duties with 4 hours of training every afternoon was demanding, but Sita never missed a session. With one-on-one mentorship from master tailors, she learned to sew school uniforms and traditional attire. Upon graduating, she was provided with a sewing machine and starter fabric through our micro-enterprise kit.',
+      outcome:
+        'Within four months of graduation, Sita set up a small tailoring unit at her home. She secured contracts for stitching local school uniforms and dresses for neighbouring villages, generating a dependable monthly income of over ₹12,000. Her children are now back in school with all required books and supplies.',
+      impact:
+        'When a woman achieves financial independence, she invests directly in her children’s health and education. Sita has now trained two other women in her neighbourhood, multiplying the impact of every rupee invested.',
+    },
+    {
+      title: 'Clean Water, Healthier Families',
+      slug: 'clean-water-healthier-families',
+      excerpt: 'Access to clean water is creating healthier and stronger communities in Kalahandi.',
+      subjectName: 'Kavita',
+      category: 'Environment',
+      location: 'Kalahandi, Odisha',
+      programSlug: 'environment',
+      campaignSlug: 'greener-communities-bhopal',
+      pullQuote:
+        'Having clean drinking water right in our village has saved our children from illness and given us our days back.',
+      challenge:
+        'For decades, families in Kavita’s village in Kalahandi had to walk over three kilometres twice a day to fetch water from an unprotected open stream. During the dry season, the stream slowed to a muddy trickle, and during monsoons, agricultural runoff led to frequent outbreaks of waterborne infections among children and elders.',
+      intervention:
+        'Our environmental and community health team partnered with village elders to survey groundwater levels and construct a solar-powered borewell with a multi-stage filtration system right in the village square. We formed a village water committee, trained five local residents in system maintenance, and conducted hygiene workshops.',
+      journey:
+        'Installing the system involved active community participation—villagers dug the distribution trenches and helped install the overhead storage tanks. Kavita joined the local water committee as treasurer, overseeing maintenance funds collected from households to ensure long-term community ownership.',
+      outcome:
+        'Today, over 120 households have reliable access to clean, potable drinking water within minutes of their doorsteps. Incidents of waterborne diseases in the village have plummeted by 80%, and women and girls save up to four hours every single day that are now dedicated to schooling and livelihood activities.',
+      impact:
+        'Clean water is the bedrock of community health, dignity, and local economic resilience. Ensuring sustainable access creates ripple effects across education, health, and gender equality.',
     },
   ];
 
   for (const [index, { programSlug, campaignSlug, ...story }] of storySeeds.entries()) {
     // Staggered a day apart. The listing sorts newest first, so without this
-    // all three share a timestamp and come back in whatever order the database
+    // all share a timestamp and come back in whatever order the database
     // returns them — which is not the order the homepage row is designed in.
     const publishedAt = inDays(-index);
     await db
@@ -1702,11 +1762,6 @@ async function seedDemoContent(db: Database): Promise<void> {
         ...story,
         programId: programIds.get(programSlug) ?? null,
         campaignId: campaignIds.get(campaignSlug) ?? null,
-        challenge: 'Demo challenge section.',
-        intervention: 'Demo intervention section.',
-        journey: 'Demo journey section.',
-        outcome: 'Demo outcome section.',
-        impact: 'Demo impact section.',
         // Required before publishing a story that names a person — the
         // constraint rejects the row otherwise, which is the point.
         consentObtained: true,
@@ -1719,7 +1774,14 @@ async function seedDemoContent(db: Database): Promise<void> {
           title: story.title,
           excerpt: story.excerpt,
           subjectName: story.subjectName,
+          category: story.category,
           location: story.location,
+          pullQuote: story.pullQuote,
+          challenge: story.challenge,
+          intervention: story.intervention,
+          journey: story.journey,
+          outcome: story.outcome,
+          impact: story.impact,
           publishedAt,
           programId: programIds.get(programSlug) ?? null,
           campaignId: campaignIds.get(campaignSlug) ?? null,

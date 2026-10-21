@@ -22,6 +22,7 @@ interface ApiStorySummary {
 
 interface ApiStoryDetail extends ApiStorySummary {
   content: string | null;
+  pullQuote?: string | null;
   challenge: string | null;
   intervention: string | null;
   journey: string | null;
@@ -55,6 +56,7 @@ function toStory(row: ApiStorySummary | ApiStoryDetail): Story {
     publishedAt: row.publishedAt,
     cover: toMedia(row.coverImage, `story-${row.slug}`, row.title),
 
+    pullQuote: detail.pullQuote ?? null,
     challenge: detail.challenge ?? '',
     intervention: detail.intervention ?? '',
     journey: detail.journey ?? '',

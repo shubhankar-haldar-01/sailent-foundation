@@ -391,6 +391,23 @@ describe('Success stories (integration)', () => {
       expect((await request(server).get(`${PREFIX}/stories/${slug}`)).status).toBe(404);
     });
 
+    it("serves the subject's pull quote once published, and nothing when there is none", async () => {
+      const quoted = await draft({ pullQuote: 'Now I can work, and plan for next year.' });
+      const plain = await draft();
+      for (const story of [quoted, plain]) {
+        const { id } = (story.body as Envelope<{ id: string }>).data!;
+        await setStatus(id, 'published');
+      }
+
+      const read = async (response: typeof quoted) => {
+        const { slug } = (response.body as Envelope<{ slug: string }>).data!;
+        const detail = await request(server).get(`${PREFIX}/stories/${slug}`);
+        return (detail.body as Envelope<{ pullQuote: string | null }>).data!.pullQuote;
+      };
+      expect(await read(quoted)).toBe('Now I can work, and plan for next year.');
+      expect(await read(plain)).toBeNull();
+    });
+
     it('NEVER exposes the name on an anonymised story', async () => {
       /*
         The flag was being recorded and then ignored: the public endpoint

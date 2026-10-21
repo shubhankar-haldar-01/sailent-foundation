@@ -80,6 +80,14 @@ export function StoryForm({
         >
           <TextArea name="excerpt" rows={3} defaultValue={story?.excerpt ?? ''} />
         </Field>
+        <Field
+          label="Quote"
+          name="pullQuote"
+          errors={state.fieldErrors}
+          hint="Their own words, one sentence. It appears on the photograph at the top of the story, attributed to the name below. Leave blank for none."
+        >
+          <TextArea name="pullQuote" rows={2} defaultValue={story?.pullQuote ?? ''} />
+        </Field>
         <Field label="Introduction" name="content" errors={state.fieldErrors}>
           <TextArea name="content" rows={6} defaultValue={story?.content ?? ''} />
         </Field>

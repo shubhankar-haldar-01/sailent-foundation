@@ -1438,6 +1438,7 @@ function storyFields(form: FormData) {
   return {
     title: text('title'),
     excerpt: orNull('excerpt'),
+    pullQuote: orNull('pullQuote'),
     content: orNull('content'),
     challenge: orNull('challenge'),
     intervention: orNull('intervention'),

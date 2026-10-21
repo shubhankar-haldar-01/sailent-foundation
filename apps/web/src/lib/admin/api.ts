@@ -561,6 +561,8 @@ export interface PublishBlocker {
 
 export interface AdminStory extends AdminStorySummary {
   excerpt: string | null;
+  /** The subject's own words, one sentence, shown on the public page's photograph. */
+  pullQuote: string | null;
   content: string | null;
   challenge: string | null;
   intervention: string | null;

@@ -673,6 +673,7 @@ export class ContentService {
       title: story.title,
       slug: story.slug,
       excerpt: story.excerpt,
+      pullQuote: story.pullQuote,
       content: story.content,
       coverImage: story.coverImage,
       gallery: story.gallery,

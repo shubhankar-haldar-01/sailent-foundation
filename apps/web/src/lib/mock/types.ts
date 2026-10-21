@@ -164,6 +164,8 @@ export interface Story extends Omit<StoryCardModel, 'coverImage'> {
    * (the API resolves this). Absent on the fixtures.
    */
   category?: string | null;
+  /** The subject's own words, one sentence, for the photograph at the top of the page. */
+  pullQuote?: string | null;
   /** The five-part structure Phase 0 specifies for success stories. */
   challenge: string;
   intervention: string;

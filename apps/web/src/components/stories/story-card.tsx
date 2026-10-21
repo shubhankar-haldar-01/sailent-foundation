@@ -1,101 +1,182 @@
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, CalendarDays } from 'lucide-react';
+
 import { cn } from '@sailent/ui';
 
-import { CategoryIcon, categoryTone } from '@/components/home/category-icon';
+import { categoryTone } from '@/components/home/category-icon';
 import { MediaFrame } from '@/components/media/media-frame';
 import type { Story } from '@/lib/mock/types';
-import { StoryMeta } from './featured-story';
+
+import { storyDate, StoryMeta } from './featured-story';
+import { StoryCategoryIcon } from './story-category-icon';
 
 /**
- * Where the Stories design colours a category differently from the campaign
- * palette (`categoryTone`): Healthcare is blue and Disaster Relief orange on
- * these cards. Both pairs are the palette's own, already measured on white.
+ * The badge over a card's photograph: a white pill with the category's icon
+ * and name in its own ink. White rather than the category's wash, because
+ * three of the inks (blue, amber, mint) fall under WCAG AA's 4.5:1 on their
+ * own wash and all of them clear it on white. The owner's design draws
+ * Healthcare blue (the site's tone for Healthcare is rose), so that one is
+ * set here; every other category, including any added later, takes its own.
  */
-const STORY_CHIP: Record<string, string> = {
-  healthcare: 'bg-wash-blue/60 text-wash-blue-ink',
-  health: 'bg-wash-blue/60 text-wash-blue-ink',
-  disasterrelief: 'bg-wash-amber/60 text-wash-amber-ink',
-};
-
-/** Marks drawn solid, as the design does — except the book, which fills to a plain block. */
-const OUTLINED = new Set(['education']);
-
-const chipKey = (category: string) => category.toLowerCase().replace(/[^a-z]/g, '');
-
-function storyChip(category: string): string {
-  return STORY_CHIP[chipKey(category)] ?? categoryTone(category).chip;
+function badgeInk(category: string): string {
+  const key = category.toLowerCase().replace(/[^a-z]/g, '');
+  if (key === 'healthcare' || key === 'health') return 'text-wash-blue-ink';
+  return categoryTone(category).ink;
 }
 
 /**
- * A story in a grid (owner's page design, 2026-10-08): the photograph with
- * the category on it, the title, two lines of summary, where and when, and an
- * arrow. The whole card links to the story; the arrow is decoration that
- * repeats what the card already does.
+ * A story below the lead one, matched to the owner's design (2026-10-15): a
+ * row — the photograph on the left (53% of the card, as tall as the card)
+ * with the category's badge in its top corner; on the right the title, the
+ * summary, where and when, and "Read Story" beside a pale-orange arrow.
+ * Below `md` the photograph goes on top.
+ *
+ * THE WHOLE CARD IS ONE LINK. The title is the only anchor; its `::after`
+ * stretches over the card, so a click anywhere opens the story while a screen
+ * reader hears one link named by the title. "Read Story" and the arrow are
+ * decoration. A keyboard focus ring is drawn round the whole card.
  */
-export function StoryCard({ story, className }: { story: Story; className?: string }) {
+export function StoryCard({
+  story,
+  className,
+  variant = 'row',
+}: {
+  story: Story;
+  className?: string;
+  /**
+   * `row`: the listing's card. `compact`: the story page's "More stories"
+   * card — the photograph inset at the left, the title and summary beside it,
+   * and the date and "Read Story" on a row beneath both.
+   */
+  variant?: 'row' | 'compact';
+}) {
+  const storyCategory = story.category ?? story.programName;
+  const href = `/stories/${story.slug}`;
+
+  if (variant === 'compact') {
+    const date = story.publishedAt ? storyDate(story.publishedAt) : '';
+    return (
+      <article
+        className={cn(
+          'dark:bg-surface dark:border-border group relative flex flex-col justify-between rounded-xl border border-slate-200/80 bg-white p-3 sm:p-3.5',
+          'shadow-[0_1px_3px_rgb(16_42_67/0.05)] transition-all duration-200 hover:shadow-md motion-safe:hover:-translate-y-0.5',
+          'has-[a:focus-visible]:outline-ring has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2',
+          className,
+        )}
+      >
+        <div className="flex gap-3.5">
+          <div className="relative aspect-[4/3] w-[42%] shrink-0 overflow-hidden rounded-lg">
+            <MediaFrame
+              media={story.cover}
+              rounded={false}
+              className="absolute inset-0 aspect-auto size-full object-cover"
+              sizes="(max-width: 768px) 42vw, 190px"
+            />
+          </div>
+          <div className="min-w-0 flex-1 py-0.5">
+            <h3 className="font-display dark:text-foreground line-clamp-2 text-sm font-bold leading-snug tracking-[-0.01em] text-[#102A43] sm:text-[0.9375rem]">
+              <Link
+                href={href}
+                className="group-hover:text-primary transition-colors after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none"
+              >
+                {story.title}
+              </Link>
+            </h3>
+            {story.summary ? (
+              <p className="dark:text-muted-foreground mt-1.5 line-clamp-2 text-xs leading-relaxed text-slate-500">
+                {story.summary}
+              </p>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="dark:border-border/60 mt-3.5 flex items-center justify-between border-t border-slate-100 px-0.5 pt-2.5">
+          {date ? (
+            <span className="dark:text-muted-foreground inline-flex items-center gap-1.5 text-xs text-slate-600">
+              <CalendarDays className="size-3.5 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+              <time dateTime={story.publishedAt}>{date}</time>
+            </span>
+          ) : (
+            <span />
+          )}
+          <span
+            aria-hidden="true"
+            className="text-primary inline-flex items-center gap-1 text-xs font-semibold"
+          >
+            Read Story
+            <ArrowRight
+              className="size-3.5 transition-transform motion-safe:group-hover:translate-x-0.5"
+              strokeWidth={2}
+            />
+          </span>
+        </div>
+      </article>
+    );
+  }
+
   return (
     <article
       className={cn(
-        'border-border/60 bg-surface @container group relative flex flex-col overflow-hidden rounded-2xl border shadow-[0_8px_24px_-16px_rgb(15_23_42/0.25)]',
-        'duration-(--duration-base) transition-[translate,box-shadow] hover:shadow-lg motion-safe:hover:-translate-y-1',
-        'focus-within:shadow-lg motion-safe:focus-within:-translate-y-1',
+        // Half and half at 1280–1439px, where two cards share the row and the text needs the room.
+        'bg-surface border-accent-100 dark:border-border min-[90rem]:grid-cols-[53%_47%] group relative flex flex-col overflow-hidden rounded-2xl border md:grid md:grid-cols-[53%_47%] xl:grid-cols-2',
+        'shadow-[0_1px_2px_rgb(16_42_67/0.04),0_10px_24px_-14px_rgb(16_42_67/0.16)]',
+        'duration-(--duration-base) transition-[translate,box-shadow] hover:shadow-[0_2px_4px_rgb(16_42_67/0.05),0_18px_34px_-16px_rgb(16_42_67/0.24)] motion-safe:hover:-translate-y-0.5',
+        'has-[a:focus-visible]:outline-ring has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2',
         className,
       )}
     >
-      <div className="relative">
+      <div className="relative aspect-[16/10] w-full md:aspect-auto md:min-h-[13.5rem] xl:min-h-[15rem]">
         <MediaFrame
           media={story.cover}
           rounded={false}
-          className="aspect-[332/152]"
-          sizes="(max-width: 767px) 92vw, (max-width: 1023px) 46vw, 340px"
+          className="absolute inset-0 aspect-auto size-full"
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 53vw, 360px"
         />
-        {story.category ? (
-          // On a white backing, so the tint is a known colour whatever the photograph does.
-          <span className="bg-surface absolute left-3 top-2 rounded-full shadow-sm">
-            <span
-              className={cn(
-                'inline-flex h-9 items-center gap-3 rounded-full pl-3.5 pr-4 text-[0.6875rem] font-bold leading-none',
-                storyChip(story.category),
-              )}
-            >
-              <CategoryIcon
-                category={story.category}
-                className={cn(
-                  'size-[1.0625rem]',
-                  !OUTLINED.has(chipKey(story.category)) && 'fill-current',
-                )}
-              />
-              {story.category}
-            </span>
+
+        {storyCategory ? (
+          <span
+            className={cn(
+              'bg-surface absolute left-3.5 top-3.5 z-10 inline-flex h-[2.125rem] items-center gap-2 rounded-full px-3.5 text-[0.8125rem] font-bold shadow-[0_6px_14px_-8px_rgb(16_42_67/0.5)]',
+              badgeInk(storyCategory),
+            )}
+          >
+            <StoryCategoryIcon category={storyCategory} />
+            <span>{storyCategory}</span>
           </span>
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col pb-2 pl-5 pr-3 pt-3">
-        <h3 className="font-display text-[0.9625rem] font-bold leading-snug">
+      <div className="flex min-w-0 flex-col p-5 sm:p-6 xl:py-5">
+        <h3 className="font-display text-foreground line-clamp-2 text-lg font-bold leading-tight tracking-[-0.01em] sm:text-xl xl:text-[1.3125rem]">
           <Link
-            href={`/stories/${story.slug}`}
-            className="hover:text-info-action focus-visible:outline-ring line-clamp-2 rounded-sm after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
+            href={href}
+            className="group-hover:text-primary transition-colors after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none"
           >
             {story.title}
           </Link>
         </h3>
+
         {story.summary ? (
-          <p className="text-muted-foreground mt-1 line-clamp-2 max-w-[14.75rem] text-[0.84375rem] leading-[1.48]">
+          <p className="text-muted-foreground mt-2.5 line-clamp-2 text-sm leading-normal sm:text-[0.9375rem]">
             {story.summary}
           </p>
         ) : null}
 
-        <div className="mt-auto flex items-center justify-between gap-3 pt-2">
-          <StoryMeta story={story} />
-          <span
-            aria-hidden="true"
-            className="bg-wash-coral text-cta-glow @max-[19rem]:hidden grid size-8 shrink-0 place-items-center rounded-full transition-transform motion-safe:group-hover:translate-x-0.5"
-          >
-            <ArrowRight className="size-4" />
+        <StoryMeta story={story} className="mt-4" />
+
+        {/* At the foot of the column, so the arrow lines up across the cards in a row. */}
+        <span
+          aria-hidden="true"
+          className="text-primary mt-auto inline-flex items-center gap-3 pt-5 text-[0.9375rem] font-bold"
+        >
+          Read Story
+          <span className="bg-cta/12 text-cta-glow duration-(--duration-base) group-hover:bg-primary group-hover:text-primary-foreground grid size-8 shrink-0 place-items-center rounded-full transition-colors">
+            <ArrowRight
+              className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5"
+              strokeWidth={2.2}
+            />
           </span>
-        </div>
+        </span>
       </div>
     </article>
   );

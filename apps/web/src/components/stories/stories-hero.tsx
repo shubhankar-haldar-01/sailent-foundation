@@ -1,135 +1,121 @@
-import { BookOpen, Heart, UserRound, type LucideIcon } from 'lucide-react';
+import { BookOpen, Heart, Users, type LucideIcon } from 'lucide-react';
+
 import { cn } from '@sailent/ui';
 
 import { MediaFrame } from '@/components/media/media-frame';
-import { FilledSprig, OutlineLeaves, TripleRays } from './stories-decor';
+import { Breadcrumbs } from '@/components/sections/breadcrumbs';
+import { headingExtraBold } from '@/lib/fonts';
 
 /**
- * The Stories page's opening band (owner's page design, 2026-10-08).
+ * The Stories page's opening band, matched to the owner's design (2026-10-14):
+ * one cream, rounded card. On the left the eyebrow, the two-line headline
+ * ("Real people." navy, "Real change." orange), the lead, three highlights on
+ * soft discs; on the right one photograph
+ * with rounded corners, set almost to the card's edge.
  *
- * Title, lead and three promises on the left; on the right a collage of three
- * portraits, each in a white frame at its own slight angle, over a peach wash
- * with line-art and filled leaves. The collage is laid out in PERCENTAGES of
- * a fixed-ratio box, so it scales down whole on a narrower screen rather than
- * rearranging. The portraits are illustrative photographs, not the subjects
- * of the stories below — they are `aria-hidden` with empty alt text.
+ * ON A PHONE IT IS NOT THE DESKTOP SHRUNK: eyebrow, headline and lead, then
+ * the photograph full-width at 4:3, then the highlights as rows — the order
+ * the design's phone panel draws. The source order IS
+ * that phone order; from `lg` the grid places the photograph in the right
+ * column across the text column's rows.
+ *
+ * The breadcrumb is not shown (owner, 2026-10-15) but stays in the card for
+ * screen readers and as the page's one BreadcrumbList.
+ *
+ * The photograph is illustrative — the pupils in it are not the subjects of
+ * the stories below — so its alt text says what it shows, no more.
  */
-const PROMISES: { icon: LucideIcon; lines: [string, string] }[] = [
-  { icon: UserRound, lines: ['Real people', 'real stories'] },
-  { icon: BookOpen, lines: ['Stories from', 'the ground'] },
-  { icon: Heart, lines: ['Hope that', 'inspires change'] },
+const HIGHLIGHTS: { icon: LucideIcon; title: string; text: string }[] = [
+  { icon: Users, title: 'Real people', text: 'Lives and voices from our communities.' },
+  {
+    icon: BookOpen,
+    title: 'Stories from the ground',
+    text: 'Real experiences and lasting impact.',
+  },
+  { icon: Heart, title: 'Hope that inspires change', text: 'Brighter futures through our work.' },
 ];
 
 export function StoriesHero() {
   return (
-    <section aria-labelledby="stories-title" className="overflow-hidden">
-      <div className="container-page min-[70rem]:grid-cols-[minmax(0,1fr)_minmax(0,31.5rem)] grid items-center gap-10 pb-8 pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,25.5rem)] lg:gap-2 lg:pb-0 lg:pl-[3.125rem] lg:pr-[1.875rem] lg:pt-2">
-        <div className="lg:pb-3">
-          <p className="text-primary text-caption font-bold uppercase tracking-[0.06em]">Stories</p>
-          <h1
-            id="stories-title"
-            className="font-display mt-2 text-balance text-[clamp(2rem,1.4rem+2vw,2.4rem)] font-bold leading-[1.08] tracking-[-0.01em]"
-          >
-            <span className="sm:block">One person, one program, </span>
-            <span className="sm:block">one thing that changed</span>
-          </h1>
-          <p className="text-muted-foreground mt-4 max-w-[30rem] text-[0.9375rem] leading-[1.5]">
-            Real stories from real people — children, families and communities whose lives are
-            changing through our long-term work.
-          </p>
+    <section aria-labelledby="stories-title" className="pt-4 sm:pt-6 lg:pt-8">
+      <div className="container-page">
+        <div
+          className={cn(
+            'bg-surface-warm rounded-[1.25rem] px-6 pb-8 pt-10 sm:rounded-[1.75rem] sm:px-10 sm:pb-10 sm:pt-12',
+            // The photograph takes 44% of the card, as the design proportions it; the text the rest.
+            'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,44%)] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-4 lg:py-16 lg:pl-16 lg:pr-2',
+          )}
+        >
+          <div className="lg:col-start-1 lg:row-start-1">
+            <p className="text-primary flex items-center gap-5 text-sm font-semibold uppercase leading-6 tracking-[0.24em]">
+              <span aria-hidden="true" className="bg-cta-bright h-0.5 w-12 shrink-0 rounded-full" />
+              Stories
+            </p>
+            <h1
+              id="stories-title"
+              className={cn(
+                headingExtraBold.className,
+                'text-foreground mt-5 text-[clamp(2.25rem,0.5rem+4.4vw,4.375rem)] leading-[1.1] tracking-[-0.025em]',
+              )}
+            >
+              <span className="block">Real people.</span>
+              {/* Display size only: the bright orange is for large text (`--cta-bright`). */}
+              <span className="text-cta-bright block">Real change.</span>
+            </h1>
+            <p className="text-foreground/75 mt-5 max-w-[38rem] text-[1.0625rem] leading-[1.5] sm:text-lg lg:mt-6 lg:text-xl xl:text-[1.375rem]">
+              Stories from children, families and communities whose lives are changing through our
+              long-term work.
+            </p>
+          </div>
 
-          <ul className="mt-6 flex flex-wrap gap-x-9 gap-y-4">
-            {PROMISES.map(({ icon: Icon, lines }) => (
-              <li key={lines[0]} className="flex items-center gap-3.5">
+          {/* 4:3 and full-width on a phone; from `lg`, the right column, as tall as its 8:7 shape. */}
+          <MediaFrame
+            media={{
+              seed: 'campaigns-hero-education',
+              alt: 'A schoolgirl in uniform smiling, a book in her arms and her classmates behind her',
+              url: '/images/campaigns-hero-education.webp',
+            }}
+            aspect="photo"
+            rounded={false}
+            priority
+            focus="left center"
+            className="mt-5 rounded-[0.875rem] sm:mt-7 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:aspect-[8/7] lg:rounded-[1.125rem]"
+            sizes="(max-width: 64rem) 100vw, 36rem"
+          />
+
+          {/* Three across where the row has room (a tablet, and the full desktop column from 1408px); rows between, where the text column beside the photograph is narrow. */}
+          <ul className="min-[88rem]:grid-cols-3 min-[88rem]:gap-x-2.5 mt-4 grid gap-y-3.5 sm:mt-8 md:grid-cols-3 md:gap-x-5 lg:col-start-1 lg:row-start-2 lg:mt-11 lg:max-w-[44rem] lg:grid-cols-1 lg:gap-y-5">
+            {HIGHLIGHTS.map(({ icon: Icon, title, text }) => (
+              <li key={title} className="flex items-center gap-3.5">
                 <span
                   aria-hidden="true"
-                  className="bg-wash-coral text-cta-glow grid size-[3.25rem] shrink-0 place-items-center rounded-full"
+                  className="bg-wash-coral text-cta-glow grid size-14 shrink-0 place-items-center rounded-full lg:size-[4.5rem]"
                 >
-                  <Icon className="size-[1.375rem]" strokeWidth={1.75} />
+                  <Icon className="size-6 lg:size-7" strokeWidth={1.75} />
                 </span>
-                <span className="text-foreground text-[0.8125rem] font-medium leading-[1.6]">
-                  {lines[0]}
-                  <br />
-                  {lines[1]}
+                <span className="min-w-0">
+                  <span className="font-display text-foreground block text-base font-bold leading-[1.25] lg:text-[1.0625rem]">
+                    {title}
+                  </span>
+                  <span className="text-foreground/70 mt-1 block text-[0.8125rem] leading-[1.4]">
+                    {text}
+                  </span>
                 </span>
               </li>
             ))}
           </ul>
-        </div>
 
-        <Collage />
+          {/* Not shown (owner, 2026-10-15); kept for screen readers and as BreadcrumbList data. */}
+          <div className="sr-only">
+            <Breadcrumbs
+              entries={[
+                { name: 'Home', path: '/' },
+                { name: 'Stories', path: '/stories' },
+              ]}
+            />
+          </div>
+        </div>
       </div>
     </section>
-  );
-}
-
-/** A photograph in a white frame, turned by `rotate`. */
-function FramedPhoto({
-  url,
-  focus,
-  className,
-  sizes,
-  priority,
-}: {
-  url: string;
-  focus?: string;
-  className: string;
-  sizes: string;
-  priority?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        'absolute rounded-[1.25rem] border-[5px] border-white shadow-[0_14px_30px_-14px_rgb(15_23_42/0.45)] dark:border-neutral-200',
-        className,
-      )}
-    >
-      <MediaFrame
-        media={{ seed: url, alt: '', url }}
-        rounded={false}
-        priority={priority}
-        focus={focus}
-        className="aspect-auto size-full rounded-[0.95rem]"
-        sizes={sizes}
-      />
-    </div>
-  );
-}
-
-function Collage() {
-  return (
-    <div
-      aria-hidden="true"
-      className="relative mx-auto aspect-[505/325] w-full max-w-[31.5rem] lg:mx-0 lg:justify-self-end"
-    >
-      {/* Peach washes behind the photographs. */}
-      <span className="bg-wash-coral absolute left-0 top-[24%] aspect-square w-[38%] rounded-full" />
-      <span className="bg-wash-coral absolute left-[88%] top-[17%] h-[77%] w-[14%] rounded-full" />
-
-      <OutlineLeaves className="text-cta-glow/70 absolute -left-[1%] top-[10.5%] h-[51.5%] w-auto" />
-      <FilledSprig className="text-wash-mint-ink/45 absolute -left-[1%] top-[46.9%] h-[49.1%] w-auto" />
-      <TripleRays className="text-cta-glow absolute -top-[1%] left-[81%] w-[11%]" />
-      <FilledSprig className="text-wash-mint-ink/45 absolute left-[90%] top-[69%] h-[21%] w-auto" />
-
-      <FramedPhoto
-        url="/images/campaigns-hero-education.webp"
-        focus="38% 30%"
-        priority
-        className="left-[15%] top-[2%] h-[93%] w-[59%] rotate-[3deg]"
-        sizes="(max-width: 1024px) 60vw, 300px"
-      />
-      <FramedPhoto
-        url="/images/16_story_priya.webp"
-        focus="center 30%"
-        className="left-[71%] top-[17%] h-[47%] w-[29%] rotate-[9deg]"
-        sizes="160px"
-      />
-      <FramedPhoto
-        url="/images/15_story_ramesh.webp"
-        focus="center 35%"
-        className="left-[63%] top-[55%] h-[36%] w-[26%] rotate-[-4deg]"
-        sizes="140px"
-      />
-    </div>
   );
 }
