@@ -3,12 +3,12 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowRight, ChevronDown, Menu, Search, UserRound, X } from 'lucide-react';
+import { ArrowRight, ChevronDown, Menu, UserRound, X } from 'lucide-react';
 import { Button, cn } from '@sailent/ui';
 
 import { primaryCta, primaryNav, siteConfig, type NavEntry } from '@/lib/site-config';
 import { BrandLockup } from './brand-mark';
-import { ThemeToggle, ThemeToggleRow } from './theme-toggle';
+import { ThemeToggle } from './theme-toggle';
 import { SOCIAL_ICONS_SOLID } from './social-icons';
 
 /**
@@ -104,10 +104,11 @@ export function SiteHeader({
   /*
     THE PHONE MENU'S OWN "CURRENT PAGE".
 
-    Its groups list their own links (`mobileChildren`), and two of those are
-    also somewhere else: Stories has a top-level row, and "Partner with Us"
-    shares /contact with the Contact Us row under the groups. On those pages
-    the row marks the current page, and no group claims it.
+    Its groups list their own links (`mobileChildren`), and one of those is
+    also somewhere else: "Partner with Us" shares /contact with the Contact Us
+    row under the groups. On that page the row marks the current page, and no
+    group claims it. A page that has a top-level row of its own is never
+    claimed by a group either.
   */
   const mobileChildrenOf = (entry: NavEntry) => entry.mobileChildren ?? entry.children ?? [];
   const isMobileChildActive = (href: string) => href !== '/contact' && isActive(href);
@@ -161,6 +162,7 @@ export function SiteHeader({
     <>
       <header
         className={cn(
+          'print:hidden',
           // Pure white on the tinted page (owner decision, 2026-10-08), so the bar
           // stands apart from the content below it.
           'bg-surface duration-(--duration-base) sticky top-0 z-50 border-b backdrop-blur-sm transition-shadow',
@@ -470,17 +472,6 @@ export function SiteHeader({
             </li>
             <li>
               <Link
-                href="/search"
-                aria-current={isActive('/search') ? 'page' : undefined}
-                onClick={() => setIsOpen(false)}
-                className={utilityRow(isActive('/search'))}
-              >
-                <Search className="size-7 shrink-0" strokeWidth={2.2} aria-hidden="true" />
-                Search
-              </Link>
-            </li>
-            <li>
-              <Link
                 href="/contact"
                 aria-current={isActive('/contact') ? 'page' : undefined}
                 onClick={() => setIsOpen(false)}
@@ -489,9 +480,6 @@ export function SiteHeader({
                 <MailSolid className="size-7 shrink-0" />
                 Contact Us
               </Link>
-            </li>
-            <li>
-              <ThemeToggleRow className={utilityRow(false)} iconClassName="size-7 shrink-0" />
             </li>
           </ul>
 

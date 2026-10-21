@@ -6,28 +6,20 @@ import { footerNav, legalNav, siteConfig } from '@/lib/site-config';
 import { HeartDoodle } from '@/components/home/focus-icons';
 import { ScriptAccent } from '@/components/sections/script-accent';
 
-import { BrandLockup } from './brand-mark';
+import { BrandGlyph } from './brand-mark';
 import { MobileFooter } from './mobile-footer';
 import { SOCIAL_ICONS } from './social-icons';
 
 /**
- * Site footer.
+ * Site footer matching the approved warm design.
  *
- * Five columns as approved: the brand block, four navigation columns and the
- * contact details, with the legal line beneath.
- *
- * There is NO newsletter form and no donate band here. Both were duplicates —
- * the newsletter has its own band directly above the footer, and the ask
- * already appears in the header, the hero, the donation widget, every campaign
- * card and the community panel. A sixth copy a few hundred pixels below the
- * fifth adds nothing and pushes the contact details further down.
- *
- * Contact details and social links come from Admin → Settings (Phase 13,
- * `getOrganisation`); a detail nobody has entered is left out rather than
- * shown blank. The statutory identifiers are NOT repeated
- * here — they live on /about, and a table of DEMO-marked registration numbers
- * under every page of the site was the tallest thing in a footer the approved
- * design keeps to five columns.
+ * Warm cream background (#FFF9F2), prominent brand lockup with mission text and
+ * round social buttons, orange section heading bars, two short link columns,
+ * contact details with peach icon badges, and the handwritten "People,
+ * Purpose, Possibilities" script with heart flourish. No "Donate Now" button:
+ * taken out of the footer at the owner's request (2026-10-16). The pages' own
+ * donate buttons and the phone menu's Donate Now remain; the desktop header
+ * bar has none.
  */
 export async function SiteFooter() {
   const year = new Date().getFullYear();
@@ -37,16 +29,65 @@ export async function SiteFooter() {
   const addressSecond = [address.city, address.state, address.country].filter(Boolean).join(', ');
 
   return (
-    <footer className="bg-accent-950 mt-auto text-white/85">
-      {/* Below `md` the phone layout; from `md` up, the footer below, unchanged. */}
-      <MobileFooter organisation={organisation} year={year} />
-      <div className="container-page py-9 max-md:hidden md:py-10">
-        <div className="grid gap-8 lg:grid-cols-12 lg:gap-6">
-          {/* Brand ---------------------------------------------------------- */}
-          <div className="space-y-4 lg:col-span-3">
-            <BrandLockup tone="inverse" href={null} />
+    // `overflow-clip`: the corner leaves sit 24px outside the footer, and unclipped they gave every page a sideways scroll.
+    <footer className="border-border bg-surface dark:border-border dark:bg-surface relative mt-auto overflow-clip border-t text-[#475569] dark:text-slate-300 print:hidden">
+      {/* Decorative botanical watermark corners from approved design */}
+      <div
+        className="pointer-events-none absolute -bottom-6 -left-6 select-none text-[#F4D9C4] opacity-25 dark:opacity-10"
+        aria-hidden="true"
+      >
+        <svg width="220" height="160" viewBox="0 0 220 160" fill="currentColor">
+          <path d="M0 160C30 100 90 60 170 30C120 90 60 140 0 160Z" />
+          <path d="M40 160C80 110 140 80 220 70C170 115 100 150 40 160Z" opacity="0.75" />
+          <path d="M10 160C50 130 90 105 150 95C110 125 60 150 10 160Z" opacity="0.5" />
+        </svg>
+      </div>
+      <div
+        className="pointer-events-none absolute -bottom-6 -right-6 select-none text-[#F4D9C4] opacity-25 dark:opacity-10"
+        aria-hidden="true"
+      >
+        <svg
+          width="220"
+          height="160"
+          viewBox="0 0 220 160"
+          fill="currentColor"
+          className="-scale-x-100"
+        >
+          <path d="M0 160C30 100 90 60 170 30C120 90 60 140 0 160Z" />
+          <path d="M40 160C80 110 140 80 220 70C170 115 100 150 40 160Z" opacity="0.75" />
+          <path d="M10 160C50 130 90 105 150 95C110 125 60 150 10 160Z" opacity="0.5" />
+        </svg>
+      </div>
 
-            <ul className="flex flex-wrap gap-2">
+      {/* Mobile view (< md) */}
+      <MobileFooter organisation={organisation} year={year} />
+
+      {/* Desktop view (>= md) */}
+      <div className="container-page relative z-10 py-7 max-md:hidden lg:py-8">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+          {/* Column 1: Brand & Mission */}
+          <div className="space-y-3 lg:col-span-4">
+            <Link href="/" className="inline-flex items-center gap-2.5">
+              <span className="text-primary flex size-9 shrink-0 items-center justify-center">
+                <BrandGlyph className="size-8" />
+              </span>
+              <span>
+                <span className="font-display block text-xl font-bold leading-tight tracking-tight">
+                  <span className="text-[#0F172A] dark:text-white">Sailent</span>{' '}
+                  <span className="text-primary">Foundation</span>
+                </span>
+                <span className="mt-0.5 block text-[11px] font-medium tracking-normal text-slate-500 dark:text-slate-400">
+                  People • Progress • Possibilities
+                </span>
+              </span>
+            </Link>
+
+            <p className="max-w-xs text-sm leading-relaxed text-[#475569] dark:text-slate-400">
+              Empowering communities through education, healthcare, and sustainable opportunities
+              for a brighter tomorrow.
+            </p>
+
+            <ul className="flex flex-wrap gap-2.5 pt-1">
               {organisation.social.map((link) => {
                 const Icon = SOCIAL_ICONS[link.label];
                 return (
@@ -56,10 +97,10 @@ export async function SiteFooter() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`${siteConfig.name} on ${link.label}`}
-                      className="focus-visible:outline-ring grid size-8 place-items-center rounded-full text-white/80 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
+                      className="focus-visible:outline-ring shadow-xs size-8.5 border-border bg-surface dark:border-border dark:bg-surface hover:text-primary flex items-center justify-center rounded-full border text-slate-700 transition-all hover:border-[#EB6A1F] focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-slate-300 dark:hover:border-orange-500 dark:hover:text-orange-400"
                     >
                       {Icon ? (
-                        <Icon className="size-5" aria-hidden="true" />
+                        <Icon className="size-4" aria-hidden="true" />
                       ) : (
                         <span aria-hidden="true" className="text-caption font-bold">
                           {link.label.slice(0, 1)}
@@ -72,26 +113,28 @@ export async function SiteFooter() {
             </ul>
           </div>
 
-          {/* Four link columns + contact ------------------------------------ */}
-          {/* Four equal nav columns and a wider fifth. The contact column holds
-              an email address, which is one unbreakable token — at an equal
-              fifth it breaks mid-domain, and "hello@sailentfoundat / ion.org"
-              is the one thing in a footer that has to be copyable by eye. */}
-          <div className="grid gap-8 sm:grid-cols-2 lg:col-span-9 lg:grid-cols-[1fr_1.25fr_1fr_0.85fr_1.6fr_1.15fr] lg:gap-6">
+          {/* Columns 2 and 3: the link groups (Explore, Information — `footerNav`) */}
+          <div className="grid grid-cols-2 gap-6 lg:col-span-4">
             {footerNav.map((group) => {
               const id = `footer-${group.label.replace(/\s+/g, '-').toLowerCase()}`;
               return (
                 <nav key={group.label} aria-labelledby={id}>
-                  <h2 id={id} className="text-body-sm font-sans font-semibold text-white">
+                  <h2
+                    id={id}
+                    className="font-display text-[15px] font-bold tracking-tight text-[#0F172A] dark:text-white"
+                  >
                     {group.label}
                   </h2>
-                  {/* Each link a 24px target (WCAG 2.5.8): 16px of text sat 23px apart. */}
-                  <ul className="mt-2 space-y-0.5">
+                  <div
+                    className="h-0.75 mb-2 mt-1 w-6 rounded-full bg-[#EB6A1F]"
+                    aria-hidden="true"
+                  />
+                  <ul className="space-y-1.5 text-sm">
                     {group.items.map((item) => (
-                      <li key={item.href} className="text-caption">
+                      <li key={item.label}>
                         <Link
                           href={item.href}
-                          className="focus-visible:outline-ring inline-flex min-h-6 items-center rounded-sm text-white/75 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
+                          className="focus-visible:outline-ring hover:text-primary block py-0.5 text-[#475569] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-slate-400 dark:hover:text-orange-400"
                         >
                           {item.label}
                         </Link>
@@ -101,109 +144,125 @@ export async function SiteFooter() {
                 </nav>
               );
             })}
+          </div>
 
+          {/* Column 5: Contact Us + Script Accent */}
+          <div className="flex flex-col justify-between gap-6 lg:col-span-4 xl:flex-row">
             <div>
-              <h2 id="footer-contact" className="text-body-sm font-sans font-semibold text-white">
-                Contact
+              <h2
+                id="footer-contact"
+                className="font-display text-[15px] font-bold tracking-tight text-[#0F172A] dark:text-white"
+              >
+                Contact Us
               </h2>
+              <div className="h-0.75 mb-2 mt-1 w-6 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
               <address
                 aria-labelledby="footer-contact"
-                className="text-caption mt-2.5 space-y-1.5 not-italic text-white/75"
+                className="space-y-2.5 text-sm not-italic text-[#475569] dark:text-slate-400"
               >
-                {/* Two lines, as approved. The one-line form runs to five
-                    lines in a column this width and makes the footer the
-                    tallest thing on the page. */}
                 {addressFirst || addressSecond ? (
-                  <span className="flex items-start gap-2">
-                    <MapPin className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-                    <span>
+                  <div className="flex items-start gap-2.5">
+                    <span className="size-7.5 text-primary flex shrink-0 items-center justify-center rounded-full bg-[#FFEDD5] dark:bg-orange-950/50">
+                      <MapPin className="size-3.5" aria-hidden="true" />
+                    </span>
+                    <span className="leading-snug">
                       {addressFirst}
-                      {addressFirst && addressSecond ? (
-                        <>
-                          ,
-                          <br />
-                        </>
-                      ) : null}
+                      {addressFirst && addressSecond ? <br /> : null}
                       {addressSecond}
                     </span>
-                  </span>
+                  </div>
                 ) : null}
-                {organisation.phoneDisplay && organisation.phoneHref ? (
-                  <a
-                    href={`tel:${organisation.phoneHref}`}
-                    className="focus-visible:outline-ring flex items-center gap-2 rounded-sm transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
-                  >
-                    <Phone className="size-3.5 shrink-0" aria-hidden="true" />
-                    {organisation.phoneDisplay}
-                  </a>
-                ) : null}
-                {organisation.email ? (
-                  <a
-                    href={`mailto:${organisation.email}`}
-                    className="focus-visible:outline-ring flex items-start gap-2 rounded-sm transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
-                  >
-                    <Mail className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-                    {/*
-                      `min-w-0` is what makes the wrap possible at all: a flex
-                      child defaults to `min-width: auto`, which floors it at
-                      the width of its longest unbreakable run, and no amount
-                      of `overflow-wrap` reduces that. Without it the address
-                      pushed the page 35px wide at 1024.
 
-                      `break-words`, not `break-all`, so it breaks at the @ or
-                      a dot rather than mid-domain.
-                    */}
-                    <span className="min-w-0 break-words">{organisation.email}</span>
-                  </a>
-                ) : (
+                {organisation.phoneDisplay && organisation.phoneHref ? (
+                  <div className="flex items-center gap-2.5">
+                    <span className="size-7.5 text-primary flex shrink-0 items-center justify-center rounded-full bg-[#FFEDD5] dark:bg-orange-950/50">
+                      <Phone className="size-3.5" aria-hidden="true" />
+                    </span>
+                    <a
+                      href={`tel:${organisation.phoneHref}`}
+                      className="focus-visible:outline-ring hover:text-primary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:text-orange-400"
+                    >
+                      {organisation.phoneDisplay}
+                    </a>
+                  </div>
+                ) : null}
+
+                {organisation.email ? (
+                  <div className="flex items-center gap-2.5">
+                    <span className="size-7.5 text-primary flex shrink-0 items-center justify-center rounded-full bg-[#FFEDD5] dark:bg-orange-950/50">
+                      <Mail className="size-3.5" aria-hidden="true" />
+                    </span>
+                    <a
+                      href={`mailto:${organisation.email}`}
+                      className="focus-visible:outline-ring hover:text-primary break-words transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:text-orange-400"
+                    >
+                      {organisation.email}
+                    </a>
+                  </div>
+                ) : null}
+                {/* Nothing configured yet: the contact form, rather than invented details. */}
+                {!(addressFirst || addressSecond) &&
+                !(organisation.phoneDisplay && organisation.phoneHref) &&
+                !organisation.email ? (
                   <Link
                     href="/contact"
-                    className="focus-visible:outline-ring flex items-center gap-2 rounded-sm transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
+                    className="hover:text-primary underline underline-offset-4 transition-colors"
                   >
-                    <Mail className="size-3.5 shrink-0" aria-hidden="true" />
                     Send us a message
                   </Link>
-                )}
+                ) : null}
               </address>
             </div>
 
-            {/* The handwritten note, at the far right of the row as approved —
-                three lines with the heart beside them, not underneath. */}
-            <div className="hidden items-center gap-3 lg:flex">
-              {/*
-                One word per line, each STEPPED RIGHT of the one above it — the
-                cascade is what makes this read as handwriting rather than as
-                three stacked labels, and it is how the approved mark is drawn.
-                
-                The indents are in `em`, so the stagger keeps its proportion if
-                the script size ever changes.
-
-                The breaks are explicit rather than produced by squeezing the
-                box: "People Purpose" and "Possibilities" are near enough the
-                same width that any container wide enough for one fits the
-                other too.
-              */}
-              <ScriptAccent size="sm" className="leading-tight text-white/90">
-                <span className="block">People</span>
-                <span className="block ps-[0.55em]">Purpose</span>
-                <span className="block ps-[1.1em]">Possibilities</span>
-              </ScriptAccent>
-              <HeartDoodle className="text-cta-glow size-8 shrink-0" />
+            {/* Hand-drawn People Purpose Possibilities flourish */}
+            <div className="hidden flex-col items-center justify-center pl-2 xl:flex">
+              <div className="flex items-start gap-2">
+                <ScriptAccent
+                  size="sm"
+                  className="leading-tight text-[#475569] dark:text-slate-400"
+                >
+                  <span className="block">People</span>
+                  <span className="block ps-[0.45em]">Purpose</span>
+                  <span className="block ps-[0.9em]">Possibilities</span>
+                </ScriptAccent>
+                <HeartDoodle className="text-primary mt-1 size-7 shrink-0" />
+              </div>
+              <svg
+                viewBox="0 0 100 16"
+                fill="none"
+                className="mt-1 w-20 text-[#EB6A1F]"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 12C30 3 70 3 96 12"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+              </svg>
             </div>
           </div>
         </div>
 
-        <div className="border-white/12 mt-7 flex flex-col gap-4 border-t pt-4 md:flex-row md:items-center md:justify-between">
-          <p className="text-caption text-white/70">
-            © {year} {siteConfig.name}. All rights reserved.
+        {/* Bottom Sub-footer */}
+        <div className="border-border dark:border-border mt-6 flex flex-col items-center justify-between gap-3 border-t pt-3.5 text-xs text-[#64748B] sm:flex-row dark:text-slate-400">
+          <p>
+            © {year}{' '}
+            <span className="font-semibold text-[#0F172A] dark:text-white">{siteConfig.name}</span>.
+            All rights reserved.
           </p>
 
-          <ul className="flex flex-wrap items-center divide-white/25 sm:divide-x">
-            {legalNav.map((item) => (
-              <li key={item.href} className="px-3 first:pl-0 last:pr-0">
+          <ul className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {legalNav.map((item, index) => (
+              <li key={item.href} className="inline-flex items-center">
+                {index > 0 && (
+                  <span className="text-primary/40 mx-2" aria-hidden="true">
+                    |
+                  </span>
+                )}
                 <Link
                   href={item.href}
-                  className="text-caption focus-visible:outline-ring rounded-sm text-white/70 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
+                  className="focus-visible:outline-ring hover:text-primary rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:text-orange-400"
                 >
                   {item.label}
                 </Link>

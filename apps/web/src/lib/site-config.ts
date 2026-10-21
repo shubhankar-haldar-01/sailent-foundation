@@ -45,10 +45,11 @@ export const siteConfig = {
 /**
  * Primary navigation.
  *
- * Seven items, two of which group their children into a menu. Phase 0 caps the
- * nav at seven because beyond that it stops being navigation and becomes a
- * menu nobody reads; grouping Get involved and Resources keeps Stories and
- * Impact — the two that build trust — at the top level where they are seen.
+ * Seven items, one of which (Get Involved) groups its children into a menu.
+ * Phase 0 caps the nav at seven because beyond that it stops being navigation
+ * and becomes a menu nobody reads. Blog is a plain link: the Resources menu
+ * it sat in was taken off at the owner's request (2026-10-16), once FAQ had
+ * left it and Blog was its only item.
  */
 export interface NavEntry extends NavItem {
   children?: NavItem[];
@@ -84,7 +85,6 @@ export const primaryNav: NavEntry[] = [
     children: [
       { label: 'Volunteer', href: '/volunteer', description: 'Give time to a program' },
       { label: 'Events', href: '/events', description: 'Field days and open sessions' },
-      { label: 'Our team', href: '/team', description: 'Who runs the organization' },
     ],
     mobileChildren: [
       { label: 'Donate', href: '/donate' },
@@ -93,84 +93,51 @@ export const primaryNav: NavEntry[] = [
       { label: 'Partner with Us', href: '/contact' },
     ],
   },
-  {
-    label: 'Resources',
-    href: '/blog',
-    children: [
-      { label: 'Blog', href: '/blog', description: 'Field notes and program thinking' },
-      { label: 'FAQ', href: '/faq', description: 'Common questions' },
-    ],
-    mobileChildren: [
-      { label: 'Stories', href: '/stories' },
-      { label: 'Blog', href: '/blog' },
-      { label: 'FAQ', href: '/faq' },
-    ],
-  },
+  /*
+    BLOG, NOT A "RESOURCES" MENU (owner, 2026-10-16). No FAQ item either, on
+    a desktop or in the phone menu: /faq still exists and the footer's
+    Information column links to it.
+  */
+  { label: 'Blog', href: '/blog' },
 ];
 
 /** The single primary call to action. Present at every breakpoint. */
 export const primaryCta: NavItem = { label: 'Donate Now', href: '/donate' };
 
 /**
- * Footer navigation — four link columns, plus the contact block the footer
- * renders itself.
+ * Footer navigation — two short link columns, plus the contact block the
+ * footer renders itself (owner decision, 2026-10-15: "like the reference").
  *
- * The approved design's fifth heading is "Careers", which has no page, and the
- * slot previously held Transparency — a page that no longer exists either. The
- * platform does not publish documents to the public, so the registration
- * identifiers a visitor actually wants moved onto About, which this column
- * already links to.
- *
- * The Programs column points at the campaign listing filtered by category
- * rather than at a program page per area: the filter is a real route with
- * real results behind it, and it is the same destination the focus-area strip
- * on the homepage uses.
+ * EVERY LINK IS A REAL, DISTINCT PAGE. The earlier sixteen links included
+ * ones that were dead or misleading, and they were removed rather than kept
+ * for their labels:
+ *   • "Our Impact" — `AGENTS.md` §11 item 5 says no Impact link in the footer;
+ *   • "Transparency" — `/about#transparency`, an anchor that does not exist;
+ *   • "Careers" and "Partner With Us" — no such pages, both opened Contact;
+ *   • the seven area links — campaign filters, two of them ("Food Security",
+ *     "Livelihood") for areas no programme has; Programs is one link now;
+ *   • "Donate" — the footer's Donate Now button stood beside it; that button
+ *     was itself taken out on 2026-10-16 (owner), so the footer has no donate
+ *     action — the pages' own buttons and the phone menu's carry it;
+ *   • "Your Account" — the header carries Login / Sign Up on every page.
  */
 export const footerNav: NavGroup[] = [
   {
-    label: 'About',
+    label: 'Explore',
     items: [
-      { label: 'Our Mission', href: '/about' },
-      { label: 'Our Team', href: '/team' },
-      // No "Our Impact": removed from the footer, as from the header, at the
-      // client's request. The /impact page itself is unchanged.
-    ],
-  },
-  {
-    label: 'Programs',
-    items: [
-      { label: 'Education', href: '/campaigns?categorySlug=education' },
-      { label: 'Healthcare', href: '/campaigns?categorySlug=healthcare' },
-      { label: 'Food Security', href: '/campaigns?categorySlug=food-support' },
-      { label: 'Disaster Relief', href: '/campaigns?categorySlug=disaster-relief' },
-      { label: 'Women Empowerment', href: '/campaigns?categorySlug=women-empowerment' },
-      { label: 'Livelihood', href: '/campaigns?categorySlug=livelihood' },
-      { label: 'Animal Welfare', href: '/campaigns?categorySlug=animal-welfare' },
-    ],
-  },
-  {
-    label: 'Get Involved',
-    items: [
-      { label: 'Volunteer', href: '/volunteer' },
-      { label: 'Donate', href: '/donate' },
+      { label: 'Programs', href: '/programs' },
+      { label: 'Campaigns', href: '/campaigns' },
+      { label: 'Stories', href: '/stories' },
       { label: 'Events', href: '/events' },
-      { label: 'Partner With Us', href: '/contact' },
-      /*
-        The way back in for someone who has already given.
-
-        In the footer rather than the header because the header carries exactly
-        one button by design, and a second one competing with Donate would cost
-        more than an account link is worth. A donor looking for their receipt
-        looks for "Your account", and this is where sites put it.
-      */
-      { label: 'Your Account', href: '/dashboard' },
     ],
   },
   {
-    label: 'Resources',
+    label: 'Information',
     items: [
-      { label: 'Blog', href: '/blog' },
-      { label: 'FAQs', href: '/faq' },
+      { label: 'About Us', href: '/about' },
+      { label: 'Volunteer', href: '/volunteer' },
+      { label: 'FAQ', href: '/faq' },
+      { label: 'Contact Us', href: '/contact' },
     ],
   },
 ];
