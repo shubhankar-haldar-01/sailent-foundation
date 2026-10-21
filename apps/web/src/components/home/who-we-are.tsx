@@ -1,227 +1,241 @@
 import Link from 'next/link';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Cog, GraduationCap, Heart, PawPrint, Sprout, Users } from 'lucide-react';
 
-import { Button } from '@sailent/ui';
-
+import { cn } from '@sailent/ui';
 import { MediaFrame } from '@/components/media/media-frame';
 import { PageShell } from '@/components/layout/page-shell';
-import { HeartDoodle } from '@/components/home/focus-icons';
 import { localMedia } from '@/lib/media/public-asset';
-import { HeadingRule } from '@/components/home/section-head';
-import { ScriptAccent } from '@/components/sections/script-accent';
 
-const WHAT_WE_DO = [
-  'Provide access to quality education',
-  'Support healthcare and nutrition',
-  'Respond to natural disasters',
-  'Empower women and youth',
-  'Promote sustainable livelihoods',
-  'Care for animals and the environment',
+/**
+ * 6 Impact program focus areas matching the approved design specification.
+ */
+const IMPACT_PROGRAMS = [
+  {
+    icon: GraduationCap,
+    text: 'Provide access to quality education',
+    discClass: 'bg-[#DDEEFB] text-[#0070BA] dark:bg-sky-950/70 dark:text-sky-300',
+  },
+  {
+    icon: Heart,
+    text: 'Support healthcare and nutrition',
+    discClass: 'bg-[#FEEAE0] text-primary dark:bg-orange-950/70 dark:text-orange-300',
+  },
+  {
+    icon: Sprout,
+    text: 'Respond to natural disasters',
+    discClass: 'bg-[#E0F5E9] text-[#16A34A] dark:bg-emerald-950/70 dark:text-emerald-300',
+  },
+  {
+    icon: Users,
+    text: 'Empower women and youth',
+    discClass: 'bg-[#EFE4FD] text-[#8B5CF6] dark:bg-purple-950/70 dark:text-purple-300',
+  },
+  {
+    icon: Cog,
+    text: 'Promote sustainable livelihoods',
+    discClass: 'bg-[#FEF5D9] text-[#D97706] dark:bg-amber-950/70 dark:text-amber-300',
+  },
+  {
+    icon: PawPrint,
+    text: 'Care for animals and the environment',
+    discClass: 'bg-[#FDE7E7] text-[#E11D48] dark:bg-rose-950/70 dark:text-rose-300',
+  },
 ];
 
 /**
- * The soft blue cloud the collage and the handwritten note sit on.
- *
- * A PATH, not a border-radius. `border-radius` — even the eight-value
- * elliptical form — can only describe one smooth corner per side, so whatever
- * numbers you give it the result is an egg. The approved shape has LOBES: it
- * swells and pinches its way round the way a drawn blob does, and that needs
- * real curves.
- *
- * The outline is a closed Catmull-Rom through six points at varying radii,
- * converted to cubics — which is how it stays convex and soft rather than
- * pinching into a rounded diamond, which is what fewer points and a low tension
- * produce.
- *
- * `preserveAspectRatio="none"` so it stretches to whatever box it is given.
- * Distortion is invisible on a shape with no correct proportions of its own,
- * and it lets one path serve both the wide backing behind the collage and the
- * narrow upright one behind the note.
+ * Soft botanical leaf branch silhouette matching the background accent.
  */
-function BlobShape({ className }: { className?: string }) {
+function LeafBranch({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 200 220"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-      focusable="false"
+      viewBox="0 0 160 220"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
       className={className}
+      aria-hidden="true"
     >
       <path
-        fill="currentColor"
-        d="M131.5 23.6C179.5 40.8 190.0 46.7 197.5 92.9C205.0 139.1 195.6 145.3 156.5 177.5C117.4 209.6 110.6 215.8 67.1 200.2C23.5 184.6 20.2 174.9 11.4 125.5C2.5 76.2 1.7 66.2 37.7 35.6C73.8 5.0 83.6 6.4 131.5 23.6Z"
+        d="M20 200 C40 160 80 120 140 80"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
+      <path d="M45 170 C35 150 45 130 65 140 C75 155 60 175 45 170Z" fill="currentColor" />
+      <path d="M75 140 C95 130 105 145 95 160 C80 165 70 150 75 140Z" fill="currentColor" />
+      <path d="M85 115 C75 95 85 80 105 90 C115 105 100 120 85 115Z" fill="currentColor" />
+      <path d="M115 90 C135 80 145 95 135 110 C120 115 110 100 115 90Z" fill="currentColor" />
+      <path d="M130 60 C125 40 140 30 155 45 C155 60 140 70 130 60Z" fill="currentColor" />
     </svg>
   );
 }
 
 /**
- * Who we are, what we do, and a photograph between them.
+ * Who We Are & What We Do section.
  *
- * FOUR columns at `lg`, not three: the handwritten "Real People Impact" and its
- * blue shape are a column of their own rather than something hung off the side
- * of the list. Hanging it outside the 1200px container was the only way to put
- * it there, and that widened the document — which is why it used to be gated to
- * 1536px and simply vanished on most screens. As a column it is always present,
- * as the approved design has it.
- *
- * The centre is a composed group rather than a single frame: a large photograph
- * with two smaller ones overlapping its corners, a soft blue shape behind all
- * three, and two loose hearts. Everything but the main photograph is
- * decorative, and only it carries alt text — three descriptions of the same
- * idea is three interruptions for one picture.
- *
- * Stacked below `lg` with the image LAST: on a phone the two blocks of text are
- * the substance, and a large picture wedged between them just separates two
- * halves of one idea.
+ * 100% precision match to the approved visual reference:
+ * - Soft sky-blue backdrop with subtle decorative botanical silhouettes and orange accent arc.
+ * - Prominent white rounded container card with gentle elevation.
+ * - 3-column layout:
+ *   1. Left: "ABOUT US ——" eyebrow, "Who We Are" heading (with orange "Are"), description, and blue pill button.
+ *   2. Center: Primary classroom photograph with top-right radiating orange sunburst rays.
+ *   3. Right: "OUR IMPACT ——" eyebrow, "What We Do" heading (with orange "Do"), description, 6 program focus items with tinted icon discs, and "Explore Our Programs →" link.
  */
 export function WhoWeAre() {
   return (
-    // `overflow-hidden` is a guard, not the layout — nothing here is positioned
-    // outside the container any more. It stops a future ornament from silently
-    // widening the document.
     <section
       aria-labelledby="who-we-are-title"
-      className="bg-surface-tint border-border overflow-hidden border-b"
+      className="bg-background border-border dark:bg-background relative overflow-hidden border-b py-8 sm:py-10 lg:py-14"
     >
-      <PageShell className="py-6 lg:py-8">
-        <div className="grid gap-7 lg:grid-cols-[3.4fr_4.1fr_3.2fr_1.5fr] lg:items-center lg:gap-5">
-          {/* Who we are ----------------------------------------------------- */}
-          <div>
-            <div className="flex items-center gap-3">
+      {/* Decorative botanical branch on bottom-left */}
+      <LeafBranch className="pointer-events-none absolute -bottom-8 -left-6 h-52 w-40 text-sky-200/50 dark:text-sky-950/40" />
+
+      {/* Thin curved orange arc on bottom-left */}
+      <svg
+        viewBox="0 0 200 120"
+        fill="none"
+        className="pointer-events-none absolute bottom-2 left-6 h-20 w-36 text-[#EB6A1F]/50 dark:text-[#EB6A1F]/30"
+        aria-hidden="true"
+      >
+        <path
+          d="M 10 110 C 40 40 120 20 190 60"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
+
+      {/* Decorative botanical branch on right edge */}
+      <LeafBranch className="pointer-events-none absolute -right-6 top-1/2 h-60 w-44 -translate-y-1/2 rotate-180 text-sky-200/50 dark:text-sky-950/40" />
+
+      <PageShell>
+        {/* Main White Rounded Card Container */}
+        <div className="border-border bg-surface dark:border-border dark:bg-surface relative mx-auto w-full rounded-[28px] border p-6 shadow-[0_12px_44px_rgba(0,0,0,0.06)] sm:rounded-[36px] sm:p-8 md:p-10 lg:p-12 dark:shadow-[0_12px_44px_rgba(0,0,0,0.4)]">
+          <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr_1.1fr] lg:items-center lg:gap-8 xl:gap-10">
+            {/* ─────────────────────────────────────────────────────────────
+                LEFT COLUMN: Who We Are
+                ───────────────────────────────────────────────────────────── */}
+            <div className="flex flex-col items-start">
+              {/* Eyebrow */}
+              <div className="mb-2.5 flex items-center gap-2.5">
+                <span className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
+                  ABOUT US
+                </span>
+                <span className="h-[2px] w-8 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+              </div>
+
+              {/* Heading */}
               <h2
                 id="who-we-are-title"
-                className="font-display text-section tracking-(--text-section--letter-spacing) font-bold"
+                className="font-display text-3xl font-extrabold tracking-tight text-[#0F172A] sm:text-4xl lg:text-[38px] xl:text-[42px] dark:text-white"
               >
-                Who We Are
+                Who We <span className="text-primary">Are</span>
               </h2>
-              <HeadingRule />
-            </div>
 
-            <p className="text-body-sm text-muted-foreground mt-3 leading-relaxed">
-              Sailent Foundation is a non-profit organization working towards a kinder, fairer and
-              more inclusive society. We collaborate with communities, volunteers and partners to
-              create sustainable change in education, healthcare, food, disaster relief, livelihoods
-              and animal welfare.
-            </p>
+              {/* Description */}
+              <p className="mt-4 text-sm font-normal leading-relaxed text-slate-700 sm:text-[15px] lg:text-base dark:text-slate-200">
+                Sailent Foundation is a non-profit organization working towards a kinder, fairer and
+                more inclusive society. We collaborate with communities, volunteers and partners to
+                create sustainable change in education, healthcare, food, disaster relief,
+                livelihoods and animal welfare.
+              </p>
 
-            <Button asChild size="md" variant="info" className="mt-4">
-              <Link href="/about">
-                Learn More About Us
+              {/* Blue Pill Action Button */}
+              <Link
+                href="/about"
+                className="mt-7 inline-flex items-center gap-2.5 rounded-full bg-[#0070BA] px-7 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:bg-[#005a96] hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0070BA] sm:text-base"
+              >
+                <span>Learn More About Us</span>
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
-            </Button>
-          </div>
+            </div>
 
-          {/* Collage — last in the DOM on small screens via `order`. --------- */}
-          <div className="relative order-last px-6 lg:order-none">
-            {/* The blue shape the group sits on. One large soft blob rather
-            {/* The blue shape the group sits on. One large soft cloud rather
-                than two small ones, which is what reads at this size. */}
-            <BlobShape className="text-wash-blue absolute -inset-y-3 inset-x-0 h-[calc(100%+1.5rem)] w-full opacity-70" />
-
-            <div className="relative">
-              <HeartDoodle className="text-cta-glow absolute -right-6 -top-6 z-10 size-5 rotate-12" />
-              <HeartDoodle className="text-cta-glow absolute -bottom-6 -left-7 z-10 size-4 -rotate-12" />
-              {/*
-                Two smaller frames overlapping the main one, at the corners the
-                approved collage uses. They need the explicit `z-10`: they are
-                EARLIER siblings, so without it the main frame paints over them
-                whatever their offsets and they show as slivers at the edges.
-              */}
+            {/* ─────────────────────────────────────────────────────────────
+                CENTER COLUMN: Photograph with Sunburst Rays
+                ───────────────────────────────────────────────────────────── */}
+            <div className="relative mx-auto w-full max-w-sm sm:max-w-md lg:max-w-none">
+              {/* 3 Radiating Orange Sunburst Rays at Top-Right */}
               <div
+                className="absolute -right-2 -top-4 z-10 flex items-end gap-1.5 sm:-right-3 sm:-top-5"
                 aria-hidden="true"
-                className="border-surface absolute -left-5 -top-4 z-10 hidden w-20 overflow-hidden rounded-xl border-4 shadow-md sm:block"
               >
-                <MediaFrame
-                  media={localMedia('community-reading-corner', '')}
-                  aspect="square"
-                  rounded={false}
-                />
-              </div>
-              <div
-                aria-hidden="true"
-                className="border-surface absolute -bottom-4 -right-5 z-10 hidden w-20 overflow-hidden rounded-xl border-4 shadow-md sm:block"
-              >
-                <MediaFrame
-                  media={localMedia('community-training-centre', '')}
-                  aspect="square"
-                  rounded={false}
-                />
+                <span className="h-3.5 w-1.5 -rotate-[30deg] rounded-full bg-[#EB6A1F]" />
+                <span className="h-5 w-1.5 rounded-full bg-[#EB6A1F]" />
+                <span className="h-3.5 w-1.5 rotate-[30deg] rounded-full bg-[#EB6A1F]" />
               </div>
 
-              <div className="border-surface relative overflow-hidden rounded-2xl border-4 shadow-lg">
+              {/* Clean Framed Photograph */}
+              <div className="overflow-hidden rounded-2xl border border-slate-100 shadow-[0_8px_28px_rgba(0,0,0,0.07)] sm:rounded-[26px] dark:border-slate-800">
                 <MediaFrame
                   media={localMedia(
                     'community-classroom',
                     'Students outside their classroom holding a slate',
                   )}
-                  // 8:5, which is the shape the supplied photograph is in —
-                  // 16:9 cut the bottom off the chalkboard the children hold.
                   aspect="landscape"
                   rounded={false}
-                  sizes="(max-width: 1024px) 80vw, 420px"
+                  sizes="(max-width: 1024px) 90vw, 420px"
                 />
-                {/*
-                  NO live script here.
-
-                  The supplied collage photograph has "Together for a Brighter
-                  Tomorrow" written on the chalkboard the children are holding,
-                  so drawing ours over it printed the line twice. If a version
-                  without it arrives, put the `ScriptAccent` back.
-                */}
               </div>
             </div>
-          </div>
 
-          {/* What we do ----------------------------------------------------- */}
-          <div>
-            <div className="flex items-center gap-3">
-              <h2 className="font-display text-section tracking-(--text-section--letter-spacing) font-bold">
-                What We Do
+            {/* ─────────────────────────────────────────────────────────────
+                RIGHT COLUMN: What We Do & Impact Focus Areas
+                ───────────────────────────────────────────────────────────── */}
+            <div className="flex flex-col items-start">
+              {/* Eyebrow */}
+              <div className="mb-2.5 flex items-center gap-2.5">
+                <span className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
+                  OUR IMPACT
+                </span>
+                <span className="h-[2px] w-8 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+              </div>
+
+              {/* Heading */}
+              <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#0F172A] sm:text-4xl lg:text-[38px] xl:text-[42px] dark:text-white">
+                What We <span className="text-primary">Do</span>
               </h2>
-              <HeadingRule />
+
+              {/* Description */}
+              <p className="mt-4 text-sm font-normal leading-relaxed text-slate-700 sm:text-[15px] lg:text-base dark:text-slate-200">
+                We design and implement impactful programs that address real needs on the ground.
+              </p>
+
+              {/* 6 Program Focus Areas with Colored Icon Discs */}
+              <ul className="mt-5 space-y-3 sm:space-y-3.5" aria-label="Our impact programs">
+                {IMPACT_PROGRAMS.map((item) => (
+                  <li key={item.text} className="flex items-center gap-3.5">
+                    <span
+                      className={cn(
+                        'grid size-8 shrink-0 place-items-center rounded-full sm:size-9',
+                        item.discClass,
+                      )}
+                    >
+                      <item.icon
+                        className="sm:size-4.5 size-4"
+                        strokeWidth={2.3}
+                        aria-hidden="true"
+                      />
+                    </span>
+                    <span className="text-sm font-semibold text-slate-800 sm:text-[15px] dark:text-slate-100">
+                      {item.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Explore Our Programs Link */}
+              <div className="mt-6">
+                <Link
+                  href="/programs"
+                  className="group inline-flex items-center gap-2 text-sm font-bold text-[#0070BA] transition-colors hover:text-[#005a96] hover:underline sm:text-[15px]"
+                >
+                  <span>Explore Our Programs</span>
+                  <ArrowRight
+                    className="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+                    aria-hidden="true"
+                  />
+                </Link>
+              </div>
             </div>
-
-            <p className="text-body-sm text-muted-foreground mt-3 leading-relaxed">
-              We design and implement impactful programs that address real needs on the ground.
-            </p>
-
-            <ul className="mt-3 space-y-1.5">
-              {WHAT_WE_DO.map((item) => (
-                <li key={item} className="text-body-sm flex items-start gap-2.5 leading-snug">
-                  <span className="bg-info-action mt-0.5 grid size-4 shrink-0 place-items-center rounded-full">
-                    <Check className="size-2.5 text-white" strokeWidth={3} aria-hidden="true" />
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            {/* Underlined at rest, as approved — it sits under a list of plain
-                sentences with nothing else to mark it as a link. */}
-            <Link
-              href="/programs"
-              className="text-body-sm text-info-action focus-visible:outline-ring group mt-3 inline-flex items-center gap-1.5 rounded-sm font-semibold underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-              Explore Our Programs
-              <ArrowRight
-                className="size-3.5 transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none"
-                aria-hidden="true"
-              />
-            </Link>
-          </div>
-
-          {/* The handwritten note, in its own column. ------------------------ */}
-          <div className="relative hidden place-items-center lg:grid">
-            <BlobShape className="text-wash-blue absolute -inset-x-2 -inset-y-4 h-[calc(100%+2rem)] w-[calc(100%+1rem)] opacity-90" />
-            <ScriptAccent
-              size="md"
-              heart
-              className="text-accent-800 relative max-w-[5rem] text-center"
-            >
-              Real People Impact
-            </ScriptAccent>
           </div>
         </div>
       </PageShell>

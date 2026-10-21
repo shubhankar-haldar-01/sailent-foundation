@@ -27,36 +27,44 @@ import type { ImpactMetric } from '@/lib/content';
  * ══════════════════════════════════════════════════════════════════════════
  */
 const ICONS = {
-  beneficiaries: { icon: PeopleSolid, wash: 'bg-wash-amber text-wash-amber-ink', stroke: false },
-  communities: { icon: PinSolid, wash: 'bg-wash-blue text-wash-blue-ink', stroke: false },
-  campaigns: { icon: Heart, wash: 'bg-wash-mint text-wash-mint-ink', stroke: true },
-  volunteers: { icon: PeopleSolid, wash: 'bg-wash-rose text-wash-rose-ink', stroke: false },
-  years: { icon: Star, wash: 'bg-wash-amber text-wash-gold-ink', stroke: true },
+  beneficiaries: {
+    icon: PeopleSolid,
+    wash: 'bg-[#FFEDD5] text-[#C2410C] shadow-[0_4px_14px_rgba(194,65,12,0.22)]',
+    stroke: false,
+  },
+  communities: {
+    icon: PinSolid,
+    wash: 'bg-[#DBEAFE] text-[#0284C7] shadow-[0_4px_14px_rgba(2,132,199,0.22)]',
+    stroke: false,
+  },
+  campaigns: {
+    icon: Heart,
+    wash: 'bg-[#DCFCE7] text-[#15803D] shadow-[0_4px_14px_rgba(22,163,74,0.22)]',
+    stroke: true,
+  },
+  volunteers: {
+    icon: PeopleSolid,
+    wash: 'bg-[#FFE4E6] text-[#BE123C] shadow-[0_4px_14px_rgba(190,18,60,0.22)]',
+    stroke: false,
+  },
+  years: {
+    icon: Star,
+    wash: 'bg-[#FEF3C7] text-[#D97706] shadow-[0_4px_14px_rgba(217,119,6,0.22)]',
+    stroke: true,
+  },
 } as const;
 
-const FALLBACK = { icon: Star, wash: 'bg-wash-blue text-wash-blue-ink', stroke: true } as const;
+const FALLBACK = {
+  icon: Star,
+  wash: 'bg-[#DBEAFE] text-[#0284C7] shadow-[0_4px_14px_rgba(2,132,199,0.22)]',
+  stroke: true,
+} as const;
 
 /**
  * The impact strip.
  *
- * ══════════════════════════════════════════════════════════════════════════
- * Every figure is a LIVE DATABASE AGGREGATE (decision A14). The reference
- * shows "50,000+ Lives Impacted · 120+ Communities · 15+ Years of Service";
- * none of those is typed in here, and none of them will be. The layout, the
- * icons, the weights and the rules below are matched to it exactly — the
- * numbers are counted.
- *
- * A metric with nothing behind it does not render, so the strip shrinks rather
- * than inventing a number. If the whole set is empty the section disappears.
- *
- * An unverifiable statistic on a donation page is the first thing a journalist
- * checks, and the only version of this that is safe is the one counted from
- * records.
- * ══════════════════════════════════════════════════════════════════════════
- *
- * How the figures are counted is stated once on /impact rather than in a
- * footnote here — the approved strip is a single compact row, and a paragraph
- * of methodology under it doubles the height of the band.
+ * Rendered as an elevated rounded pill card with ambient shadows, subtle warm
+ * border, icon glow drop-shadows, and vertical dividers matching the approved design.
  */
 export function ImpactStats({ metrics }: { metrics: ImpactMetric[] }) {
   if (metrics.length === 0) return null;
@@ -64,129 +72,80 @@ export function ImpactStats({ metrics }: { metrics: ImpactMetric[] }) {
   return (
     <section
       aria-labelledby="impact-stats-title"
-      className="bg-surface-warm border-border border-b"
+      className="border-border border-b py-6 sm:py-8 lg:py-9"
     >
-      <PageShell className="py-6 lg:py-7">
+      <PageShell>
         <h2 id="impact-stats-title" className="sr-only">
           Our impact so far
         </h2>
 
-        {/*
-          The quote moves BESIDE the figures at `xl`, not at `lg`.
+        {/* Elevated rounded card container with consistent card-elevated variant */}
+        <div className="card-elevated lg:py-6.5 bg-surface dark:bg-surface rounded-[22px] px-6 py-6 sm:px-8">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:gap-8">
+            <ul className="lg:divide-border dark:lg:divide-border grid flex-1 grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4 lg:flex lg:flex-nowrap lg:items-center lg:justify-between lg:gap-x-0 lg:divide-x">
+              {metrics.map((metric, index) => {
+                const meta = ICONS[metric.id as keyof typeof ICONS] ?? FALLBACK;
+                const Icon = meta.icon;
 
-          At 1024 the five figures need about 950px on one line and the quote
-          wants 224 of the 984 available. Something has to give, and when it
-          was the figures three labels wrapped and "Years of Service" went to
-          three lines. Stacking the quote costs one row of height at one
-          breakpoint and keeps the strip reading as a strip.
-        */}
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:gap-7">
-          {/*
-            The hairline rules between figures are the reference's, and they
-            are drawn with `divide-x` on the ROW rather than a border on each
-            item — a per-item border needs a "not the first one" rule that has
-            to be re-derived at every breakpoint where the wrapping changes.
-
-            The cells size to their CONTENT and the row spreads them, which is
-            why the rules do not land at even intervals. That is the reference:
-            look at it and the gap after "Volunteers" is visibly tighter than
-            the one after "Lives Impacted". Equal-width columns would even the
-            rules out and force the longest label to wrap so that the shortest
-            could keep space it does not need.
-
-            They appear only at `lg`, where this is genuinely one row. In the
-            two- and three-column grid above that, a vertical rule would land
-            between items that are not adjacent on screen.
-          */}
-          <ul
-            className={cn(
-              'grid flex-1 grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3',
-              'lg:divide-border lg:flex lg:flex-nowrap lg:justify-between lg:gap-x-0 lg:divide-x',
-            )}
-          >
-            {metrics.map((metric, index) => {
-              const meta = ICONS[metric.id as keyof typeof ICONS] ?? FALLBACK;
-              const Icon = meta.icon;
-
-              return (
-                <Reveal
-                  as="li"
-                  key={metric.id}
-                  delay={index * 70}
-                  className="flex items-center gap-3 lg:gap-3.5 lg:px-2 xl:px-3"
-                >
-                  <span
-                    className={cn(
-                      'grid size-12 shrink-0 place-items-center rounded-full lg:size-14',
-                      meta.wash,
-                    )}
+                return (
+                  <Reveal
+                    as="li"
+                    key={metric.id}
+                    delay={index * 70}
+                    className="flex items-center gap-3.5 lg:px-4 xl:px-6"
                   >
-                    <Icon
-                      className="size-6 lg:size-7"
-                      aria-hidden="true"
-                      // Only meaningful on the two lucide marks; the solid ones
-                      // ignore it because they have no stroke to weight.
-                      {...(meta.stroke ? { strokeWidth: 2.4 } : {})}
-                    />
-                  </span>
-
-                  <span className="min-w-0">
                     <span
-                      data-numeric=""
-                      className="font-display text-h4 lg:text-h3 block font-bold tabular-nums leading-none"
+                      className={cn(
+                        'grid size-12 shrink-0 place-items-center rounded-full transition-transform lg:size-14',
+                        meta.wash,
+                      )}
                     >
-                      {formatNumber(metric.value)}
-                      {metric.unit ? (
-                        <span className="text-body-sm text-muted-foreground ml-1 font-semibold">
-                          {metric.unit}
-                        </span>
-                      ) : null}
+                      <Icon
+                        className="size-6 lg:size-7"
+                        aria-hidden="true"
+                        {...(meta.stroke ? { strokeWidth: 2.4 } : {})}
+                      />
                     </span>
-                    {/*
-                      One line from `lg`, which is where the figures become a
-                      single row with the full width to themselves. Below that it
-                      wraps rather than overflowing — "Active Campaigns" on two
-                      lines is untidy; "Active Campaig…" is broken.
-                    */}
-                    <span className="text-body-sm text-muted-foreground mt-1 block leading-tight lg:whitespace-nowrap">
-                      {metric.label}
+
+                    <span className="min-w-0">
+                      <span
+                        data-numeric=""
+                        className="font-display block text-2xl font-bold tabular-nums leading-none tracking-tight text-[#0F172A] lg:text-[28px] dark:text-white"
+                      >
+                        {formatNumber(metric.value)}
+                        {metric.unit ? (
+                          <span className="text-body-sm text-muted-foreground ml-1 font-semibold">
+                            {metric.unit}
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="text-body-sm mt-1 block font-medium leading-tight text-[#64748B] lg:whitespace-nowrap dark:text-slate-400">
+                        {metric.label}
+                      </span>
                     </span>
-                  </span>
-                </Reveal>
-              );
-            })}
-          </ul>
+                  </Reveal>
+                );
+              })}
+            </ul>
 
-          <figure className="border-border flex gap-3 border-t pt-4 xl:w-60 xl:shrink-0 xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0 2xl:w-72">
-            {/*
-              A typographic quote mark, not the lucide icon.
-
-              The reference's mark is a large, soft, grey double-quote sitting
-              above the first line — a piece of TYPE. The icon version is two
-              small filled commas on the baseline, which is a different shape at
-              a different weight, and no amount of sizing turns one into the
-              other.
-
-              `aria-hidden`, because the blockquote below already says this is a
-              quotation and a screen reader announcing a stray quotation mark
-              before it is noise.
-            */}
-            <span
-              aria-hidden="true"
-              className="font-display text-muted-foreground/45 select-none text-[2.75rem] font-bold leading-[0.8]"
-            >
-              &ldquo;
-            </span>
-            <div className="min-w-0">
-              <blockquote className="text-body-sm text-balance leading-snug">
-                &ldquo;Together, we can create a more compassionate, equal and sustainable
-                world.&rdquo;
-              </blockquote>
-              <figcaption className="text-caption text-muted-foreground mt-1.5">
-                — Sailent Foundation
-              </figcaption>
-            </div>
-          </figure>
+            <figure className="border-border dark:border-border flex items-start gap-2.5 border-t pt-4 xl:w-64 xl:shrink-0 xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0 2xl:w-72">
+              <span
+                aria-hidden="true"
+                className="font-display text-primary select-none text-2xl font-black leading-none sm:text-3xl"
+              >
+                &ldquo;
+              </span>
+              <div className="min-w-0">
+                <blockquote className="text-xs font-medium leading-snug text-[#1E293B] sm:text-[13px] dark:text-slate-200">
+                  &ldquo;Together, we can create a more compassionate, equal and sustainable
+                  world.&rdquo;
+                </blockquote>
+                <figcaption className="text-caption mt-1 text-[#64748B] dark:text-slate-400">
+                  — Sailent Foundation
+                </figcaption>
+              </div>
+            </figure>
+          </div>
         </div>
       </PageShell>
     </section>

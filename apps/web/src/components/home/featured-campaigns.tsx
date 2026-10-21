@@ -87,7 +87,7 @@ export function FeaturedCampaigns({
   );
 
   const visible = matching.slice(0, VISIBLE_CARDS);
-  const rail = useAutoplayRail(visible.length);
+  const rail = useAutoplayRail(visible.length, { intervalMs: 4000 });
 
   if (campaigns.length === 0) return null;
 
@@ -95,7 +95,7 @@ export function FeaturedCampaigns({
   const viewAllLabel = area ? `View All ${area.title} Campaigns` : 'View All Campaigns';
 
   return (
-    <section aria-labelledby="campaigns-title" className="bg-surface border-border border-b">
+    <section aria-labelledby="campaigns-title" className="bg-background border-border border-b">
       <PageShell className="band-y">
         {/*
           The band heading, as the approved design draws it: a green rule and
@@ -106,64 +106,27 @@ export function FeaturedCampaigns({
           block — centring it on eyebrow-plus-headline-plus-lead would drop it
           level with the lead, which is not where the design puts it.
         */}
-        <div className="flex items-center gap-3">
-          {/* Decorative: the eyebrow beside it already names the band. */}
-          <span
-            aria-hidden="true"
-            className="bg-wash-mint-ink-strong block h-[3px] w-8 shrink-0 rounded-full"
-          />
-          <p className="text-overline tracking-(--text-overline--letter-spacing) text-wash-mint-ink-strong font-bold uppercase">
+        {/*
+          Featured Campaigns section heading (inspired by reference layout):
+          Centered eyebrow + dual-colored punchy headline + lead description.
+        */}
+        <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
+          <p className="text-foreground/80 dark:text-foreground/70 text-sm font-bold tracking-tight sm:text-base">
             Featured Campaigns
           </p>
-        </div>
 
-        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
           <h2
             id="campaigns-title"
-            className="font-display text-h2 tracking-(--text-section--letter-spacing) font-bold"
+            className="font-display mt-1.5 text-2xl font-black leading-[1.2] tracking-tight sm:text-3xl md:text-[2.25rem]"
           >
-            Make a Real Difference
-          </h2>
-
-          <div className="flex flex-wrap items-center gap-3">
             {/*
-              The rail's only control: pause/play, hidden until it is tabbed to
-              (see RailPauseToggle for why it must exist). It is the stop just
-              before "View All Campaigns" and appears above it when focused.
+              The band's approved heading. The redesign's "Real Needs. Lasting
+              Change. Transforming Lives Together." had no recorded owner
+              decision, so the heading stays as approved (2026-10-21).
             */}
-            {rail.canPlay ? (
-              // Full row height, so "above" means above the pill, not over it.
-              <div className="relative self-stretch">
-                <RailPauseToggle
-                  rail={rail}
-                  label="featured campaigns"
-                  className="focus-visible:bottom-full focus-visible:left-0 focus-visible:mb-2"
-                />
-              </div>
-            ) : null}
-
-            <Link
-              href={viewAllHref}
-              className={cn(
-                'bg-wash-mint text-wash-mint-ink-strong text-body-sm group inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-bold',
-                'focus-visible:outline-ring hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2',
-              )}
-            >
-              {viewAllLabel}
-              <ArrowRight
-                className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none"
-                aria-hidden="true"
-              />
-            </Link>
-          </div>
+            <span className="text-[#36335C] dark:text-indigo-200">Make a Real Difference</span>
+          </h2>
         </div>
-
-        {/* `max-w-3xl` so the sentence sits on ONE line at desktop, as the
-            approved design shows it, and still wraps sanely under that. */}
-        <p className="text-body text-muted-foreground mt-2 max-w-3xl">
-          Support our ongoing campaigns and help us create a better tomorrow for communities in
-          need.
-        </p>
 
         {/*
           Announced, so a filter press is not a silent change.
@@ -220,31 +183,22 @@ export function FeaturedCampaigns({
           THE SAME CARD AS THE CAMPAIGNS PAGE — one component, so the homepage
           and the listing cannot drift apart. Rail items stretch to the tallest
           card, so the Donate buttons line up across whatever is on screen.
-
-          Two on screen until `xl`, then four: the card sets donors, raised and
-          goal side by side, and a quarter of a 1024px screen is too narrow for
-          those three figures. A phone shows one with the next peeking in, so
-          the row reads as one that moves.
-
-          Vertical padding, cancelled by negative margin, gives a hovered card
-          room to lift and cast its shadow: a scrolling row clips everything
-          outside its own box. No horizontal padding — the rail measures each
-          card's position from its edge to know where the next one starts.
         */}
         <ul
           ref={rail.ref}
           hidden={visible.length === 0}
           aria-label="Featured campaigns"
-          className="rail -mb-8 mt-2 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-8 pt-4"
+          className="rail -mb-6 mt-4 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-2 pb-10 pt-4"
         >
           {visible.map((campaign, index) => (
             <li
               key={campaign.slug}
-              className="rise-in flex shrink-0 basis-[85%] snap-start sm:basis-[calc((100%-1.25rem)/2)] xl:basis-[calc((100%-3.75rem)/4)]"
+              className="rise-in flex shrink-0 basis-full snap-start sm:basis-[calc((100%-1.25rem)/2)] xl:basis-[calc((100%-3.75rem)/4)]"
               style={{ '--rise-delay': `${Math.min(index, 3) * 70}ms` } as React.CSSProperties}
             >
               <CampaignCard
                 campaign={campaign}
+                variant="featured"
                 className="w-full"
                 {...(viewer
                   ? {
@@ -259,6 +213,35 @@ export function FeaturedCampaigns({
             </li>
           ))}
         </ul>
+
+        {/* View All Campaigns button matching reference screenshot mint pill + glow */}
+        {visible.length > 0 ? (
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {rail.canPlay ? (
+              <div className="relative self-stretch">
+                <RailPauseToggle
+                  rail={rail}
+                  label="featured campaigns"
+                  className="focus-visible:bottom-full focus-visible:left-0 focus-visible:mb-2"
+                />
+              </div>
+            ) : null}
+
+            <Link
+              href={viewAllHref}
+              className={cn(
+                'bg-wash-mint text-wash-mint-ink-strong group inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-bold shadow-[0_12px_28px_-6px_rgba(34,197,94,0.32)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-5px_rgba(34,197,94,0.42)] hover:brightness-95 sm:text-base',
+                'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
+              )}
+            >
+              {viewAllLabel}
+              <ArrowRight
+                className="size-4.5 text-wash-mint-ink-strong transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none"
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
+        ) : null}
       </PageShell>
     </section>
   );

@@ -18,43 +18,36 @@ import type { SailentEvent, Story } from '@/lib/mock/types';
  */
 function StoryCard({ story }: { story: Story }) {
   return (
-    <article className="border-border bg-surface hover-lift group relative flex gap-3 overflow-hidden rounded-xl border p-2.5 shadow-sm hover:shadow-md">
-      {/*
-        `self-stretch` + `aspect-auto`: the crop fills the card's height rather
-        than setting it, so three cards in a row stay level however many lines
-        each title takes.
-
-        WIDER than it looks like it needs to be. The frame is upright and the
-        supplied photographs are landscape, so `object-cover` keeps only a
-        vertical slice of each one — at 104px that was half the width and cut
-        into the faces. Every 16px here is another 8% of the picture kept.
-      */}
-      <div className="w-[7.5rem] shrink-0 self-stretch overflow-hidden rounded-lg">
+    <article className="card-interactive group relative flex h-full w-full flex-col rounded-[22px] p-3.5 sm:p-4">
+      {/* Photograph on top: rounded with card inset */}
+      <div className="relative aspect-[16/10] overflow-hidden rounded-[16px] bg-slate-100 dark:bg-slate-800">
         <MediaFrame
           media={story.cover}
-          aspect="portrait"
+          aspect="video"
           rounded={false}
-          // A narrow upright crop beside the text, never a third of the page.
-          sizes="(max-width: 640px) 34vw, 128px"
-          className="hover-zoom aspect-auto size-full group-hover:scale-[1.04] motion-reduce:scale-100"
+          sizes="(max-width: 640px) 92vw, (max-width: 1024px) 45vw, 260px"
+          className="hover-zoom size-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:scale-100"
         />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <h3 className="text-caption text-balance font-bold leading-snug">
+      <div className="flex flex-1 flex-col pt-3.5">
+        <h3 className="font-display text-base font-bold leading-snug tracking-tight text-[#0F172A] sm:text-[1.0625rem] dark:text-white">
           <Link
             href={`/stories/${story.slug}`}
-            className="hover:text-info-action focus-visible:outline-ring rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="focus-visible:outline-ring hover:text-primary rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {story.title}
           </Link>
         </h3>
-        <p className="text-caption text-muted-foreground mt-1 line-clamp-5 leading-snug">
+        <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-[#64748B] sm:text-[13px] dark:text-slate-400">
           {story.summary}
         </p>
-        <p className="text-caption text-primary mt-auto inline-flex items-center gap-1 pt-2 font-semibold">
+        <p className="text-primary mt-auto inline-flex items-center gap-1.5 pt-4 text-xs font-bold sm:text-[13px]">
           Read Story
-          <ArrowRight className="size-3" aria-hidden="true" />
+          <ArrowRight
+            className="size-3.5 transition-transform duration-200 group-hover:translate-x-1"
+            aria-hidden="true"
+          />
         </p>
       </div>
     </article>
@@ -63,44 +56,56 @@ function StoryCard({ story }: { story: Story }) {
 
 function EventRow({ event }: { event: SailentEvent }) {
   const date = new Date(event.startsAt);
+  const day = date.toLocaleDateString('en-IN', { day: '2-digit' });
+  const month = date.toLocaleDateString('en-IN', { month: 'short' });
 
   return (
-    <li className="border-border bg-surface hover-lift relative flex items-center gap-3 rounded-xl border p-2 shadow-sm hover:shadow-md">
-      {/* Presentational: the full, unambiguous date is in the <time> below. */}
-      <p
-        aria-hidden="true"
-        className="bg-wash-amber text-foreground grid size-10 shrink-0 place-content-center rounded-lg text-center"
-      >
-        <span data-numeric="" className="text-body block font-bold tabular-nums leading-none">
-          {date.toLocaleDateString('en-IN', { day: '2-digit' })}
-        </span>
-        <span className="text-caption mt-0.5 block font-bold uppercase leading-none">
-          {date.toLocaleDateString('en-IN', { month: 'short' })}
-        </span>
-      </p>
-
-      <div className="min-w-0 flex-1">
-        <h3 className="text-body-sm font-bold leading-snug">
-          <Link
-            href={`/events/${event.slug}`}
-            className="hover:text-info-action focus-visible:outline-ring rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2"
+    <li className="card-interactive group relative flex items-center justify-between gap-3.5 rounded-[20px] p-3.5 sm:p-4">
+      <div className="flex min-w-0 items-center gap-3.5">
+        {/* Date badge on left */}
+        <p
+          aria-hidden="true"
+          className="sm:size-15 flex size-14 shrink-0 flex-col items-center justify-center rounded-[16px] border border-[#FFEDD5] bg-[#FFF7ED] text-center dark:border-amber-900/40 dark:bg-amber-950/30"
+        >
+          <span
+            data-numeric=""
+            className="block text-lg font-black tabular-nums leading-none text-[#0F172A] sm:text-xl dark:text-white"
           >
-            {event.title}
-          </Link>
-        </h3>
-        <p className="text-caption text-muted-foreground mt-0.5 truncate">
-          {event.isOnline
-            ? 'Online Event'
-            : (event.venueName ?? event.city ?? 'Venue to be confirmed')}
+            {day}
+          </span>
+          <span className="mt-1 block text-[10px] font-extrabold uppercase leading-none tracking-wider text-[#475569] sm:text-[11px] dark:text-amber-300">
+            {month}
+          </span>
         </p>
-        <time dateTime={event.startsAt} className="sr-only">
-          {formatDate(event.startsAt)}
-        </time>
+
+        {/* Event info */}
+        <div className="min-w-0">
+          <h3 className="font-display line-clamp-1 text-sm font-bold leading-snug tracking-tight text-[#0F172A] sm:text-[15px] dark:text-white">
+            <Link
+              href={`/events/${event.slug}`}
+              className="hover:text-info-action focus-visible:outline-ring rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              {event.title}
+            </Link>
+          </h3>
+          <p className="mt-1 truncate text-xs text-[#64748B] sm:text-[13px] dark:text-slate-400">
+            {event.isOnline
+              ? 'Online Event'
+              : (event.venueName ?? event.city ?? 'Venue to be confirmed')}
+          </p>
+          <time dateTime={event.startsAt} className="sr-only">
+            {formatDate(event.startsAt)}
+          </time>
+        </div>
       </div>
 
-      <span className="text-caption text-info-action hidden shrink-0 items-center gap-1 font-semibold sm:inline-flex">
+      {/* Register link on right */}
+      <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-[#2563EB] sm:text-sm dark:text-blue-400">
         Register
-        <ArrowRight className="size-3" aria-hidden="true" />
+        <ArrowRight
+          className="size-3.5 transition-transform duration-200 group-hover:translate-x-1"
+          aria-hidden="true"
+        />
       </span>
     </li>
   );
@@ -108,11 +113,6 @@ function EventRow({ event }: { event: SailentEvent }) {
 
 /**
  * Stories and events, side by side.
- *
- * They share a row because they answer the same question from two angles —
- * "what has this changed" and "what can I turn up to" — and because neither
- * justifies a full band of its own. Stacked below `lg`, stories first: a
- * first-time visitor is more likely to be moved by a person than by a date.
  */
 export function StoriesAndEvents({
   stories,
@@ -126,9 +126,9 @@ export function StoriesAndEvents({
   if (stories.length === 0 && events.length === 0) return null;
 
   return (
-    <section className={cn('bg-surface border-border border-b', className)}>
+    <section className={cn('bg-background border-border border-b', className)}>
       <PageShell className="band-y">
-        <div className="grid gap-8 lg:grid-cols-12 lg:gap-8">
+        <div className="grid gap-10 lg:grid-cols-12 lg:gap-10">
           {stories.length > 0 ? (
             <div className="flex flex-col lg:col-span-8">
               <SectionHead
@@ -136,12 +136,7 @@ export function StoriesAndEvents({
                 title="Stories of Change"
                 viewAll={{ href: '/stories', label: 'View All Stories' }}
               />
-              {/*
-                Three across from `sm` up — the cards are horizontal, so they
-                stay legible at a third of the column in a way a vertical card
-                would not.
-              */}
-              <ul className="mt-5 grid flex-1 gap-3 sm:grid-cols-3">
+              <ul className="mt-6 grid flex-1 gap-4 sm:grid-cols-3">
                 {stories.map((story) => (
                   <li key={story.slug} className="flex h-full">
                     <StoryCard story={story} />
@@ -152,13 +147,13 @@ export function StoriesAndEvents({
           ) : null}
 
           {events.length > 0 ? (
-            <div className="lg:col-span-4">
+            <div className="flex flex-col lg:col-span-4">
               <SectionHead
                 id="events-title"
                 title="Upcoming Events"
                 viewAll={{ href: '/events', label: 'View All Events' }}
               />
-              <ul className="mt-5 space-y-2">
+              <ul className="mt-6 space-y-3.5">
                 {events.map((event) => (
                   <EventRow key={event.slug} event={event} />
                 ))}

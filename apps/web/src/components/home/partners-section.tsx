@@ -95,7 +95,7 @@ export function PartnersSection() {
   );
 
   return (
-    <section aria-labelledby="partners-title" className="bg-surface border-border border-b">
+    <section aria-labelledby="partners-title" className="bg-background border-border border-b">
       <PageShell className="py-5 lg:py-6">
         <div className="relative flex flex-wrap items-center gap-x-6 gap-y-4">
           <h2 id="partners-title" className="text-body-lg whitespace-nowrap font-bold">

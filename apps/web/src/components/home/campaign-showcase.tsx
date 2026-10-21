@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 
+import { cn } from '@sailent/ui';
 import { PageShell } from '@/components/layout/page-shell';
 import { CampaignCard } from '@/components/campaigns/campaign-card';
 import { CauseFilters } from '@/components/campaigns/cause-filters';
@@ -69,10 +70,20 @@ export function CampaignShowcase({
     <section aria-labelledby="campaign-showcase-title" className="border-border band-y border-b">
       <PageShell>
         <div className="max-w-(--container-wide) mx-auto">
-          {/* Named for assistive technology; the tiles and cards are the visible heading. */}
-          <h2 id="campaign-showcase-title" className="sr-only">
-            Browse campaigns by cause
-          </h2>
+          {/* Section heading matching reference layout: centered eyebrow + dual-tone headline */}
+          <div className="mx-auto mb-6 flex max-w-5xl flex-col items-center text-center sm:mb-8">
+            <p className="text-foreground/80 dark:text-foreground/70 text-sm font-bold tracking-tight sm:text-base">
+              Browse By Cause
+            </p>
+
+            <h2
+              id="campaign-showcase-title"
+              className="font-display mt-1.5 text-2xl font-black leading-[1.2] tracking-tight sm:text-3xl md:text-[2.25rem]"
+            >
+              <span className="text-[#36335C] dark:text-indigo-200">Discover Causes That</span>{' '}
+              <span className="text-primary dark:text-orange-400">Inspire You.</span>
+            </h2>
+          </div>
 
           <CauseFilters
             categories={categories}
@@ -99,7 +110,7 @@ export function CampaignShowcase({
             {visible.map((campaign, index) => (
               <li
                 key={campaign.slug}
-                className="rise-in flex"
+                className={cn('rise-in flex', index >= 6 && 'hidden md:flex')}
                 style={{ '--rise-delay': `${index * 70}ms` } as React.CSSProperties}
               >
                 <CampaignCard

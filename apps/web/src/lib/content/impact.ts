@@ -186,14 +186,13 @@ export async function getHeadlineMetrics(): Promise<ImpactMetric[]> {
   const registeredOnText = formatRegisteredOn(registeredOn);
 
   /**
-   * The five figures the approved homepage shows, in its order.
+   * The four figures the approved homepage shows, in its order:
    *
    * Every one is still an AGGREGATE (decision A14) — the labels match the
    * design, the numbers come from the database:
    *
    *   Lives Impacted    sum of beneficiaries across published work
    *   Communities       distinct districts we have a presence in
-   *   Active Campaigns  count of campaigns
    *   Volunteers        count of volunteers with status Active
    *   Years of Service  whole years since the registration date
    *
@@ -212,12 +211,6 @@ export async function getHeadlineMetrics(): Promise<ImpactMetric[]> {
       label: 'Communities',
       value: reach.districts,
       derivation: 'Distinct districts with a published program or campaign.',
-    },
-    {
-      id: 'campaigns',
-      label: 'Active Campaigns',
-      value: totals.campaigns,
-      derivation: 'Count of active and completed campaigns.',
     },
     {
       id: 'volunteers',

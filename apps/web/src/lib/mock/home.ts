@@ -75,6 +75,8 @@ export interface Testimonial {
   quote: string;
   name: string;
   role: string;
+  /** Location displayed beneath role with a map pin icon. */
+  location?: string;
   kind: 'parent' | 'community' | 'volunteer' | 'donor' | 'partner';
   /** Seed for the deterministic portrait placeholder. */
   photoSeed: string;
