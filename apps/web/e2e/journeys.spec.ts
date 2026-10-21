@@ -890,7 +890,6 @@ test.describe('site-wide quality', () => {
     { path: '/impact', name: 'impact' },
     { path: '/faq', name: 'faq' },
     { path: '/contact', name: 'contact' },
-    { path: '/team', name: 'team' },
     { path: '/blog', name: 'blog' },
     { path: '/events', name: 'events' },
     { path: '/search', name: 'search' },

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { StatusActions } from '@/components/admin/status-actions';
@@ -38,17 +37,7 @@ export default async function EditTeamMemberPage({ params }: { params: Promise<{
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-h1 font-bold tracking-tight">{member.name}</h1>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            {member.designation}
-            {member.isPublic ? (
-              <>
-                {' · '}
-                <Link href={`/team/${member.slug}`} className="text-primary hover:underline">
-                  View the public page
-                </Link>
-              </>
-            ) : null}
-          </p>
+          <p className="text-body-sm text-muted-foreground mt-1">{member.designation}</p>
         </div>
       </header>
 
