@@ -4,9 +4,9 @@ import * as React from 'react';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
-import { Heart, X } from 'lucide-react';
+import { Heart, Trash2 } from 'lucide-react';
 
-import { Button, cn } from '@sailent/ui';
+import { cn } from '@sailent/ui';
 
 import { saveCampaign, unsaveCampaign, type DonorActionState } from '@/lib/donor/actions';
 
@@ -22,31 +22,40 @@ import { saveCampaign, unsaveCampaign, type DonorActionState } from '@/lib/donor
  * double-tapped bookmark on a phone sends two requests, and the second must be
  * a success rather than a 409 the donor has to interpret.
  */
-function RemoveSubmit({ title }: { title: string }) {
+function RemoveSubmit({ title, className }: { title: string; className?: string }) {
   const { pending } = useFormStatus();
   return (
-    <Button
+    <button
       type="submit"
-      size="sm"
-      variant="ghost"
       disabled={pending}
-      // 44px, the WCAG 2.5.8 enhanced target, because this is a small icon
-      // control sitting next to a link people actually want to press.
-      className="text-muted-foreground hover:text-foreground size-11 shrink-0 p-0"
+      title={`Remove ${title} from saved campaigns`}
+      aria-label={`Remove ${title} from saved campaigns`}
+      className={cn(
+        'focus-visible:outline-ring size-9.5 text-primary flex shrink-0 items-center justify-center rounded-full bg-orange-50/90 transition-all hover:scale-105 hover:bg-orange-100 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:size-10 dark:bg-orange-950/40 dark:hover:bg-orange-900/50',
+        className,
+      )}
     >
-      <X className="size-4" aria-hidden="true" />
+      <Trash2 className="size-4.5 stroke-[1.8]" aria-hidden="true" />
       <span className="sr-only">Remove {title} from saved campaigns</span>
-    </Button>
+    </button>
   );
 }
 
-export function UnsaveButton({ campaignId, title }: { campaignId: string; title: string }) {
+export function UnsaveButton({
+  campaignId,
+  title,
+  className,
+}: {
+  campaignId: string;
+  title: string;
+  className?: string;
+}) {
   const [, action] = useActionState<DonorActionState, FormData>(unsaveCampaign, {});
 
   return (
     <form action={action}>
       <input type="hidden" name="campaignId" value={campaignId} />
-      <RemoveSubmit title={title} />
+      <RemoveSubmit title={title} className={className} />
     </form>
   );
 }

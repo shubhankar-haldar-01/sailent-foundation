@@ -211,7 +211,10 @@ export function CampaignDonationSummary({
             progress ? 'border-border mt-2 border-t pt-2' : 'mt-3',
           )}
         >
-          Choose an item above, or pick an amount below.
+          {/* No way-of-giving switch means no products to choose from. */}
+          {onModeChange
+            ? 'Choose an item above, or pick an amount below.'
+            : 'Pick an amount below.'}
         </p>
       ) : null}
 

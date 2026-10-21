@@ -424,9 +424,19 @@ export function DonationBuilder({
 
         {/* Other ways to support --------------------------------------------- */}
         {showCustomAmountSection ? (
+          /*
+            WITHOUT PRODUCTS, THIS IS THE PAGE'S DONATE ANCHOR. The cards'
+            "Donate Now", the programme pages and the section links all point
+            at `#give` — the product grid when there is one, this panel when
+            there is not — so a campaign with nothing to pick from still lands
+            on the ask. It also takes the grid's place as where the page
+            returns to from the checkout.
+          */
           <section
+            id={campaign.products.length === 0 ? 'give' : undefined}
+            ref={campaign.products.length === 0 ? productsRef : undefined}
             aria-labelledby="custom-amount"
-            className="bg-surface-warm border-wash-amber mt-6 rounded-xl border p-4 first:mt-0 md:p-5"
+            className="bg-surface-warm border-wash-amber mt-6 scroll-mt-32 rounded-xl border p-4 first:mt-0 md:p-5"
           >
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex min-w-0 flex-1 items-start gap-3">

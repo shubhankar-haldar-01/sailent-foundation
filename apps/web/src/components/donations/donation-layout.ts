@@ -4,11 +4,12 @@
  * ══════════════════════════════════════════════════════════════════════════
  * PLAIN STRINGS IN A PLAIN MODULE, ON PURPOSE.
  *
- * The builder is a client component and the campaign page is a server one, and
- * both lay out the same grid — the page does it on its own when a campaign has
- * no products and so no builder. A constant exported from a `'use client'` file
- * reaches a server component as a client reference rather than as the string,
- * so these live here, where both sides import the real value.
+ * The builder is a client component, and the campaign page — a server
+ * component — used to lay this grid out itself for a campaign without
+ * products. Every campaign page renders the builder now (2026-10-16), but the
+ * strings stay in a plain module: a constant exported from a `'use client'`
+ * file reaches a server component as a client reference rather than as the
+ * string, so any server side that needs them imports the real value from here.
  * ══════════════════════════════════════════════════════════════════════════
  *
  * THE RAIL IS STICKY, AND NEVER SCROLLS INSIDE ITSELF.

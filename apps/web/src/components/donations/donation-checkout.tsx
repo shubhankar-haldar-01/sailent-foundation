@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, ArrowLeft, Loader2, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, FileText, Loader2, ShieldCheck } from 'lucide-react';
 
 import { Alert, Button, Card, Input, Label, Switch, cn, formatCurrency } from '@sailent/ui';
 import { emailSchema, phoneSchema } from '@sailent/validation';
@@ -292,6 +292,10 @@ export function DonationCheckout({
             NO TAX-ID FIELD. A PAN is collected later, from donors who choose to
             claim relief — asking for one at the highest-abandonment step of the
             funnel costs donations for a benefit most people will not use.
+
+            NO REFUND WORDING. There is no published refund or cancellation
+            policy yet (DEVELOPMENT_STATUS.md §6), and Phase 9 keeps refund
+            terms off the site until there is (e2e/phase-9.spec.ts).
           */}
 
           <Button type="submit" size="lg" fullWidth disabled={busy}>
@@ -311,28 +315,67 @@ export function DonationCheckout({
         </form>
       </Card>
 
-      <Card className="p-5 lg:sticky lg:top-24">
-        <h2 className="text-h4 font-semibold">Your donation</h2>
-        <p className="text-body-sm text-muted-foreground mt-2">{selection.campaignTitle}</p>
-        <p data-numeric="" className="font-display text-h2 mt-4 font-bold tabular-nums">
-          {formatCurrency(selection.displayTotal)}
-        </p>
-        <div className="border-border mt-4 space-y-2 border-t pt-4">
-          <p className="text-caption text-muted-foreground flex items-start gap-2">
+      <Card variant="elevated" className="space-y-5 p-6 lg:sticky lg:top-24">
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-h4 font-semibold">Your donation</h2>
+          </div>
+          <p className="text-body-sm text-muted-foreground mt-1 line-clamp-2">
+            {selection.campaignTitle}
+          </p>
+        </div>
+
+        {/* Item breakdown if products or custom amount present */}
+        {selection.items.length > 0 || selection.customAmount > 0 ? (
+          <div className="border-border/60 divide-border/40 text-caption space-y-2 border-y py-3">
+            {selection.items.length > 0 ? (
+              <div className="text-muted-foreground flex justify-between">
+                <span>
+                  Product add-ons ({selection.items.reduce((s, i) => s + i.quantity, 0)} items)
+                </span>
+                <span className="text-foreground font-medium">Included</span>
+              </div>
+            ) : null}
+            {selection.customAmount > 0 ? (
+              <div className="text-muted-foreground flex justify-between">
+                <span>Custom donation</span>
+                <span data-numeric="" className="text-foreground font-medium tabular-nums">
+                  {formatCurrency(selection.customAmount)}
+                </span>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div>
+          <span className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
+            Total to Pay
+          </span>
+          <p data-numeric="" className="font-display text-h2 font-bold tabular-nums">
+            {formatCurrency(selection.displayTotal)}
+          </p>
+        </div>
+
+        <div className="border-border/60 text-caption text-muted-foreground space-y-3 border-t pt-4">
+          <div className="flex items-start gap-2">
             <ShieldCheck className="text-success mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>
               Your donation is recorded only after our server confirms the payment with Razorpay —
-              never on the browser saying it worked.
+              never on the browser alone.
             </span>
-          </p>
-          {/*
-            Careful wording. A receipt is not an 80G certificate: that is Form
-            10BE, issued by the Income Tax Department after the annual filing.
-          */}
-          <p className="text-caption text-muted-foreground">
-            You will receive an itemised receipt by email. Relief under Section 80G is claimed
-            separately, through Form 10BE after our annual filing.
-          </p>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <FileText className="text-info mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>
+              {/*
+                Careful wording. A receipt is not an 80G certificate: that is Form
+                10BE, issued by the Income Tax Department after the annual filing.
+              */}
+              You will receive an itemised receipt by email. Relief under Section 80G is claimed
+              separately, through Form 10BE after our annual filing.
+            </span>
+          </div>
         </div>
       </Card>
     </div>

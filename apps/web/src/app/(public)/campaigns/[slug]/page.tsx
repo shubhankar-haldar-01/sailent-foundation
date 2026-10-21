@@ -1,21 +1,16 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { PageShell, Section } from '@/components/layout/page-shell';
+import { PageShell } from '@/components/layout/page-shell';
 import { Breadcrumbs } from '@/components/sections/breadcrumbs';
 import { DonationBuilder } from '@/components/donations/donation-builder';
-import { donationColumns } from '@/components/donations/donation-layout';
-import { StickyRail } from '@/components/donations/sticky-rail';
 import { CampaignAbout, hasAboutContent } from '@/components/campaigns/campaign-about';
-import { CampaignCard } from '@/components/campaigns/campaign-card';
 import { CampaignFaqs } from '@/components/campaigns/campaign-faqs';
 import { CampaignHero } from '@/components/campaigns/campaign-hero';
-import { CampaignImpact } from '@/components/campaigns/campaign-impact';
 import {
   CampaignSectionNav,
   type CampaignSectionLink,
 } from '@/components/campaigns/campaign-section-nav';
-import { CampaignStatusCard } from '@/components/campaigns/campaign-status-card';
 import { CampaignAssurances } from '@/components/campaigns/campaign-trust';
 import { RecentDonors } from '@/components/campaigns/recent-donors';
 import { StoriesStrip } from '@/components/campaigns/stories-strip';
@@ -48,14 +43,18 @@ export async function generateMetadata({
  *
  * The main column runs, in this order: photograph and facts, section links,
  * products, other ways to support (any amount, typed), about (its photos
- * first), stories, recent supporters, the difference support makes, FAQs. The
+ * first), stories, recent supporters, FAQs (the "difference your support can
+ * make" block was taken off at the owner's request, 2026-10-16). The
  * side column is the donation card and the assurances under it, sticky for the
  * whole length of the main column.
  *
- * When the campaign has products, the donation builder lays out both columns —
- * it owns the basket the grid and the card share — and this page hands it the
- * rest as slots. When it has none, nothing on the page takes money, and the
- * page lays out the same grid itself with a progress card in the side column.
+ * The donation builder lays out both columns for EVERY campaign — it owns the
+ * basket the grid and the card share — and this page hands it the rest as
+ * slots. A campaign with no products simply has no product grid: its main
+ * column opens on "Choose an amount", and the card beside it takes the gift
+ * exactly as it does on a campaign that lists items. One design for every
+ * campaign page, whichever page it was reached from (owner, 2026-10-16); the
+ * progress-only side card that product-less campaigns used to get is retired.
  *
  * Below `lg` it is one column in the same order, and nothing is fixed to the
  * screen: the donation card sits in the page straight after the ways of
@@ -73,15 +72,16 @@ export default async function CampaignDetailPage({
   const [allStories, siblings, donors] = await Promise.all([
     getStories(),
     /*
-      Only when the campaign belongs to a programme. An empty slug is no filter
-      at all, so a stand-alone campaign would list every campaign under a
-      "More in" heading with no programme name in it.
+      The programme's other campaigns, so the stories strip can prefer that
+      programme's stories when this campaign has none of its own. Only when the
+      campaign belongs to a programme: an empty slug is no filter at all.
+
+      (They are no longer listed on the page: the "More in <programme>" row
+      after the FAQs was taken off at the owner's request, 2026-10-16.)
     */
     campaign.programSlug ? getCampaigns({ programSlug: campaign.programSlug }) : [],
     getCampaignDonors(campaign.slug, { limit: 5 }),
   ]);
-
-  const relatedCampaigns = siblings.filter((item) => item.slug !== campaign.slug).slice(0, 3);
 
   /*
     THIS CAMPAIGN'S OWN STORIES, and only those when it has any. Topping them
@@ -111,10 +111,11 @@ export default async function CampaignDetailPage({
 
   // Only sections that will actually render get a link.
   const sections: CampaignSectionLink[] = [
-    ...(hasProducts ? [{ id: 'give', label: 'Products' }] : []),
+    // The ask comes first on every campaign: the product grid when there is
+    // one, otherwise the amount panel — both carry `id="give"`.
+    { id: 'give', label: hasProducts ? 'Products' : 'Donate' },
     ...(hasAboutContent(campaign) ? [{ id: 'campaign-about', label: 'About' }] : []),
     ...(stories.length > 0 ? [{ id: 'campaign-stories', label: 'Stories' }] : []),
-    { id: 'campaign-impact', label: 'Impact' },
     ...(campaign.faqs.length > 0 ? [{ id: 'campaign-faqs', label: 'FAQs' }] : []),
   ];
 
@@ -130,7 +131,6 @@ export default async function CampaignDetailPage({
       <CampaignAbout campaign={campaign} />
       <StoriesStrip stories={stories} fromElsewhere={storiesFromElsewhere} />
       <RecentDonors donors={donors} />
-      <CampaignImpact campaign={campaign} />
       <CampaignFaqs faqs={campaign.faqs} />
     </>
   );
@@ -138,57 +138,28 @@ export default async function CampaignDetailPage({
   const assurances = <CampaignAssurances />;
 
   return (
-    <>
-      <PageShell className="pb-12 pt-2 md:pb-16">
-        {/*
-          Above BOTH columns, so the photograph and the donation card start on
-          the same line.
-        */}
-        <Breadcrumbs
-          className="mb-2.5"
-          entries={[
-            { name: 'Home', path: '/' },
-            { name: 'Campaigns', path: '/campaigns' },
-            { name: campaign.title, path: `/campaigns/${campaign.slug}` },
-          ]}
-        />
+    <PageShell className="pb-12 pt-2 md:pb-16">
+      {/*
+        Above BOTH columns, so the photograph and the donation card start on
+        the same line.
+      */}
+      <Breadcrumbs
+        className="mb-2.5"
+        entries={[
+          { name: 'Home', path: '/' },
+          { name: 'Campaigns', path: '/campaigns' },
+          { name: campaign.title, path: `/campaigns/${campaign.slug}` },
+        ]}
+      />
 
-        {hasProducts ? (
-          <DonationBuilder
-            campaign={campaign}
-            lead={lead}
-            assurances={assurances}
-            preselectSmallestAmount
-          >
-            {body}
-          </DonationBuilder>
-        ) : (
-          <div className={donationColumns}>
-            <div className="min-w-0">
-              {lead}
-              {body}
-            </div>
-            <StickyRail>
-              <CampaignStatusCard campaign={campaign} assurances={assurances} />
-            </StickyRail>
-          </div>
-        )}
-      </PageShell>
-
-      {relatedCampaigns.length > 0 ? (
-        <Section className="border-border bg-surface-sunken border-t">
-          <PageShell>
-            <h2 className="text-h1 font-bold">More in {campaign.programName}</h2>
-            <ul className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {relatedCampaigns.map((item) => (
-                <li key={item.slug}>
-                  <CampaignCard campaign={item} />
-                </li>
-              ))}
-            </ul>
-          </PageShell>
-        </Section>
-      ) : null}
-    </>
+      <DonationBuilder
+        campaign={campaign}
+        lead={lead}
+        assurances={assurances}
+        preselectSmallestAmount
+      >
+        {body}
+      </DonationBuilder>
+    </PageShell>
   );
 }

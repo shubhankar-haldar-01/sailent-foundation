@@ -25,6 +25,7 @@ export interface CampaignCardModel {
   endsAt: string | null;
   status: 'active' | 'paused' | 'completed' | 'archived';
   hasProducts: boolean;
+  category?: string;
 }
 
 export interface ProductDonationModel {

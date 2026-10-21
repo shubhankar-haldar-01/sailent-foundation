@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Button, Skeleton, cn, formatCurrency, formatNumber, percentOf } from '@sailent/ui';
@@ -5,6 +7,7 @@ import { Button, Skeleton, cn, formatCurrency, formatNumber, percentOf } from '@
 import { SaveCampaignHeart } from '@/components/dashboard/save-campaign-button';
 import { CategoryIcon, categoryTone } from '@/components/home/category-icon';
 import { CoinsSolid, PeopleSolid, TargetSolid } from '@/components/home/focus-icons';
+import { FacebookSolid, WhatsAppLogo } from '@/components/layout/social-icons';
 import {
   CAMPAIGN_STATE_NAMES,
   STATUS_VISUALS,
@@ -27,69 +30,63 @@ const CTA_ARROW =
   'duration-(--duration-base) ease-(--ease-out-soft) transition-[translate] motion-safe:group-hover/cta:translate-x-1';
 
 /**
- * Campaign card — the listing's card, and the "More in …" card on a campaign.
+ * Campaign card — the listing's card, on /campaigns, the homepage and programme pages.
  *
- * Image, category, title, the three figures, progress, and one action, in
- * that order. No description: the card says what the campaign is and how far
- * it has got, and the campaign's own page says the rest. The rules from Phase 0 §5.2 are enforced here rather
- * than left to each caller:
- *   • progress shows a percentage AND both absolute figures
- *   • the donor count is suppressed below five
- *   • the whole card links to the detail page; the button goes straight to
- *     giving, and only on a campaign that is taking donations
- *
- * Every figure is the campaign's own — `progress` where the API computed it,
- * the raw columns where it did not — and nothing here rounds money.
+ * Image, category, title, figures/share action, and donate button.
+ * Supports `variant="featured"` (compact action bar with Share buttons) and
+ * `variant="standard"` (3 figures: Donors / Raised / Goal + progress bar).
  */
 export function CampaignCard({
   campaign,
-  className,
   save,
   showStatus = false,
+  variant = 'standard',
+  className,
 }: {
   campaign: Campaign;
-  className?: string;
-  /**
-   * Draw the save heart. Omitted where the card is a cross-link rather than a
-   * place to browse — the related campaigns on a campaign page.
-   */
   save?: { signedIn: boolean; saved: boolean; returnTo?: string };
-  /**
-   * Badge EVERY card with its state, Active included. The campaign listing
-   * does this in every "Show" view, so a card's state is always on the card
-   * whichever filter brought it there. Elsewhere — the related campaigns on a
-   * campaign page — only Closed and Completed are badged, as the exceptions.
-   */
   showStatus?: boolean;
+  variant?: 'standard' | 'featured';
+  className?: string;
 }) {
+  const isFeatured = variant === 'featured';
   const detailHref = `/campaigns/${campaign.slug}`;
   const tone = categoryTone(campaign.category);
 
   const goal = campaign.progress?.goal ?? campaign.goalAmount;
   const raised = campaign.progress?.raised ?? campaign.amountRaised;
-  // Unclamped, as on the campaign page: 112% is said as 112%, not as 100%.
   const percent = campaign.progress?.rawPercent ?? percentOf(raised, goal);
-  // A sliver of bar for any real money, so ₹500 against ₹5 lakh is not drawn as nothing.
   const barWidth = Math.min(100, Math.max(percent, raised > 0 ? 2 : 0));
   const isOpen = acceptsDonationsNow(campaign);
   const state = campaignState(campaign.status, campaign.donation?.state);
-  const stateBadge = state && (showStatus || state !== 'active') ? STATUS_VISUALS[state] : null;
+  const stateBadge =
+    !isFeatured && state && (showStatus || state !== 'active') ? STATUS_VISUALS[state] : null;
+
+  const handleShare = (platform: 'facebook' | 'whatsapp') => {
+    if (typeof window === 'undefined') return;
+    const url = `${window.location.origin}/campaigns/${campaign.slug}`;
+    const title = campaign.title;
+    if (platform === 'whatsapp') {
+      const text = `Support "${title}" on Sailent Foundation: ${url}`;
+      window.open(
+        `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
+        '_blank',
+        'noopener,noreferrer',
+      );
+    } else if (platform === 'facebook') {
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+        '_blank',
+        'noopener,noreferrer',
+      );
+    }
+  };
 
   return (
     <article
       className={cn(
-        // `@container`: the figures size themselves to the card, not the screen.
-        'bg-surface @container group relative flex flex-col rounded-2xl shadow-[0_8px_28px_-14px_rgb(15_23_42/0.22)]',
-        'border-border/50 dark:border-border border',
-        /*
-          Lifts on hover AND when anything inside it has keyboard focus, so a
-          keyboard user sees which card they are in as clearly as a pointer
-          user does. Movement only when the reader has not asked for less;
-          the deeper shadow carries the state either way.
-        */
-        'duration-(--duration-slow) ease-(--ease-out-soft) transition-[translate,box-shadow,border-color]',
-        'focus-within:shadow-lg hover:shadow-lg',
-        'motion-safe:focus-within:-translate-y-1.5 motion-safe:hover:-translate-y-1.5',
+        'card-interactive @container group relative flex flex-col',
+        'rounded-[22px] p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900',
         className,
       )}
     >
@@ -105,7 +102,7 @@ export function CampaignCard({
             media={campaign.cover}
             aspect="video"
             rounded={false}
-            className="hover-zoom aspect-[2/1] group-hover:scale-[1.06] motion-reduce:scale-100"
+            className="hover-zoom aspect-[2.25/1] group-hover:scale-[1.06] motion-reduce:scale-100"
             sizes="(max-width: 767px) 92vw, (max-width: 1023px) 46vw, (max-width: 1279px) 31vw, 320px"
           />
         </div>
@@ -148,30 +145,35 @@ export function CampaignCard({
             white backing, so the colours are known whatever the photograph
             does underneath — the ink is measured against wash over white.
           */
-          <span className="bg-surface absolute bottom-4 left-3 rounded-full shadow-sm">
+          <span className="bg-surface absolute bottom-2.5 left-3 rounded-full shadow-sm">
             <span
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8125rem] font-bold leading-none',
+                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.75rem] font-bold leading-none sm:px-3 sm:py-1.5 sm:text-[0.8125rem]',
                 // The 60% wash over white, not the full wash: at full strength
                 // the blue and gold inks fall to 4.36:1 and 4.24:1.
                 tone.chip,
               )}
             >
-              <CategoryIcon category={campaign.category} className="size-4" />
+              <CategoryIcon category={campaign.category} className="size-3.5 sm:size-4" />
               {campaign.category}
             </span>
           </span>
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col px-4 pb-3.5 pt-3.5">
+      <div
+        className={cn(
+          'flex flex-1 flex-col',
+          isFeatured ? 'px-0.5 pb-0.5 pt-3' : 'px-1 pb-1 pt-2.5',
+        )}
+      >
         {/*
           The display face, large, as the owner's card design sets it. Ordinary
           wrapping rather than the base layer's `balance` (which evens two lines
           out and leaves the right of the card empty), and anything past two
           lines ends in an ellipsis rather than pushing the figures down.
         */}
-        <h3 className="font-display text-wrap text-[1.125rem] font-bold leading-snug tracking-[-0.01em] [&>a]:line-clamp-2">
+        <h3 className="font-display text-wrap text-[1.0625rem] font-bold leading-snug tracking-[-0.01em] sm:text-[1.125rem] [&>a]:line-clamp-2">
           <Link
             href={detailHref}
             className="hover:text-info-action focus-visible:outline-ring rounded-sm after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -186,107 +188,155 @@ export function CampaignCard({
           the row lands on the same line however long each title runs — the bar
           is what a reader compares ACROSS cards.
         */}
-        <div className="mt-auto pt-3.5">
-          {/*
-            Equal columns, each figure centred in its own, with the dividers
-            between them (owner request, 2026-10-08: smaller, evenly aligned).
-            Without a donor count the two remaining figures share the row.
-          */}
-          <dl
-            className={cn(
-              'grid items-stretch gap-x-1.5',
-              campaign.donorCount >= 5
-                ? 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]'
-                : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]',
-            )}
-          >
-            {campaign.donorCount >= 5 ? (
+        {variant === 'featured' ? (
+          <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+            {/* Share with Facebook and WhatsApp icons */}
+            <div className="relative z-10 flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-[#64748B] dark:text-slate-400">
+                Share:
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleShare('facebook');
+                }}
+                aria-label="Share on Facebook"
+                className="sm:size-7.5 flex size-7 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-[#64748B] transition-colors hover:bg-slate-200 hover:text-[#0F172A] dark:bg-slate-800 dark:hover:bg-slate-700"
+              >
+                <FacebookSolid className="size-3.5" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleShare('whatsapp');
+                }}
+                aria-label="Share on WhatsApp"
+                className="sm:size-7.5 flex size-7 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-[#64748B] transition-colors hover:bg-slate-200 hover:text-[#0F172A] dark:bg-slate-800 dark:hover:bg-slate-700"
+              >
+                <WhatsAppLogo className="size-3.5" aria-hidden="true" />
+              </button>
+            </div>
+
+            {/* Donate Now Button */}
+            <div className="relative z-10">
+              <Button
+                asChild
+                className={cn(
+                  'h-9 rounded-full px-5 text-[0.8125rem] font-bold sm:px-6',
+                  CTA_MOTION,
+                )}
+              >
+                <Link href={isOpen ? `${detailHref}#give` : detailHref}>Donate Now</Link>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-auto pt-2">
+            {/*
+              Equal columns, each figure centred in its own, with the dividers
+              between them (owner request, 2026-10-08: smaller, evenly aligned).
+              Without a donor count the two remaining figures share the row.
+            */}
+            <dl
+              className={cn(
+                '-mx-2 grid items-stretch gap-x-1.5',
+                campaign.donorCount >= 5
+                  ? 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]'
+                  : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]',
+              )}
+            >
+              {campaign.donorCount >= 5 ? (
+                <>
+                  <Figure
+                    label="Donors"
+                    value={formatNumber(campaign.donorCount)}
+                    icon={PeopleSolid}
+                    iconClassName="text-wash-coral-ink"
+                    discClassName="bg-wash-coral"
+                  />
+                  <FigureDivider />
+                </>
+              ) : null}
+              <Figure
+                label="Raised"
+                value={formatCurrency(raised)}
+                valueClassName="text-success"
+                icon={CoinsSolid}
+                iconClassName="text-success"
+                discClassName="bg-wash-mint"
+              />
+              <FigureDivider />
+              <Figure
+                label="Goal"
+                value={formatCurrency(goal)}
+                icon={TargetSolid}
+                iconClassName="text-wash-coral-ink"
+                discClassName="bg-wash-coral"
+              />
+            </dl>
+
+            {goal > 0 ? (
               <>
-                <Figure
-                  label="Donors"
-                  value={formatNumber(campaign.donorCount)}
-                  icon={PeopleSolid}
-                  iconClassName="text-wash-coral-ink"
-                  discClassName="bg-wash-coral"
-                />
-                <FigureDivider />
+                {/*
+                  The brand orange, as the owner's card design draws it. The
+                  percentage beside it carries the meaning; the bar is the cue.
+                */}
+                <div
+                  role="img"
+                  aria-label={`${percent}% of the ${formatCurrency(goal)} goal raised`}
+                  className="bg-muted mt-2.5 h-2 overflow-hidden rounded-full"
+                >
+                  <span
+                    aria-hidden="true"
+                    // Grows from empty to its value as the card lands.
+                    className="fill-in bg-primary block h-full rounded-full"
+                    style={{ width: `${barWidth}%` }}
+                  />
+                </div>
+                <p className="text-muted-foreground mt-1 flex items-baseline justify-between gap-3 text-[0.8125rem]">
+                  <span data-numeric="">
+                    <span className="text-primary font-bold">{percent}%</span> Complete
+                  </span>
+                  <span data-numeric="">
+                    {percent >= 100 ? 'Goal reached' : `${100 - percent}% to go`}
+                  </span>
+                </p>
               </>
             ) : null}
-            <Figure
-              label="Raised"
-              value={formatCurrency(raised)}
-              valueClassName="text-success"
-              icon={CoinsSolid}
-              iconClassName="text-success"
-              discClassName="bg-wash-mint"
-            />
-            <FigureDivider />
-            <Figure
-              label="Goal"
-              value={formatCurrency(goal)}
-              icon={TargetSolid}
-              iconClassName="text-wash-coral-ink"
-              discClassName="bg-wash-coral"
-            />
-          </dl>
 
-          {goal > 0 ? (
-            <>
-              {/*
-                The brand orange, as the owner's card design draws it. The
-                percentage beside it carries the meaning; the bar is the cue.
-              */}
-              <div
-                role="img"
-                aria-label={`${percent}% of the ${formatCurrency(goal)} goal raised`}
-                className="bg-muted mt-3.5 h-2.5 overflow-hidden rounded-full"
-              >
-                <span
-                  aria-hidden="true"
-                  // Grows from empty to its value as the card lands.
-                  className="fill-in bg-primary block h-full rounded-full"
-                  style={{ width: `${barWidth}%` }}
-                />
-              </div>
-              <p className="text-muted-foreground mt-1.5 flex items-baseline justify-between gap-3 text-[0.8125rem]">
-                <span data-numeric="">
-                  <span className="text-primary font-bold">{percent}%</span> Complete
-                </span>
-                <span data-numeric="">
-                  {percent >= 100 ? 'Goal reached' : `${100 - percent}% to go`}
-                </span>
-              </p>
-            </>
-          ) : null}
-
-          {/* z-10 lifts the action above the card-wide overlay link. */}
-          <div className="relative z-10 -mx-1 mt-3">
-            {isOpen ? (
-              <Button
-                asChild
-                fullWidth
-                className={cn('h-10 text-[0.875rem] font-bold', CTA_MOTION)}
-              >
-                <Link href={`${detailHref}#give`}>
-                  Donate Now
-                  <ArrowRight aria-hidden="true" className={CTA_ARROW} />
-                </Link>
-              </Button>
-            ) : (
-              <Button
-                asChild
-                variant="secondary"
-                fullWidth
-                className={cn('h-10 text-[0.875rem] font-bold', CTA_MOTION)}
-              >
-                <Link href={detailHref}>
-                  {campaign.status === 'completed' ? 'See What Happened' : 'View Campaign'}
-                  <ArrowRight aria-hidden="true" className={CTA_ARROW} />
-                </Link>
-              </Button>
-            )}
+            {/* z-10 lifts the action above the card-wide overlay link. */}
+            <div className="relative z-10 mt-2.5">
+              {isOpen ? (
+                <Button
+                  asChild
+                  fullWidth
+                  className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}
+                >
+                  <Link href={`${detailHref}#give`}>
+                    Donate Now
+                    <ArrowRight aria-hidden="true" className={CTA_ARROW} />
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  asChild
+                  variant="secondary"
+                  fullWidth
+                  className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}
+                >
+                  <Link href={detailHref}>
+                    {campaign.status === 'completed' ? 'See What Happened' : 'View Campaign'}
+                    <ArrowRight aria-hidden="true" className={CTA_ARROW} />
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </article>
   );
@@ -358,26 +408,26 @@ export function CampaignCardSkeleton() {
   return (
     <div className="border-border/50 bg-surface flex w-full flex-col rounded-2xl border shadow-sm">
       <div className="relative">
-        <Skeleton className="aspect-[2/1] w-full rounded-2xl" />
-        <Skeleton className="bg-surface absolute bottom-4 left-3 h-7 w-28 rounded-full" />
+        <Skeleton className="aspect-[2.25/1] w-full rounded-2xl" />
+        <Skeleton className="bg-surface absolute bottom-2.5 left-3 h-6 w-24 rounded-full" />
       </div>
-      <div className="flex flex-1 flex-col px-4 pb-3.5 pt-3.5">
-        <Skeleton className="h-6 w-4/5" />
-        <div className="mt-6 grid grid-cols-3 gap-2">
+      <div className="flex flex-1 flex-col px-1 pb-1 pt-2.5">
+        <Skeleton className="h-5 w-4/5" />
+        <div className="mt-4 grid grid-cols-3 gap-2">
           {[0, 1, 2].map((key) => (
-            <div key={key} className="flex flex-col items-center gap-1.5">
+            <div key={key} className="flex flex-col items-center gap-1">
               <Skeleton className="size-[1.375rem] rounded-full" />
-              <Skeleton className="h-4 w-14" />
-              <Skeleton className="h-3 w-10" />
+              <Skeleton className="h-3.5 w-14" />
+              <Skeleton className="h-2.5 w-10" />
             </div>
           ))}
         </div>
-        <Skeleton className="mt-5 h-2.5 w-full rounded-full" />
-        <div className="mt-2 flex justify-between">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-16" />
+        <Skeleton className="mt-3.5 h-2 w-full rounded-full" />
+        <div className="mt-1 flex justify-between">
+          <Skeleton className="h-3.5 w-24" />
+          <Skeleton className="h-3.5 w-16" />
         </div>
-        <Skeleton className="-mx-1 mt-3 h-10 rounded-full" />
+        <Skeleton className="mt-2.5 h-9 rounded-full" />
       </div>
     </div>
   );

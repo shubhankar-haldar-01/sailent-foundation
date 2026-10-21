@@ -44,7 +44,15 @@ export function CampaignStatusMenu({
   const CurrentIcon = current.icon;
 
   return (
-    <Select name="status" value={value} onValueChange={(next) => onChange(parseStatus(next))}>
+    /*
+      A native submit (before hydration) sends the status only when it is not
+      the default, as `listingHref` does — so `?q=school` stays `?q=school`.
+    */
+    <Select
+      {...(value === 'active' ? {} : { name: 'status' })}
+      value={value}
+      onValueChange={(next) => onChange(parseStatus(next))}
+    >
       <SelectTrigger
         aria-label="Show campaigns"
         className={cn(

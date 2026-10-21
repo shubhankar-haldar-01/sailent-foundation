@@ -49,7 +49,6 @@ test.describe('campaign page', () => {
       'About This Campaign',
       'Stories from the Ground',
       'Recent Supporters',
-      'The Difference Your Support Can Make',
       'FAQs',
     ];
 
@@ -292,6 +291,40 @@ test.describe('campaign page', () => {
     await expect(
       page.getByRole('button', { name: 'Donate ₹500' }).filter({ visible: true }),
     ).toBeEnabled();
+  });
+
+  /**
+   * A campaign with nothing to pick from has the SAME page as one with products
+   * (owner, 2026-10-16): the donation card beside it, the smallest amount
+   * already chosen, and the amount panel where the product grid would be —
+   * carrying the `#give` anchor every "Donate Now" on the site points at.
+   * (Whether the browser scrolls to that anchor is not asserted: with a
+   * `loading.tsx` on this route, a hash landing is not reliable on any campaign.)
+   */
+  test('gives a campaign without products the same donation card and anchor', async ({ page }) => {
+    await page.goto('/campaigns/animal-care-pune');
+    await page.waitForLoadState('networkidle');
+
+    // No products, so no grid and no way-of-giving switch — only the amount,
+    // and that panel is what every "Donate Now" link on the site (`#give`) names.
+    await expect(page.getByRole('heading', { name: 'Choose How You Want to Help' })).toHaveCount(0);
+    await expect(page.getByRole('radio', { name: 'Support with Products' })).toHaveCount(0);
+    await expect(
+      page.locator('#give').getByRole('heading', { name: 'Choose an amount', exact: true }),
+    ).toBeVisible();
+
+    // The section links lead with the ask, as they do on a campaign with products.
+    const sections = page.getByRole('navigation', { name: 'Campaign sections' });
+    await expect(sections.getByRole('link').first()).toHaveText('Donate');
+
+    // The same card, open on "Donate ₹500" — not a progress card with a link to /donate.
+    await expect(
+      page.getByRole('heading', { name: 'Your Donation' }).filter({ visible: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Donate ₹500' }).filter({ visible: true }),
+    ).toBeEnabled();
+    await expect(page.getByRole('heading', { name: 'Support This Campaign' })).toHaveCount(0);
   });
 
   test('shows what each item costs and how much is still needed', async ({ page }) => {

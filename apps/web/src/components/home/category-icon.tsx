@@ -1,4 +1,14 @@
-import { Book, Heart, PawPrint, Shield, Sprout, Tag, Users, UtensilsCrossed } from 'lucide-react';
+import {
+  Book,
+  Briefcase,
+  Heart,
+  PawPrint,
+  Shield,
+  Sprout,
+  Tag,
+  Users,
+  UtensilsCrossed,
+} from 'lucide-react';
 
 import { cn } from '@sailent/ui';
 
@@ -27,7 +37,7 @@ const BY_CATEGORY: Record<string, typeof Book> = {
   disasterrelief: Shield,
   womenempowerment: Users,
   childwelfare: Users,
-  livelihood: Sprout,
+  livelihood: Briefcase,
   environment: Sprout,
   animalwelfare: PawPrint,
   clothing: Tag,

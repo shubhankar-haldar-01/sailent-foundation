@@ -58,10 +58,10 @@ export async function generateMetadata({
  * shareable, back-button-safe, and work without scripting.
  *
  * The hero and search bar render at once. The causes and the cards wait on
- * the API inside a Suspense boundary KEYED ON THE QUERY: a new search or cause
- * swaps the grid for skeleton cards until its own results arrive, rather than
- * leaving the previous results on screen looking like the answer. "View More"
- * is the exception — it keeps what is there and adds to it.
+ * the API inside a Suspense boundary, shown as a skeleton on first arrival
+ * only. After that, a new cause, status or search keeps the tiles and cards on
+ * screen — dimmed, the tapped tile lit — until its own results replace them in
+ * place (owner, 2026-10-15: the skeleton swap read as the page reloading).
  */
 export default async function CampaignsPage({ searchParams }: { searchParams: SearchParams }) {
   const query = parseListingQuery(await searchParams);
@@ -83,15 +83,15 @@ export default async function CampaignsPage({ searchParams }: { searchParams: Se
               Campaigns
             </h2>
             {/*
-              Keyed on everything EXCEPT the page count. "View More" must
-              append to the cards already on screen, not tear them down for a
-              skeleton — a remount collapses the page for a frame and throws
-              the reader back up it.
+              NOT keyed on the query. Choosing a cause, a status or a search
+              is a navigation in a transition, and an unkeyed boundary that is
+              already showing keeps its content until the new results arrive —
+              the tiles and the cards stay put (dimmed while they load, see
+              CampaignDiscovery) instead of collapsing into a skeleton and back,
+              which read as the page reloading. The skeleton is for the first
+              arrival only.
             */}
-            <Suspense
-              key={listingHref({ ...query, page: 1 })}
-              fallback={<CampaignListingSkeleton />}
-            >
+            <Suspense fallback={<CampaignListingSkeleton />}>
               <CampaignDiscovery query={query} />
             </Suspense>
           </div>
@@ -136,77 +136,80 @@ async function CampaignDiscovery({ query }: { query: ListingQuery }) {
   const returnTo = listingHref({ ...query, page: 1 });
 
   return (
-    <>
+    // `group/listing`: while a cause tile's navigation is pending, the results dim.
+    <div className="group/listing">
       <CauseFilters categories={filters.categories} activeCategory={activeCategory} query={query} />
 
-      {listing === null ? (
-        <LoadError retryHref={listingHref(query)} />
-      ) : (
-        <>
-          {/*
+      <div className="duration-(--duration-base) transition-opacity group-has-[[data-pending]]/listing:pointer-events-none group-has-[[data-pending]]/listing:opacity-50">
+        {listing === null ? (
+          <LoadError retryHref={listingHref(query)} />
+        ) : (
+          <>
+            {/*
             What is on screen, said in words. Visible only once somebody has
             narrowed the list — the unfiltered page needs no caption — but always
             in the DOM for assistive technology.
           */}
-          <p
-            role="status"
-            className={isFiltered ? 'text-body-sm text-muted-foreground mt-6' : 'sr-only'}
-          >
-            {resultSummary(listing, query, activeCategory)}
-            {isFiltered ? (
-              <>
-                {' '}
-                <Link
-                  href="/campaigns"
-                  scroll={false}
-                  className="text-info-action focus-visible:outline-ring rounded-sm font-semibold underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-                >
-                  Clear filters
-                </Link>
-              </>
-            ) : null}
-          </p>
-
-          {listing.items.length === 0 ? (
-            <NoResults />
-          ) : (
-            <ul
-              aria-label="Campaigns"
-              className="mt-6 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            <p
+              role="status"
+              className={isFiltered ? 'text-body-sm text-muted-foreground mt-6' : 'sr-only'}
             >
-              {listing.items.map((campaign, index) => (
-                /*
+              {resultSummary(listing, query, activeCategory)}
+              {isFiltered ? (
+                <>
+                  {' '}
+                  <Link
+                    href="/campaigns"
+                    scroll={false}
+                    className="text-info-action focus-visible:outline-ring rounded-sm font-semibold underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  >
+                    Clear filters
+                  </Link>
+                </>
+              ) : null}
+            </p>
+
+            {listing.items.length === 0 ? (
+              <NoResults />
+            ) : (
+              <ul
+                aria-label="Campaigns"
+                className="mt-6 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              >
+                {listing.items.map((campaign, index) => (
+                  /*
                   Each card rises in a beat after the one before. Counted per
                   page, so cards added by "View More" stagger from the first
                   of THEIR set rather than waiting behind the eight above.
                 */
-                <li
-                  key={campaign.slug}
-                  className="rise-in flex"
-                  style={{ '--rise-delay': `${(index % PAGE_SIZE) * 70}ms` } as CSSProperties}
-                >
-                  <CampaignCard
-                    campaign={campaign}
-                    className="w-full"
-                    // Every view, so a card's state is always on the card.
-                    showStatus
-                    save={{
-                      signedIn: viewer.signedIn,
-                      saved: viewer.savedIds.includes(campaign.id),
-                      returnTo,
-                    }}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
+                  <li
+                    key={campaign.slug}
+                    className="rise-in flex"
+                    style={{ '--rise-delay': `${(index % PAGE_SIZE) * 70}ms` } as CSSProperties}
+                  >
+                    <CampaignCard
+                      campaign={campaign}
+                      className="w-full"
+                      // Every view, so a card's state is always on the card.
+                      showStatus
+                      save={{
+                        signedIn: viewer.signedIn,
+                        saved: viewer.savedIds.includes(campaign.id),
+                        returnTo,
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
 
-          {listing.hasMore && query.page < MAX_PAGES ? (
-            <ViewMoreLink href={listingHref({ ...query, page: query.page + 1 })} />
-          ) : null}
-        </>
-      )}
-    </>
+            {listing.hasMore && query.page < MAX_PAGES ? (
+              <ViewMoreLink href={listingHref({ ...query, page: query.page + 1 })} />
+            ) : null}
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 

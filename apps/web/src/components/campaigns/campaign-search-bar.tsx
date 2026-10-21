@@ -35,16 +35,20 @@ export function CampaignSearchBar({ query }: { query: ListingQuery }) {
   const [pending, startTransition] = React.useTransition();
 
   /*
-    Controlled, and re-synced when the URL changes underneath — the back
-    button, or a cause tile clearing the search — so the box never shows a
-    query the grid is no longer answering.
+    THE SEARCH BOX IS UNCONTROLLED, as the programs search is and for the same
+    reason: on a slow device the page is usable before React hydrates it, and a
+    controlled input then overwrote what had been typed with its empty initial
+    state — the text vanished and Enter searched for nothing. `defaultValue`
+    leaves the typed text alone; the `key` remounts the box when the URL's
+    search changes underneath it (the back button, a cause tile), so it never
+    shows a query the grid is no longer answering. The status menu, which
+    needs scripting anyway, stays controlled.
   */
-  const [q, setQ] = React.useState(query.q);
+  const searchBox = React.useRef<HTMLInputElement>(null);
   const [status, setStatus] = React.useState<CampaignStatusFilter>(query.status);
-  const [synced, setSynced] = React.useState(query);
-  if (synced.q !== query.q || synced.status !== query.status) {
-    setSynced(query);
-    setQ(query.q);
+  const [synced, setSynced] = React.useState(query.status);
+  if (synced !== query.status) {
+    setSynced(query.status);
     setStatus(query.status);
   }
 
@@ -61,7 +65,7 @@ export function CampaignSearchBar({ query }: { query: ListingQuery }) {
       method="get"
       onSubmit={(event) => {
         event.preventDefault();
-        go({ q, status });
+        go({ q: String(new FormData(event.currentTarget).get('q') ?? ''), status });
       }}
       className="flex flex-col gap-3 md:flex-row md:items-center"
     >
@@ -86,8 +90,9 @@ export function CampaignSearchBar({ query }: { query: ListingQuery }) {
           id="campaign-search"
           type="search"
           name="q"
-          value={q}
-          onChange={(event) => setQ(event.target.value)}
+          ref={searchBox}
+          key={query.q}
+          defaultValue={query.q}
           maxLength={200}
           autoComplete="off"
           placeholder="Search campaigns, causes or keywords..."
@@ -116,7 +121,7 @@ export function CampaignSearchBar({ query }: { query: ListingQuery }) {
           value={status}
           onChange={(next) => {
             setStatus(next);
-            go({ q, status: next });
+            go({ q: searchBox.current?.value ?? query.q, status: next });
           }}
         />
       </div>
