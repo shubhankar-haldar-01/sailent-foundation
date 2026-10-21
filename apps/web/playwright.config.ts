@@ -67,6 +67,12 @@ const WEB_PORT = process.env.E2E_WEB_PORT ?? '3100';
 const API_URL = `http://localhost:${API_PORT}`;
 const WEB_URL = `http://localhost:${WEB_PORT}`;
 
+/** The header each project's browser sends its own client address in (see `stackEnv`). */
+const E2E_CLIENT_IP_HEADER = 'x-e2e-client-ip';
+const clientAddress = (last: number) => ({
+  extraHTTPHeaders: { [E2E_CLIENT_IP_HEADER]: `198.51.100.${last}` },
+});
+
 /** Handed to both processes, so neither can reach the application database. */
 const stackEnv = {
   NODE_ENV: 'development',
@@ -80,6 +86,22 @@ const stackEnv = {
   API_PORT,
   CORS_ORIGINS: WEB_URL,
   NEXT_PUBLIC_APP_URL: WEB_URL,
+
+  /*
+    EACH PROJECT IS ITS OWN CLIENT, as each visitor is in production.
+
+    The API limits every client to 100 requests a minute per route, and it
+    tells clients apart only by the address the web server vouches for
+    (`x-sailent-client-ip` with `INTERNAL_API_SECRET`, Phase 11). Without these
+    two lines all four projects were one client, and the signed-in dashboard
+    tests ran into each other's 429s. The limits themselves are untouched; the
+    API's own suite proves them (`apps/api/test/rate-limit.spec.ts`).
+
+    Test-only values: the secret exists nowhere else, and each project sends
+    its documentation-range address (RFC 5737) in `extraHTTPHeaders` below.
+  */
+  INTERNAL_API_SECRET: 'e2e-only-internal-api-secret-not-used-anywhere-else',
+  CLIENT_IP_HEADER: E2E_CLIENT_IP_HEADER,
 
   /*
     AND FENCED AWAY FROM REAL OBJECT STORAGE, for the same reason.
@@ -126,14 +148,22 @@ export default defineConfig({
   projects: [
     {
       name: 'desktop',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
+        ...clientAddress(11),
+      },
     },
-    { name: 'tablet', use: { ...devices['iPad Mini'] } },
-    { name: 'mobile', use: { ...devices['Pixel 5'] } },
+    { name: 'tablet', use: { ...devices['iPad Mini'], ...clientAddress(12) } },
+    { name: 'mobile', use: { ...devices['Pixel 5'], ...clientAddress(13) } },
     // 320px: the narrowest width WCAG reflow requires support for.
     {
       name: 'mobile-xs',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 320, height: 640 } },
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 320, height: 640 },
+        ...clientAddress(14),
+      },
     },
   ],
   /*

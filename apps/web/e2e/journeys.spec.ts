@@ -129,7 +129,7 @@ test.describe('journey: homepage → campaign', () => {
  * and it pauses the rail.
  */
 test.describe('featured campaigns rail', () => {
-  test('keyboard users can still pause it', async ({ page }) => {
+  test('keyboard users can still pause it', async ({ page, browserName }) => {
     await page.goto('/');
     const pause = page.getByRole('button', { name: 'Pause featured campaigns' });
     await expect(pause).toHaveCount(1);
@@ -139,7 +139,9 @@ test.describe('featured campaigns rail', () => {
 
     // …until it is reached from the keyboard, as the stop before "View All".
     await page.getByRole('link', { name: 'View All Campaigns' }).focus();
-    await page.keyboard.press('Shift+Tab');
+    // Safari's Tab skips buttons and links unless the user turns that on;
+    // Option+Tab always reaches them, so that is the keyboard path tested there.
+    await page.keyboard.press(browserName === 'webkit' ? 'Alt+Shift+Tab' : 'Shift+Tab');
     await expect(pause).toBeFocused();
     expect(await pause.evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(40);
 
@@ -286,7 +288,12 @@ test.describe('campaign listing', () => {
     const menu = page.getByRole('combobox', { name: 'Show campaigns' });
     await expect(menu).toContainText('Active Campaigns');
 
-    await menu.click();
+    // The menu is a client component: a click that lands before hydration
+    // opens nothing, so open it once hydrated — every assertion below stands.
+    await expect(async () => {
+      await menu.click();
+      await expect(page.getByRole('option').first()).toBeVisible({ timeout: 1_000 });
+    }).toPass();
     await expect(page.getByRole('option')).toHaveText([
       /Active Campaigns/,
       /Closed Campaigns/,
@@ -809,7 +816,12 @@ test.describe('journey: homepage → blog', () => {
       .click();
     await page.waitForURL('**/blog/**');
 
-    await expect(page.locator('article')).toBeVisible();
+    // THE article: the related-posts cards under it are <article>s too, and
+    // are there only when another post is published (another spec's, mid-run).
+    const article = page.locator('article', {
+      has: page.getByRole('heading', { level: 1, name: E2E_POST.title }),
+    });
+    await expect(article).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name: E2E_POST.title })).toBeVisible();
 
     // The author must be a real person, never "Admin".
@@ -825,8 +837,8 @@ test.describe('journey: homepage → blog', () => {
       asserting the renderer did the wrong thing.
     */
     await expect(page.getByRole('heading', { name: 'What is in a kit' })).toBeVisible();
-    await expect(page.locator('article ul li').first()).toBeVisible();
-    await expect(page.locator('article blockquote')).toBeVisible();
+    await expect(article.locator('ul li').first()).toBeVisible();
+    await expect(article.locator('blockquote')).toBeVisible();
   });
 });
 
