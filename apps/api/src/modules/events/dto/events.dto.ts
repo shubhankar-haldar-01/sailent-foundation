@@ -210,11 +210,13 @@ export const registerForEventSchema = z
       .regex(/^(\+91[-\s]?)?[6-9]\d{9}$/, 'Enter a valid Indian mobile number')
       .optional(),
     attendeeCount: z
-      .number()
-      .int('A whole number of people')
-      .min(1, 'At least one person')
-      .max(20, 'For groups larger than 20, contact the organiser')
-      .optional(),
+      .literal(1, {
+        errorMap: () => ({
+          message: 'One registration is allowed for exactly one person and one seat.',
+        }),
+      })
+      .optional()
+      .default(1),
     notes: z.string().trim().max(1000).optional(),
   })
   .strict();
@@ -272,8 +274,12 @@ export class RegisterForEventDto {
   @ApiPropertyOptional({ example: '9876543210' })
   phone?: string;
 
-  @ApiPropertyOptional({ example: 2, minimum: 1, maximum: 20 })
-  attendeeCount?: number;
+  @ApiPropertyOptional({
+    example: 1,
+    enum: [1],
+    description: 'One registration is allowed for exactly one person and one seat.',
+  })
+  attendeeCount?: 1;
 }
 
 export class AttendanceDto {

@@ -738,6 +738,13 @@ export class ContentService {
           capacity: events.capacity,
           registeredCount: events.registeredCount,
           registrationStatus: events.registrationStatus,
+          /*
+            The cut-off, so a listing card can say "Registration closed" for an
+            event that is open but past its deadline — the same public fact the
+            detail endpoint already serves, read by the same shared rule
+            (`registrationAvailability`) the registration itself is checked by.
+          */
+          registrationDeadline: events.registrationDeadline,
           // Same reasoning as the story listing: the slug is what a link needs.
           programSlug: programs.slug,
           campaignSlug: campaigns.slug,

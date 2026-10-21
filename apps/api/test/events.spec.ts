@@ -273,34 +273,46 @@ describe('Events (integration)', () => {
       expect(row.rows![0]!.registration_status).toBe('full');
     }, 60_000);
 
-    it('counts a group booking against the cap, not the head count of bookings', async () => {
-      const event = await makeOpenEvent({ capacity: 4 });
+    it('enforces one person and one seat per registration, refusing multiple seats', async () => {
+      const event = await makeOpenEvent({ capacity: 2 });
       const first = await makeDonor('group1');
       const second = await makeDonor('group2');
+      const third = await makeDonor('group3');
 
+      // Attempting to register for multiple seats is refused at the API boundary (ValidationException)
+      const multi = await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(first.token))
+        .send({ attendeeCount: 2 });
+
+      expect(multi.status).toBe(422);
+
+      // Registering for exactly 1 seat succeeds
       await request(server)
         .post(`${PREFIX}/events/${event.id}/register`)
         .set(auth(first.token))
-        .send({ attendeeCount: 3 })
-        .expect(201);
-
-      // Two rows would fit; five seats do not.
-      const overflow = await request(server)
-        .post(`${PREFIX}/events/${event.id}/register`)
-        .set(auth(second.token))
-        .send({ attendeeCount: 2 });
-
-      expect(overflow.status).toBe(409);
-      expect(await seatsHeld(event.id)).toBe(3);
-
-      // One seat is left, and one person still fits into it.
-      await request(server)
-        .post(`${PREFIX}/events/${event.id}/register`)
-        .set(auth(second.token))
         .send({ attendeeCount: 1 })
         .expect(201);
 
-      expect(await seatsHeld(event.id)).toBe(4);
+      expect(await seatsHeld(event.id)).toBe(1);
+
+      // Second donor registers for 1 seat (defaulting when attendeeCount is omitted)
+      await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(second.token))
+        .send({})
+        .expect(201);
+
+      expect(await seatsHeld(event.id)).toBe(2);
+
+      // Event is now full at capacity 2; third registration is refused
+      const fullResponse = await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(third.token))
+        .send({});
+
+      expect(fullResponse.status).toBe(409);
+      expect(await seatsHeld(event.id)).toBe(2);
     }, 60_000);
 
     it('lets a freed seat be taken, and reopens an event that was full', async () => {
@@ -907,6 +919,34 @@ describe('Events (integration)', () => {
       expect(response.status).toBe(409);
     }, 60_000);
 
+    it('lists the registration deadline publicly, and never the joining link', async () => {
+      /*
+        The events listing decides each card's action with the shared
+        `registrationAvailability` rule, which needs the cut-off: an event can
+        be open and still past its deadline. The detail endpoint always served
+        it; the listing now does too — and still withholds `meetingUrl`.
+      */
+      const deadline = iso(2 * DAY);
+      const event = await makeOpenEvent({
+        startDate: iso(5 * DAY),
+        registrationDeadline: deadline,
+      });
+
+      const response = await request(server)
+        .get(`${PREFIX}/events?when=upcoming&limit=100`)
+        .expect(200);
+      const items = (
+        response.body as Envelope<{
+          items: { slug: string; registrationDeadline: string | null }[];
+        }>
+      ).data!.items;
+      const listed = items.find((item) => item.slug === event.slug);
+
+      expect(listed).toBeDefined();
+      expect(new Date(listed!.registrationDeadline!).getTime()).toBe(new Date(deadline).getTime());
+      expect(JSON.stringify(response.body)).not.toContain('meetingUrl');
+    }, 60_000);
+
     it('keeps a cancelled event visible to the public', async () => {
       const event = await makeOpenEvent();
       await request(server)
@@ -924,10 +964,23 @@ describe('Events (integration)', () => {
     it('refuses to lower the cap below the seats already taken', async () => {
       const event = await makeOpenEvent({ capacity: 10 });
       const first = await makeDonor('cap1');
+      const second = await makeDonor('cap2');
+      const third = await makeDonor('cap3');
+
       await request(server)
         .post(`${PREFIX}/events/${event.id}/register`)
         .set(auth(first.token))
-        .send({ attendeeCount: 4 })
+        .send({})
+        .expect(201);
+      await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(second.token))
+        .send({})
+        .expect(201);
+      await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(third.token))
+        .send({})
         .expect(201);
 
       const response = await request(server)
@@ -947,7 +1000,7 @@ describe('Events (integration)', () => {
       await request(server)
         .post(`${PREFIX}/events/${event.id}/register`)
         .set(auth(donor.token))
-        .send({ attendeeCount: 2 })
+        .send({})
         .expect(201);
 
       // Drift, forced. This is the state the recount exists for — the counter
@@ -965,7 +1018,7 @@ describe('Events (integration)', () => {
       const result = (response.body as Envelope<{ was: number; now: number; drifted: boolean }>)
         .data!;
       expect(result.was).toBe(99);
-      expect(result.now).toBe(2);
+      expect(result.now).toBe(1);
       expect(result.drifted).toBe(true);
     }, 60_000);
   });

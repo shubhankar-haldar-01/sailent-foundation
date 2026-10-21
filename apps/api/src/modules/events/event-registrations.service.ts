@@ -134,7 +134,8 @@ export class EventRegistrationsService {
       [donor.firstName, donor.lastName].filter(Boolean).join(' ').trim() ||
       'Guest';
     const phone = input.phone?.trim() || donor.phone;
-    const attendeeCount = input.attendeeCount ?? 1;
+    // Exactly one person and one seat per registration.
+    const attendeeCount = 1;
 
     const outcome = await this.database.db.transaction(async (tx) => {
       // ─── THE LOCK ───────────────────────────────────────────────────────

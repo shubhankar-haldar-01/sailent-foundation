@@ -766,8 +766,10 @@ test.describe('journey: homepage → stories', () => {
 test.describe('journey: homepage → events', () => {
   test('an event shows its details and a registration form', async ({ page }) => {
     await page.goto('/events');
+    // The panoramic events banner (2026-10-17) carries its title in the
+    // artwork; the page's h1 is the screen-reader "Events" beside it.
     await expect(
-      page.getByRole('heading', { level: 1, name: /come and see the work/i }),
+      page.getByRole('heading', { level: 1, name: 'Events', exact: true }),
     ).toBeVisible();
 
     await page
@@ -776,10 +778,16 @@ test.describe('journey: homepage → events', () => {
       .click();
     await page.waitForURL('**/events/**');
 
-    await expect(page.getByRole('heading', { name: 'Details' })).toBeVisible();
+    // The event page as redesigned (2026-10-18): the title as its h1, the date
+    // and place beside it, and the registration form — which, for a visitor
+    // who is not signed in, carries the way to sign in that registering needs.
     await expect(
-      page.getByRole('heading', { name: /Register to attend|Join the waitlist/ }),
+      page.getByRole('heading', { level: 1, name: /Community Clean-up\s*Drive/i }),
     ).toBeVisible();
+    await expect(page.getByText('DATE', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('LOCATION', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Reserve your place' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Sign in to register' })).toBeVisible();
   });
 });
 

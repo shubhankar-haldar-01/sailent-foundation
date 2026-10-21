@@ -1,16 +1,23 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { CalendarDays, Clock, MapPin, Users } from 'lucide-react';
-import { Badge, Button, Card } from '@sailent/ui';
+import { notFound } from 'next/navigation';
 
-import { PageShell } from '@/components/layout/page-shell';
-import { Breadcrumbs } from '@/components/sections/breadcrumbs';
-import { MediaFrame, MediaFigure } from '@/components/media/media-frame';
-import { EventRegistrationPanel } from '@/components/events/event-registration-panel';
-import { buildMetadata } from '@/lib/seo/metadata';
+import { EventRegistrationFlow } from '@/components/events/event-registration-flow';
+import { EventRegistrationHero } from '@/components/events/event-registration-hero';
+import { EventSummaryCard } from '@/components/events/event-summary-card';
+import { cardAction } from '@/components/events/events-query';
+import { currentDonor } from '@/lib/auth/donor-session';
+import { getEvent, getProgram } from '@/lib/content';
+import { getOrganisation } from '@/lib/content/organisation';
+import { donorFetch, type DonorProfile } from '@/lib/donor/api';
+import { buildMetadata, canonicalUrl } from '@/lib/seo/metadata';
 import { jsonLd } from '@/lib/seo/structured-data';
-import { getCampaign, getEvent, getProgram } from '@/lib/content';
+
+interface MyRegistration {
+  id: string;
+  status: 'registered' | 'confirmed' | 'attended' | 'no_show' | 'cancelled' | 'waitlisted';
+  attendeeCount: number;
+  meetingUrl: string | null;
+}
 
 export async function generateMetadata({
   params,
@@ -27,27 +34,61 @@ export async function generateMetadata({
 }
 
 export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const event = await getEvent((await params).slug);
+  const { slug } = await params;
+  const event = await getEvent(slug);
   if (!event) notFound();
 
-  const [program, campaign] = await Promise.all([
-    event.programSlug ? getProgram(event.programSlug) : Promise.resolve(null),
-    event.campaignSlug ? getCampaign(event.campaignSlug) : Promise.resolve(null),
+  const [program, organisation, donor] = await Promise.all([
+    event.programSlug ? getProgram(event.programSlug).catch(() => null) : Promise.resolve(null),
+    getOrganisation(),
+    currentDonor(),
   ]);
 
-  const dateFormatter = new Intl.DateTimeFormat('en-IN', {
-    dateStyle: 'full',
-    timeZone: 'Asia/Kolkata',
-  });
-  const timeFormatter = new Intl.DateTimeFormat('en-IN', {
-    timeStyle: 'short',
-    timeZone: 'Asia/Kolkata',
-  });
+  // An event without a programme has no category, as on its card: nothing is invented.
+  const categoryName = program?.category || program?.name || null;
+  // The shared rule, as the card on /events and the API apply it.
+  const action = cardAction(event);
+
+  // Load donor profile & registration if signed in
+  let profile: DonorProfile | null = null;
+  let myReg: MyRegistration | null = null;
+
+  if (donor) {
+    try {
+      profile = await donorFetch<DonorProfile>('me');
+    } catch {
+      profile = null;
+    }
+
+    if (event.id) {
+      try {
+        myReg = await donorFetch<MyRegistration>(`events/${event.id}/registration`);
+      } catch {
+        myReg = null;
+      }
+    }
+  }
+
+  const isRegistered = myReg !== null && myReg.status !== 'cancelled';
+  const seatsLeft =
+    event.capacity === null ? null : Math.max(0, event.capacity - event.registeredCount);
+
+  // The organisation's own contact details, and nothing in their place.
+  const supportEmail = organisation.email;
+  const supportPhone = organisation.phoneDisplay;
+  const supportPhoneHref = organisation.phoneHref ? `tel:${organisation.phoneHref}` : null;
+
+  const initialProfile = profile
+    ? {
+        fullName: [profile.firstName, profile.lastName].filter(Boolean).join(' ') || undefined,
+        email: profile.email || undefined,
+        phone: profile.phone || undefined,
+      }
+    : null;
 
   /**
    * Event structured data. `eventAttendanceMode` and `location` reflect what is
-   * actually true; no `offers` block is emitted because attendance is free and
-   * claiming a price would be misleading markup.
+   * actually true; no `offers` block is emitted because attendance is free.
    */
   const eventSchema = {
     '@context': 'https://schema.org',
@@ -71,173 +112,51 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   };
 
   return (
-    <>
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#F8FAFC]">
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(eventSchema)} />
 
-      <PageShell className="pt-8">
-        <Breadcrumbs
-          entries={[
-            { name: 'Home', path: '/' },
-            { name: 'Events', path: '/events' },
-            { name: event.title, path: `/events/${event.slug}` },
-          ]}
-        />
-      </PageShell>
+      {/* 1. Event Hero Section matching exact design */}
+      <EventRegistrationHero event={event} categoryName={categoryName} />
 
-      <PageShell>
-        <div className="grid gap-8 lg:grid-cols-[1fr_22rem] lg:items-start">
-          <div className="min-w-0">
-            <MediaFrame media={event.cover} aspect="hero" priority />
-
-            <div className="mt-6">
-              <div className="flex flex-wrap items-center gap-2">
-                {/*
-                  Driven by `event.status`, which the content loader already
-                  derives from the lifecycle and the date together.
-
-                  It used to read "Waitlist only" when an event was full. There
-                  is no waitlist — Phase 9 implements none — so the badge was
-                  promising a queue that does not exist to precisely the people
-                  who could not get a place.
-                */}
-                {event.status === 'cancelled' ? (
-                  <Badge variant="destructive">Cancelled</Badge>
-                ) : event.status === 'completed' ? (
-                  <Badge variant="neutral">Past event</Badge>
-                ) : event.status === 'registration_open' ? (
-                  <Badge variant="success">Registration open</Badge>
-                ) : (
-                  <Badge variant="warning">Registration closed</Badge>
-                )}
-                {program ? (
-                  <Link
-                    href={`/programs/${program.slug}`}
-                    className="text-overline tracking-(--text-overline--letter-spacing) text-primary focus-visible:outline-ring rounded-sm uppercase underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-                  >
-                    {program.name}
-                  </Link>
-                ) : null}
-              </div>
-
-              <h1 className="text-display mt-3 text-balance font-bold">{event.title}</h1>
-              <p className="text-body-lg text-muted-foreground mt-4 max-w-prose">{event.summary}</p>
-            </div>
-
-            <div className="prose-measure mt-8 space-y-4">
-              {event.description.map((paragraph, index) => (
-                <p key={index} className="text-body text-muted-foreground leading-relaxed">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-
-            {event.schedule.length > 0 ? (
-              <section className="mt-10">
-                <h2 className="text-h2 font-bold">Schedule</h2>
-                <ol className="prose-measure divide-border border-border mt-4 divide-y border-y">
-                  {event.schedule.map((item) => (
-                    <li key={item.time} className="flex gap-4 py-3">
-                      <span
-                        data-numeric=""
-                        className="text-body-sm w-24 shrink-0 font-medium tabular-nums"
-                      >
-                        {item.time}
-                      </span>
-                      <span className="text-body-sm text-muted-foreground">{item.activity}</span>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            ) : null}
-
-            {event.gallery.length > 0 ? (
-              <section className="mt-10">
-                <h2 className="text-h2 font-bold">From this event</h2>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {event.gallery.map((media) => (
-                    <MediaFigure key={media.seed} media={media} aspect="photo" />
-                  ))}
-                </div>
-              </section>
-            ) : null}
+      {/* 2. Main Two-Column Layout */}
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10">
+          {/* Left Column (Width ~ 7 cols): Event Registration Form */}
+          <div className="lg:col-span-7 xl:col-span-7">
+            <EventRegistrationFlow
+              eventId={event.id || ''}
+              slug={event.slug}
+              eventTitle={event.title}
+              startsAt={event.startsAt}
+              endsAt={event.endsAt}
+              venueName={event.venueName}
+              city={event.city}
+              isOnline={event.isOnline}
+              meetingUrl={myReg?.meetingUrl}
+              isRegistered={isRegistered}
+              isSignedIn={Boolean(donor)}
+              availability={action.kind}
+              registrationDeadline={event.registrationDeadline ?? null}
+              signInHref={`/sign-in?next=/events/${event.slug}`}
+              initialProfile={initialProfile}
+            />
           </div>
 
-          <div className="space-y-6 lg:sticky lg:top-24">
-            <Card className="p-5">
-              <h2 className="text-h4 font-semibold">Details</h2>
-              <dl className="text-body-sm mt-4 space-y-3">
-                <div className="flex gap-3">
-                  <dt className="sr-only">Date</dt>
-                  <CalendarDays
-                    className="text-muted-foreground mt-0.5 size-4 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <dd>
-                    <time dateTime={event.startsAt}>
-                      {dateFormatter.format(new Date(event.startsAt))}
-                    </time>
-                  </dd>
-                </div>
-                <div className="flex gap-3">
-                  <dt className="sr-only">Time</dt>
-                  <Clock
-                    className="text-muted-foreground mt-0.5 size-4 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <dd data-numeric="">
-                    {timeFormatter.format(new Date(event.startsAt))}
-                    {event.endsAt ? ` – ${timeFormatter.format(new Date(event.endsAt))}` : ''}
-                  </dd>
-                </div>
-                <div className="flex gap-3">
-                  <dt className="sr-only">Location</dt>
-                  <MapPin
-                    className="text-muted-foreground mt-0.5 size-4 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <dd>
-                    {event.isOnline
-                      ? 'Online — joining link sent to registrants'
-                      : (event.address ?? 'Venue to be confirmed')}
-                  </dd>
-                </div>
-                {event.capacity !== null ? (
-                  <div className="flex gap-3">
-                    <dt className="sr-only">Capacity</dt>
-                    <Users
-                      className="text-muted-foreground mt-0.5 size-4 shrink-0"
-                      aria-hidden="true"
-                    />
-                    <dd data-numeric="">
-                      {event.registeredCount} of {event.capacity} places taken
-                    </dd>
-                  </div>
-                ) : null}
-              </dl>
-            </Card>
-
-            {/*
-              One component decides all of it — past, cancelled, full, closed,
-              signed out, already registered — because those states are mutually
-              exclusive and deciding them in one place is what stops a page
-              showing "register" over a cancelled event.
-            */}
-            <EventRegistrationPanel event={event} />
-
-            {campaign ? (
-              <Card className="p-5">
-                <p className="text-overline tracking-(--text-overline--letter-spacing) text-muted-foreground uppercase">
-                  Related campaign
-                </p>
-                <h2 className="text-body mt-2 font-semibold">{campaign.title}</h2>
-                <Button asChild variant="secondary" fullWidth className="mt-3">
-                  <Link href={`/campaigns/${campaign.slug}`}>View campaign</Link>
-                </Button>
-              </Card>
-            ) : null}
+          {/* Right Column (Width ~ 5 cols): Event Summary Card */}
+          <div className="lg:sticky lg:top-24 lg:col-span-5 xl:col-span-5">
+            <EventSummaryCard
+              event={event}
+              categoryName={categoryName}
+              supportEmail={supportEmail}
+              supportPhone={supportPhone}
+              supportPhoneHref={supportPhoneHref}
+              seatsLeft={seatsLeft}
+              availability={action.kind}
+              shareUrl={canonicalUrl(`/events/${event.slug}`)}
+            />
           </div>
         </div>
-      </PageShell>
-    </>
+      </div>
+    </div>
   );
 }

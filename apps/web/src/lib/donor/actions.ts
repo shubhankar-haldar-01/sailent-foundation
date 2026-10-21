@@ -221,7 +221,10 @@ export async function registerForEvent(
 ): Promise<DonorActionState> {
   const eventId = String(form.get('eventId') ?? '');
   const slug = String(form.get('slug') ?? '');
-  const attendees = Number(form.get('attendeeCount') ?? 1);
+
+  if (form.has('consent') && !checkbox(form, 'consent')) {
+    return { ok: false, error: 'You must agree to the Terms and Conditions and Privacy Policy.' };
+  }
 
   try {
     await donorFetch(`events/${eventId}/register`, {
@@ -229,14 +232,21 @@ export async function registerForEvent(
       body: {
         fullName: text(form, 'fullName'),
         phone: text(form, 'phone'),
-        attendeeCount: Number.isFinite(attendees) && attendees > 0 ? attendees : 1,
+        attendeeCount: 1,
+        notes: text(form, 'notes') ?? text(form, 'message'),
       },
     });
   } catch (error) {
+    if (error instanceof DonorApiError && error.status === 401) {
+      return { ok: false, error: 'Please sign in to register for this event.' };
+    }
     return toState(error);
   }
 
-  if (slug) revalidatePath(`/events/${slug}`);
+  if (slug) {
+    revalidatePath(`/events/${slug}`);
+    revalidatePath(`/events/${slug}/register`);
+  }
   revalidatePath('/events');
   revalidatePath('/dashboard/events');
   revalidatePath('/dashboard');

@@ -1,7 +1,7 @@
 import 'server-only';
 
 import type { SailentEvent } from '@/lib/mock/types';
-import { events as eventFixtures } from '@/lib/mock/events';
+import { events as eventFixtures, getPastEvents, getUpcomingEvents } from '@/lib/mock/events';
 
 import { isNotFound } from './programs';
 import { loadContent, publicCache, toMedia, type Paginated } from './source';
@@ -114,7 +114,7 @@ export async function getEvents(when: 'upcoming' | 'past' = 'upcoming'): Promise
       });
       return page.items.map(toEvent);
     },
-    fallback: () => eventFixtures,
+    fallback: () => (when === 'upcoming' ? getUpcomingEvents() : getPastEvents()),
   });
 }
 

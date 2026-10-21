@@ -485,23 +485,37 @@ test.describe('signed in as a donor', () => {
    */
   test('a donor registers, is refused a second place, sees it listed, and cancels', async ({
     page,
-  }) => {
-    await page.goto(`/events/${OPEN_EVENT}`);
+  }, testInfo) => {
+    // Where an event card's "Register Now" leads (the redesign, 2026-10-18).
+    await page.goto(`/events/${OPEN_EVENT}/register`);
     await settle(page);
 
     // A previous run that failed midway may have left a place held. Start from
     // a known state rather than assuming one.
     const registered = page.getByRole('heading', { name: 'You are registered' });
     if (!(await registered.isVisible().catch(() => false))) {
-      await expect(page.getByRole('heading', { name: 'Register to attend' })).toBeVisible();
-      await submitAndWait(page, page.getByRole('button', { name: /^Register/ }));
+      await expect(page.getByRole('heading', { name: 'Reserve your place' })).toBeVisible();
+      // Name and mobile are filled from the donor's profile when the page could
+      // read it; a donor fills in whatever is empty, and agrees to the terms.
+      const donor = donorFor(testInfo.project.name);
+      const fields: [string, string][] = [
+        ['Full Name', `${donor.firstName} ${donor.lastName}`],
+        ['Mobile Number', donor.phone],
+      ];
+      for (const [label, value] of fields) {
+        const field = page.getByLabel(label);
+        if (!(await field.inputValue())) await field.fill(value);
+      }
+      await page.getByRole('checkbox', { name: /I agree to the Terms/ }).check();
+      // The action refreshes the page, which then shows the donor's place.
+      await submitAndWait(page, page.getByRole('button', { name: 'Confirm Registration' }));
     }
 
     await expect(registered).toBeVisible();
 
-    // A second place is not offered — the button is GONE rather than disabled,
+    // A second place is not offered — the form is GONE rather than disabled,
     // so the UI never presents an action the server would refuse.
-    await expect(page.getByRole('button', { name: /^Register my place$/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Confirm Registration' })).toHaveCount(0);
 
     // It appears on the dashboard, under "Coming up".
     await page.goto('/dashboard/events');
@@ -532,7 +546,7 @@ test.describe('signed in as a donor', () => {
     */
     await page.reload();
     await settle(page);
-    await expect(page.getByRole('heading', { name: 'Register to attend' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Reserve your place' })).toBeVisible();
   });
 
   test('the dashboard events page is accessible', async ({ page }) => {

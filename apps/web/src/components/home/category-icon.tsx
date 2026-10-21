@@ -42,6 +42,10 @@ const BY_CATEGORY: Record<string, typeof Book> = {
   animalwelfare: PawPrint,
   clothing: Tag,
   communitydevelopment: Users,
+  volunteer: Users,
+  volunteering: Users,
+  communitysupport: Heart,
+  communityengagement: Users,
 };
 
 function normalise(category: string): string {
@@ -194,6 +198,34 @@ const TONES: Record<string, CategoryTone> = {
     bar: 'from-wash-blue-ink to-wash-blue-ink',
     chip: 'bg-wash-blue/60 text-wash-blue-ink',
     wash: 'bg-wash-blue',
+  },
+  volunteer: {
+    ink: 'text-wash-violet-ink',
+    fill: 'bg-wash-violet-ink',
+    bar: 'from-wash-blue-ink to-wash-violet-ink',
+    chip: 'bg-wash-violet/60 text-wash-violet-ink',
+    wash: 'bg-wash-violet',
+  },
+  volunteering: {
+    ink: 'text-wash-violet-ink',
+    fill: 'bg-wash-violet-ink',
+    bar: 'from-wash-blue-ink to-wash-violet-ink',
+    chip: 'bg-wash-violet/60 text-wash-violet-ink',
+    wash: 'bg-wash-violet',
+  },
+  communitysupport: {
+    ink: 'text-wash-coral-ink',
+    fill: 'bg-wash-coral-ink',
+    bar: 'from-wash-blue-ink to-wash-coral-ink',
+    chip: 'bg-wash-amber/60 text-wash-gold-ink',
+    wash: 'bg-wash-amber',
+  },
+  communityengagement: {
+    ink: 'text-wash-gold-ink',
+    fill: 'bg-wash-gold-ink',
+    bar: 'from-wash-blue-ink to-wash-gold-ink',
+    chip: 'bg-wash-amber/60 text-wash-gold-ink',
+    wash: 'bg-wash-amber',
   },
 };
 
