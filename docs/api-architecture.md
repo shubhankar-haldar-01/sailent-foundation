@@ -297,7 +297,8 @@ There is **no** `PATCH /donations/{id}` that alters amounts. A donation's financ
 | GET | `/stories` · `/stories/{slug}` | P |
 | GET | `/impact` | P — **live aggregates only** (A14), plus published updates |
 | GET | `/impact/{slug}` | P — one record, **including its verification method** (A14) |
-| GET | `/me/impact` | D — updates for campaigns this donor funded |
+| GET | `/me/impact` | D — what this donor's giving bought: totals and items, summed from their own confirmed donation lines (A14) |
+| GET | `/me/updates` | D — published impact updates from the campaigns this donor funded, paginated (the dashboard's Updates page) |
 | GET | `/blog` · `/blog/{slug}` · `/blog/categories` | P |
 | GET | `/pages/{slug}` | P — composed sections, validated against the approved section schema |
 | GET | `/team` · `/team/{slug}` · `/faqs` | P — a team member needs both `status = published` and `isPublic` |

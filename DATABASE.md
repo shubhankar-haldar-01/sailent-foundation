@@ -1,8 +1,8 @@
 # DATABASE.md — actual database
 
-Verified on 2026-10-06 (updated for Phase 13 and Phase 14 on 2026-10-07) against:
+Verified on 2026-10-06 (updated for Phase 13 and Phase 14 on 2026-10-07, and for migrations `0024` and `0025` from their files on 2026-10-21) against:
 - the Drizzle schema in `packages/database/src/schema/*.ts`;
-- the SQL migrations `packages/database/drizzle/0000`–`0023`;
+- the SQL migrations `packages/database/drizzle/0000`–`0025`;
 - the seed;
 - read-only queries against the local `sailent_dev` and `sailent_e2e` databases.
 
@@ -50,6 +50,7 @@ Verified on 2026-10-06 (updated for Phase 13 and Phase 14 on 2026-10-07) against
   - `phone` (not unique since `0011`)
   - `tax_id_type` and `tax_id_number`; CHECK `donors_tax_id_type_required`. Since Phase 12 `tax_id_number` is **encrypted by the API** (AES-256-GCM, `FIELD_ENCRYPTION_KEY`) and stored as `enc:v1:<iv>:<ciphertext>:<tag>` (base64url). Still `text`; **no migration**. Rows written before Phase 12 may hold plaintext; they are read as-is and encrypted on their next write (bulk re-encryption in production is human-only, `DEPLOYMENT.md` §6b)
   - address fields
+  - `avatar_url` (text, nullable, `0024`): the profile photo. Written only by `POST /me/avatar` (a checked JPEG, PNG or WebP of at most 5 MB: the object store's URL under `donor-avatars/`, or — outside production, with no object store — the image inline as a `data:` URL of at most 256 KB) and cleared by `DELETE /me/avatar`. `PATCH /me` does not accept it. Reads serve it only when it passes the same checks (`SECURITY.md`, Files and storage)
   - consent and notify flags
   - `total_donated`, `donation_count`
   - `user_id` → users SET NULL (vestigial)
@@ -130,7 +131,7 @@ Verified on 2026-10-06 (updated for Phase 13 and Phase 14 on 2026-10-07) against
 - **receipt_sequences**: per-financial-year counter
 
 ### Content
-- **success_stories**: CHECK `success_stories_consent_before_publish`; programme and campaign FKs SET NULL
+- **success_stories**: CHECK `success_stories_consent_before_publish`; programme and campaign FKs SET NULL; `pull_quote` (text, nullable, `0025`) is the subject's own words, shown on the public page only when set
 - **blog_posts**, **blog_tags**, **blog_post_tags** (`0019`)
 - **pages**: `sections` jsonb, validated in the app; `version`. **page_revisions**: unique (`page_id`, `version`) (`0020`)
 - **media**
@@ -215,7 +216,7 @@ donations 1 ── 1 receipts
 
 ## 5. Migration history
 
-The journal (`meta/_journal.json`) lists 23 entries. Dates come from the journal's `when` field; for `0017`–`0022` those values were hand-assigned.
+The journal (`meta/_journal.json`) lists 25 entries. Dates come from the journal's `when` field; for `0017`–`0022` those values were hand-assigned.
 
 | # | Date (IST) | Change | Risk |
 |---|---|---|---|
@@ -243,12 +244,14 @@ The journal (`meta/_journal.json`) lists 23 entries. Dates come from the journal
 | 0021 | 2026-09-23* | Documents `file_key` unique; public needs `published_at` | Unguarded constraints; inner BEGIN/COMMIT |
 | 0022 | 2026-09-23* | Notification templates and revisions; notification columns | Inner BEGIN/COMMIT |
 | 0023 | 2026-10-07* | Phase 13: `contact_messages`, `newsletter_subscribers` (RLS on); `organization_contact` and `organization_social` settings rows (empty); six permissions granted to `SUPER_ADMIN` — all `ON CONFLICT DO NOTHING` / `IF NOT EXISTS` | Additive only; no BEGIN/COMMIT. Journal `when` = 1790102369677 (see below) |
+| 0024 | 2026-10-08* | `donors.avatar_url` (text, nullable): the donor's profile photo | Additive only. `when` = 1790102370000. Applied to `sailent_dev` (by another session) and `sailent_e2e` locally; **not applied to production** |
+| 0025 | 2026-10-16* | `success_stories.pull_quote` (text, nullable): the subject's own words for the public story page | Additive only. `when` = 1790102371000. Applied to `sailent_dev` and `sailent_e2e` locally; **not applied to production** |
 
 \* Hand-assigned timestamps.
 
 ### Applied state vs repository (local databases)
 
-`drizzle.__drizzle_migrations` had **24 rows** in both `sailent_dev` and `sailent_e2e` before Phase 13; `sailent_dev` has 25 after `0023` was applied locally on 2026-10-07 (`sailent_e2e` gets it from `db:prepare-e2e`).
+`drizzle.__drizzle_migrations` had **24 rows** in both `sailent_dev` and `sailent_e2e` before Phase 13; `sailent_dev` has 25 after `0023` was applied locally on 2026-10-07, and 27 after `0024` and `0025` (`0025` is row 27, checked on 2026-10-16); `sailent_e2e` gets them from `db:prepare-e2e`.
 - Matching the hashes against the repo files gives `0000`–`0013` and `0015`–`0022` as exact matches.
 - Row 15 (`0014`) **does not match**: the file was edited after it was applied.
 - Row 24 matches **no file**. Its `created_at` is **1790102368677** — exactly the next hand-assigned journal timestamp after `0022` — which strongly suggests it was an earlier migration numbered `0023` whose file was later removed. Phase 13's `0023` was first given that same timestamp and Drizzle silently skipped it ("up to date": it applies only migrations newer than the last applied row), so `0023` uses **1790102369677**. A database WITHOUT the unknown row (production, presumably) applies it normally. The only database object absent from the repo SQL is the CHECK `donors_tax_id_encrypted` (`tax_id_number IS NULL OR tax_id_number LIKE 'enc:%'`). Before Phase 12 it broke `PATCH /me` with a PAN and accounted for 4 failing API tests; Phase 12's `enc:v1:` encryption satisfies it, so those tests now pass **without any database change**. The unknown row itself is still unexplained (owner decision pending).
