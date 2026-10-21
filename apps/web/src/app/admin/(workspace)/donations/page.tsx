@@ -1,36 +1,18 @@
 import Link from 'next/link';
 
-import { formatCurrency, formatDate } from '@sailent/ui';
-
 import { adminFetch, type Paginated } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
+import {
+  DonationsTable,
+  DonationStatusBadge,
+  type AdminDonation,
+} from '@/components/admin/donations-table';
 
 export const dynamic = 'force-dynamic';
 
+export { DonationStatusBadge, type AdminDonation };
+
 const STATUSES = ['all', 'successful', 'pending', 'failed'] as const;
-
-const STATUS_STYLE: Record<string, string> = {
-  successful: 'bg-success-subtle text-success',
-  pending: 'bg-warning-subtle text-warning-foreground',
-  processing: 'bg-warning-subtle text-warning-foreground',
-  failed: 'bg-destructive-subtle text-destructive',
-  cancelled: 'bg-muted text-muted-foreground',
-};
-
-interface AdminDonation {
-  id: string;
-  reference: string;
-  status: string;
-  donationType: string;
-  amount: number;
-  createdAt: string;
-  completedAt: string | null;
-  campaignTitle: string | null;
-  campaignSlug: string | null;
-  receiptNumber: string | null;
-  donorName: string | null;
-  donorEmail: string | null;
-}
 
 /**
  * Donations.
@@ -100,86 +82,60 @@ export default async function AdminDonationsPage({
           No donations match this filter.
         </p>
       ) : (
-        <div className="border-border overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[52rem] border-collapse">
-            <caption className="sr-only">
-              Every donation, with its reference, campaign, amount and state.
-            </caption>
-            <thead>
-              <tr className="border-border bg-muted/50 border-b text-left">
-                <th scope="col" className="text-caption px-4 py-2.5 font-semibold">
-                  Reference
-                </th>
-                <th scope="col" className="text-caption px-4 py-2.5 font-semibold">
-                  Campaign
-                </th>
-                {seesDonors ? (
-                  <th scope="col" className="text-caption px-4 py-2.5 font-semibold">
-                    Donor
-                  </th>
-                ) : null}
-                <th scope="col" className="text-caption px-4 py-2.5 text-right font-semibold">
-                  Amount
-                </th>
-                <th scope="col" className="text-caption px-4 py-2.5 font-semibold">
-                  State
-                </th>
-                <th scope="col" className="text-caption px-4 py-2.5 font-semibold">
-                  Receipt
-                </th>
-                <th scope="col" className="text-caption px-4 py-2.5 font-semibold">
-                  When
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-border divide-y">
-              {data.items.map((donation) => (
-                <tr key={donation.id}>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/donations/${donation.id}`}
-                      data-numeric=""
-                      className="text-body-sm focus-visible:outline-ring whitespace-nowrap rounded-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2"
-                    >
-                      {donation.reference}
-                    </Link>
-                    <p className="text-caption text-muted-foreground capitalize">
-                      {donation.donationType}
-                    </p>
-                  </td>
-                  <td className="text-body-sm px-4 py-3">{donation.campaignTitle ?? '—'}</td>
-                  {seesDonors ? (
-                    <td className="px-4 py-3">
-                      <p className="text-body-sm">{donation.donorName ?? '—'}</p>
-                      <p className="text-caption text-muted-foreground">
-                        {donation.donorEmail ?? ''}
-                      </p>
-                    </td>
-                  ) : null}
-                  <td data-numeric="" className="text-body-sm px-4 py-3 text-right tabular-nums">
-                    {formatCurrency(donation.amount)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`text-caption inline-flex rounded-full px-2 py-0.5 font-medium capitalize ${
-                        STATUS_STYLE[donation.status] ?? 'bg-muted text-muted-foreground'
-                      }`}
-                    >
-                      {donation.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td data-numeric="" className="text-caption px-4 py-3">
-                    {donation.receiptNumber ?? '—'}
-                  </td>
-                  <td className="text-caption text-muted-foreground px-4 py-3">
-                    {formatDate(donation.completedAt ?? donation.createdAt)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DonationsTable donations={data.items} seesDonors={seesDonors} activeStatus={active} />
       )}
+
+      {data.pagination.totalPages > 1 ? (
+        <Pagination
+          page={data.pagination.page}
+          totalPages={data.pagination.totalPages}
+          hasNext={data.pagination.hasNext}
+          query={params}
+        />
+      ) : null}
     </div>
+  );
+}
+
+function Pagination({
+  page,
+  totalPages,
+  hasNext,
+  query,
+}: {
+  page: number;
+  totalPages: number;
+  hasNext: boolean;
+  query: { status?: string; q?: string; campaignId?: string };
+}) {
+  const href = (target: number) => {
+    const search = new URLSearchParams();
+    if (query.status && query.status !== 'all') search.set('status', query.status);
+    if (query.q) search.set('q', query.q);
+    if (query.campaignId) search.set('campaignId', query.campaignId);
+    search.set('page', String(target));
+    return `/admin/donations?${search.toString()}`;
+  };
+
+  return (
+    <nav aria-label="Donations pagination" className="flex items-center justify-between gap-4">
+      {page > 1 ? (
+        <Link href={href(page - 1)} className="text-body-sm font-medium underline">
+          ← Previous
+        </Link>
+      ) : (
+        <span />
+      )}
+      <span className="text-caption text-muted-foreground">
+        Page {page} of {totalPages}
+      </span>
+      {hasNext ? (
+        <Link href={href(page + 1)} className="text-body-sm font-medium underline">
+          Next →
+        </Link>
+      ) : (
+        <span />
+      )}
+    </nav>
   );
 }
