@@ -51,7 +51,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
   const lineItems = Array.isArray(receipt.lineItems) ? receipt.lineItems : [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:m-0 print:space-y-0 print:p-0">
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link
           href={`/dashboard/donations/${id}`}
@@ -63,7 +63,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
         <PrintButton />
       </div>
 
-      <Card className="p-6 md:p-8">
+      <Card className="p-6 md:p-8 print:mx-auto print:max-w-3xl print:rounded-2xl print:border print:border-neutral-300 print:bg-white print:p-8 print:shadow-none">
         <header className="border-border flex flex-wrap items-start justify-between gap-4 border-b pb-6">
           <div>
             <p className="text-caption text-muted-foreground font-semibold uppercase tracking-wide">

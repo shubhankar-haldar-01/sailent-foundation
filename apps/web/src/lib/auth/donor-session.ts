@@ -52,6 +52,7 @@ export interface DonorActor {
    * ══════════════════════════════════════════════════════════════════════════
    */
   name?: string | null;
+  avatarUrl?: string | null;
 }
 
 export type DonorSession = StoredSession<DonorActor>;

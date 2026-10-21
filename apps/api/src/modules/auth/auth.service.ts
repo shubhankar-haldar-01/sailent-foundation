@@ -21,6 +21,7 @@ import { AppConfig } from '../../config/app.config.js';
 import { AuditService } from '../audit/audit.service.js';
 import { QUEUE_NAMES, QueueService } from '../queue/queue.service.js';
 import { DATABASE } from '../database/database.module.js';
+import { sessionAvatarUrl } from '../me/avatar.js';
 import { referenceCode } from '../../common/utils/reference.js';
 import {
   ConflictException,
@@ -552,7 +553,12 @@ export class AuthService {
       // this row is being read to answer "does this account exist", and
       // widening it further would put more of a donor's record into a code
       // path that only needs a yes.
-      .select({ id: donors.id, firstName: donors.firstName, lastName: donors.lastName })
+      .select({
+        id: donors.id,
+        firstName: donors.firstName,
+        lastName: donors.lastName,
+        avatarUrl: donors.avatarUrl,
+      })
       .from(donors)
       .where(sql`lower(btrim(${donors.email})) = ${identifier}`)
       .limit(1);
@@ -606,7 +612,12 @@ export class AuthService {
             // for a real one, and nothing sends to it meanwhile.
             phone: '',
           })
-          .returning({ id: donors.id, firstName: donors.firstName, lastName: donors.lastName })
+          .returning({
+            id: donors.id,
+            firstName: donors.firstName,
+            lastName: donors.lastName,
+            avatarUrl: donors.avatarUrl,
+          })
       )[0];
 
     if (!account) {
@@ -620,6 +631,9 @@ export class AuthService {
       // The donor row is already loaded to check the account exists, so this
       // name costs no additional query.
       name: [account.firstName, account.lastName].filter(Boolean).join(' ').trim() || null,
+      // A URL only: the session travels in a cookie, so never an inline image,
+      // and nothing the profile itself would refuse to serve (`me/avatar.ts`).
+      avatarUrl: sessionAvatarUrl(account.avatarUrl),
       ip: input.ip,
       userAgent: input.userAgent,
     });
@@ -661,6 +675,7 @@ export class AuthService {
      * ══════════════════════════════════════════════════════════════════════
      */
     name?: string | null;
+    avatarUrl?: string | null;
     ip?: string;
     userAgent?: string;
   }): Promise<IssuedSession> {
@@ -699,6 +714,7 @@ export class AuthService {
         permissions: input.permissions,
         sessionId: session.id,
         ...(input.name ? { name: input.name } : {}),
+        ...(input.avatarUrl ? { avatarUrl: input.avatarUrl } : {}),
       },
     };
   }

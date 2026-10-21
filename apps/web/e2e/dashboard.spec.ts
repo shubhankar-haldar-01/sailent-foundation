@@ -208,17 +208,53 @@ test.describe('signed in as a donor', () => {
     const donor = donorFor(testInfo.project.name);
     await page.goto('/dashboard');
 
-    // The welcome banner greets the donor by name (design, 2026-10-08).
+    // The banner names the donor: "Dashboard, <first name>" (the owner's
+    // redesign of the 2026-10-08 banner).
     await expect(
-      page.getByRole('heading', { name: new RegExp(`Good to see you again.*${donor.firstName}`) }),
+      page.getByRole('heading', {
+        level: 1,
+        name: new RegExp(`^Dashboard,\\s*${donor.firstName}`),
+      }),
     ).toBeVisible();
     // ₹1,800 from the fixture's single confirmed donation.
     await expect(page.getByText('Total Donations')).toBeVisible();
     await expect(page.getByText('Campaigns Supported', { exact: true })).toBeVisible();
 
-    // Counted from the donor's own product lines: two school kits.
-    await expect(page.getByRole('heading', { name: 'What you funded' })).toBeVisible();
-    await expect(page.getByText('School kit')).toBeVisible();
+    // Counted from the donor's own product lines: two school kits. The side
+    // column that carries it is drawn from `xl` (1280px) in the dashboard design.
+    if ((page.viewportSize()?.width ?? 0) >= 1280) {
+      await expect(page.getByRole('heading', { name: 'What you funded' })).toBeVisible();
+      await expect(page.getByText('School kit')).toBeVisible();
+    }
+  });
+
+  /**
+   * Every account page is one tap away at every width: the sidebar rail from
+   * `lg`, the "My Account" card below it (owner, 2026-10-21).
+   */
+  test('the account navigation reaches every account page at this width', async ({ page }) => {
+    await page.goto('/dashboard/profile');
+    const wide = (page.viewportSize()?.width ?? 0) >= 1024;
+    const nav = page.getByRole('navigation', {
+      name: wide ? 'Your account' : 'Account quick navigation',
+    });
+    const pages: [string, string][] = [
+      ['Dashboard', '/dashboard'],
+      ['Payments', '/dashboard/donations'],
+      [wide ? 'Saved' : 'Saved Campaigns', '/dashboard/saved'],
+      ['Profile', '/dashboard/profile'],
+      ['Settings', '/dashboard/settings'],
+      ['Updates', '/dashboard/updates'],
+      ['Events', '/dashboard/events'],
+      ['Volunteering', '/dashboard/volunteering'],
+    ];
+    for (const [name, href] of pages) {
+      await expect(nav.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
+    }
+    await expect(nav.getByRole('link', { name: 'Profile', exact: true })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 
   test('the header shows the donor’s account, not Login / Sign Up', async ({ page }) => {
@@ -586,9 +622,7 @@ test.describe('signed in as a donor', () => {
 
     await page.goto('/dashboard');
     await settle(page);
-    await expect(
-      page.getByRole('heading', { name: /good to see you|your account/i }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /^Dashboard,/ })).toBeVisible();
 
     // Keyboard again, for the same reason as the forms above — the sign-out
     // control sits at the end of a long page on mobile.

@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-
-import { formatCurrency, formatDate } from '@sailent/ui';
+import { FileText, Gift, Smartphone } from 'lucide-react';
+import { formatCurrency } from '@sailent/ui';
 
 import { ProfileForm } from '@/components/dashboard/profile-form';
+import { ProfilePhotoCard } from '@/components/dashboard/profile-photo-card';
 import { donorFetch, type DonorProfile } from '@/lib/donor/api';
 import { buildMetadata } from '@/lib/seo/metadata';
 
@@ -14,101 +15,99 @@ export const metadata: Metadata = buildMetadata({
 
 export const dynamic = 'force-dynamic';
 
-/**
- * The donor's own details.
- *
- * ══════════════════════════════════════════════════════════════════════════
- * WHAT IS SHOWN BUT NOT EDITABLE IS AS DELIBERATE AS WHAT IS.
- *
- *   Donor code      assigned once and quoted on receipts
- *   Phone number    the sign-in identifier — someone who could change their own
- *                   would be able to point the account at a number they control
- *   Lifetime totals written only by the payment-capture transaction (A6)
- *
- * They are displayed because a donor should be able to see what is held about
- * them, and they are read-only because none of them is theirs to set by
- * submitting a form. The page says WHY rather than just refusing, so that
- * somebody who genuinely needs a number changed knows to ask.
- * ══════════════════════════════════════════════════════════════════════════
- */
 export default async function ProfilePage() {
   const profile = await donorFetch<DonorProfile>('me');
+  const displayName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'Donor';
 
   return (
-    <div className="space-y-8">
-      <header>
-        <h1 className="text-h1 font-bold">Your profile</h1>
-        <p className="text-body text-muted-foreground mt-2">
-          How we address you, where we write to you, and the tax identification we need for the
-          annual filing.
+    <div className="space-y-4 lg:space-y-6">
+      {/* Header: shown from `lg`; below it, read out but not drawn — the page's h1 must not disappear on a phone. */}
+      <div className="relative overflow-hidden pb-2 pt-1 max-lg:sr-only">
+        <p className="text-primary text-[0.6875rem] font-bold uppercase tracking-wider">
+          MY ACCOUNT
         </p>
-      </header>
+        <h1 className="font-display text-foreground mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
+          Your profile
+        </h1>
+        <p className="text-body text-muted-foreground mt-1">
+          How we address you and where we write to you.
+        </p>
+      </div>
 
+      {/* ──────────────── Card 1: Profile Photo ──────────────── */}
+      <ProfilePhotoCard initialAvatarUrl={profile.avatarUrl} name={displayName} />
+
+      {/* ──────────────── Cards 2, 3, 4: Details, Address & Email ──────────────── */}
       <ProfileForm profile={profile} />
 
-      <section aria-labelledby="record-heading" className="border-border border-t pt-6">
-        <h2 id="record-heading" className="text-h3 font-semibold">
+      {/* ──────────────── Card 5: Your Record ──────────────── */}
+      <section aria-labelledby="record-heading" className="card-standard rounded-2xl p-6">
+        <h2
+          id="record-heading"
+          className="font-display text-foreground text-lg font-bold sm:text-xl"
+        >
           Your record
         </h2>
-        <p className="text-body-sm text-muted-foreground mt-1">
+        <p className="text-body-sm text-muted-foreground mt-0.5">
           These are set by us and cannot be edited here.
         </p>
 
-        <dl className="border-border divide-border mt-4 divide-y rounded-lg border">
-          <Row
-            label="Donor code"
-            value={profile.donorCode ?? '—'}
-            hint="Quoted on your receipts."
-            mono
-          />
-          <Row
-            label="Mobile number"
-            value={profile.phone ?? '—'}
-            hint="This is how you sign in. To change it, contact us — we verify it rather than take it from a form."
-            mono
-          />
-          <Row
-            label="Total given"
-            value={formatCurrency(profile.totalDonated)}
-            hint={`Across ${profile.donationCount} ${profile.donationCount === 1 ? 'donation' : 'donations'}.`}
-            mono
-          />
-          {profile.firstDonatedAt ? (
-            <Row label="First donation" value={formatDate(profile.firstDonatedAt)} />
-          ) : null}
-        </dl>
-      </section>
-    </div>
-  );
-}
+        <div className="divide-border/50 mt-4 divide-y">
+          {/* Row 1: Donor Code */}
+          <div className="flex items-center justify-between gap-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                <FileText className="size-4.5 stroke-[2]" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-body-sm text-foreground font-medium">Donor code</p>
+                <p className="text-caption text-muted-foreground">Quoted on your receipts.</p>
+              </div>
+            </div>
+            <span className="text-body-sm text-foreground font-mono font-semibold">
+              {profile.donorCode ?? '—'}
+            </span>
+          </div>
 
-function Row({
-  label,
-  value,
-  hint,
-  mono,
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-  mono?: boolean;
-}) {
-  // A `<dl>` may hold `<div>`s, and each must contain only its `<dt>` and
-  // `<dd>`; the hint therefore lives inside the `<dd>` (WCAG 1.3.1 — axe's
-  // `definition-list` rule flagged the earlier `<p>` beside them).
-  return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-3">
-      <dt className="text-caption text-muted-foreground shrink-0">{label}</dt>
-      <dd className="text-body-sm min-w-0 flex-1 text-right font-medium">
-        <span {...(mono ? { 'data-numeric': '' } : {})} className="break-words">
-          {value}
-        </span>
-        {hint ? (
-          <span className="text-caption text-muted-foreground mt-1 block text-left font-normal">
-            {hint}
-          </span>
-        ) : null}
-      </dd>
+          {/* Row 2: Mobile Number */}
+          <div className="flex items-center justify-between gap-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400">
+                <Smartphone className="size-4.5 stroke-[2]" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-body-sm text-foreground font-medium">Mobile number</p>
+                <p className="text-caption text-muted-foreground">
+                  This is how you sign in. To change it, contact us — we verify it rather than take
+                  it from a form.
+                </p>
+              </div>
+            </div>
+            <span className="text-body-sm text-foreground font-mono font-semibold">
+              {profile.phone ?? '—'}
+            </span>
+          </div>
+
+          {/* Row 3: Total Given */}
+          <div className="flex items-center justify-between gap-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <div className="size-9.5 text-primary dark:text-primary-foreground flex shrink-0 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-950/40">
+                <Gift className="size-4.5 stroke-[2]" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-body-sm text-foreground font-medium">Total given</p>
+                <p className="text-caption text-muted-foreground">
+                  Across {profile.donationCount}{' '}
+                  {profile.donationCount === 1 ? 'donation' : 'donations'}.
+                </p>
+              </div>
+            </div>
+            <span className="font-display text-body-sm text-foreground font-bold tabular-nums">
+              {formatCurrency(profile.totalDonated)}
+            </span>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

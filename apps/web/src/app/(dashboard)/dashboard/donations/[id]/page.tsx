@@ -1,39 +1,53 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Receipt } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle2, FileText, Heart, Sparkles } from 'lucide-react';
 
-import { Button, Card, formatCurrency, formatDate } from '@sailent/ui';
+import { cn, formatCurrency, formatDate } from '@sailent/ui';
 
+import { CopyButton } from '@/components/dashboard/copy-button';
+import { ReceiptCard } from '@/components/dashboard/receipt-card';
 import { StatusPill } from '@/components/dashboard/status-pill';
 import { DonorApiError, donorFetch, type DonorDonationDetail } from '@/lib/donor/api';
 import { buildMetadata } from '@/lib/seo/metadata';
 
 export const metadata: Metadata = buildMetadata({
-  title: 'Donation',
+  title: 'Donation details',
   path: '/dashboard/donations',
   noIndex: true,
 });
 
 export const dynamic = 'force-dynamic';
 
-/**
- * One donation.
- *
- * ══════════════════════════════════════════════════════════════════════════
- * A DONATION THAT IS NOT YOURS IS A 404 HERE, BECAUSE IT IS A 404 AT THE API.
- *
- * This page does no ownership check of its own and must not be given one. The
- * API scopes the query by the session's donor id, so somebody else's donation
- * does not come back as forbidden — it does not come back at all. Adding a
- * check here would imply the API's is optional.
- * ══════════════════════════════════════════════════════════════════════════
- *
- * THE PRICES ARE THE ONES THAT WERE CHARGED. Line items carry the price
- * snapshotted at the moment of giving (decision A5), so a later catalogue
- * change never rewrites what this page says. A donation from March reads what
- * March charged, forever.
- */
+function getCategoryBadgeStyle(category: string | null | undefined): string {
+  const cat = (category ?? '').toLowerCase();
+  if (cat.includes('educat') || cat.includes('school')) {
+    return 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300';
+  }
+  if (cat.includes('disaster') || cat.includes('relief') || cat.includes('emergency')) {
+    return 'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-300';
+  }
+  if (cat.includes('health') || cat.includes('medical') || cat.includes('clinic')) {
+    return 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300';
+  }
+  if (cat.includes('livelihood') || cat.includes('women') || cat.includes('tailor')) {
+    return 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300';
+  }
+  if (cat.includes('skill') || cat.includes('training') || cat.includes('youth')) {
+    return 'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-300';
+  }
+  if (cat.includes('child') || cat.includes('nutrition') || cat.includes('welfare')) {
+    return 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-300';
+  }
+  if (cat.includes('water') || cat.includes('sanitat')) {
+    return 'bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-300';
+  }
+  if (cat.includes('environment') || cat.includes('forest') || cat.includes('green')) {
+    return 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300';
+  }
+  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+}
+
 export default async function DonationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -49,140 +63,200 @@ export default async function DonationDetailPage({ params }: { params: Promise<{
   const customLines = donation.items.filter((item) => item.itemType === 'custom');
 
   return (
-    <div className="space-y-6">
-      <Link
-        href="/dashboard/donations"
-        className="text-body-sm text-muted-foreground hover:text-foreground focus-visible:outline-ring inline-flex items-center gap-1.5 rounded-sm focus-visible:outline-2"
-      >
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        All donations
-      </Link>
+    <div className="space-y-5">
+      {/* ──────────────── Top Navigation ──────────────── */}
+      <div>
+        <Link
+          href="/dashboard/donations"
+          className="text-body-sm text-muted-foreground hover:text-foreground focus-visible:outline-ring inline-flex items-center gap-1.5 font-medium transition-colors focus-visible:outline-2"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          <span>All donations</span>
+        </Link>
+      </div>
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-h1 font-bold">{formatCurrency(donation.amount)}</h1>
-          <p className="text-body text-muted-foreground mt-1">
-            {donation.campaignSlug ? (
-              <Link
-                href={`/campaigns/${donation.campaignSlug}`}
-                className="focus-visible:outline-ring rounded-sm hover:underline focus-visible:outline-2"
-              >
-                {donation.campaignTitle}
-              </Link>
-            ) : (
-              (donation.campaignTitle ?? 'General fund')
-            )}
-          </p>
+      {/* ──────────────── Card 1: Top Hero Card ──────────────── */}
+      <div className="card-elevated relative rounded-2xl p-6 sm:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-primary text-[0.6875rem] font-bold uppercase tracking-wider">
+              DONATION DETAILS
+            </p>
+            <h1 className="font-display text-foreground mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+              {formatCurrency(donation.amount)}
+            </h1>
+            <p className="font-display text-foreground mt-2 text-lg font-bold sm:text-xl">
+              {donation.campaignTitle ?? 'General fund'}
+            </p>
+            {donation.campaignCategory ? (
+              <div className="mt-2.5">
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold',
+                    getCategoryBadgeStyle(donation.campaignCategory),
+                  )}
+                >
+                  <Sparkles className="size-3" aria-hidden="true" />
+                  <span>{donation.campaignCategory}</span>
+                </span>
+              </div>
+            ) : null}
+          </div>
+          <div>
+            <StatusPill status={donation.status} />
+          </div>
         </div>
-        <StatusPill status={donation.status} />
-      </header>
 
-      {/* A failed donation needs saying, not hiding. */}
-      {donation.status === 'failed' ? (
-        <Card className="border-destructive/30 bg-destructive-subtle/40 p-4">
-          <p className="text-body-sm">
-            This payment did not go through, so nothing was charged. If your bank shows an amount
-            held against it, they release it themselves, usually within a few working days.
-          </p>
-        </Card>
-      ) : null}
+        {/* Notice for failed payments */}
+        {donation.status === 'failed' ? (
+          <div className="bg-destructive/10 border-destructive/20 mt-4 rounded-xl border p-3.5 text-xs text-rose-700 dark:text-rose-300">
+            This payment was not completed, so nothing was charged. If your bank shows an amount
+            held, they release it automatically within a few working days.
+          </div>
+        ) : null}
+      </div>
 
-      {/* `dl`, not a bare div: `dt`/`dd` outside a description list are invalid
-          and screen readers stop pairing the label with its value. */}
-      <Card>
-        <dl className="divide-border divide-y">
-          <Row label="Reference" value={donation.reference} mono />
-          <Row label="Date" value={formatDate(donation.donationDate)} />
-          {donation.completedAt ? (
-            <Row label="Confirmed" value={formatDate(donation.completedAt)} />
-          ) : null}
+      {/* ──────────────── Card 2: Payment Summary Card ──────────────── */}
+      <div className="card-standard rounded-2xl p-6">
+        <h2 className="font-display text-foreground text-base font-bold sm:text-lg">
+          Payment summary
+        </h2>
+        <div className="divide-border/50 mt-4 divide-y">
+          {/* Row 1: Donation reference */}
+          <div className="flex items-center justify-between gap-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                <FileText className="size-4.5 stroke-[2]" aria-hidden="true" />
+              </div>
+              <span className="text-body-sm text-foreground/80 font-medium">
+                Donation reference
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-body-sm text-foreground font-mono font-semibold">
+                {donation.reference}
+              </span>
+              <CopyButton text={donation.reference} label="Copy donation reference" />
+            </div>
+          </div>
+
+          {/* Row 2: Donation date */}
+          <div className="flex items-center justify-between gap-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-orange-50 text-orange-600 dark:bg-orange-950/40 dark:text-orange-400">
+                <Calendar className="size-4.5 stroke-[2]" aria-hidden="true" />
+              </div>
+              <span className="text-body-sm text-foreground/80 font-medium">Donation date</span>
+            </div>
+            <span className="text-body-sm text-foreground font-medium">
+              {formatDate(donation.donationDate)}
+            </span>
+          </div>
+
+          {/* Row 3: Payment confirmed */}
+          <div className="flex items-center justify-between gap-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                <CheckCircle2 className="size-4.5 stroke-[2]" aria-hidden="true" />
+              </div>
+              <span className="text-body-sm text-foreground/80 font-medium">Payment confirmed</span>
+            </div>
+            <span className="text-body-sm text-foreground font-medium">
+              {formatDate(donation.completedAt || donation.donationDate)}
+            </span>
+          </div>
+
+          {/* Optional Row: Paid by (Method & Card) */}
           {donation.payment?.method ? (
-            <Row
-              label="Paid by"
-              value={
-                donation.payment.cardLast4
-                  ? `${donation.payment.method} ending ${donation.payment.cardLast4}`
-                  : donation.payment.method
-              }
-            />
+            <div className="flex items-center justify-between gap-4 py-3.5">
+              <div className="flex items-center gap-3">
+                <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400">
+                  <Heart className="size-4.5 stroke-[2]" aria-hidden="true" />
+                </div>
+                <span className="text-body-sm text-foreground/80 font-medium">Paid by</span>
+              </div>
+              <span className="text-body-sm text-foreground font-medium">
+                {donation.payment.cardLast4
+                  ? `${donation.payment.method} ending in ${donation.payment.cardLast4}`
+                  : donation.payment.method}
+              </span>
+            </div>
           ) : null}
-          {donation.anonymous ? (
-            <Row label="Public listing" value="Anonymous — your name is not shown publicly" />
-          ) : null}
-        </dl>
-      </Card>
+        </div>
+      </div>
 
-      {/* What was bought --------------------------------------------------- */}
+      {/* ──────────────── Card 3: Receipt Card ──────────────── */}
+      <ReceiptCard
+        donationId={donation.id}
+        receiptNumber={donation.receiptNumber}
+        paymentStatus={donation.status}
+      />
+
+      {/* ──────────────── What Was Bought (Preserved for full accounting) ──────────────── */}
       {donation.items.length > 0 ? (
-        <section aria-labelledby="items-heading">
-          <h2 id="items-heading" className="text-h3 font-semibold">
+        <section aria-labelledby="items-heading" className="card-standard rounded-2xl p-6">
+          <h2
+            id="items-heading"
+            className="font-display text-foreground text-base font-bold sm:text-lg"
+          >
             What this bought
           </h2>
-          <ul className="border-border divide-border mt-3 divide-y rounded-lg border">
+          <ul className="border-border/60 divide-border/50 mt-3 divide-y rounded-xl border">
             {productLines.map((item) => (
               <li key={item.id} className="flex items-baseline justify-between gap-4 px-4 py-3">
                 <span className="min-w-0">
-                  <span className="text-body-sm block font-medium">{item.itemName}</span>
+                  <span className="text-body-sm text-foreground block font-semibold">
+                    {item.itemName}
+                  </span>
                   <span data-numeric="" className="text-caption text-muted-foreground">
                     {item.quantity} × {formatCurrency(item.unitPrice)}
                   </span>
                 </span>
-                <span data-numeric="" className="text-body-sm shrink-0 font-medium tabular-nums">
+                <span
+                  data-numeric=""
+                  className="font-display text-body-sm text-foreground shrink-0 font-bold tabular-nums"
+                >
                   {formatCurrency(item.totalPrice)}
                 </span>
               </li>
             ))}
             {customLines.map((item) => (
               <li key={item.id} className="flex items-baseline justify-between gap-4 px-4 py-3">
-                <span className="text-body-sm font-medium">Additional amount</span>
-                <span data-numeric="" className="text-body-sm shrink-0 font-medium tabular-nums">
+                <span className="text-body-sm text-foreground font-semibold">
+                  Additional amount
+                </span>
+                <span
+                  data-numeric=""
+                  className="font-display text-body-sm text-foreground shrink-0 font-bold tabular-nums"
+                >
                   {formatCurrency(item.totalPrice)}
                 </span>
               </li>
             ))}
           </ul>
-          <p className="text-caption text-muted-foreground mt-2">
-            These are the prices you were charged. They do not change if the campaign later reprices
-            an item.
-          </p>
         </section>
       ) : null}
 
+      {/* ──────────────── Donor Message ──────────────── */}
       {donation.donorMessage ? (
-        <section aria-labelledby="message-heading">
-          <h2 id="message-heading" className="text-h3 font-semibold">
+        <section aria-labelledby="message-heading" className="card-standard rounded-2xl p-6">
+          <h2 id="message-heading" className="font-display text-foreground text-base font-bold">
             Your message
           </h2>
-          <p className="text-body text-muted-foreground mt-2">{donation.donorMessage}</p>
+          <p className="text-body-sm text-muted-foreground mt-2">{donation.donorMessage}</p>
         </section>
       ) : null}
 
-      {donation.receiptNumber ? (
-        <Button asChild size="md" variant="secondary">
-          <Link href={`/dashboard/donations/${donation.id}/receipt`}>
-            <Receipt className="size-4" aria-hidden="true" />
-            View receipt {donation.receiptNumber}
-          </Link>
-        </Button>
-      ) : donation.status === 'successful' ? (
-        <p className="text-body-sm text-muted-foreground">
-          Your receipt is being generated and will appear here shortly.
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4 px-4 py-3">
-      <dt className="text-caption text-muted-foreground shrink-0">{label}</dt>
-      <dd
-        {...(mono ? { 'data-numeric': '' } : {})}
-        className="text-body-sm min-w-0 break-words text-right"
-      >
-        {value}
-      </dd>
+      {/* ──────────────── Bottom Back Button ──────────────── */}
+      <div className="pt-2">
+        <Link
+          href="/dashboard/donations"
+          className="border-border/80 bg-surface hover:bg-muted text-foreground focus-visible:outline-ring shadow-xs px-4.5 inline-flex items-center gap-2 rounded-xl border py-2 text-sm font-semibold transition-colors focus-visible:outline-2"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          <span>Back to all donations</span>
+        </Link>
+      </div>
     </div>
   );
 }

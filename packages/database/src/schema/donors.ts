@@ -42,6 +42,7 @@ export const donors = pgTable(
     firstName: varchar('first_name', { length: 120 }).notNull(),
     lastName: varchar('last_name', { length: 120 }),
     email: varchar('email', { length: 255 }),
+    avatarUrl: text('avatar_url'),
     /** SENSITIVE. The deduplication key — one donor per phone number. */
     phone: varchar('phone', { length: 20 }).notNull(),
 

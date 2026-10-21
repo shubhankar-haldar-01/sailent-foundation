@@ -14,7 +14,7 @@ export function DashboardHero({ firstName }: { firstName: string | null }) {
   return (
     <section
       aria-labelledby="dashboard-greeting"
-      className="bg-(--cta-50) dark:bg-primary-soft relative overflow-hidden rounded-2xl px-6 py-8 sm:px-10 sm:py-10 lg:px-12 xl:px-10 xl:py-5"
+      className="bg-surface-warm border-border-card dark:border-border dark:bg-surface relative overflow-hidden rounded-2xl border px-6 py-8 sm:px-10 sm:py-10 lg:px-12 xl:px-10 xl:py-5"
     >
       {/* Soft shapes: a deeper peach sweep across the right, a pale one low on the left. */}
       <svg
@@ -42,17 +42,18 @@ export function DashboardHero({ firstName }: { firstName: string | null }) {
       <LeafSpray className="absolute -left-10 bottom-[-20%] hidden h-32 w-auto opacity-60 lg:block" />
 
       <div className="relative max-w-[32rem] xl:max-w-[37rem]">
-        <h1 id="dashboard-greeting" className="text-foreground">
-          <span className="text-body-lg block font-normal sm:text-[1.3125rem] xl:text-[1.1875rem] xl:leading-snug">
-            Good to see you again,
-          </span>
-          <span className="font-display mt-1 block text-[2.125rem] font-bold leading-[1.1] tracking-[-0.02em] sm:text-[2.75rem] xl:mt-0.5 xl:text-[2.25rem]">
-            {firstName ?? 'Welcome back'}
-            <span aria-hidden="true"> 👋</span>
+        {/* Top tag matching competitor reference */}
+        <p className="text-primary text-[0.6875rem] font-bold uppercase tracking-wider">
+          MY ACCOUNT
+        </p>
+
+        <h1 id="dashboard-greeting" className="text-foreground mt-1">
+          <span className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[2.25rem]">
+            Dashboard, <span className="text-primary font-extrabold">{firstName ?? 'Friend'}</span>
           </span>
         </h1>
-        <p className="text-muted-foreground mt-4 max-w-[22rem] text-[1rem] leading-relaxed sm:text-[1.0625rem] xl:mt-2 xl:max-w-none xl:text-[1rem] xl:leading-normal">
-          Your compassion is creating real change. Here&rsquo;s a snapshot of your impact.
+        <p className="text-muted-foreground mt-1 text-xs font-normal sm:text-sm">
+          View Your Successful Donations And Receipts.
         </p>
       </div>
     </section>

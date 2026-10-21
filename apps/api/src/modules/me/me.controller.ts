@@ -9,7 +9,10 @@ import {
   Post,
   Query,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
 import {
   ApiBearerAuth,
@@ -47,6 +50,7 @@ import {
   type UpdateProfileInput,
   type UpdateSettingsInput,
 } from './dto/me.dto.js';
+import { ValidationException } from '../../common/exceptions.js';
 import { requestClientIp } from '../../common/security/internal-request.js';
 
 /**
@@ -122,6 +126,31 @@ export class MeController {
     @Req() request: Request,
   ) {
     return this.me.updateProfile(actor.id, body, this.context(request));
+  }
+
+  @Post('avatar')
+  @HttpCode(200)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024, files: 1 } }))
+  @ApiOperation({ summary: 'Upload a donor profile picture (JPEG, PNG or WebP, max 5 MB)' })
+  uploadAvatar(
+    @UploadedFile() file: { buffer: Buffer; mimetype?: string } | undefined,
+    @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
+  ) {
+    if (!file) {
+      throw new ValidationException(
+        [{ code: 'required', field: 'file', message: 'Choose an image to upload.' }],
+        'Choose an image to upload.',
+      );
+    }
+    return this.me.uploadAvatar(actor.id, file, this.context(request));
+  }
+
+  @Delete('avatar')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Remove the donor profile picture' })
+  removeAvatar(@CurrentActor() actor: AuthenticatedActor, @Req() request: Request) {
+    return this.me.removeAvatar(actor.id, this.context(request));
   }
 
   /**

@@ -1,9 +1,10 @@
 import Link from 'next/link';
 
 import { currentDonor } from '@/lib/auth/donor-session';
+import { donorFetch, type DonorProfile } from '@/lib/donor/api';
 
 /**
- * The signed-in donor's initials, linking to their dashboard.
+ * The signed-in donor's avatar or initials, linking to their dashboard.
  *
  * ══════════════════════════════════════════════════════════════════════════
  * A SERVER COMPONENT, PASSED INTO THE HEADER AS A SLOT.
@@ -18,26 +19,35 @@ import { currentDonor } from '@/lib/auth/donor-session';
  * "Login / Sign Up" button in that case (owner request, 2026-10-08); the
  * layouts tell it which with `signedIn`.
  *
- * THE NAME COMES FROM THE SESSION, NOT FROM AN API CALL.
- *
- * This component is in the header, so it renders on EVERY page. It used to
- * fetch `/me` for the initials, which meant a signed-in donor reading five
- * campaign pages spent five authenticated round trips on two letters in a
- * 40px circle. The name is now stored with the tokens at sign-in, where it
- * costs nothing to read.
- *
- * It also stopped the e2e suite being pushed past the API's 100-per-minute
- * limit, which is how the cost got noticed — but the cost was real in
- * production too, and would only have been noticed there as latency.
+ * AVATAR RESOLUTION:
+ * When `avatarUrl` is explicitly passed (e.g. from the dashboard layout where
+ * `/me` is already loaded), no additional request is made.
+ * On public layouts or standalone views where `avatarUrl` is not provided,
+ * it checks the session avatar, falling back to `/me` if needed so uploaded
+ * profile photos appear across all public pages as well.
  * ══════════════════════════════════════════════════════════════════════════
  */
-export async function AccountBadge() {
+export async function AccountBadge({ avatarUrl }: { avatarUrl?: string | null } = {}) {
   const donor = await currentDonor();
   if (!donor) return null;
 
-  const name = (donor.name ?? '').trim();
+  let resolvedAvatar = avatarUrl !== undefined ? avatarUrl : (donor.avatarUrl ?? null);
+  let resolvedName = (donor.name ?? '').trim();
+
+  if (avatarUrl === undefined && !resolvedAvatar) {
+    try {
+      const profile = await donorFetch<DonorProfile>('me');
+      resolvedAvatar = profile?.avatarUrl ?? null;
+      if (!resolvedName && profile) {
+        resolvedName = [profile.firstName, profile.lastName].filter(Boolean).join(' ').trim();
+      }
+    } catch {
+      resolvedAvatar = null;
+    }
+  }
+
   const initials =
-    name
+    resolvedName
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
@@ -50,12 +60,17 @@ export async function AccountBadge() {
       href="/dashboard"
       // The accessible name is the person, not the letters — "SK" read aloud is
       // two letters, and the initials are decorative once the name is there.
-      aria-label={name ? `Your account — ${name}` : 'Your account'}
-      className="bg-success focus-visible:outline-ring text-success-foreground grid size-10 shrink-0 place-items-center rounded-full transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
+      aria-label={resolvedName ? `Your account — ${resolvedName}` : 'Your account'}
+      className="bg-success focus-visible:outline-ring text-success-foreground relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-full transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
     >
-      <span aria-hidden="true" className="text-caption font-semibold">
-        {initials}
-      </span>
+      {resolvedAvatar ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={resolvedAvatar} alt="" className="size-full rounded-full object-cover" />
+      ) : (
+        <span aria-hidden="true" className="text-caption font-semibold">
+          {initials}
+        </span>
+      )}
     </Link>
   );
 }

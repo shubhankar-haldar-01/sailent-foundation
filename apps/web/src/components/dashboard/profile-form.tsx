@@ -2,8 +2,8 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-
-import { Alert, Button, Input, Label } from '@sailent/ui';
+import { ChevronDown, Loader2, Save, Send } from 'lucide-react';
+import { Alert, Input, Label } from '@sailent/ui';
 
 import {
   requestEmailChange,
@@ -14,32 +14,60 @@ import {
 } from '@/lib/donor/actions';
 import type { DonorProfile } from '@/lib/donor/api';
 
-/**
- * Edit the fields a donor owns.
- *
- * A PLAIN FORM POSTING TO A SERVER ACTION. No client-side fetch, so no token
- * reaches JavaScript and the whole thing still works without it — it degrades
- * to a form post and a reload.
- *
- * Validation is the API's. The fields here have the right `type` and
- * `autoComplete` so browsers help, but nothing is enforced client-side and then
- * trusted: the server rejects unknown keys outright and re-checks every value.
- */
-const TAX_ID_TYPES = [
-  { value: 'pan', label: 'PAN' },
-  { value: 'aadhaar', label: 'Aadhaar' },
-  { value: 'passport', label: 'Passport' },
-  { value: 'driving_licence', label: 'Driving licence' },
-  { value: 'voter_id', label: 'Voter ID' },
-  { value: 'foreign_tin', label: 'Foreign TIN' },
-] as const;
+const INDIAN_STATES = [
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chhattisgarh',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
+  'Andaman and Nicobar Islands',
+  'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi',
+  'Jammu and Kashmir',
+  'Ladakh',
+  'Lakshadweep',
+  'Puducherry',
+];
 
-function Submit() {
+function SaveButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="lg" disabled={pending}>
-      {pending ? 'Saving…' : 'Save changes'}
-    </Button>
+    <button
+      type="submit"
+      disabled={pending}
+      className="bg-primary hover:bg-primary/90 text-primary-foreground focus-visible:outline-ring shadow-xs inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 disabled:opacity-50"
+    >
+      {pending ? (
+        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+      ) : (
+        <Save className="size-4 stroke-[2]" aria-hidden="true" />
+      )}
+      <span>{pending ? 'Saving…' : 'Save changes'}</span>
+    </button>
   );
 }
 
@@ -47,7 +75,7 @@ export function ProfileForm({ profile }: { profile: DonorProfile }) {
   const [state, action] = useActionState<DonorActionState, FormData>(updateDonorProfile, {});
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       <form action={action} className="space-y-6">
         {state.error ? (
           <Alert variant="destructive" role="alert">
@@ -60,191 +88,183 @@ export function ProfileForm({ profile }: { profile: DonorProfile }) {
           </Alert>
         ) : null}
 
-        <fieldset className="space-y-4">
-          <legend className="text-h3 font-semibold">Your name</legend>
-          <div className="grid gap-4 sm:grid-cols-2">
+        {/* ──────── Card 2: Your details ──────── */}
+        <div className="card-standard rounded-2xl p-6">
+          <h2 className="font-display text-foreground text-lg font-bold sm:text-xl">
+            Your details
+          </h2>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="firstName">First name</Label>
+              <Label htmlFor="firstName" className="text-body-sm text-foreground font-medium">
+                First name
+              </Label>
               <Input
                 id="firstName"
                 name="firstName"
                 autoComplete="given-name"
                 defaultValue={profile.firstName ?? ''}
+                className="mt-1.5 rounded-xl"
               />
             </div>
             <div>
-              <Label htmlFor="lastName">Last name</Label>
+              <Label htmlFor="lastName" className="text-body-sm text-foreground font-medium">
+                Last name
+              </Label>
               <Input
                 id="lastName"
                 name="lastName"
                 autoComplete="family-name"
                 defaultValue={profile.lastName ?? ''}
+                className="mt-1.5 rounded-xl"
               />
             </div>
           </div>
 
-          {/*
-          Read-only here (Phase 12): an address changes only once a code sent to
-          the NEW address is entered — the form below the profile.
-        */}
-          <div>
-            <Label htmlFor="email">Email address</Label>
+          <div className="mt-4">
+            <Label htmlFor="email" className="text-body-sm text-foreground font-medium">
+              Email address
+            </Label>
             <Input
               id="email"
               type="email"
               value={profile.email ?? ''}
               readOnly
               aria-describedby="email-help"
+              className="bg-muted/40 text-muted-foreground mt-1.5 cursor-not-allowed rounded-xl"
             />
-            <p id="email-help" className="text-caption text-muted-foreground mt-2">
-              Where receipts and sign-in codes are sent. To change it, use “Change your email
-              address” below.
+            <p id="email-help" className="text-caption text-muted-foreground mt-1.5">
+              Where receipts and sign-in codes are sent. To change it, use the section below.
             </p>
           </div>
-        </fieldset>
+        </div>
 
-        <fieldset className="space-y-4">
-          <legend className="text-h3 font-semibold">Address</legend>
-          <p className="text-body-sm text-muted-foreground">
+        {/* ──────── Card 3: Address ──────── */}
+        <div className="card-standard rounded-2xl p-6">
+          <h2 className="font-display text-foreground text-lg font-bold sm:text-xl">Address</h2>
+          <p className="text-body-sm text-muted-foreground mt-0.5">
             Needed on the annual statement of donations if you want 80G relief.
           </p>
 
-          <div>
-            <Label htmlFor="addressLine1">Address</Label>
-            <Input
-              id="addressLine1"
-              name="addressLine1"
-              autoComplete="address-line1"
-              defaultValue={profile.addressLine1 ?? ''}
-            />
-          </div>
-          <div>
-            <Label htmlFor="addressLine2">
-              Address line 2 <span className="text-muted-foreground font-normal">(optional)</span>
-            </Label>
-            <Input
-              id="addressLine2"
-              name="addressLine2"
-              autoComplete="address-line2"
-              defaultValue={profile.addressLine2 ?? ''}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="mt-4 space-y-4">
             <div>
-              <Label htmlFor="city">City</Label>
+              <Label htmlFor="addressLine1" className="text-body-sm text-foreground font-medium">
+                Address
+              </Label>
               <Input
-                id="city"
-                name="city"
-                autoComplete="address-level2"
-                defaultValue={profile.city ?? ''}
+                id="addressLine1"
+                name="addressLine1"
+                autoComplete="address-line1"
+                defaultValue={profile.addressLine1 ?? ''}
+                placeholder="123 Green Park Colony"
+                className="mt-1.5 rounded-xl"
               />
             </div>
-            <div>
-              <Label htmlFor="state">State</Label>
-              <Input
-                id="state"
-                name="state"
-                autoComplete="address-level1"
-                defaultValue={profile.state ?? ''}
-              />
-            </div>
-            <div>
-              <Label htmlFor="postalCode">PIN code</Label>
-              <Input
-                id="postalCode"
-                name="postalCode"
-                inputMode="numeric"
-                autoComplete="postal-code"
-                defaultValue={profile.postalCode ?? ''}
-              />
-            </div>
-          </div>
-        </fieldset>
 
-        <fieldset className="space-y-4">
-          <legend className="text-h3 font-semibold">Tax identification</legend>
-          <p className="text-body-sm text-muted-foreground">
-            We report donations to the Income Tax Department each year on Form 10BD. Without your
-            PAN we cannot include you, and the department cannot issue your Form 10BE.
-          </p>
-
-          <div className="grid gap-4 sm:grid-cols-[12rem_1fr]">
             <div>
-              <Label htmlFor="taxIdType">Type</Label>
-              {/* A NATIVE select, matching the admin forms. The design system's
-                `Select` is a Radix primitive and needs JavaScript to post its
-                value; this form is meant to work without it. */}
-              <select
-                id="taxIdType"
-                name="taxIdType"
-                defaultValue={profile.taxIdType ?? 'pan'}
-                className="border-input bg-surface text-body-sm h-10 w-full rounded-md border px-3"
-              >
-                {TAX_ID_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="taxIdNumber">Number</Label>
-              {/*
-              The full number is never sent back to the browser (Phase 12): the
-              field starts empty, shows the masked number on file, and leaving
-              it empty keeps that number.
-            */}
+              <Label htmlFor="addressLine2" className="text-body-sm text-foreground font-medium">
+                Address line 2 <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
               <Input
-                id="taxIdNumber"
-                name="taxIdNumber"
-                defaultValue=""
-                placeholder={profile.taxIdNumberMasked ?? ''}
-                autoComplete="off"
-                spellCheck={false}
-                className="uppercase"
-                aria-describedby="tax-help"
+                id="addressLine2"
+                name="addressLine2"
+                autoComplete="address-line2"
+                defaultValue={profile.addressLine2 ?? ''}
+                placeholder="Apartment, suite, building (optional)"
+                className="mt-1.5 rounded-xl"
               />
-              <p id="tax-help" className="text-caption text-muted-foreground mt-2">
-                {profile.hasTaxId
-                  ? `On file: ${profile.taxIdNumberMasked ?? 'yes'}. Leave empty to keep it, or type a new number to replace it. `
-                  : ''}
-                Stored encrypted and used only for the statutory filing. Never shown publicly.
-              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <Label htmlFor="city" className="text-body-sm text-foreground font-medium">
+                  City
+                </Label>
+                <Input
+                  id="city"
+                  name="city"
+                  autoComplete="address-level2"
+                  defaultValue={profile.city ?? ''}
+                  placeholder="City"
+                  className="mt-1.5 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="state" className="text-body-sm text-foreground font-medium">
+                  State
+                </Label>
+                <div className="relative mt-1.5">
+                  <select
+                    id="state"
+                    name="state"
+                    defaultValue={profile.state ?? 'Delhi'}
+                    className="bg-surface text-body border-input focus-visible:border-primary focus-visible:outline-primary flex h-11 w-full appearance-none rounded-xl border px-3 py-2 pr-9 text-sm transition-colors focus-visible:outline-2"
+                  >
+                    <option value="">Select state</option>
+                    {INDIAN_STATES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    className="text-muted-foreground pointer-events-none absolute right-3 top-3.5 size-4"
+                    aria-hidden="true"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="postalCode" className="text-body-sm text-foreground font-medium">
+                  PIN code
+                </Label>
+                <Input
+                  id="postalCode"
+                  name="postalCode"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  defaultValue={profile.postalCode ?? ''}
+                  placeholder="110016"
+                  className="mt-1.5 rounded-xl"
+                />
+              </div>
             </div>
           </div>
-        </fieldset>
 
-        <Submit />
+          <div className="mt-6">
+            <SaveButton />
+          </div>
+        </div>
       </form>
 
-      <EmailChangeForm currentEmail={profile.email} />
+      {/* ──────── Card 4: Change your email address ──────── */}
+      <EmailChangeCard currentEmail={profile.email} />
     </div>
   );
 }
 
-/**
- * Change the account's email address, in two steps (Phase 12): a code is sent
- * to the NEW address, and the address changes only when that code is entered.
- */
-function EmailChangeForm({ currentEmail }: { currentEmail: string | null }) {
+function EmailChangeCard({ currentEmail }: { currentEmail: string | null }) {
   const [requested, request] = useActionState<EmailChangeState, FormData>(requestEmailChange, {});
   const [verified, verify] = useActionState<EmailChangeState, FormData>(verifyEmailChange, {});
   const pending = verified.pendingEmail ?? requested.pendingEmail;
 
   return (
-    <section aria-labelledby="change-email" className="border-border space-y-4 border-t pt-8">
-      <h2 id="change-email" className="text-h3 font-semibold">
+    <div className="card-standard rounded-2xl p-6">
+      <h2 className="font-display text-foreground text-lg font-bold sm:text-xl">
         Change your email address
       </h2>
 
       {verified.ok ? (
-        <Alert variant="success" role="status">
-          Your email address has been changed.
-        </Alert>
+        <div className="mt-4">
+          <Alert variant="success" role="status">
+            Your email address has been changed.
+          </Alert>
+        </div>
       ) : null}
 
       {!pending || verified.ok ? (
-        <form action={request} className="space-y-3">
+        <form action={request} className="mt-4 space-y-4">
           {requested.error ? (
             <Alert variant="destructive" role="alert">
               {requested.error}
@@ -254,16 +274,34 @@ function EmailChangeForm({ currentEmail }: { currentEmail: string | null }) {
             We will send a six-digit code to the new address. Your address stays{' '}
             {currentEmail ?? 'as it is'} until you enter it.
           </p>
+
           <div>
-            <Label htmlFor="newEmail">New email address</Label>
-            <Input id="newEmail" name="newEmail" type="email" autoComplete="email" required />
+            <Label htmlFor="newEmail" className="text-body-sm text-foreground font-medium">
+              New email address
+            </Label>
+            <Input
+              id="newEmail"
+              name="newEmail"
+              type="email"
+              autoComplete="email"
+              placeholder="Enter new email address"
+              required
+              className="mt-1.5 rounded-xl"
+            />
           </div>
-          <Button type="submit" variant="secondary">
-            Send a code
-          </Button>
+
+          <div>
+            <button
+              type="submit"
+              className="border-primary text-primary hover:bg-primary/10 focus-visible:outline-ring inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-colors focus-visible:outline-2"
+            >
+              <Send className="size-4 stroke-[2]" aria-hidden="true" />
+              <span>Send a code</span>
+            </button>
+          </div>
         </form>
       ) : (
-        <form action={verify} className="space-y-3">
+        <form action={verify} className="mt-4 space-y-4">
           {verified.error ? (
             <Alert variant="destructive" role="alert">
               {verified.error}
@@ -274,7 +312,9 @@ function EmailChangeForm({ currentEmail }: { currentEmail: string | null }) {
           </p>
           <input type="hidden" name="newEmail" value={pending} />
           <div>
-            <Label htmlFor="emailCode">Six-digit code</Label>
+            <Label htmlFor="emailCode" className="text-body-sm text-foreground font-medium">
+              Six-digit code
+            </Label>
             <Input
               id="emailCode"
               name="code"
@@ -283,11 +323,19 @@ function EmailChangeForm({ currentEmail }: { currentEmail: string | null }) {
               pattern="[0-9]{6}"
               maxLength={6}
               required
+              className="mt-1.5 rounded-xl font-mono text-base tracking-widest"
             />
           </div>
-          <Button type="submit">Confirm the new address</Button>
+          <div>
+            <button
+              type="submit"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground focus-visible:outline-ring shadow-xs inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-colors focus-visible:outline-2"
+            >
+              <span>Confirm the new address</span>
+            </button>
+          </div>
         </form>
       )}
-    </section>
+    </div>
   );
 }

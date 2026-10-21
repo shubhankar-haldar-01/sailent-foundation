@@ -7,7 +7,6 @@ import { AccountBadge } from '@/components/layout/account-badge';
 import { PageShell } from '@/components/layout/page-shell';
 import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar';
 import { donorDisplayName } from '@/components/dashboard/format';
-import { SignOutButton } from '@/components/dashboard/sign-out-button';
 import { currentDonor } from '@/lib/auth/donor-session';
 import { getOrganisation } from '@/lib/content/organisation';
 import { donorFetch, type DonorProfile } from '@/lib/donor/api';
@@ -35,6 +34,8 @@ import { donorFetch, type DonorProfile } from '@/lib/donor/api';
  * request; a forged cookie gets somebody an empty shell full of 401s, which is
  * the correct outcome.
  */
+import { MyAccountNavSlot } from '@/components/dashboard/my-account-nav-card';
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const donor = await currentDonor();
   if (!donor) redirect('/sign-in');
@@ -53,32 +54,52 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const organisation = await getOrganisation();
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col print:block print:min-h-0">
       <a
         href="#main-content"
-        className="skip-link bg-primary text-primary-foreground rounded-md px-4 py-2"
+        className="skip-link bg-primary text-primary-foreground rounded-md px-4 py-2 print:hidden"
       >
         Skip to content
       </a>
-      <SiteHeader
-        accountSlot={<AccountBadge />}
-        signedIn={Boolean(donor)}
-        socialLinks={organisation.social}
-      />
-      <main id="main-content" className="flex-1 py-6 md:py-8 xl:pb-8 xl:pt-5">
-        <PageShell>
-          <div className="grid gap-5 lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:gap-6 xl:gap-5">
-            <DashboardSidebar name={name} email={profile?.email ?? null} />
-            <div className="min-w-0">{children}</div>
-          </div>
 
-          {/* Logout at the foot of the page on a phone; the sidebar carries it from `lg`. */}
-          <div className="border-border/60 bg-surface mt-6 rounded-2xl border p-2 lg:hidden">
-            <SignOutButton />
+      {/* Header across all screen sizes (mobile uses SiteHeader's full-site drawer) */}
+      <div className="print:hidden">
+        <SiteHeader
+          accountSlot={<AccountBadge avatarUrl={profile?.avatarUrl ?? null} />}
+          signedIn={Boolean(donor)}
+          socialLinks={organisation.social}
+        />
+      </div>
+
+      <main
+        id="main-content"
+        className="min-h-[calc(100dvh-4.5rem)] flex-1 py-4 sm:py-6 md:py-8 lg:py-6 lg:pb-8 xl:pb-8 xl:pt-5 print:m-0 print:block print:p-0"
+      >
+        <PageShell className="print:m-0 print:w-full print:max-w-none print:p-0">
+          <div className="grid gap-5 lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:gap-6 xl:gap-5 print:block print:w-full print:gap-0">
+            <div className="hidden lg:block print:hidden">
+              <DashboardSidebar
+                name={name}
+                email={profile?.email ?? null}
+                avatarUrl={profile?.avatarUrl ?? null}
+              />
+            </div>
+            <div className="min-w-0 print:w-full">
+              {/*
+                Phone-only "My Account" card above each dashboard page. The
+                dashboard home renders it itself, under its welcome banner.
+              */}
+              <MyAccountNavSlot />
+              <div>{children}</div>
+            </div>
           </div>
         </PageShell>
       </main>
-      <SiteFooter />
+
+      {/* Footer for mobile and desktop */}
+      <div className="print:hidden">
+        <SiteFooter />
+      </div>
     </div>
   );
 }

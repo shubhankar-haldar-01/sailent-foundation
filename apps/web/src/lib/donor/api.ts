@@ -79,7 +79,14 @@ function ensureTrailingSlash(value: string): string {
 
 export interface Paginated<T> {
   items: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number; hasNext: boolean };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious?: boolean;
+  };
 }
 
 export interface DonorProfile {
@@ -88,6 +95,7 @@ export interface DonorProfile {
   firstName: string | null;
   lastName: string | null;
   email: string | null;
+  avatarUrl?: string | null;
   phone: string | null;
   taxIdType: string | null;
   /** Phase 12: the API never returns the full number to the donor — `XXXXXX234F`. */
@@ -119,6 +127,8 @@ export interface DonorDonation {
   campaignId: string | null;
   campaignTitle: string | null;
   campaignSlug: string | null;
+  campaignCategory?: string | null;
+  campaignCoverImage?: string | null;
   receiptId: string | null;
   receiptNumber: string | null;
 }

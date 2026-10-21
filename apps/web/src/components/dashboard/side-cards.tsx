@@ -64,7 +64,11 @@ export function ProfileCard({ profile }: { profile: DonorProfile }) {
         </div>
 
         <div className="mt-6 flex items-center gap-3.5">
-          <DonorAvatar name={name} className="size-[3.625rem] text-[1.0625rem]" />
+          <DonorAvatar
+            src={profile.avatarUrl}
+            name={name}
+            className="size-[3.625rem] text-[1.0625rem]"
+          />
           <div className="min-w-0">
             <p className="font-display text-foreground truncate text-[0.9375rem] font-bold">
               {name || 'Your account'}
@@ -133,7 +137,7 @@ export function ExploreCard() {
   return (
     <section
       aria-labelledby="explore-heading"
-      className="dark:bg-primary-soft bg-(--cta-50) relative overflow-hidden rounded-2xl p-5 pb-8 sm:p-[1.375rem] sm:pb-9"
+      className="dark:bg-surface dark:border-border border-border-card bg-surface-warm relative overflow-hidden rounded-2xl border p-5 pb-8 sm:p-[1.375rem] sm:pb-9"
     >
       <ExploreLeaves className="absolute bottom-0 right-0 h-[7.25rem] w-auto dark:opacity-60" />
       <div className="relative">

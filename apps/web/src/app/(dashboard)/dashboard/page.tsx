@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { DashboardHero } from '@/components/dashboard/dashboard-hero';
+import { MyAccountNavCard } from '@/components/dashboard/my-account-nav-card';
 import { RecentPayments } from '@/components/dashboard/recent-payments';
 import {
   ExploreCard,
@@ -9,6 +10,7 @@ import {
   ProfileCard,
 } from '@/components/dashboard/side-cards';
 import { StatCards } from '@/components/dashboard/stat-cards';
+import { StayConnectedCard } from '@/components/dashboard/stay-connected-card';
 import { DASHBOARD_ROWS } from '@/components/dashboard/fit';
 import { SupportedCampaigns } from '@/components/dashboard/supported-campaigns';
 import { toMedia } from '@/lib/content/source';
@@ -62,13 +64,29 @@ export default async function DashboardPage() {
 
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_18.5rem] xl:gap-5">
-      <div className="min-w-0 space-y-5 xl:space-y-3">
+      <div className="flex min-w-0 flex-col gap-5 xl:gap-4">
+        {/* Welcome Greeting: MY ACCOUNT / Dashboard , [FirstName] */}
         <DashboardHero firstName={profile.firstName?.trim() || null} />
+
+        {/*
+          Phone only: the "My Account" card comes AFTER the welcome banner on
+          this page (owner, 2026-10-17). The layout leaves it out here.
+        */}
+        <MyAccountNavCard className="lg:hidden" />
+
+        {/* 3. Core Stat Cards: Total Donations & Campaigns Supported */}
         <StatCards impact={impact} />
+
+        {/* 4. Recent Successful Payments */}
         <RecentPayments donations={recentDonations} />
+
+        {/* 5. Continue your impact campaigns */}
         <SupportedCampaigns campaigns={campaigns} />
+
+        {/* 6. Stay Connected / Updates in Inbox (bottom card) */}
+        <StayConnectedCard />
       </div>
-      <div className="space-y-5 xl:space-y-3">
+      <div className="hidden space-y-5 xl:block xl:space-y-4">
         <ProfileCard profile={profile} />
         <ImpactCard />
         <ExploreCard />

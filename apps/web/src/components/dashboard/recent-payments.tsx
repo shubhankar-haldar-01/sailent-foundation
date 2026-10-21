@@ -5,10 +5,9 @@ import { cn, formatCurrency } from '@sailent/ui';
 
 import type { DonorDonation } from '@/lib/donor/api';
 
-import { EmptyState } from './empty-state';
 import { fitRow } from './fit';
 import { formatDayMonthYear } from './format';
-import { Panel, PanelHeader } from './panel';
+import { Panel } from './panel';
 import { StatusPill } from './status-pill';
 
 /**
@@ -25,23 +24,32 @@ export function RecentPayments({ donations }: { donations: DonorDonation[] }) {
   return (
     <Panel className="p-5 sm:p-6 xl:p-[1.125rem]">
       <section aria-labelledby="payments-heading">
-        <PanelHeader
-          id="payments-heading"
-          title="Recent Payments"
-          action={
-            donations.length > 0 ? (
-              <PanelLink href="/dashboard/donations">View All Payments</PanelLink>
-            ) : null
-          }
-        />
+        <div className="flex items-center justify-between">
+          <div>
+            <h2
+              id="payments-heading"
+              className="font-display text-foreground text-lg font-bold sm:text-xl"
+            >
+              Recent Successful Payments
+            </h2>
+            <p className="text-muted-foreground text-xs font-normal sm:text-sm">
+              {donations.length} {donations.length === 1 ? 'Payment' : 'Payments'}
+            </p>
+          </div>
+          {donations.length > 0 ? (
+            <PanelLink href="/dashboard/donations">View All Payments</PanelLink>
+          ) : null}
+        </div>
 
         {donations.length === 0 ? (
-          <EmptyState
-            className="mt-5 xl:mt-3"
-            title="No payments yet"
-            description="Your successful donations will appear here."
-            action={{ label: 'Explore Campaigns', href: '/campaigns' }}
-          />
+          <div className="mt-4 space-y-4">
+            <div className="border-border/70 bg-muted/30 text-muted-foreground flex min-h-[5.5rem] items-center justify-center rounded-2xl border p-5 text-center text-xs font-medium sm:text-sm">
+              No Payments Found For This Selection.
+            </div>
+            <div>
+              <PanelLink href="/dashboard/donations">View All Payments</PanelLink>
+            </div>
+          </div>
         ) : (
           <>
             {/* From `md`: the table. */}

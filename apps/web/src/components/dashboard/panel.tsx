@@ -1,17 +1,25 @@
 import { cn } from '@sailent/ui';
 
+export interface PanelProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'flat' | 'standard' | 'elevated' | 'interactive' | 'featured';
+}
+
 /**
- * The dashboard's card: white, softly rounded, a thin border and a faint
- * shadow — one shape for every panel on the page, so the sidebar, the hero's
- * neighbours and the right-hand column all read as one system.
+ * The dashboard's card: integrated into the global elevation system with
+ * subtle warm border, soft low-opacity layered shadows, and rounded-2xl geometry.
  */
-export function Panel({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function Panel({ className, variant = 'standard', ...props }: PanelProps) {
+  const variantClass = {
+    flat: 'card-flat',
+    standard: 'card-standard',
+    elevated: 'card-elevated',
+    interactive: 'card-interactive',
+    featured: 'card-featured',
+  }[variant];
+
   return (
     <div
-      className={cn(
-        'border-border/60 bg-surface text-surface-foreground rounded-2xl border shadow-[0_10px_30px_-24px_rgb(15_23_42/0.35)]',
-        className,
-      )}
+      className={cn('text-surface-foreground rounded-2xl', variantClass, className)}
       {...props}
     />
   );

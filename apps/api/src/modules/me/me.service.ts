@@ -1,7 +1,22 @@
 import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, desc, eq, gt, gte, inArray, isNull, lte, ne, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  gte,
+  ilike,
+  inArray,
+  isNull,
+  lte,
+  ne,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 
 import {
   campaigns,
@@ -26,6 +41,7 @@ import {
   ConflictException,
   NotFoundException,
   RateLimitException,
+  ServiceUnavailableException,
   UnauthenticatedException,
   ValidationException,
 } from '../../common/exceptions.js';
@@ -40,6 +56,10 @@ import {
   type PaginatedResult,
   type PaginationQuery,
 } from '../../common/dto/pagination.dto.js';
+import { StorageService } from '../storage/storage.service.js';
+import { inspectImage, UnsupportedImageError } from '../storage/image-inspection.js';
+import { stripImageMetadata } from '../storage/strip-metadata.js';
+import { MAX_INLINE_AVATAR_BYTES, inlineAvatarUrl, servableAvatarUrl } from './avatar.js';
 import type { MyDonationsQuery, UpdateProfileInput, UpdateSettingsInput } from './dto/me.dto.js';
 
 interface ActorContext {
@@ -86,6 +106,7 @@ export class MeService {
     private readonly encryption: FieldEncryptionService,
     private readonly queue: QueueService,
     private readonly config: AppConfig,
+    private readonly storage: StorageService,
   ) {}
 
   // -------------------------------------------------------------------------
@@ -105,6 +126,7 @@ export class MeService {
     const { taxIdNumber, ...row } = await this.profileRow(donorId);
     return {
       ...row,
+      avatarUrl: servableAvatarUrl(row.avatarUrl),
       hasTaxId: Boolean(taxIdNumber),
       taxIdNumberMasked: taxIdNumber
         ? maskTaxId(this.encryption.decrypt(taxIdNumber, TAX_ID_CONTEXT))
@@ -120,6 +142,7 @@ export class MeService {
         firstName: donors.firstName,
         lastName: donors.lastName,
         email: donors.email,
+        avatarUrl: donors.avatarUrl,
         phone: donors.phone,
         donorType: donors.donorType,
         taxIdType: donors.taxIdType,
@@ -206,6 +229,118 @@ export class MeService {
     });
 
     return this.profile(donorId);
+  }
+
+  /**
+   * Upload a donor profile picture.
+   *
+   * Validates file size (max 5 MB) and sniffs magic bytes (JPEG, PNG, WebP).
+   * Strips EXIF metadata before storage.
+   */
+  async uploadAvatar(
+    donorId: string,
+    file: { buffer: Buffer; mimetype?: string },
+    context: ActorContext,
+  ) {
+    if (!file || !file.buffer || file.buffer.byteLength === 0) {
+      throw new ValidationException([
+        { code: 'required', field: 'file', message: 'Choose an image to upload.' },
+      ]);
+    }
+
+    const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+    if (file.buffer.byteLength > MAX_AVATAR_BYTES) {
+      throw new ValidationException([
+        {
+          code: 'file_too_large',
+          field: 'file',
+          message: 'That file is larger than 5MB.',
+        },
+      ]);
+    }
+
+    let inspected;
+    try {
+      inspected = inspectImage(file.buffer, file.mimetype);
+    } catch (error) {
+      if (error instanceof UnsupportedImageError) {
+        throw new ValidationException(
+          [{ code: 'unsupported_type', field: 'file', message: error.message }],
+          'That file cannot be uploaded.',
+        );
+      }
+      throw error;
+    }
+
+    const stripped = stripImageMetadata(file.buffer, inspected.mimeType).bytes;
+    let url: string;
+
+    if (this.storage.isConfigured) {
+      const key = this.storage.buildKey({ prefix: 'donor-avatars', mimeType: inspected.mimeType });
+      await this.storage.put('public', key, stripped, inspected.mimeType);
+      const publicUrl = this.storage.publicUrl(key);
+      if (!publicUrl) throw new ConflictException('Could not generate public URL for avatar');
+      url = publicUrl;
+    } else if (this.config.isProduction) {
+      // Production keeps photos in the object store; the database is not a
+      // stand-in for it. Refused before anything is written.
+      throw new ServiceUnavailableException(
+        'Photo storage is not configured on this server, so the photo was not saved. Nothing was changed.',
+      );
+    } else {
+      // No object store (a development machine): the photo is kept inline,
+      // and every `GET /me` carries it — so it has to be small.
+      if (stripped.byteLength > MAX_INLINE_AVATAR_BYTES) {
+        throw new ValidationException(
+          [
+            {
+              code: 'file_too_large',
+              field: 'file',
+              message: `Without photo storage on this server, a profile photo can be at most ${MAX_INLINE_AVATAR_BYTES / 1024} KB.`,
+            },
+          ],
+          'That file is too large to store here.',
+        );
+      }
+      url = inlineAvatarUrl(inspected.mimeType, stripped);
+    }
+
+    await this.database.db
+      .update(donors)
+      .set({ avatarUrl: url, updatedAt: new Date() })
+      .where(eq(donors.id, donorId));
+
+    await this.audit.record({
+      action: 'donor.avatar_updated',
+      entityType: 'donor',
+      entityId: donorId,
+      actorType: 'donor',
+      userId: donorId,
+      ...context,
+    });
+
+    return { avatarUrl: url };
+  }
+
+  /**
+   * Remove the donor profile picture, reverting to default initials.
+   */
+  async removeAvatar(donorId: string, context: ActorContext) {
+    await this.database.db
+      .update(donors)
+      .set({ avatarUrl: null, updatedAt: new Date() })
+      .where(eq(donors.id, donorId));
+
+    await this.audit.record({
+      action: 'donor.avatar_removed',
+      entityType: 'donor',
+      entityId: donorId,
+      actorType: 'donor',
+      userId: donorId,
+      ...context,
+    });
+
+    return { avatarUrl: null };
   }
 
   // -------------------------------------------------------------------------
@@ -495,13 +630,46 @@ export class MeService {
     if (query.campaignId) filters.push(eq(donations.campaignId, query.campaignId));
     if (query.from) filters.push(gte(donations.donationDate, query.from));
     if (query.to) filters.push(lte(donations.donationDate, query.to));
+    if (query.q) {
+      filters.push(
+        or(
+          ilike(donations.reference, `%${query.q.trim()}%`),
+          ilike(campaigns.title, `%${query.q.trim()}%`),
+        )!,
+      );
+    }
 
     const where = and(...filters);
 
     const totalRows = await this.database.db
       .select({ total: sql<number>`count(*)::int` })
       .from(donations)
+      .leftJoin(campaigns, eq(campaigns.id, donations.campaignId))
       .where(where);
+
+    let orderByClause: SQL = desc(donations.donationDate);
+    if (query.sort) {
+      switch (query.sort) {
+        case 'donationDate':
+        case 'date':
+        case 'createdAt':
+          orderByClause = asc(donations.donationDate);
+          break;
+        case '-donationDate':
+        case '-date':
+        case '-createdAt':
+          orderByClause = desc(donations.donationDate);
+          break;
+        case 'amount':
+          orderByClause = asc(donations.amount);
+          break;
+        case '-amount':
+          orderByClause = desc(donations.amount);
+          break;
+        default:
+          orderByClause = desc(donations.donationDate);
+      }
+    }
 
     const rows = await this.database.db
       .select({
@@ -516,6 +684,8 @@ export class MeService {
         campaignId: donations.campaignId,
         campaignTitle: campaigns.title,
         campaignSlug: campaigns.slug,
+        campaignCategory: campaigns.category,
+        campaignCoverImage: campaigns.coverImage,
         receiptId: donations.receiptId,
         receiptNumber: receipts.receiptNumber,
       })
@@ -523,7 +693,7 @@ export class MeService {
       .leftJoin(campaigns, eq(campaigns.id, donations.campaignId))
       .leftJoin(receipts, eq(receipts.id, donations.receiptId))
       .where(where)
-      .orderBy(desc(donations.donationDate))
+      .orderBy(orderByClause)
       .limit(query.limit)
       .offset(offsetFor(query.page, query.limit));
 
@@ -556,6 +726,7 @@ export class MeService {
         campaignId: donations.campaignId,
         campaignTitle: campaigns.title,
         campaignSlug: campaigns.slug,
+        campaignCategory: campaigns.category,
         receiptId: donations.receiptId,
         receiptNumber: receipts.receiptNumber,
       })

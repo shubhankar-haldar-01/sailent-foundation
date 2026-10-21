@@ -1,9 +1,11 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
+import { deflateSync } from 'node:zlib';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { sql } from 'drizzle-orm';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { AppConfig } from '../src/config/app.config.js';
 import { DATABASE } from '../src/modules/database/database.module.js';
 import { AdminDonorsService } from '../src/modules/donors/admin-donors.service.js';
 import {
@@ -13,6 +15,7 @@ import {
   createTestApp,
   devTotpCode,
   errorCode,
+  fakeStorage,
   type Envelope,
 } from './harness.js';
 
@@ -50,6 +53,50 @@ interface Fixture {
  * numbers remain because a donor record still carries one — it is contact
  * detail now rather than identity.
  */
+
+/** CRC-32 as PNG uses it, so the test images below are well-formed files. */
+function crc32(bytes: Buffer): number {
+  let crc = ~0;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return ~crc >>> 0;
+}
+
+function pngChunk(type: string, data: Buffer): Buffer {
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length);
+  const body = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(body));
+  return Buffer.concat([length, body, crc]);
+}
+
+/**
+ * A real PNG of random pixels. Noise does not compress, so the file is about
+ * `width × height × 3` bytes — which is how a test gets a valid image of a
+ * known size without shipping one.
+ */
+function noisyPng(width: number, height: number): Buffer {
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header[8] = 8; // bit depth
+  header[9] = 2; // RGB
+  const rows: Buffer[] = [];
+  for (let y = 0; y < height; y += 1)
+    rows.push(Buffer.concat([Buffer.from([0]), randomBytes(width * 3)]));
+  return Buffer.concat([
+    Buffer.from('89504e470d0a1a0a', 'hex'),
+    pngChunk('IHDR', header),
+    pngChunk('IDAT', deflateSync(Buffer.concat(rows))),
+    pngChunk('IEND', Buffer.alloc(0)),
+  ]);
+}
+
+const TINY_PNG = noisyPng(2, 2);
+
 const ALICE = { email: 'alice-me-spec@example.test', phone: '9811177001' };
 const BOB = { email: 'bob-me-spec@example.test', phone: '9811177002' };
 
@@ -411,6 +458,46 @@ describe('Donor account (integration)', () => {
       // The flag is there; the number is not.
       expect(row.new_values as string).toContain('taxIdOnFile');
       expect(row.new_values as string).not.toContain('ABCDE1234F');
+    });
+
+    it('uploads a valid profile picture and updates avatar_url', async () => {
+      // 1x1 transparent PNG
+      const pngBuffer = Buffer.from(
+        '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000a49444154789c63000100000500010d0a2d420000000049454e44ae426082',
+        'hex',
+      );
+
+      const response = await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .set(auth(alice.token))
+        .attach('file', pngBuffer, 'avatar.png')
+        .expect(200);
+
+      const body = (response.body as Envelope<{ avatarUrl: string }>).data!;
+      expect(body.avatarUrl).toBeTruthy();
+
+      const profile = await request(server).get(`${PREFIX}/me`).set(auth(alice.token)).expect(200);
+
+      expect((profile.body as Envelope<{ avatarUrl: string }>).data!.avatarUrl).toBe(
+        body.avatarUrl,
+      );
+    });
+
+    it('removes a profile picture and reverts avatar_url to null', async () => {
+      await request(server).delete(`${PREFIX}/me/avatar`).set(auth(alice.token)).expect(200);
+
+      const profile = await request(server).get(`${PREFIX}/me`).set(auth(alice.token)).expect(200);
+
+      expect((profile.body as Envelope<{ avatarUrl: string | null }>).data!.avatarUrl).toBeNull();
+    });
+
+    it('refuses invalid file format for avatar', async () => {
+      const response = await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .set(auth(alice.token))
+        .attach('file', Buffer.from('not an image'), 'not-image.txt');
+
+      expect(response.status).toBe(422);
     });
   });
 
@@ -822,6 +909,300 @@ describe('Donor account (integration)', () => {
 
       await db().execute(
         sql`DELETE FROM otp_codes WHERE identifier = 'unknown-me-spec@example.test'`,
+      );
+    });
+  });
+
+  // =========================================================================
+  /**
+   * The profile photo: one writer, small values, nothing arbitrary.
+   *
+   * `POST /me/avatar` is the only way a photo is set, and the value it stores
+   * is one it built itself. These are the refusals around it — the wrong
+   * caller, the wrong file, too much of it — and the check every read makes on
+   * whatever the column already holds (`src/modules/me/avatar.ts`).
+   */
+  describe('the profile photo', () => {
+    const storedAvatar = async (donorId: string) =>
+      (await db().execute(sql`SELECT avatar_url FROM donors WHERE id = ${donorId}::uuid`)).rows![0]!
+        .avatar_url as string | null;
+
+    afterAll(async () => {
+      await db().execute(
+        sql`UPDATE donors SET avatar_url = NULL WHERE id = ${alice.donorId}::uuid`,
+      );
+    });
+
+    it('refuses the photo routes without a session, and to a staff token', async () => {
+      await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .attach('file', TINY_PNG, 'a.png')
+        .expect(401);
+      await request(server).delete(`${PREFIX}/me/avatar`).expect(401);
+      await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .set(auth(staffToken))
+        .attach('file', TINY_PNG, 'a.png')
+        .expect(401);
+    });
+
+    it('refuses an upload with no file, or an empty one', async () => {
+      const none = await request(server).post(`${PREFIX}/me/avatar`).set(auth(alice.token));
+      expect(none.status).toBe(422);
+
+      const empty = await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .set(auth(alice.token))
+        .attach('file', Buffer.alloc(0), 'empty.png');
+      expect(empty.status).toBe(422);
+    });
+
+    it('refuses a script that claims to be a PNG, and an SVG', async () => {
+      const script = await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .set(auth(alice.token))
+        .attach('file', Buffer.from('#!/bin/sh\nrm -rf /\n'), {
+          filename: 'evil.png',
+          contentType: 'image/png',
+        });
+      expect(script.status).toBe(422);
+
+      const svg = await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .set(auth(alice.token))
+        .attach(
+          'file',
+          Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'),
+          { filename: 'x.svg', contentType: 'image/svg+xml' },
+        );
+      expect(svg.status).toBe(422);
+      expect(await storedAvatar(alice.donorId)).toBeNull();
+    });
+
+    it('refuses a file over 5 MB as too large, without storing anything', async () => {
+      const response = await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .set(auth(alice.token))
+        .attach('file', Buffer.alloc(5 * 1024 * 1024 + 1, 1), 'big.png');
+
+      expect(response.status).toBe(413);
+      expect(await storedAvatar(alice.donorId)).toBeNull();
+    });
+
+    it('keeps an inline photo small when there is no object store', async () => {
+      // Valid, and larger than the inline cap once stripped (about 270 KB).
+      const response = await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .set(auth(alice.token))
+        .attach('file', noisyPng(300, 300), 'large.png');
+
+      expect(response.status).toBe(422);
+      expect(JSON.stringify(response.body)).toMatch(/at most 256 KB/);
+      expect(await storedAvatar(alice.donorId)).toBeNull();
+    });
+
+    it('stores a small photo inline when there is no object store, and serves it', async () => {
+      const response = await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .set(auth(alice.token))
+        .attach('file', TINY_PNG, 'small.png')
+        .expect(200);
+
+      const url = (response.body as Envelope<{ avatarUrl: string }>).data!.avatarUrl;
+      expect(url).toMatch(/^data:image\/png;base64,/);
+      const profile = await request(server).get(`${PREFIX}/me`).set(auth(alice.token)).expect(200);
+      expect((profile.body as Envelope<{ avatarUrl: string }>).data!.avatarUrl).toBe(url);
+    });
+
+    it('refuses to store a photo inline in production, and changes nothing', async () => {
+      const before = await storedAvatar(alice.donorId);
+      const production = vi.spyOn(app.get(AppConfig), 'isProduction', 'get').mockReturnValue(true);
+      try {
+        const response = await request(server)
+          .post(`${PREFIX}/me/avatar`)
+          .set(auth(alice.token))
+          .attach('file', noisyPng(4, 4), 'other.png');
+        expect(response.status).toBe(503);
+      } finally {
+        production.mockRestore();
+      }
+      expect(await storedAvatar(alice.donorId)).toBe(before);
+    });
+
+    it('does not accept a photo through PATCH /me', async () => {
+      const before = await storedAvatar(alice.donorId);
+      const response = await request(server)
+        .patch(`${PREFIX}/me`)
+        .set(auth(alice.token))
+        .send({ avatarUrl: `https://example.test/${'x'.repeat(10_000)}.png` });
+
+      expect(response.status).toBe(422);
+      expect(await storedAvatar(alice.donorId)).toBe(before);
+    });
+
+    it('serves no photo for a stored value that is not a safe, small URL', async () => {
+      const unsafe = [
+        'javascript:alert(1)',
+        `https://example.test/${'x'.repeat(3000)}.png`,
+        'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
+        `data:image/png;base64,${'A'.repeat(400_000)}`,
+        'not a url at all',
+      ];
+      for (const value of unsafe) {
+        await db().execute(
+          sql`UPDATE donors SET avatar_url = ${value} WHERE id = ${alice.donorId}::uuid`,
+        );
+        const profile = await request(server)
+          .get(`${PREFIX}/me`)
+          .set(auth(alice.token))
+          .expect(200);
+        expect((profile.body as Envelope<{ avatarUrl: string | null }>).data!.avatarUrl).toBeNull();
+      }
+
+      const safe = 'https://media.example.test/donor-avatars/a.webp';
+      await db().execute(
+        sql`UPDATE donors SET avatar_url = ${safe} WHERE id = ${alice.donorId}::uuid`,
+      );
+      const profile = await request(server).get(`${PREFIX}/me`).set(auth(alice.token)).expect(200);
+      expect((profile.body as Envelope<{ avatarUrl: string }>).data!.avatarUrl).toBe(safe);
+    });
+
+    it('lets one donor change only their own photo', async () => {
+      await db().execute(sql`UPDATE donors SET avatar_url = NULL WHERE id = ${bob.donorId}::uuid`);
+      await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .set(auth(alice.token))
+        .attach('file', TINY_PNG, 'mine.png')
+        .expect(200);
+      await request(server).delete(`${PREFIX}/me/avatar`).set(auth(alice.token)).expect(200);
+      expect(await storedAvatar(bob.donorId)).toBeNull();
+    });
+
+    describe('with an object store', () => {
+      let storedApp: INestApplication;
+      let storage: ReturnType<typeof fakeStorage>;
+
+      beforeAll(async () => {
+        storage = fakeStorage();
+        storedApp = await createTestApp({ storage });
+      }, 60_000);
+
+      afterAll(async () => {
+        await storedApp.close();
+      });
+
+      it('puts the stripped photo in the public bucket and stores only its URL', async () => {
+        const response = await request(storedApp.getHttpServer())
+          .post(`${PREFIX}/me/avatar`)
+          .set(auth(alice.token))
+          .attach('file', noisyPng(300, 300), 'large-but-stored.png')
+          .expect(200);
+
+        const url = (response.body as Envelope<{ avatarUrl: string }>).data!.avatarUrl;
+        expect(url).toMatch(/^https?:\/\//);
+        expect(url).toContain('donor-avatars');
+        expect(url.length).toBeLessThan(2048);
+        expect(await storedAvatar(alice.donorId)).toBe(url);
+      });
+    });
+  });
+
+  // =========================================================================
+  /**
+   * Reading a donation writes nothing — decision A6.
+   *
+   * A receipt is issued in exactly one place: the payment-capture transaction,
+   * which numbers it from the gapless book, dates it, and records the payment
+   * reference. A successful donation WITHOUT a receipt is a row that capture
+   * never touched (seed or hand-made data), and the donor's own routes must
+   * report it as having none rather than mint a number for it on a GET.
+   */
+  describe('reading a donation writes nothing (decision A6)', () => {
+    let receiptless: string;
+    let pending: string;
+
+    const receiptsFor = async (donationId: string) =>
+      (
+        await db().execute(
+          sql`SELECT count(*)::int AS n FROM receipts WHERE donation_id = ${donationId}::uuid`,
+        )
+      ).rows![0]!.n as number;
+
+    beforeAll(async () => {
+      const made = await db().execute(sql`
+        INSERT INTO donations (reference, donor_id, campaign_id, amount, status, donation_type, completed_at)
+        VALUES ('DON-TEST-NORCPT', ${alice.donorId}::uuid, ${campaignId}::uuid, 50000, 'successful', 'custom', now()),
+               ('DON-TEST-PENDNG', ${alice.donorId}::uuid, ${campaignId}::uuid, 50000, 'pending', 'custom', NULL)
+        RETURNING id, status
+      `);
+      const rows = made.rows as { id: string; status: string }[];
+      receiptless = rows.find((row) => row.status === 'successful')!.id;
+      pending = rows.find((row) => row.status === 'pending')!.id;
+    });
+
+    it('shows a successful donation without a receipt as having none, and issues none', async () => {
+      const response = await request(server)
+        .get(`${PREFIX}/me/donations/${receiptless}`)
+        .set(auth(alice.token))
+        .expect(200);
+
+      expect(
+        (response.body as Envelope<{ receiptNumber: string | null }>).data!.receiptNumber,
+      ).toBeNull();
+      expect(await receiptsFor(receiptless)).toBe(0);
+    });
+
+    it('answers the receipt route with 404 for it, and issues none', async () => {
+      const response = await request(server)
+        .get(`${PREFIX}/me/donations/${receiptless}/receipt`)
+        .set(auth(alice.token));
+
+      expect(response.status).toBe(404);
+      expect(await receiptsFor(receiptless)).toBe(0);
+    });
+
+    it('issues none under concurrent reads either', async () => {
+      const responses = await Promise.all(
+        Array.from({ length: 6 }, (_, index) =>
+          request(server)
+            .get(`${PREFIX}/me/donations/${receiptless}${index % 2 ? '/receipt' : ''}`)
+            .set(auth(alice.token)),
+        ),
+      );
+
+      expect(responses.map((response) => response.status).sort()).toEqual([
+        200, 200, 200, 404, 404, 404,
+      ]);
+      expect(await receiptsFor(receiptless)).toBe(0);
+    });
+
+    it('has no receipt for a pending donation', async () => {
+      await request(server)
+        .get(`${PREFIX}/me/donations/${pending}/receipt`)
+        .set(auth(alice.token))
+        .expect(404);
+      expect(await receiptsFor(pending)).toBe(0);
+    });
+
+    it('gives another donor 404 for both routes, and issues nothing', async () => {
+      await request(server)
+        .get(`${PREFIX}/me/donations/${receiptless}`)
+        .set(auth(bob.token))
+        .expect(404);
+      await request(server)
+        .get(`${PREFIX}/me/donations/${receiptless}/receipt`)
+        .set(auth(bob.token))
+        .expect(404);
+      expect(await receiptsFor(receiptless)).toBe(0);
+    });
+
+    it('still serves the receipt that capture issued', async () => {
+      const response = await request(server)
+        .get(`${PREFIX}/me/donations/${alice.donationId}/receipt`)
+        .set(auth(alice.token))
+        .expect(200);
+      expect((response.body as Envelope<{ receiptNumber: string }>).data!.receiptNumber).toMatch(
+        /^SFL-TEST-/,
       );
     });
   });
