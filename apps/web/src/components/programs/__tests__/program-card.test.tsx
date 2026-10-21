@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import type { Program } from '@/lib/mock/types';
 
 import { ProgramCard } from '../program-card';
+
+// `next/font` is a build-time loader that only Next can run; the class name is all the card needs.
+vi.mock('@/lib/fonts', () => ({ headingExtraBold: { className: 'font-heading-extrabold' } }));
 
 const base: Program = {
   slug: 'healthcare',

@@ -666,29 +666,73 @@ test.describe('journey: homepage → programs', () => {
 test.describe('programs listing', () => {
   const grid = (page: Page) => page.getByRole('list', { name: 'Programs' }).getByRole('listitem');
 
-  test('an area pill narrows the grid, and "All Programs" brings everything back', async ({
+  const categories = (page: Page) => page.getByRole('button', { name: 'All categories' });
+
+  test('a category narrows the grid, and "All categories" brings everything back', async ({
     page,
   }) => {
     await page.goto('/programs');
-    const pills = page.getByRole('navigation', { name: 'Filter programs by area' });
-    await expect(pills.getByRole('link', { name: 'All Programs' })).toHaveAttribute(
-      'aria-current',
-      'true',
-    );
+    // Nothing chosen yet: the category menu says so, and the count is the whole
+    // list (seven in the seed — more than the six cards of the first page).
+    await expect(categories(page)).toBeVisible();
+    const total = await grid(page).count();
+    expect(total).toBeGreaterThan(1);
+    const status = page.getByRole('status');
+    await expect(status).toHaveText(/^\d+ programs/);
+    const unfiltered = await status.textContent();
 
-    await pills.getByRole('link', { name: 'Healthcare' }).click();
+    await categories(page).click();
+    await page.getByRole('menuitem', { name: 'Healthcare' }).click();
     await page.waitForURL(/\/programs\?category=healthcare$/);
     await expect(grid(page)).toHaveCount(1);
     await expect(grid(page).first()).toContainText('Healthcare');
-    await expect(pills.getByRole('link', { name: 'Healthcare' })).toHaveAttribute(
+    await expect(status).toContainText('1 program');
+
+    // The menu now names the area in force, marks it inside, and still lists the rest.
+    const narrowed = page.getByRole('button', { name: 'Healthcare' });
+    await expect(narrowed).toBeVisible();
+    await narrowed.click();
+    const menu = page.getByRole('menu');
+    await expect(menu.getByRole('menuitem', { name: 'Healthcare' })).toHaveAttribute(
       'aria-current',
       'true',
     );
+    await expect(menu.getByRole('menuitem', { name: 'Environment' })).toBeVisible();
 
-    await pills.getByRole('link', { name: 'All Programs' }).click();
+    await menu.getByRole('menuitem', { name: 'All categories' }).click();
     await page.waitForURL(/\/programs$/);
     await expect(grid(page).first()).toBeVisible();
-    expect(await grid(page).count()).toBeGreaterThan(1);
+    expect(await grid(page).count()).toBe(total);
+    await expect(status).toHaveText(unfiltered ?? '');
+    await expect(categories(page)).toBeVisible();
+  });
+
+  test('search narrows by a word, keeps the area, and lifts when the box is emptied', async ({
+    page,
+  }) => {
+    await page.goto('/programs');
+    const box = page.getByRole('searchbox', { name: 'Search programs' });
+
+    // "clinic" is in one programme's description (Healthcare) and no other.
+    await box.fill('clinic');
+    await box.press('Enter');
+    await page.waitForURL(/\/programs\?q=clinic$/);
+    await expect(grid(page)).toHaveCount(1);
+    await expect(grid(page).first()).toContainText('Healthcare');
+    await expect(page.getByRole('status')).toContainText('1 program');
+
+    // A category keeps the search; the search keeps the category.
+    await categories(page).click();
+    await page.getByRole('menuitem', { name: 'Education' }).click();
+    await page.waitForURL(/\/programs\?category=education&q=clinic$/);
+    await expect(page.getByRole('status')).toContainText('0 programs');
+    await expect(page.getByText('No programs match')).toBeVisible();
+    await expect(box).toHaveValue('clinic');
+
+    await box.fill('');
+    await page.waitForURL(/\/programs\?category=education$/);
+    await expect(grid(page)).toHaveCount(1);
+    await expect(grid(page).first()).toContainText('Education');
   });
 
   test('"View More Programs" adds the rest below, then goes away', async ({ page }) => {

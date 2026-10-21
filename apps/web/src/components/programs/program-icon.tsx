@@ -17,7 +17,9 @@ import type { Program } from '@/lib/mock/types';
  * database without a matching icon fails to compile rather than rendering
  * nothing.
  */
-const ICONS: Record<Program['accentIcon'], typeof BookOpen> = {
+export type AccentIcon = Program['accentIcon'];
+
+const ICONS: Record<AccentIcon, typeof BookOpen> = {
   book: BookOpen,
   heart: HeartPulse,
   shield: Shield,
@@ -27,27 +29,40 @@ const ICONS: Record<Program['accentIcon'], typeof BookOpen> = {
   paw: PawPrint,
 };
 
+/** The icon component for a programme's `accentIcon`, for the toolbar's chips and menus. */
+export function accentIcon(accent: AccentIcon): typeof BookOpen {
+  return ICONS[accent] ?? Sprout;
+}
+
+export interface ProgramTone {
+  /** The soft disc behind the icon. */
+  disc: string;
+  /** The icon's own colour — also the chip icon, with no disc. */
+  ink: string;
+}
+
 /**
- * The disc's colour, by AREA — as the owner's programs design (2026-10-08)
- * draws them: Education, Disaster Relief and Animal Welfare in the brand's
- * soft orange, Healthcare blue, Women Empowerment purple, Environment green.
- * An area the design does not show falls back to the soft orange.
+ * The colours, by AREA — as the owner's programs design (2026-10-14) draws
+ * them: Education in the brand's soft orange, Healthcare blue, Child Welfare
+ * pink, Women Empowerment purple, Disaster Relief and Environment green,
+ * Animal Welfare amber. An area the design does not show falls back to the
+ * soft orange.
  *
  * These are the programme cards' own colours. The campaign cards keep their
  * approved category colours (`components/home/category-icon.tsx`).
  */
-const ORANGE = 'bg-primary/12 text-cta-glow';
-const TONES: Record<string, string> = {
+const ORANGE: ProgramTone = { disc: 'bg-cta/12', ink: 'text-cta-glow' };
+const TONES: Record<string, ProgramTone> = {
   education: ORANGE,
-  healthcare: 'bg-wash-blue text-wash-blue-ink',
-  childwelfare: 'bg-wash-pink text-wash-pink-ink',
-  womenempowerment: 'bg-wash-violet text-wash-violet-ink',
-  disasterrelief: ORANGE,
-  animalwelfare: ORANGE,
-  environment: 'bg-wash-mint text-wash-mint-ink',
+  healthcare: { disc: 'bg-wash-blue', ink: 'text-wash-blue-ink' },
+  childwelfare: { disc: 'bg-wash-pink', ink: 'text-wash-pink-ink' },
+  womenempowerment: { disc: 'bg-wash-violet', ink: 'text-wash-violet-ink' },
+  disasterrelief: { disc: 'bg-wash-mint', ink: 'text-wash-mint-ink' },
+  animalwelfare: { disc: 'bg-wash-amber', ink: 'text-wash-gold-ink' },
+  environment: { disc: 'bg-wash-mint', ink: 'text-wash-mint-ink' },
 };
 
-export function programTone(area: string | null | undefined): string {
+export function programTone(area: string | null | undefined): ProgramTone {
   return TONES[categoryKey(area)] ?? ORANGE;
 }
 
@@ -63,14 +78,16 @@ export function ProgramIcon({
   className?: string;
   iconClassName?: string;
 }) {
-  const Icon = ICONS[accent] ?? Sprout;
+  const Icon = accentIcon(accent);
+  const tone = programTone(area);
 
   return (
     <span
       aria-hidden="true"
       className={cn(
         'grid size-12 shrink-0 place-items-center rounded-full',
-        programTone(area),
+        tone.disc,
+        tone.ink,
         className,
       )}
     >

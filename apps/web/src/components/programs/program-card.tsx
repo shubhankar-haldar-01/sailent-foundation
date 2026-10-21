@@ -5,13 +5,22 @@ import { cn } from '@sailent/ui';
 
 import { MediaFrame } from '@/components/media/media-frame';
 import { ProgramIcon } from '@/components/programs/program-icon';
+import { headingExtraBold } from '@/lib/fonts';
 import type { Program } from '@/lib/mock/types';
 
 /**
- * Program card, matched to the owner's programs design (2026-10-08): the
- * photograph across the top, the area's icon on a white ring overlapping its
- * lower edge, then the name, the short description and the count of open
- * campaigns beside an arrow.
+ * Program card, matched to the owner's programs design (2026-10-14): a
+ * compact row — the photograph on the left, about two fifths of the card and
+ * as tall as the card; on the right the area's icon on a soft disc, the name,
+ * the short description, and the count of open campaigns beside an arrow.
+ *
+ * THE PHOTOGRAPH TAKES THE CARD'S HEIGHT, not a fixed shape, so the three
+ * cards in a row stay the same height whatever their descriptions run to
+ * (three lines at most). On a phone the row is too narrow for two columns,
+ * so the photograph goes on top, wide and short, and the text below it.
+ *
+ * The outline and shadow are the design's cool blue-grey rather than the
+ * shared `card-interactive` warm tint, so they are set here.
  *
  * THE WHOLE CARD IS ONE LINK. The name is the only anchor; its `::after`
  * stretches over the card, so a click anywhere lands on the program while a
@@ -34,51 +43,54 @@ export function ProgramCard({
   return (
     <article
       className={cn(
-        'border-border/70 bg-surface group relative flex h-full flex-col overflow-hidden rounded-2xl border',
-        'shadow-[0_10px_28px_-22px_rgb(15_23_42/0.35)]',
-        'duration-(--duration-base) ease-(--ease-out-soft) transition-[translate,box-shadow]',
-        'hover:shadow-[0_18px_36px_-22px_rgb(15_23_42/0.4)] motion-safe:hover:-translate-y-0.5',
+        'bg-surface border-accent-100 dark:border-border group relative flex h-full gap-4 rounded-xl border p-3.5 max-sm:flex-col sm:gap-6',
+        'shadow-[0_1px_2px_rgb(16_42_67/0.04),0_10px_24px_-14px_rgb(16_42_67/0.16)]',
+        'duration-(--duration-base) transition-[translate,box-shadow] hover:shadow-[0_2px_4px_rgb(16_42_67/0.05),0_18px_34px_-16px_rgb(16_42_67/0.24)] motion-safe:hover:-translate-y-0.5',
         'has-[a:focus-visible]:outline-ring has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2',
         className,
       )}
     >
+      {/* 16:9 across the top on a phone; from `sm`, a column as tall as the card. */}
       <MediaFrame
         media={program.cover}
-        aspect="landscape"
+        aspect="video"
         rounded={false}
         priority={imagePriority}
-        className="aspect-[12/7]"
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 440px"
+        className="w-full shrink-0 rounded-[0.625rem] sm:aspect-auto sm:min-h-[10.5rem] sm:w-[44%] sm:max-w-[12rem]"
+        sizes="(max-width: 30rem) 100vw, 12rem"
       />
 
-      <div className="relative flex flex-1 flex-col px-5 pb-5 sm:px-6 sm:pb-6">
-        {/* Half over the photograph, on a white ring — as the design draws it. */}
-        <span className="bg-surface relative -mt-8 inline-grid w-fit place-items-center rounded-full p-1 shadow-[0_6px_16px_-10px_rgb(15_23_42/0.4)]">
-          <ProgramIcon
-            accent={program.accentIcon}
-            area={program.category ?? program.name}
-            className="size-14"
-            iconClassName="size-6.5"
-          />
-        </span>
+      <div className="flex min-w-0 flex-1 flex-col sm:pt-1">
+        <ProgramIcon
+          accent={program.accentIcon}
+          area={program.category ?? program.name}
+          className="size-10"
+          iconClassName="size-5"
+        />
 
-        <h3 className="font-display text-foreground mt-3 text-[1.3125rem] font-semibold leading-snug tracking-[-0.01em] lg:text-[1.375rem]">
+        <h3
+          className={cn(
+            headingExtraBold.className,
+            'text-foreground mt-2.5 text-lg leading-tight tracking-[-0.015em]',
+          )}
+        >
           <Link
             href={`/programs/${program.slug}`}
-            className="group-hover:text-primary transition-colors after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none"
+            className="group-hover:text-primary transition-colors after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none"
           >
             {program.name}
           </Link>
         </h3>
 
         {description ? (
-          <p className="text-body text-muted-foreground mt-2 line-clamp-3 leading-relaxed lg:text-[1.0625rem]">
+          <p className="text-foreground/80 mt-1.5 line-clamp-3 text-sm leading-[1.5]">
             {description}
           </p>
         ) : null}
 
-        <div className="mt-auto flex items-center justify-between gap-3 pt-5">
-          <span className="text-muted-foreground text-[0.9375rem] font-medium lg:text-base">
+        {/* At the foot of the column, so the arrow sits in the card's corner whatever the description runs to. */}
+        <div className="mt-auto flex items-center justify-between gap-3 pt-2.5">
+          <span className="text-foreground/75 text-sm">
             {count > 0 ? (
               <>
                 <span data-numeric="">{count}</span> active {count === 1 ? 'campaign' : 'campaigns'}
@@ -89,10 +101,10 @@ export function ProgramCard({
           </span>
           <span
             aria-hidden="true"
-            className="bg-primary/10 text-cta-glow duration-(--duration-base) group-hover:bg-primary group-hover:text-primary-foreground grid size-10 shrink-0 place-items-center rounded-full transition-colors"
+            className="bg-cta/12 text-cta-glow duration-(--duration-base) group-hover:bg-primary group-hover:text-primary-foreground size-8.5 grid shrink-0 place-items-center rounded-full transition-colors"
           >
             <ArrowRight
-              className="size-[1.125rem] transition-transform motion-safe:group-hover:translate-x-0.5"
+              className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5"
               strokeWidth={2.2}
             />
           </span>
