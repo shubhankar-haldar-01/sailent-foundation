@@ -16,6 +16,40 @@ describe('Button', () => {
     expect(button).toBeDisabled();
     expect(button).toHaveTextContent('Donate');
   });
+
+  it('renders all standardized variants correctly', () => {
+    const { rerender } = render(<Button variant="primary">Primary</Button>);
+    expect(screen.getByRole('button')).toHaveClass('bg-primary', 'text-primary-foreground');
+
+    rerender(<Button variant="secondary">Secondary</Button>);
+    expect(screen.getByRole('button')).toHaveClass('border-info-action', 'text-info-action');
+
+    rerender(<Button variant="ghost">Ghost</Button>);
+    expect(screen.getByRole('button')).toHaveClass('bg-transparent');
+
+    rerender(<Button variant="dark">Dark</Button>);
+    expect(screen.getByRole('button')).toHaveClass('bg-accent-950', 'text-white');
+
+    rerender(<Button variant="destructive">Destructive</Button>);
+    expect(screen.getByRole('button')).toHaveClass('bg-destructive', 'text-destructive-foreground');
+
+    rerender(<Button variant="info">Info</Button>);
+    expect(screen.getByRole('button')).toHaveClass('bg-info-action', 'text-info-action-foreground');
+  });
+
+  it('renders sizes with consistent pill proportions', () => {
+    const { rerender } = render(<Button size="sm">Small</Button>);
+    expect(screen.getByRole('button')).toHaveClass('h-9', 'rounded-full');
+
+    rerender(<Button size="md">Medium</Button>);
+    expect(screen.getByRole('button')).toHaveClass('h-11', 'rounded-full');
+
+    rerender(<Button size="lg">Large</Button>);
+    expect(screen.getByRole('button')).toHaveClass('h-12', 'rounded-full');
+
+    rerender(<Button size="xl">Extra Large</Button>);
+    expect(screen.getByRole('button')).toHaveClass('h-14', 'rounded-full');
+  });
 });
 
 describe('ImpactStat — decision A14', () => {

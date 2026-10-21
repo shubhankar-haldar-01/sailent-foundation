@@ -2,23 +2,32 @@ import * as React from 'react';
 
 import { cn } from '../lib/cn';
 
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'flat' | 'standard' | 'elevated' | 'interactive' | 'featured';
+  interactive?: boolean;
+}
+
 /**
- * Card. Border-defined at rest, never shadowed — a grid of shadowed cards is
- * the strongest single signal of a template (docs/design-system.md §4).
+ * Card — foundational surface container with elevation variants:
+ *   • flat: visually quiet, no shadow
+ *   • standard: default subtle shadow and delicate border
+ *   • elevated: slightly deeper shadow for summary/featured containers
+ *   • interactive: card shadow with restrained hover elevation (-2.5px)
+ *   • featured: subtle warm ambient glow for genuinely featured content
  */
-export function Card({
-  className,
-  interactive,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement> & { interactive?: boolean }) {
+export function Card({ className, variant = 'standard', interactive, ...props }: CardProps) {
+  const effectiveVariant = interactive ? 'interactive' : variant;
+  const variantClass = {
+    flat: 'card-flat',
+    standard: 'card-standard',
+    elevated: 'card-elevated',
+    interactive: 'card-interactive',
+    featured: 'card-featured',
+  }[effectiveVariant];
+
   return (
     <div
-      className={cn(
-        'border-border bg-surface text-surface-foreground rounded-lg border',
-        interactive &&
-          'duration-(--duration-base) transition-shadow focus-within:shadow-md hover:shadow-md',
-        className,
-      )}
+      className={cn('text-surface-foreground rounded-2xl', variantClass, className)}
       {...props}
     />
   );

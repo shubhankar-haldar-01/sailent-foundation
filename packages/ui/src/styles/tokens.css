@@ -68,8 +68,8 @@
                               button-size text; the owner chose the navy
                               label over a darker orange.
        --cta-hover   #F57C3A  hover fill, navy label (5.46:1)
-       --cta-active  #C5531A  pressed fill, WHITE label (4.54:1) — navy on it
-                              is only 3.2:1
+       --cta-active  #B3450E  a darker fill for white text; not the button's
+                              pressed state (that is #EB6A1F, navy label)
        --cta-ink     #B74500  orange TEXT: eyebrows, active nav labels,
                               orange links. #EB6A1F as small text is about
                               3:1 on the off-white grounds; this shade of the
@@ -81,8 +81,11 @@
        --cta-light   #FFEFCC  light accent and icon washes
        --cta-soft    #FFF7ED  very light grounds, selected rows
 
-     If a future change needs white button labels, the fill has to be at
-     least #C5531A; that is a decision, not a tweak.
+     OWNER DECISION (2026-10-21, replacing 2026-10-14's white label): filled
+     orange buttons, pills and badges (`--primary`) use #EB6A1F with a NAVY
+     label, `--primary-foreground` #0F172A (5.62:1, WCAG AA). Hover is the
+     lighter #F07A33 (6.41:1) and pressed is #EB6A1F, so the label passes in
+     every state (`AGENTS.md` §11 item 12). Orange TEXT keeps `--cta-ink`.
      --------------------------------------------------------------------- */
   --cta-50: oklch(0.965 0.025 55);
   --cta-100: oklch(0.93 0.05 55);
@@ -92,7 +95,7 @@
   --cta-soft: oklch(0.98 0.016 73.7);
   --cta: oklch(0.6721 0.1784 45.43);
   --cta-hover: oklch(0.715 0.168 46.4);
-  --cta-active: oklch(0.582 0.16 42.9);
+  --cta-active: oklch(0.5337 0.155 41.74);
   --cta-ink: oklch(0.54 0.164 45.4);
   --cta-glow: var(--cta);
   /* Large display text only (3.18:1 on white). */
@@ -115,16 +118,14 @@
      SEMANTIC TOKENS — what components actually reference.
      No component ever contains a raw colour value.
      --------------------------------------------------------------------- */
-  /* A tinted page, navy ink. Owner decision (2026-10-08): the page is a
-     light blue-grey and the header is pure white (`--surface`), so the two
-     read as different surfaces — at `--neutral-50` they were the same. */
-  --background: oklch(0.958 0.016 245);
+  /* Default soft off-white background (#F7F9FC) for standard content sections
+     and page surfaces, creating cohesive contrast with pure white cards (--surface). */
+  --background: #f7f9fc;
   --foreground: var(--accent-950);
-  /* The warm cream behind the hero and the impact strip. */
-  --surface-warm: oklch(0.982 0.016 72);
-  /* The light blue band behind "Who we are". A step below `--background`,
-     so it still reads as a band now that the page itself is tinted. */
-  --surface-tint: oklch(0.94 0.028 250);
+  /* The warm cream (#FDF5EC) reserved for occasional warm sections (testimonials, CTA). */
+  --surface-warm: #fdf5ec;
+  /* The subtle tint band. */
+  --surface-tint: #f0f4f8;
 
   --surface: var(--neutral-0);
   --surface-foreground: var(--neutral-900);
@@ -153,18 +154,20 @@
   /**
    * PRIMARY IS ORANGE, because primary means "donate".
    *
-   * #EB6A1F (owner decision, 2026-10-07). The label on it is NAVY — white
-   * on #EB6A1F is 3.18:1 — except while pressed, on the darker #C5531A,
-   * where white reads at 4.54:1. `text-primary` is the darker `--primary-ink`
-   * (see `--text-color-primary` in @theme) so orange TEXT stays legible,
-   * while fills, borders and indicators use #EB6A1F itself. See the ORANGE
-   * block above for every measurement.
+   * Owner decision (2026-10-14): the fill is the brand orange #EB6A1F (--cta)
+   * with pure white text, as on the hero's Donate Now — 3.18:1, which the
+   * owner accepted below WCAG AA's 4.5:1 (`AGENTS.md` §11). It replaces the
+   * darker #C5531A everywhere. Hover darkens to #D45914 (4.01:1) and pressed
+   * to #B3450E (5.56:1). Small orange text on light grounds still uses
+   * --primary-ink (#B74500, >= 4.5:1).
    */
   --primary: var(--cta);
-  --primary-foreground: var(--accent-950);
-  --primary-hover: var(--cta-hover);
-  --primary-active: var(--cta-active);
-  --primary-active-foreground: var(--neutral-0);
+  /* Navy on the orange fill: 5.62:1 (owner, 2026-10-21; was white, 3.18:1). */
+  --primary-foreground: #0f172a;
+  /* Lighter on hover, so the navy label keeps its contrast (6.41:1). */
+  --primary-hover: #f07a33;
+  --primary-active: var(--cta);
+  --primary-active-foreground: #0f172a;
   --primary-ink: var(--cta-ink);
   --primary-light: var(--cta-light);
   --primary-soft: var(--cta-soft);
@@ -259,6 +262,21 @@
   /* Radius. Public defaults to `lg`. Nothing larger than 2xl —
      the pill-shaped-everything look is the template aesthetic we avoid. */
   --radius: 0.5rem;
+
+  /* ---------------------------------------------------------------------
+     Consistent Global Card Shadow & Elevation System
+     Inspired by Stories of Change & Upcoming Events.
+     --------------------------------------------------------------------- */
+  --border-card: #fbe8d8;
+  --transition-card: 200ms var(--ease-out-soft);
+
+  --shadow-card: 0 4px 12px rgba(20, 40, 60, 0.04), 0 12px 28px rgba(235, 106, 31, 0.06);
+
+  --shadow-card-hover: 0 8px 20px rgba(20, 40, 60, 0.07), 0 16px 36px rgba(235, 106, 31, 0.1);
+
+  --shadow-elevated: 0 4px 14px rgba(20, 40, 60, 0.04), 0 12px 32px rgba(20, 40, 60, 0.08);
+
+  --shadow-featured: 0 4px 12px rgba(20, 40, 60, 0.04), 0 14px 34px -8px rgba(235, 106, 31, 0.16);
 }
 
 /* -----------------------------------------------------------------------
@@ -308,14 +326,15 @@
   --border-strong: oklch(1 0 0 / 20%);
   --input: oklch(1 0 0 / 15%);
 
-  /* Orange still means action in dark mode, lifted so it reads on a dark
-     ground — contrast is measured against the surface behind it, not chosen
-     once and reused. */
-  --primary: var(--cta-glow);
-  --primary-foreground: var(--accent-950);
-  --primary-hover: var(--cta-300);
-  --primary-active: var(--cta-200);
-  --primary-active-foreground: var(--accent-950);
+  /* Orange still means action in dark mode: the same #EB6A1F fill and white
+     label as the light theme (owner decision, 2026-10-14). */
+  --primary: var(--cta);
+  /* Navy on the orange fill: 5.62:1 (owner, 2026-10-21; was white, 3.18:1). */
+  --primary-foreground: #0f172a;
+  /* Lighter on hover, so the navy label keeps its contrast (6.41:1). */
+  --primary-hover: #f07a33;
+  --primary-active: var(--cta);
+  --primary-active-foreground: #0f172a;
   /* Orange text on a dark ground is the light end of the scale. */
   --primary-ink: var(--cta-300);
   --primary-light: oklch(0.34 0.07 50);
@@ -379,6 +398,13 @@
   --info-subtle: oklch(0.28 0.05 250);
 
   --ring: var(--accent-400);
+
+  /* Elevation tokens in dark mode */
+  --border-card: oklch(1 0 0 / 12%);
+  --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-featured: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(235, 106, 31, 0.08);
 }
 
 /* =============================================================================
@@ -399,6 +425,7 @@
   --color-muted-foreground-strong: var(--muted-foreground-strong);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-border-card: var(--border-card);
   --color-input: var(--input);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
@@ -558,6 +585,10 @@
   --shadow-sm: 0 1px 2px 0 oklch(0 0 0 / 0.04);
   --shadow-md: 0 4px 12px -2px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.04);
   --shadow-lg: 0 12px 32px -8px oklch(0 0 0 / 0.12), 0 4px 8px -4px oklch(0 0 0 / 0.06);
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-featured: var(--shadow-featured);
 
   /* Breakpoints — mirrored in @sailent/config so JS and CSS agree. */
   --breakpoint-xs: 20rem; /* 320 */
@@ -783,6 +814,64 @@
       transform: none;
     }
   }
+}
+
+/**
+ * Card elevation variants.
+ *
+ *   • card-flat: Visually quiet sections, forms, and subtle rows.
+ *   • card-standard: Default subtle shadow and delicate border for standard cards.
+ *   • card-elevated: Slightly stronger shadow for featured/summary containers.
+ *   • card-interactive: Card shadow with restrained hover elevation (-2.5px).
+ *   • card-featured: Subtle warm ambient glow for genuinely featured content.
+ */
+@utility card-flat {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+@utility card-standard {
+  background-color: var(--surface);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-card);
+}
+
+@utility card-elevated {
+  background-color: var(--surface);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-elevated);
+}
+
+@utility card-interactive {
+  background-color: var(--surface);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--transition-card),
+    box-shadow var(--transition-card),
+    border-color var(--transition-card);
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2.5px);
+      box-shadow: var(--shadow-card-hover);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: box-shadow var(--transition-card);
+
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+@utility card-featured {
+  background-color: var(--surface);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-featured);
 }
 
 /**
