@@ -1,88 +1,140 @@
 import Link from 'next/link';
-import { Card, cn, formatDate } from '@sailent/ui';
+import { Calendar, Clock, ArrowRight } from 'lucide-react';
+
+import { cn } from '@sailent/ui';
 
 import { MediaFrame } from '@/components/media/media-frame';
 import type { BlogPostSummary } from '@/lib/content/blog';
 
+/** Formats a date into "15 Feb 2026" notation matching the design reference. */
+export function formatArticleDate(value: string | Date | null | undefined): string {
+  if (!value) return '';
+  const date = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Kolkata',
+  }).format(date);
+}
+
+export interface PostCardProps {
+  post: BlogPostSummary & { readingTime?: string | null };
+  featured?: boolean;
+  layout?: 'horizontal' | 'vertical';
+  className?: string;
+}
+
 /**
- * One article, on a listing.
+ * An individual blog article card.
  *
- * Takes a `BlogPostSummary` — a real record from the API. It used to take a
- * `BlogPost` from `@/lib/mock`, which described eight invented articles; that
- * file is gone, and with it the reason `/blog` carried a `noIndex`.
+ * In 'horizontal' layout (the default for the blog index):
+ * - Large landscape thumbnail on the left (rounded-xl)
+ * - Article info on the right: date, reading time if available, Manrope title, excerpt, "Read More →"
+ * - Warm cream surface when `featured={true}`
+ * - Clean white surface when `featured={false}`
  *
- * `MediaFrame` handles a missing image by falling back to a seeded
- * placeholder, so a post whose featured image was never set still lays out
- * correctly rather than collapsing the card.
+ * In 'vertical' layout:
+ * - Stacked layout for multi-column grids (such as "More from the blog" on article detail)
  */
 export function PostCard({
   post,
   featured = false,
+  layout = 'horizontal',
   className,
-}: {
-  post: BlogPostSummary;
-  featured?: boolean;
-  className?: string;
-}) {
+}: PostCardProps) {
+  const isHorizontal = layout === 'horizontal';
+
   return (
-    <Card
-      interactive
+    <article
       className={cn(
-        'group relative flex overflow-hidden',
-        featured ? 'flex-col lg:flex-row' : 'flex-col',
+        'group relative overflow-hidden rounded-2xl border transition-all duration-300',
+        featured
+          ? 'border-[#FCEBDC] bg-[#FFF9F4] shadow-[0_2px_12px_rgba(235,106,31,0.06)] hover:shadow-[0_4px_20px_rgba(235,106,31,0.12)]'
+          : 'shadow-xs border-slate-200/80 bg-white hover:border-slate-300/90 hover:shadow-md',
+        isHorizontal ? 'flex flex-col gap-5 p-4 sm:flex-row sm:p-5 lg:gap-6' : 'flex flex-col p-4',
         className,
       )}
     >
-      <div className={cn(featured && 'lg:w-1/2 lg:shrink-0')}>
+      {/* Thumbnail */}
+      <div
+        className={cn(
+          'relative shrink-0 overflow-hidden rounded-xl bg-slate-100',
+          isHorizontal
+            ? 'aspect-[16/11] w-full sm:aspect-[4/3] sm:w-[42%] lg:w-[40%]'
+            : 'aspect-[16/10] w-full',
+        )}
+      >
         <MediaFrame
           media={{
             seed: `blog-${post.slug}`,
             alt: post.featuredImageAlt ?? post.title,
             ...(post.featuredImageUrl ? { url: post.featuredImageUrl } : {}),
           }}
-          aspect="video"
+          aspect={isHorizontal ? 'photo' : 'video'}
           rounded={false}
-          className={cn(featured && 'lg:h-full')}
+          className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
 
+      {/* Information */}
       <div
-        className={cn('flex flex-1 flex-col gap-2 p-5', featured && 'lg:justify-center lg:p-10')}
+        className={cn(
+          'flex min-w-0 flex-1 flex-col',
+          isHorizontal ? 'justify-between py-0.5' : 'pt-3.5',
+        )}
       >
-        {post.categoryName ? (
-          <p className="text-overline tracking-(--text-overline--letter-spacing) text-primary uppercase">
-            {post.categoryName}
-          </p>
-        ) : null}
+        <div>
+          {/* Metadata: Date and Reading Time */}
+          <div className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-slate-500">
+            {post.publishedAt ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Calendar className="size-3.5 shrink-0 text-[#EB6A1F]" aria-hidden="true" />
+                <time dateTime={post.publishedAt}>{formatArticleDate(post.publishedAt)}</time>
+              </span>
+            ) : null}
 
-        <h2 className={cn('font-bold', featured ? 'text-h2' : 'text-h4')}>
-          {/*
-            The whole card is clickable through this stretched link, so there is
-            exactly one link in the accessibility tree rather than one per
-            element — a card with three links to the same place is three stops
-            for somebody tabbing through.
-          */}
-          <Link href={`/blog/${post.slug}`} className="after:absolute after:inset-0">
-            {post.title}
-          </Link>
-        </h2>
+            {/* Reading time only if available metadata exists */}
+            {post.readingTime ? (
+              <>
+                <span aria-hidden="true" className="mx-1 text-slate-300">
+                  |
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="size-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                  <span>{post.readingTime}</span>
+                </span>
+              </>
+            ) : null}
+          </div>
 
-        {post.excerpt ? (
-          <p
-            className={cn(
-              'text-muted-foreground',
-              featured ? 'text-body' : 'text-body-sm line-clamp-3',
-            )}
-          >
-            {post.excerpt}
-          </p>
-        ) : null}
+          {/* Heading */}
+          <h2 className="font-display group-hover:text-primary mt-2 line-clamp-2 text-lg font-bold leading-snug text-[#102A43] transition-colors sm:text-xl">
+            <Link href={`/blog/${post.slug}`} className="after:absolute after:inset-0">
+              {post.title}
+            </Link>
+          </h2>
 
-        <p className="text-caption text-muted-foreground mt-auto pt-2">
-          {post.authorName ? `${post.authorName} · ` : ''}
-          {post.publishedAt ? formatDate(post.publishedAt) : null}
-        </p>
+          {/* Excerpt */}
+          {post.excerpt ? (
+            <p className="mt-2.5 line-clamp-3 text-xs leading-relaxed text-slate-600 sm:text-sm">
+              {post.excerpt}
+            </p>
+          ) : null}
+        </div>
+
+        {/* Read More Link */}
+        <div className="mt-4 pt-3 sm:mt-auto">
+          <span className="text-primary inline-flex items-center gap-1.5 text-xs font-semibold transition-colors group-hover:text-[#D45914] sm:text-sm">
+            Read More
+            <ArrowRight
+              className="size-4 transition-transform group-hover:translate-x-1"
+              aria-hidden="true"
+            />
+          </span>
+        </div>
       </div>
-    </Card>
+    </article>
   );
 }

@@ -193,7 +193,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <h2 className="text-h3 mb-6 font-semibold">More from the blog</h2>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {post.related.map((related) => (
-                <PostCard key={related.slug} post={related} />
+                <PostCard key={related.slug} post={related} layout="vertical" />
               ))}
             </div>
           </PageShell>
