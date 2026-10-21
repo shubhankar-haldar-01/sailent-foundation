@@ -3,6 +3,7 @@ import 'server-only';
 import { API_PREFIX } from '@sailent/config';
 
 import { getAccessToken } from '@/lib/auth/session';
+import { requestForwardingHeaders } from '@/lib/api/forwarding';
 
 /**
  * Server-side admin API client.
@@ -46,6 +47,8 @@ export async function adminFetch<T>(
     method: options.method ?? 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
+      // Who the client is, vouched for — so rate limits are per client (Phase 11).
+      ...(await requestForwardingHeaders()),
       ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
     },
     ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),

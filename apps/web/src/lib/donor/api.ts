@@ -3,6 +3,7 @@ import 'server-only';
 import { API_PREFIX } from '@sailent/config';
 
 import { getDonorAccessToken } from '@/lib/auth/donor-session';
+import { requestForwardingHeaders } from '@/lib/api/forwarding';
 
 /**
  * Server-side donor API client.
@@ -48,6 +49,8 @@ export async function donorFetch<T>(
     method: options.method ?? 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
+      // Who the client is, vouched for — so rate limits are per client (Phase 11).
+      ...(await requestForwardingHeaders()),
       ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
     },
     ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
