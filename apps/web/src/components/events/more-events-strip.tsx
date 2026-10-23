@@ -52,7 +52,7 @@ export function MoreEventsStrip({ events, programsBySlug = {} }: MoreEventsStrip
             return (
               <article
                 key={item.id || item.slug}
-                className="shadow-xs group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition-all duration-300 hover:shadow-md"
+                className="card-interactive group flex flex-col overflow-hidden rounded-2xl dark:border-slate-800 dark:bg-slate-900"
               >
                 {/* Image + Date Badge */}
                 <div className="relative aspect-[16/10] overflow-hidden">

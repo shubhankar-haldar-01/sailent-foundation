@@ -49,10 +49,8 @@ export function PostCard({
   return (
     <article
       className={cn(
-        'group relative overflow-hidden rounded-2xl border transition-all duration-300',
-        featured
-          ? 'border-[#FCEBDC] bg-[#FFF9F4] shadow-[0_2px_12px_rgba(235,106,31,0.06)] hover:shadow-[0_4px_20px_rgba(235,106,31,0.12)]'
-          : 'shadow-xs border-slate-200/80 bg-white hover:border-slate-300/90 hover:shadow-md',
+        'card-interactive group relative overflow-hidden rounded-2xl dark:border-slate-800 dark:bg-slate-900',
+        featured ? 'border-[#FCEBDC] bg-[#FFF9F4]' : 'bg-white',
         isHorizontal ? 'flex flex-col gap-5 p-4 sm:flex-row sm:p-5 lg:gap-6' : 'flex flex-col p-4',
         className,
       )}

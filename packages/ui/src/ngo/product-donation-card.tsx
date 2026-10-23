@@ -57,6 +57,7 @@ export function ProductDonationCard({
 
   return (
     <Card
+      interactive
       className={cn(
         'flex flex-col overflow-hidden transition-colors',
         quantity > 0 && 'border-primary ring-primary ring-1',

@@ -60,8 +60,8 @@ export const events: SailentEvent[] = [
     city: 'Ranchi',
     address: 'Government Middle School, Namkum block, Ranchi district, Jharkhand',
     isOnline: false,
-    capacity: 25,
-    registeredCount: 25,
+    capacity: 50,
+    registeredCount: 18,
     status: 'registration_open',
     programSlug: 'education',
     campaignSlug: 'school-kits-jharkhand',
@@ -69,7 +69,7 @@ export const events: SailentEvent[] = [
     description: [
       'Distribution days are the visible end of the school kit campaign, and they need more hands than our field team has.',
       'Volunteers help with sorting kits by class level, checking uniform sizes, and keeping the distribution record that lets us track attendance afterwards. No prior experience is needed; the work is straightforward and the field team briefs everyone on arrival.',
-      'This event is currently at capacity. Register to join the waitlist — places do open up.',
+      'Registration is open. Register below to reserve your place.',
     ],
     schedule: [
       { time: '09:00', activity: 'Arrival, briefing and sorting' },

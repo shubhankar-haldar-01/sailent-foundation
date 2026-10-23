@@ -59,7 +59,7 @@ export function BlogSidebar({ latestPosts, currentQuery = '', className }: BlogS
       {/* 2. Latest Articles Panel */}
       <section
         aria-labelledby="latest-articles-title"
-        className="shadow-xs rounded-2xl border border-slate-200/80 bg-white p-5"
+        className="card-interactive rounded-2xl p-5 dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="mb-4 flex items-center gap-2">
           <span aria-hidden="true" className="inline-block h-4 w-1 rounded-full bg-[#EB6A1F]" />
@@ -153,7 +153,7 @@ function BlogNewsletterCard() {
   return (
     <section
       aria-labelledby="subscribe-panel-title"
-      className="shadow-xs relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6"
+      className="card-interactive relative overflow-hidden rounded-2xl p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900"
     >
       {/* Decorative warm peach gradient corner */}
       <div

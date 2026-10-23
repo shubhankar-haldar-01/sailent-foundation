@@ -665,8 +665,10 @@ test.describe('journey: homepage → programs', () => {
     await page.waitForURL('**/programs/education');
 
     await expect(page.getByRole('heading', { level: 1, name: 'Education' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Goals' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Activities' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'About this program' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Campaigns supporting this program' }),
+    ).toBeVisible();
   });
 });
 

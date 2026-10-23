@@ -319,7 +319,7 @@ function AboutCard({
     <article
       aria-labelledby={id}
       className={cn(
-        'border-border/70 from-surface via-surface to-surface-tint rounded-2xl border bg-gradient-to-br p-5 shadow-sm sm:p-6',
+        'card-interactive rounded-2xl p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900',
         className,
       )}
     >

@@ -620,7 +620,8 @@ async function seedDemoContent(db: Database): Promise<void> {
     {
       title: 'Education',
       slug: 'education',
-      tagline: 'Keeping children in school, and helping them stay there',
+      tagline:
+        'Helping children stay in school and access the support they need to learn, grow and build a brighter future.',
       shortDescription:
         'Learning support, materials and school infrastructure for children in under-served districts.',
       category: 'Education',
@@ -716,9 +717,9 @@ async function seedDemoContent(db: Database): Promise<void> {
     education: {
       accentIcon: 'book',
       problem:
-        'Demo content. Children in the districts in this demo data set rarely leave school because they stop caring — they leave because a textbook costs more than a day of family income, or because the nearest secondary school is eleven kilometres away.',
+        'Many children in underserved communities struggle to stay in school due to poverty, lack of learning resources, and inadequate infrastructure. This often leads to irregular attendance and early dropouts, limiting their future opportunities.',
       approach:
-        'Demo content. This demo program works with existing government schools rather than building parallel ones: supplying materials, running after-school support, and repairing the infrastructure that quietly decides whether families keep sending their daughters.',
+        'We provide academic support, essential learning materials, and safer school environments in partnership with local communities and schools. Our focus is on practical, sustainable support that helps children learn and stay in school.',
       activities: [
         {
           title: 'School kit distribution',
@@ -1915,8 +1916,8 @@ async function seedDemoContent(db: Database): Promise<void> {
       title: 'Food Distribution Camp',
       slug: 'school-kit-distribution-namkum',
       startDate: inDays(21),
-      capacity: 25,
-      registeredCount: 25,
+      capacity: 50,
+      registeredCount: 18,
       city: 'Nashik, Maharashtra',
       isOnline: false,
     },

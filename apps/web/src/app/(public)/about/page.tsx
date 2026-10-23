@@ -17,9 +17,10 @@ import {
   UsersRound,
   type LucideIcon,
 } from 'lucide-react';
-import { Button, cn } from '@sailent/ui';
+import { cn } from '@sailent/ui';
 
 import { PageShell } from '@/components/layout/page-shell';
+import { AboutHero } from '@/components/about/about-hero';
 import { IndiaPresenceMap } from '@/components/about/india-presence-map';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { getImpact, getTeam } from '@/lib/content';
@@ -166,78 +167,7 @@ export default async function AboutPage() {
   return (
     <>
       {/* Hero ---------------------------------------------------------------- */}
-      <section
-        aria-labelledby="about-title"
-        className="relative overflow-hidden bg-gradient-to-b from-[#F2F8FD] via-[#EEF6FC] to-[#E6F1FA] pb-16 pt-12 md:pb-20 md:pt-16 lg:pb-24 lg:pt-20 dark:from-[#0B1B2B] dark:via-[#0E2235] dark:to-[#0A1724]"
-      >
-        <PageShell className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14 xl:gap-16">
-          <div className="max-w-xl">
-            <div className="flex items-center gap-3">
-              <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
-                ABOUT SAILENT FOUNDATION
-              </span>
-              <span className="h-[1.5px] w-8 bg-[#EB6A1F]" aria-hidden="true" />
-            </div>
-
-            <h1
-              id="about-title"
-              className="font-display mt-3 text-balance text-4xl font-bold leading-[1.12] tracking-tight text-[#102A43] sm:text-5xl lg:text-[3.5rem] xl:text-[3.75rem] dark:text-white"
-            >
-              <span className="block">Real People.</span>
-              <span className="text-primary block">Lasting Change.</span>
-            </h1>
-
-            <p className="mt-5 text-base leading-[1.65] text-[#486581] sm:text-[1.0625rem] lg:text-[1.125rem] dark:text-slate-300">
-              We work with communities to remove real and practical obstacles in education, health,
-              livelihoods and social welfare. We focus on what is possible, work with existing
-              systems, and stay accountable for the change we create.
-            </p>
-
-            <div className="mt-7 flex flex-col gap-3.5 sm:mt-8 sm:flex-row sm:items-center sm:gap-4">
-              <Button
-                asChild
-                size="lg"
-                className="text-primary-foreground hover:bg-primary-hover h-12 w-full rounded-full bg-[#EB6A1F] px-7 text-base font-semibold shadow-md shadow-[#EB6A1F]/25 transition-all duration-200 hover:shadow-lg hover:shadow-[#EB6A1F]/35 sm:w-auto sm:px-8"
-              >
-                <Link
-                  href="/donate"
-                  className="inline-flex w-full items-center justify-center gap-2 sm:w-auto"
-                >
-                  Donate Now
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="secondary"
-                size="lg"
-                className="h-12 w-full rounded-full border-2 border-[#0070BA] bg-white px-7 text-base font-semibold text-[#0070BA] shadow-none transition-all duration-200 hover:bg-[#0070BA]/5 sm:w-auto sm:px-8 dark:border-sky-400 dark:bg-slate-900 dark:text-sky-400 dark:hover:bg-sky-400/10"
-              >
-                <Link
-                  href="/programs"
-                  className="inline-flex w-full items-center justify-center gap-2 sm:w-auto"
-                >
-                  Explore Our Programs
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-
-          <div className="relative mx-auto w-full max-w-[34rem] lg:max-w-none">
-            <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[24px] shadow-xl shadow-[#102A43]/10 ring-1 ring-black/5 sm:rounded-[32px] dark:ring-white/10">
-              <Image
-                src="/images/about-hero.webp"
-                alt="Sailent Foundation field team coordinator and volunteers smiling warmly with rural villagers and school children under a banyan tree"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, (max-width: 1280px) 50vw, 600px"
-                className="object-cover object-center"
-              />
-            </div>
-          </div>
-        </PageShell>
-      </section>
+      <AboutHero />
 
       {/* Where We Focus -------------------------------------------------------- */}
       <section
@@ -270,7 +200,7 @@ export default async function AboutPage() {
             {focusAreas.map((area) => (
               <div
                 key={area.title}
-                className="sm:p-4.5 flex flex-col rounded-[18px] border border-slate-200/80 bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-shadow duration-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                className="card-interactive sm:p-4.5 flex flex-col rounded-[18px] p-4 dark:border-slate-800 dark:bg-slate-900"
               >
                 <div
                   aria-hidden="true"
@@ -434,7 +364,7 @@ export default async function AboutPage() {
             {approach.map((item) => (
               <div
                 key={item.title}
-                className="sm:p-4.5 flex flex-col rounded-[18px] border border-slate-200/80 bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-shadow duration-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                className="card-interactive sm:p-4.5 flex flex-col rounded-[18px] p-4 dark:border-slate-800 dark:bg-slate-900"
               >
                 <div
                   aria-hidden="true"
@@ -564,7 +494,7 @@ export default async function AboutPage() {
               {leadership.map((member) => (
                 <div
                   key={member.slug}
-                  className="group relative flex flex-col overflow-hidden rounded-[18px] border border-slate-200/80 bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-shadow duration-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                  className="card-interactive group relative flex flex-col overflow-hidden rounded-[18px] dark:border-slate-800 dark:bg-slate-900"
                 >
                   <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                     <Image
@@ -658,7 +588,7 @@ export default async function AboutPage() {
 
           {/* Right Column: Identifiers Card */}
           <div className="lg:col-span-7">
-            <div className="p-4.5 rounded-[20px] border border-slate-200/80 bg-white shadow-[0_2px_15px_rgba(0,0,0,0.02)] sm:p-5 lg:p-6 dark:border-slate-800 dark:bg-slate-900">
+            <div className="card-interactive p-4.5 rounded-[20px] sm:p-5 lg:p-6 dark:border-slate-800 dark:bg-slate-900">
               {registration.length > 0 ? (
                 <dl className="divide-y divide-slate-100 dark:divide-slate-800/80">
                   {registration.map((field) => (

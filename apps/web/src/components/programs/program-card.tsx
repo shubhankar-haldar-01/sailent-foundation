@@ -43,9 +43,7 @@ export function ProgramCard({
   return (
     <article
       className={cn(
-        'bg-surface border-accent-100 dark:border-border group relative flex h-full gap-4 rounded-xl border p-3.5 max-sm:flex-col sm:gap-6',
-        'shadow-[0_1px_2px_rgb(16_42_67/0.04),0_10px_24px_-14px_rgb(16_42_67/0.16)]',
-        'duration-(--duration-base) transition-[translate,box-shadow] hover:shadow-[0_2px_4px_rgb(16_42_67/0.05),0_18px_34px_-16px_rgb(16_42_67/0.24)] motion-safe:hover:-translate-y-0.5',
+        'card-interactive group relative flex h-full gap-4 rounded-xl p-3.5 max-sm:flex-col sm:gap-6 dark:border-slate-800 dark:bg-slate-900',
         'has-[a:focus-visible]:outline-ring has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2',
         className,
       )}

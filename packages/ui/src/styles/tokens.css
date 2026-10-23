@@ -81,11 +81,10 @@
        --cta-light   #FFEFCC  light accent and icon washes
        --cta-soft    #FFF7ED  very light grounds, selected rows
 
-     OWNER DECISION (2026-10-21, replacing 2026-10-14's white label): filled
-     orange buttons, pills and badges (`--primary`) use #EB6A1F with a NAVY
-     label, `--primary-foreground` #0F172A (5.62:1, WCAG AA). Hover is the
-     lighter #F07A33 (6.41:1) and pressed is #EB6A1F, so the label passes in
-     every state (`AGENTS.md` §11 item 12). Orange TEXT keeps `--cta-ink`.
+     OWNER DECISION (2026-10-23, replacing 2026-10-21): filled orange buttons,
+     pills and badges (`--primary`) use #EB6A1F with a PURE WHITE label,
+     `--primary-foreground` #ffffff. Hover is darker #D45914 and pressed is
+     #B3450E (`AGENTS.md` §11 item 12). Orange TEXT keeps `--cta-ink`.
      --------------------------------------------------------------------- */
   --cta-50: oklch(0.965 0.025 55);
   --cta-100: oklch(0.93 0.05 55);
@@ -154,20 +153,18 @@
   /**
    * PRIMARY IS ORANGE, because primary means "donate".
    *
-   * Owner decision (2026-10-14): the fill is the brand orange #EB6A1F (--cta)
-   * with pure white text, as on the hero's Donate Now — 3.18:1, which the
-   * owner accepted below WCAG AA's 4.5:1 (`AGENTS.md` §11). It replaces the
-   * darker #C5531A everywhere. Hover darkens to #D45914 (4.01:1) and pressed
-   * to #B3450E (5.56:1). Small orange text on light grounds still uses
-   * --primary-ink (#B74500, >= 4.5:1).
+   * Owner decision (2026-10-23): the fill is the brand orange #EB6A1F (--cta)
+   * with pure white text (#ffffff), as on the hero's Donate Now. Hover
+   * darkens to #D45914 and pressed to #B3450E. Small orange text on light
+   * grounds still uses --primary-ink (#B74500, >= 4.5:1).
    */
   --primary: var(--cta);
-  /* Navy on the orange fill: 5.62:1 (owner, 2026-10-21; was white, 3.18:1). */
-  --primary-foreground: #0f172a;
-  /* Lighter on hover, so the navy label keeps its contrast (6.41:1). */
-  --primary-hover: #f07a33;
-  --primary-active: var(--cta);
-  --primary-active-foreground: #0f172a;
+  /* Pure white label on the orange fill (owner decision, 2026-10-23). */
+  --primary-foreground: #ffffff;
+  /* Darker on hover for tactile feedback (#d45914). */
+  --primary-hover: #d45914;
+  --primary-active: #b3450e;
+  --primary-active-foreground: #ffffff;
   --primary-ink: var(--cta-ink);
   --primary-light: var(--cta-light);
   --primary-soft: var(--cta-soft);
@@ -327,14 +324,14 @@
   --input: oklch(1 0 0 / 15%);
 
   /* Orange still means action in dark mode: the same #EB6A1F fill and white
-     label as the light theme (owner decision, 2026-10-14). */
+     label as the light theme (owner decision, 2026-10-23). */
   --primary: var(--cta);
-  /* Navy on the orange fill: 5.62:1 (owner, 2026-10-21; was white, 3.18:1). */
-  --primary-foreground: #0f172a;
-  /* Lighter on hover, so the navy label keeps its contrast (6.41:1). */
-  --primary-hover: #f07a33;
-  --primary-active: var(--cta);
-  --primary-active-foreground: #0f172a;
+  /* Pure white label on the orange fill (owner decision, 2026-10-23). */
+  --primary-foreground: #ffffff;
+  /* Darker on hover for tactile feedback (#d45914). */
+  --primary-hover: #d45914;
+  --primary-active: #b3450e;
+  --primary-active-foreground: #ffffff;
   /* Orange text on a dark ground is the light end of the scale. */
   --primary-ink: var(--cta-300);
   --primary-light: oklch(0.34 0.07 50);

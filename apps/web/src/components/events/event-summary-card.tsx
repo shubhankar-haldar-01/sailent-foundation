@@ -113,7 +113,7 @@ export function EventSummaryCard({
   const hasHelp = Boolean(supportEmail || (supportPhone && supportPhoneHref));
 
   return (
-    <Card className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_4px_25px_-4px_rgba(0,0,0,0.05)] sm:p-8">
+    <Card className="card-interactive overflow-hidden rounded-3xl p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-900">
       {/* Event Thumbnail with Category Badge in Bottom Right */}
       <div className="relative overflow-hidden rounded-2xl">
         <MediaFrame

@@ -27,7 +27,7 @@ export function FeaturedStory({ story }: { story: Story }) {
   const storyCategory = story.category ?? story.programName;
 
   return (
-    <article className="bg-surface border-accent-100 dark:border-border relative flex flex-col overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgb(16_42_67/0.04),0_10px_24px_-14px_rgb(16_42_67/0.16)] lg:grid lg:grid-cols-[53%_47%]">
+    <article className="card-interactive relative flex flex-col overflow-hidden rounded-2xl lg:grid lg:grid-cols-[53%_47%] dark:border-slate-800 dark:bg-slate-900">
       {/* The photograph: 16:10 on top below `lg`; from `lg`, as tall as the panel beside it. */}
       <div className="relative aspect-[16/10] w-full sm:aspect-[2/1] lg:aspect-auto lg:min-h-[19.25rem]">
         <MediaFrame

@@ -8,17 +8,16 @@ import { TeamDirectory } from '../team-directory';
 import { teamMembers } from '@/lib/mock/team';
 
 describe('Team Components', () => {
-  it('renders TeamHero with heading, breadcrumbs, and highlights', () => {
+  it('renders TeamHero with heading, breadcrumbs, and banner image', () => {
     render(<TeamHero />);
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Meet Our Team/i);
-    expect(screen.getByText('OUR TEAM')).toBeInTheDocument();
-    expect(screen.getByText(/Passionate/i)).toBeInTheDocument();
-    expect(screen.getByText(/Professionals/i)).toBeInTheDocument();
-    expect(screen.getByText(/Community/i)).toBeInTheDocument();
-    expect(screen.getByText(/Focused/i)).toBeInTheDocument();
-    expect(screen.getByText(/Working for a/i)).toBeInTheDocument();
-    expect(screen.getByText(/Brighter Tomorrow/i)).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: /Breadcrumb/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'About Us' })).toHaveAttribute('href', '/about');
+    expect(
+      screen.getByRole('img', { name: /Sailent Foundation coordinator with children/i }),
+    ).toBeInTheDocument();
   });
 
   it('renders LeadershipCard with role, name, bio, and socials', () => {

@@ -58,8 +58,7 @@ export function StoryCard({
     return (
       <article
         className={cn(
-          'dark:bg-surface dark:border-border group relative flex flex-col justify-between rounded-xl border border-slate-200/80 bg-white p-3 sm:p-3.5',
-          'shadow-[0_1px_3px_rgb(16_42_67/0.05)] transition-all duration-200 hover:shadow-md motion-safe:hover:-translate-y-0.5',
+          'card-interactive group relative flex flex-col justify-between rounded-xl p-3 sm:p-3.5 dark:border-slate-800 dark:bg-slate-900',
           'has-[a:focus-visible]:outline-ring has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2',
           className,
         )}
@@ -118,9 +117,7 @@ export function StoryCard({
     <article
       className={cn(
         // Half and half at 1280–1439px, where two cards share the row and the text needs the room.
-        'bg-surface border-accent-100 dark:border-border min-[90rem]:grid-cols-[53%_47%] group relative flex flex-col overflow-hidden rounded-2xl border md:grid md:grid-cols-[53%_47%] xl:grid-cols-2',
-        'shadow-[0_1px_2px_rgb(16_42_67/0.04),0_10px_24px_-14px_rgb(16_42_67/0.16)]',
-        'duration-(--duration-base) transition-[translate,box-shadow] hover:shadow-[0_2px_4px_rgb(16_42_67/0.05),0_18px_34px_-16px_rgb(16_42_67/0.24)] motion-safe:hover:-translate-y-0.5',
+        'card-interactive min-[90rem]:grid-cols-[53%_47%] group relative flex flex-col overflow-hidden rounded-2xl md:grid md:grid-cols-[53%_47%] xl:grid-cols-2 dark:border-slate-800 dark:bg-slate-900',
         'has-[a:focus-visible]:outline-ring has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2',
         className,
       )}

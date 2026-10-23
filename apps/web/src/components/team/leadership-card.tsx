@@ -28,7 +28,7 @@ export function LeadershipCard({ member }: LeadershipCardProps) {
   );
 
   return (
-    <article className="group relative flex h-full items-center gap-3.5 rounded-[16px] border border-slate-200/80 bg-white p-3 shadow-[0_2px_12px_rgba(0,0,0,0.02)] transition-all duration-200 hover:shadow-md sm:p-3.5 dark:border-slate-800 dark:bg-slate-900">
+    <article className="card-interactive group relative flex h-full items-center gap-3.5 rounded-[16px] p-3 sm:p-3.5 dark:border-slate-800 dark:bg-slate-900">
       {/* Photograph */}
       <div className="relative h-[126px] w-[96px] shrink-0 overflow-hidden rounded-[12px] bg-slate-100 sm:h-[130px] sm:w-[100px] dark:bg-slate-800">
         <Image

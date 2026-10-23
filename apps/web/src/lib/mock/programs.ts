@@ -20,13 +20,14 @@ export const programs: ProgramFixture[] = [
   {
     slug: 'education',
     name: 'Education',
-    tagline: 'Keeping children in school, and helping them stay there',
+    tagline:
+      'Helping children stay in school and access the support they need to learn, grow and build a brighter future.',
     shortDescription:
       'Learning support, materials and school infrastructure for children in under-served districts.',
     problem:
-      'Children in the districts we work in rarely leave school because they stop caring. They leave because a textbook costs more than a day of family income, because the nearest secondary school is eleven kilometres away, or because an older sibling needs to start earning. The barrier is almost never ability.',
+      'Many children in underserved communities struggle to stay in school due to poverty, lack of learning resources, and inadequate infrastructure. This often leads to irregular attendance and early dropouts, limiting their future opportunities.',
     approach:
-      'We work with existing government schools rather than building parallel ones. That means supplying the materials a child needs to keep attending, running after-school support for students who have fallen behind, and repairing the infrastructure — a roof, a toilet block, a library — that quietly decides whether families keep sending their daughters.',
+      'We provide academic support, essential learning materials, and safer school environments in partnership with local communities and schools. Our focus is on practical, sustainable support that helps children learn and stay in school.',
     goals: [
       {
         title: 'Remove the cost barrier',

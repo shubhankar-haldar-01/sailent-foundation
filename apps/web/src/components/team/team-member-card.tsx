@@ -47,7 +47,7 @@ export function TeamMemberCard({
     return (
       <div
         className={cn(
-          'border-border bg-surface group relative flex h-full flex-col overflow-hidden rounded-xl border shadow-sm transition-shadow hover:shadow-md',
+          'card-interactive group relative flex h-full flex-col overflow-hidden rounded-xl dark:border-slate-800 dark:bg-slate-900',
           className,
         )}
       >

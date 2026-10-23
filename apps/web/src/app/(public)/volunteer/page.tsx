@@ -139,7 +139,7 @@ export default async function VolunteerPage() {
           <ul className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {OPPORTUNITIES.map((opportunity) => (
               <li key={opportunity.title}>
-                <Card className="flex h-full flex-col p-5">
+                <Card interactive className="flex h-full flex-col p-5">
                   <h3 className="text-h4 font-semibold">{opportunity.title}</h3>
                   <p className="text-caption text-primary mt-1 font-medium">
                     {opportunity.commitment}
@@ -182,7 +182,7 @@ export default async function VolunteerPage() {
             <h2 className="text-h1 font-bold">From our volunteers</h2>
             <div className="mt-8 grid gap-8 md:grid-cols-2">
               {volunteerTestimonials.map((testimonial) => (
-                <Card key={testimonial.id} className="p-6">
+                <Card interactive key={testimonial.id} className="p-6">
                   <Testimonial testimonial={{ ...testimonial, photo: null }} />
                 </Card>
               ))}

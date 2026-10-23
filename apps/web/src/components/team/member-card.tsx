@@ -26,7 +26,7 @@ export function MemberCard({ member }: MemberCardProps) {
   );
 
   return (
-    <article className="group relative flex h-full flex-col rounded-[16px] border border-slate-200/80 bg-white p-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all duration-200 hover:shadow-md sm:p-3 dark:border-slate-800 dark:bg-slate-900">
+    <article className="card-interactive group relative flex h-full flex-col rounded-[16px] p-2.5 sm:p-3 dark:border-slate-800 dark:bg-slate-900">
       {/* Photograph */}
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[12px] bg-slate-100 dark:bg-slate-800">
         <Image

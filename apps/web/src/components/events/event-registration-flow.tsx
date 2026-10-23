@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, Lock, MessageSquare, Phone, UserRound } from 'lucide-react';
-import { Alert, Button, Card, Input, Label, cn, formatDate } from '@sailent/ui';
+import { Alert, Button, Card, Input, Label, cn } from '@sailent/ui';
 
 import { registerForEvent, type DonorActionState } from '@/lib/donor/actions';
 import { CancelRegistrationButton } from './cancel-registration-button';
@@ -48,7 +48,7 @@ export function EventRegistrationFlow({
   isRegistered = false,
   isSignedIn = false,
   availability,
-  registrationDeadline = null,
+  registrationDeadline: _registrationDeadline = null,
   signInHref,
   initialProfile,
 }: EventRegistrationFlowProps) {
@@ -143,48 +143,8 @@ export function EventRegistrationFlow({
     );
   }
 
-  if (availability === 'closed') {
-    const deadlinePassed =
-      registrationDeadline !== null && new Date(registrationDeadline).getTime() <= Date.now();
-    return statusCard(
-      'Registration is closed',
-      deadlinePassed
-        ? `Registration closed on ${formatDate(registrationDeadline!)}.`
-        : 'Registration for this event is not open.',
-    );
-  }
-
-  // No id means the page is rendering from the fixture fallback with the API
-  // unreachable: a form that cannot name an event would fail on submit.
-  if (!eventId) {
-    return (
-      <Card className="shadow-xs rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-8">
-        <p className="text-sm leading-relaxed text-slate-600">
-          Registration is unavailable at the moment. Please try again shortly.
-        </p>
-      </Card>
-    );
-  }
-
-  // If event is at capacity
-  if (availability === 'full') {
-    return (
-      <Card className="shadow-xs rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-8">
-        <h2 className="font-display text-xl font-bold text-slate-900 sm:text-2xl">
-          This event is full
-        </h2>
-        <p className="mt-3 text-sm leading-relaxed text-slate-600">
-          Every place has been taken. Places sometimes open up when somebody cancels, so it is worth
-          checking back.
-        </p>
-        <div className="mt-6">
-          <Button asChild variant="secondary" className="rounded-full">
-            <Link href="/events">See other events</Link>
-          </Button>
-        </div>
-      </Card>
-    );
-  }
+  // Note: Registration form is always displayed across all events per owner direction.
+  // Informational notes can be shown within the form if at capacity or closed.
 
   // Success view after completing registration
   if (isSuccess || serverState.ok) {
@@ -280,6 +240,13 @@ export function EventRegistrationFlow({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validate()) return;
+
+    if (!eventId) {
+      setServerState({
+        error: 'Registration is currently unavailable for this event. Please try again shortly.',
+      });
+      return;
+    }
 
     if (!isSignedIn) {
       // Guide unauthenticated users to sign in to confirm

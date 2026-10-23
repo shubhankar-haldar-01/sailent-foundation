@@ -80,7 +80,7 @@ export function FocusAreasStrip({ limit = 4 }: { limit?: number }) {
           <li key={area.slug}>
             <Link
               href={`/campaigns?categorySlug=${area.slug}`}
-              className="border-border bg-surface focus-visible:outline-ring flex h-full flex-col items-center rounded-lg border px-4 py-6 text-center transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2"
+              className="card-interactive focus-visible:outline-ring flex h-full flex-col items-center rounded-2xl p-6 text-center focus-visible:outline-2 focus-visible:outline-offset-2 dark:border-slate-800 dark:bg-slate-900"
             >
               <span
                 aria-hidden="true"

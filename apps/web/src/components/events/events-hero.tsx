@@ -1,26 +1,18 @@
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 
+import { PageShell } from '@/components/layout/page-shell';
 import { breadcrumbSchema, jsonLd } from '@/lib/seo/structured-data';
 
 const HERO_BANNER = '/images/events-hero-elder.webp';
 
 /**
- * The events page's banner: one full-width panoramic image (1671×752) with the
- * "EVENTS" title, its orange rules and the purple heart set in the artwork.
- *
- * - The artwork is an illustrative composite of the kinds of activity the
- *   events cover (school kits, food distribution, animal care) — not a record
- *   of a particular event — so nothing on the page presents it as one.
- * - The breadcrumb, the h1 "Events" and the lead are screen-reader text beside
- *   it, with the breadcrumb's structured data.
+ * The Events hero section, unified with the approved Stories hero design
+ * while preserving the events banner artwork.
  */
 export function EventsHero() {
   return (
-    <section
-      aria-labelledby="events-title"
-      className="border-border relative isolate w-full overflow-hidden border-b bg-[#12080D]"
-    >
+    <section aria-labelledby="events-title" className="relative pt-4 sm:pt-6">
       {/* Structured data for search engines */}
       <script
         type="application/ld+json"
@@ -52,18 +44,19 @@ export function EventsHero() {
         </p>
       </div>
 
-      {/* Full-Width Panoramic Banner */}
-      <div className="relative block w-full overflow-hidden">
-        <Image
-          src={HERO_BANNER}
-          alt="Events — Sailent Foundation"
-          width={1671}
-          height={752}
-          priority
-          sizes="100vw"
-          className="h-auto w-full object-cover"
-        />
-      </div>
+      <PageShell>
+        <div className="relative overflow-hidden rounded-[24px] border border-slate-100 bg-[#12080D] shadow-[0_4px_24px_rgba(0,0,0,0.03)] sm:rounded-[32px] dark:border-slate-800">
+          <Image
+            src={HERO_BANNER}
+            alt="Sailent Foundation Events — Community members, field activities and volunteer support"
+            width={1671}
+            height={752}
+            priority
+            sizes="(max-width: 1280px) 100vw, 1280px"
+            className="h-auto w-full object-cover"
+          />
+        </div>
+      </PageShell>
     </section>
   );
 }

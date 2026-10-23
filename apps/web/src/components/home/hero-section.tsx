@@ -38,10 +38,7 @@ export function HeroSection({ metrics }: { metrics: ImpactMetric[] }) {
   const reached = metrics.find((metric) => metric.id === 'beneficiaries');
 
   return (
-    <section
-      aria-labelledby="hero-title"
-      className="border-border relative isolate overflow-hidden border-b bg-[#0B1B2B]"
-    >
+    <section aria-labelledby="hero-title" className="relative pt-4 sm:pt-6">
       {/* Screen-reader and SEO accessible semantic content */}
       <div className="sr-only">
         <h1 id="hero-title">Sailent Foundation — Every Child Deserves a Brighter Future</h1>
@@ -49,69 +46,73 @@ export function HeroSection({ metrics }: { metrics: ImpactMetric[] }) {
         <Link href="/donate">Donate Now</Link>
       </div>
 
-      {/* Mobile hero banner (< 768px) */}
-      <div className="relative block w-full md:hidden">
-        {hasHeroMobile ? (
-          <Link
-            href="/donate"
-            aria-label="Every Child Deserves a Brighter Future — Donate Now"
-            className="focus-visible:outline-primary group relative block w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
-            <Image
-              src={HERO_PHOTO_MOBILE}
-              alt="Every Child Deserves a Brighter Future — Sailent Foundation"
-              width={1671}
-              height={941}
-              priority
-              sizes="100vw"
-              className="h-auto w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.01]"
-            />
-          </Link>
-        ) : (
-          <MediaFrame
-            media={{ seed: 'home-hero-mobile', alt: 'Every Child Deserves a Brighter Future' }}
-            aspect="wide"
-            rounded={false}
-            priority
-            className="size-full [&>svg]:size-full"
-          />
-        )}
-      </div>
+      <PageShell>
+        <div className="relative overflow-hidden rounded-[24px] border border-slate-100 bg-[#0B1B2B] shadow-[0_4px_24px_rgba(0,0,0,0.03)] sm:rounded-[32px] dark:border-slate-800">
+          {/* Mobile hero banner (< 768px) */}
+          <div className="relative block w-full md:hidden">
+            {hasHeroMobile ? (
+              <Link
+                href="/donate"
+                aria-label="Every Child Deserves a Brighter Future — Donate Now"
+                className="focus-visible:outline-primary group relative block w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                <Image
+                  src={HERO_PHOTO_MOBILE}
+                  alt="Every Child Deserves a Brighter Future — Sailent Foundation"
+                  width={1671}
+                  height={941}
+                  priority
+                  sizes="(max-width: 768px) 100vw, 768px"
+                  className="h-auto w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.01]"
+                />
+              </Link>
+            ) : (
+              <MediaFrame
+                media={{ seed: 'home-hero-mobile', alt: 'Every Child Deserves a Brighter Future' }}
+                aspect="wide"
+                rounded={false}
+                priority
+                className="size-full [&>svg]:size-full"
+              />
+            )}
+          </div>
 
-      {/* Desktop hero banner (>= 768px) */}
-      <div className="relative hidden w-full md:block">
-        {hasHeroDesktop ? (
-          <Link
-            href="/donate"
-            aria-label="Every Child Deserves a Brighter Future — Donate Now"
-            className="focus-visible:outline-primary group relative block w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
-            <Image
-              src={HERO_PHOTO_DESKTOP}
-              alt="Every Child Deserves a Brighter Future — Sailent Foundation"
-              width={1671}
-              height={752}
-              priority
-              sizes="100vw"
-              className="h-auto w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.01]"
-            />
-          </Link>
-        ) : (
-          <MediaFrame
-            media={{ seed: 'home-hero-desktop', alt: 'Every Child Deserves a Brighter Future' }}
-            aspect="wide"
-            rounded={false}
-            priority
-            className="size-full [&>svg]:size-full"
-          />
-        )}
-      </div>
+          {/* Desktop hero banner (>= 768px) */}
+          <div className="relative hidden w-full md:block">
+            {hasHeroDesktop ? (
+              <Link
+                href="/donate"
+                aria-label="Every Child Deserves a Brighter Future — Donate Now"
+                className="focus-visible:outline-primary group relative block w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                <Image
+                  src={HERO_PHOTO_DESKTOP}
+                  alt="Every Child Deserves a Brighter Future — Sailent Foundation"
+                  width={1671}
+                  height={752}
+                  priority
+                  sizes="(max-width: 1280px) 100vw, 1280px"
+                  className="h-auto w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.01]"
+                />
+              </Link>
+            ) : (
+              <MediaFrame
+                media={{ seed: 'home-hero-desktop', alt: 'Every Child Deserves a Brighter Future' }}
+                aspect="wide"
+                rounded={false}
+                priority
+                className="size-full [&>svg]:size-full"
+              />
+            )}
+          </div>
+        </div>
+      </PageShell>
 
       {/* Live Impact Ticker Bar */}
       {reached ? (
         <aside
           aria-label="Impact Summary"
-          className="border-border bg-surface shadow-xs relative z-10 border-b py-2.5"
+          className="border-border bg-surface shadow-xs relative z-10 mt-4 border-y py-2.5 sm:mt-6"
         >
           <PageShell>
             <div className="flex flex-wrap items-center justify-between gap-3 text-sm">

@@ -239,7 +239,7 @@ export function VolunteerCard({
     .toUpperCase();
 
   return (
-    <Card className={cn('flex items-center gap-4 p-4', className)}>
+    <Card interactive className={cn('flex items-center gap-4 p-4', className)}>
       <Avatar size="lg">
         {volunteer.photo ? (
           <AvatarImage src={volunteer.photo.url} alt={volunteer.photo.alt} />
@@ -283,7 +283,7 @@ export function DocumentCard({
   const sizeMb = (document.sizeBytes / (1024 * 1024)).toFixed(1);
 
   return (
-    <Card className={cn('flex items-start gap-4 p-4', className)}>
+    <Card interactive className={cn('flex items-start gap-4 p-4', className)}>
       <FileText className="text-muted-foreground mt-0.5 size-8 shrink-0" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p className="text-body font-medium">{document.title}</p>
