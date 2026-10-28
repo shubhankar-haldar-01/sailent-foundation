@@ -1,9 +1,9 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { cn } from '@sailent/ui';
 
 import { PageShell } from '@/components/layout/page-shell';
-import { BrandGlyph } from '@/components/layout/brand-mark';
 import { MediaFrame } from '@/components/media/media-frame';
 import { GreenSprig, LeafOutline } from '@/components/programs/decor';
 import { headingExtraBold } from '@/lib/fonts';
@@ -40,19 +40,16 @@ export function AuthBrand() {
   return (
     <Link
       href="/"
-      className="focus-visible:outline-ring inline-flex items-center gap-3 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4"
+      className="focus-visible:outline-ring inline-flex items-center rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4"
     >
-      <span className="text-accent-800 dark:bg-primary/10 dark:text-foreground bg-(--cta-50) grid size-11 shrink-0 place-items-center rounded-full">
-        <BrandGlyph className="size-6" />
-      </span>
-      <span>
-        <span className="font-display text-foreground block text-[1.25rem] font-bold leading-tight tracking-[-0.01em]">
-          {siteConfig.name}
-        </span>
-        <span className="text-muted-foreground block text-[0.8125rem] leading-snug">
-          {siteConfig.tagline}
-        </span>
-      </span>
+      <Image
+        src="/images/sailent-logo.png"
+        alt="Sailent Foundation"
+        width={2048}
+        height={746}
+        priority
+        className="h-12 w-auto object-contain sm:h-14"
+      />
     </Link>
   );
 }

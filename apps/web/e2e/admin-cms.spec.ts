@@ -123,9 +123,7 @@ test.describe('admin screens', () => {
     await expect(page.getByText('Operational dashboard')).toHaveCount(0);
   });
 
-  test('a campaign is edited with its cover, gallery and progress updates', async ({
-    page,
-  }, testInfo) => {
+  test('a campaign is edited with its cover, gallery and products', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'One project is enough.');
     await page.goto('/admin/campaigns');
     // Straight to the address: the edit page loads a dozen things, and a click
@@ -137,7 +135,9 @@ test.describe('admin screens', () => {
     await page.goto(href!);
     await expect(page.getByRole('heading', { name: 'Cover image' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Campaign Gallery' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Progress updates' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Catalogue Products & Targeted Giving' }),
+    ).toBeVisible();
   });
 
   test('general FAQs are managed in the admin, drafts included', async ({ page }, testInfo) => {

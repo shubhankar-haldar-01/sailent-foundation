@@ -247,6 +247,64 @@ export async function createCampaign(_prev: ActionState, form: FormData): Promis
     return toState(error);
   }
 
+  const stagedProductsRaw = text(form, 'stagedProductsJson');
+  if (stagedProductsRaw) {
+    try {
+      const parsedProducts = JSON.parse(stagedProductsRaw);
+      if (Array.isArray(parsedProducts)) {
+        for (const item of parsedProducts) {
+          if (item?.productId && typeof item.price === 'number') {
+            try {
+              await adminFetch(`admin/campaigns/${created.id}/products`, {
+                method: 'POST',
+                body: {
+                  productId: String(item.productId),
+                  price: Number(item.price),
+                  targetQuantity: Number(item.targetQuantity || 1),
+                  isMostNeeded: Boolean(item.isMostNeeded),
+                },
+              });
+            } catch (err) {
+              console.error(
+                `Failed to attach product ${item.productId} to campaign ${created.id}:`,
+                err,
+              );
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to parse stagedProductsJson:', err);
+    }
+  }
+
+  const stagedFaqsRaw = text(form, 'stagedFaqsJson');
+  if (stagedFaqsRaw) {
+    try {
+      const parsedFaqs = JSON.parse(stagedFaqsRaw);
+      if (Array.isArray(parsedFaqs)) {
+        for (const item of parsedFaqs) {
+          if (item?.question && item?.answer) {
+            try {
+              await adminFetch(`admin/campaigns/${created.id}/faqs`, {
+                method: 'POST',
+                body: {
+                  question: String(item.question),
+                  answer: String(item.answer),
+                  isPublished: Boolean(item.isPublished),
+                },
+              });
+            } catch (err) {
+              console.error(`Failed to add FAQ to campaign ${created.id}:`, err);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to parse stagedFaqsJson:', err);
+    }
+  }
+
   revalidateCatalogue();
   redirect(`/admin/campaigns/${created.id}/edit`);
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,10 +15,21 @@ import {
   X,
 } from 'lucide-react';
 
-import { cn, formatCurrency, Input, Label } from '@sailent/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  cn,
+  formatCurrency,
+  Input,
+  Label,
+} from '@sailent/ui';
 
 import { Field, FormStatus, SubmitButton, TextArea } from '@/components/admin/form-shell';
 import { getVideoEmbedUrl } from '@/components/campaigns/campaign-gallery';
+import type { CatalogueProduct } from '@/components/products/types';
 import {
   createCampaign,
   updateCampaign,
@@ -27,6 +39,12 @@ import {
   type DirectUploadResult,
 } from '@/lib/admin/actions';
 import type { AdminCategory, AdminGalleryItem, AdminMedia, AdminProgram } from '@/lib/admin/api';
+import {
+  StagedFaqsManager,
+  StagedProductsManager,
+  type StagedCampaignFaq,
+  type StagedCampaignProduct,
+} from './campaign-staged-managers';
 
 /** Paise on the wire, rupees in the form. Converted at this one boundary. */
 function toRupees(paise: number | undefined): string {
@@ -920,6 +938,7 @@ export function CampaignForm({
   campaign,
   mediaOptions = [],
   initialGallery = [],
+  catalogue = [],
 }: {
   programs: AdminProgram[];
   categories: AdminCategory[];
@@ -950,6 +969,7 @@ export function CampaignForm({
   };
   mediaOptions?: AdminMedia[];
   initialGallery?: AdminGalleryItem[] | null;
+  catalogue?: CatalogueProduct[];
 }) {
   const [state, action, pending] = React.useActionState<ActionState, FormData>(
     campaign ? updateCampaign : createCampaign,
@@ -957,6 +977,8 @@ export function CampaignForm({
   );
   const [isFeatured, setIsFeatured] = React.useState(campaign?.isFeatured ?? false);
   const [extraMedia, setExtraMedia] = React.useState<AdminMedia[]>([]);
+  const [stagedProducts, setStagedProducts] = React.useState<StagedCampaignProduct[]>([]);
+  const [stagedFaqs, setStagedFaqs] = React.useState<StagedCampaignFaq[]>([]);
 
   const combinedMediaOptions = React.useMemo(() => {
     const existingIds = new Set(mediaOptions.map((m) => m.id));
@@ -985,11 +1007,8 @@ export function CampaignForm({
   const initialCover = effectiveOptions.find((item) => item.url === campaign?.coverImage) ?? null;
   const [selectedCover, setSelectedCover] = React.useState<AdminMedia | null>(initialCover);
 
-  return (
-    <form action={action} className="max-w-2xl space-y-5">
-      {campaign ? <input type="hidden" name="id" value={campaign.id} /> : null}
-      <FormStatus state={state} />
-
+  const formFields = (
+    <>
       {/* Hero Cover Image */}
       <div className="border-border/80 bg-muted/20 space-y-4 rounded-xl border p-4">
         <div className="border-border/60 border-b pb-3">
@@ -1290,8 +1309,101 @@ export function CampaignForm({
           />
         </Field>
       </div>
+    </>
+  );
 
-      <SubmitButton pending={pending}>{campaign ? 'Save changes' : 'Create campaign'}</SubmitButton>
+  if (campaign) {
+    return (
+      <form action={action} className="max-w-2xl space-y-5">
+        <input type="hidden" name="id" value={campaign.id} />
+        <FormStatus state={state} />
+        {formFields}
+        <SubmitButton pending={pending}>Save changes</SubmitButton>
+      </form>
+    );
+  }
+
+  return (
+    <form action={action} className="space-y-6">
+      <FormStatus state={state} />
+
+      {/* Card 1: Campaign Details & Goals */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <CardTitle className="text-base font-semibold">Campaign Details & Goals</CardTitle>
+          <p className="text-caption text-muted-foreground mt-1">
+            Every campaign funds a specific piece of a program. Program association is required
+            before publishing.
+          </p>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="max-w-2xl space-y-5">{formFields}</div>
+        </CardContent>
+      </Card>
+
+      {/* Card 2: Catalogue Products & Targeted Giving */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <CardTitle className="text-base font-semibold">
+            Catalogue Products & Targeted Giving
+          </CardTitle>
+          <p className="text-caption text-muted-foreground mt-1">
+            Product allocations for itemized donor giving. Modifying pricing here applies
+            specifically to this campaign.
+          </p>
+        </CardHeader>
+        <CardContent className="p-6">
+          <StagedProductsManager
+            catalogue={catalogue}
+            products={stagedProducts}
+            onChange={setStagedProducts}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Card 3: Frequently Asked Questions */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <CardTitle className="text-base font-semibold">Frequently Asked Questions</CardTitle>
+          <p className="text-caption text-muted-foreground mt-1">
+            Questions and answers rendered specifically on this campaign detail page.
+          </p>
+        </CardHeader>
+        <CardContent className="p-6">
+          <StagedFaqsManager faqs={stagedFaqs} onChange={setStagedFaqs} />
+        </CardContent>
+      </Card>
+
+      <input
+        type="hidden"
+        name="stagedProductsJson"
+        value={JSON.stringify(
+          stagedProducts.map((p) => ({
+            productId: p.productId,
+            price: p.pricePaise,
+            targetQuantity: p.targetQuantity,
+            isMostNeeded: p.isMostNeeded,
+          })),
+        )}
+      />
+      <input
+        type="hidden"
+        name="stagedFaqsJson"
+        value={JSON.stringify(
+          stagedFaqs.map((f) => ({
+            question: f.question,
+            answer: f.answer,
+            isPublished: f.isPublished,
+          })),
+        )}
+      />
+
+      <div className="flex items-center gap-3">
+        <SubmitButton pending={pending}>Create campaign</SubmitButton>
+        <Button asChild variant="ghost">
+          <Link href="/admin/campaigns">Cancel</Link>
+        </Button>
+      </div>
     </form>
   );
 }

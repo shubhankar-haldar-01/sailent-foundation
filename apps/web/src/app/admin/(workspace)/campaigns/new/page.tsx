@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
+import { PageHeader } from '@sailent/ui';
 
 import { CampaignForm } from '@/components/admin/campaign-form';
+import type { CatalogueProduct } from '@/components/products/types';
 import { can, currentActor } from '@/lib/auth/session';
 import {
   adminFetch,
@@ -18,7 +19,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function NewCampaignPage() {
   const actor = await currentActor();
-  const [programs, categories, mediaOptions] = await Promise.all([
+  const [programs, categories, mediaOptions, catalogue] = await Promise.all([
     adminFetch<Paginated<AdminProgram>>('admin/programs', {
       query: { status: 'all', limit: 100, sort: 'title' },
     }),
@@ -26,6 +27,11 @@ export default async function NewCampaignPage() {
     can(actor, 'media.read')
       ? listMedia({ visibility: 'public', limit: 100 }).then((page) => page.items)
       : Promise.resolve([] as AdminMedia[]),
+    can(actor, 'product.view')
+      ? adminFetch<Paginated<CatalogueProduct>>('admin/products', {
+          query: { status: 'active', limit: 100, sort: 'name' },
+        }).then((page) => page.items)
+      : Promise.resolve([] as CatalogueProduct[]),
   ]);
 
   return (
@@ -44,22 +50,12 @@ export default async function NewCampaignPage() {
         description="Created initially as a draft. It accepts no public donations until it is published and explicitly activated."
       />
 
-      <Card className="border-border">
-        <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Campaign Details & Goals</CardTitle>
-          <p className="text-caption text-muted-foreground mt-1">
-            Every campaign funds a specific piece of a program. Program association is required
-            before publishing.
-          </p>
-        </CardHeader>
-        <CardContent className="p-6">
-          <CampaignForm
-            programs={programs.items.filter((p) => p.status !== 'archived')}
-            categories={categories.items.filter((c) => c.isActive)}
-            mediaOptions={mediaOptions}
-          />
-        </CardContent>
-      </Card>
+      <CampaignForm
+        programs={programs.items.filter((p) => p.status !== 'archived')}
+        categories={categories.items.filter((c) => c.isActive)}
+        mediaOptions={mediaOptions}
+        catalogue={catalogue}
+      />
     </div>
   );
 }

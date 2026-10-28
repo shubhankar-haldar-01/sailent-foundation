@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Plus, Search, Sparkles, Flag } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Search, Sparkles, Flag, Info } from 'lucide-react';
 
 import {
   Badge,
@@ -59,13 +59,24 @@ export default async function AdminCampaignsPage({
       <PageHeader
         title="Campaigns"
         count={data.pagination.total}
-        description="Public and operational campaigns. Campaigns must be attached to a program before publishing."
+        description={
+          <p className="text-body-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <span>Public and operational campaigns.</span>
+            <span className="text-border hidden sm:inline" aria-hidden="true">
+              •
+            </span>
+            <span className="text-muted-foreground/90 inline-flex items-center gap-1">
+              <Info className="text-primary/70 size-3.5 shrink-0" aria-hidden="true" />
+              Must be attached to a program before publishing
+            </span>
+          </p>
+        }
         actions={
           can(actor, 'campaign.create') ? (
-            <Button asChild className="gap-1.5">
+            <Button asChild className="shadow-xs gap-2 transition-all hover:shadow-sm">
               <Link href="/admin/campaigns/new">
                 <Plus className="size-4" aria-hidden="true" />
-                New campaign
+                <span>New campaign</span>
               </Link>
             </Button>
           ) : null

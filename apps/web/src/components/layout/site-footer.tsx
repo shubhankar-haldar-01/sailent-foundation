@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Mail, MapPin, Phone } from 'lucide-react';
 
@@ -6,7 +7,6 @@ import { footerNav, legalNav, siteConfig } from '@/lib/site-config';
 import { HeartDoodle } from '@/components/home/focus-icons';
 import { ScriptAccent } from '@/components/sections/script-accent';
 
-import { BrandGlyph } from './brand-mark';
 import { MobileFooter } from './mobile-footer';
 import { SOCIAL_ICONS } from './social-icons';
 
@@ -67,19 +67,14 @@ export async function SiteFooter() {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           {/* Column 1: Brand & Mission */}
           <div className="space-y-3 lg:col-span-4">
-            <Link href="/" className="inline-flex items-center gap-2.5">
-              <span className="text-primary flex size-9 shrink-0 items-center justify-center">
-                <BrandGlyph className="size-8" />
-              </span>
-              <span>
-                <span className="font-display block text-xl font-bold leading-tight tracking-tight">
-                  <span className="text-[#0F172A] dark:text-white">Sailent</span>{' '}
-                  <span className="text-primary">Foundation</span>
-                </span>
-                <span className="mt-0.5 block text-[11px] font-medium tracking-normal text-slate-500 dark:text-slate-400">
-                  People • Progress • Possibilities
-                </span>
-              </span>
+            <Link href="/" className="inline-flex items-center">
+              <Image
+                src="/images/sailent-logo.png"
+                alt="Sailent Foundation"
+                width={2048}
+                height={746}
+                className="h-12 w-auto object-contain md:h-14"
+              />
             </Link>
 
             <p className="max-w-xs text-sm leading-relaxed text-[#475569] dark:text-slate-400">

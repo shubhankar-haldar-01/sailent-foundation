@@ -68,6 +68,10 @@ export const metadata: Metadata = {
   // Indexing is enabled per-route. Transactional and private routes opt out
   // explicitly via buildMetadata({ noIndex: true }).
   robots: { index: true, follow: true },
+  icons: {
+    icon: [{ url: '/favicon.ico', sizes: 'any' }],
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -101,6 +105,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             organizationSchema({
               email: organisation.email ?? undefined,
               phone: organisation.phoneDisplay ?? undefined,
+              logoUrl: `${siteConfig.url}/images/sailent-logo.png`,
               ...(organisation.address.line1 || organisation.address.city
                 ? {
                     address: {

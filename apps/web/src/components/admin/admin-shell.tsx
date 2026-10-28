@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Shield, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button, cn } from '@sailent/ui';
 
 import type { AdminUser } from '@/lib/admin/api';
@@ -92,9 +93,17 @@ export function AdminShell({
                   isMounted && isCollapsed ? 'w-full justify-center' : '',
                 )}
               >
-                <div className="bg-primary text-primary-foreground shadow-xs flex size-8 shrink-0 items-center justify-center rounded-lg font-bold">
-                  <Shield className="size-4.5" aria-hidden="true" />
-                </div>
+                <Image
+                  src="/images/sailent-logo.png"
+                  alt="Sailent Foundation"
+                  width={2048}
+                  height={746}
+                  priority
+                  className={cn(
+                    'object-contain',
+                    isMounted && isCollapsed ? 'size-8' : 'h-8 w-auto max-w-[150px]',
+                  )}
+                />
                 {(!isMounted || !isCollapsed) && (
                   <div className="flex min-w-0 flex-col">
                     <span className="text-foreground truncate text-sm font-bold tracking-tight">
@@ -157,9 +166,13 @@ export function AdminShell({
                   onClick={() => setIsSidebarOpen(false)}
                   className="flex items-center gap-2.5"
                 >
-                  <div className="bg-primary text-primary-foreground shadow-xs flex size-8 items-center justify-center rounded-lg font-bold">
-                    <Shield className="size-4.5" aria-hidden="true" />
-                  </div>
+                  <Image
+                    src="/images/sailent-logo.png"
+                    alt="Sailent Foundation"
+                    width={2048}
+                    height={746}
+                    className="h-8 w-auto max-w-[150px] object-contain"
+                  />
                   <div className="flex flex-col">
                     <span className="text-foreground text-sm font-bold tracking-tight">
                       Sailent Admin

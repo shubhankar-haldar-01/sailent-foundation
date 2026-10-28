@@ -15,6 +15,7 @@ import {
   type ActionState,
 } from '@/lib/admin/actions';
 
+import { ProductImage } from './product-image';
 import { ProductSelector } from './product-selector';
 import type { CampaignProductRow, CatalogueProduct } from './types';
 
@@ -93,6 +94,22 @@ export function CampaignProductManager({
             <form key={selected.id} action={addAction} className="space-y-4">
               <input type="hidden" name="campaignId" value={campaignId} />
               <input type="hidden" name="productId" value={selected.id} />
+
+              <div className="border-border/70 bg-surface flex items-center gap-3.5 rounded-lg border p-3">
+                <ProductImage
+                  image={selected.image}
+                  slug={selected.slug}
+                  name={selected.name}
+                  className="size-12 shrink-0"
+                  size={48}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-body-sm font-semibold">{selected.name}</p>
+                  <p className="text-caption text-muted-foreground truncate">
+                    {selected.description}
+                  </p>
+                </div>
+              </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
@@ -188,30 +205,41 @@ function CampaignProductItem({
 
   return (
     <li className="space-y-3 px-4 py-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-body-sm font-medium">{product.name}</p>
-          {product.isMostNeeded ? (
-            <span className="bg-primary text-primary-foreground rounded-md px-2 py-1 text-[11px] font-semibold leading-none tracking-wide">
-              Most Needed
-            </span>
-          ) : null}
-          {!product.isActive ? (
-            <span className="text-caption text-muted-foreground">(hidden on the page)</span>
-          ) : null}
-          {product.productStatus !== 'active' ? (
-            <span className="text-caption text-warning-foreground">
-              catalogue: {product.productStatus}
-            </span>
-          ) : null}
-        </div>
-        <p data-numeric="" className="text-body-sm tabular-nums">
-          {formatCurrency(product.price)}
-          <span className="text-muted-foreground"> / {product.unit}</span>
-        </p>
-      </div>
+      <div className="flex items-start gap-3.5">
+        <ProductImage
+          image={product.image}
+          slug={product.slug}
+          name={product.name}
+          className="size-14 sm:size-16"
+          size={64}
+        />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-body-sm font-semibold">{product.name}</p>
+              {product.isMostNeeded ? (
+                <span className="bg-primary text-primary-foreground rounded-md px-2 py-1 text-[11px] font-semibold leading-none tracking-wide">
+                  Most Needed
+                </span>
+              ) : null}
+              {!product.isActive ? (
+                <span className="text-caption text-muted-foreground">(hidden on the page)</span>
+              ) : null}
+              {product.productStatus !== 'active' ? (
+                <span className="text-caption text-warning-foreground">
+                  catalogue: {product.productStatus}
+                </span>
+              ) : null}
+            </div>
+            <p data-numeric="" className="text-body-sm font-medium tabular-nums">
+              {formatCurrency(product.price)}
+              <span className="text-muted-foreground font-normal"> / {product.unit}</span>
+            </p>
+          </div>
 
-      <p className="text-caption text-muted-foreground">{product.description}</p>
+          <p className="text-caption text-muted-foreground">{product.description}</p>
+        </div>
+      </div>
 
       {/* Stated as information, not as a warning. Different campaigns charging
           different prices for the same item is the design working. */}

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Phone } from 'lucide-react';
 
@@ -7,7 +8,6 @@ import { HeartDoodle } from '@/components/home/focus-icons';
 import { ScriptAccent } from '@/components/sections/script-accent';
 
 import { BackToTop } from './back-to-top';
-import { BrandGlyph } from './brand-mark';
 import { SOCIAL_ICONS_GLYPH } from './social-icons';
 
 /**
@@ -68,19 +68,14 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
         and a soft shadow, their marks near-black.
       */}
       <div className="flex flex-col items-center text-center">
-        <Link href="/" className="inline-flex items-center gap-2.5 text-left">
-          <span className="text-primary flex size-9 shrink-0 items-center justify-center">
-            <BrandGlyph className="size-8" />
-          </span>
-          <span>
-            <span className="font-display block text-xl font-bold leading-tight tracking-tight">
-              <span className="text-[#0F172A] dark:text-white">Sailent</span>{' '}
-              <span className="text-primary">Foundation</span>
-            </span>
-            <span className="mt-0.5 block text-[11px] font-medium tracking-normal text-slate-500 dark:text-slate-400">
-              People • Progress • Possibilities
-            </span>
-          </span>
+        <Link href="/" className="inline-flex items-center">
+          <Image
+            src="/images/sailent-logo.png"
+            alt="Sailent Foundation"
+            width={2048}
+            height={746}
+            className="h-11 w-auto object-contain sm:h-12"
+          />
         </Link>
 
         <p className="mt-5 max-w-[20rem] text-[13px] leading-5 text-[#555555] dark:text-slate-400">

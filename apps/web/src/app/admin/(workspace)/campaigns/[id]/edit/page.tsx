@@ -21,16 +21,13 @@ import type { CampaignProductRow, CatalogueProduct } from '@/components/products
 import { StatusActions } from '@/components/admin/status-actions';
 import { StatusPill } from '@/components/admin/status-pill';
 import { changeCampaignStatus, deleteCampaignAction } from '@/lib/admin/actions';
-import { CampaignUpdatesPanel } from '@/components/admin/campaign-media';
 import { can, currentActor } from '@/lib/auth/session';
 import {
   AdminApiError,
   adminFetch,
   listCampaignGallery,
-  listCampaignUpdates,
   listMedia,
   type AdminCampaign,
-  type AdminCampaignUpdate,
   type AdminGalleryItem,
   type AdminMedia,
   type AdminCategory,
@@ -90,14 +87,13 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
   }
 
   const actor = await currentActor();
-  const [mediaOptions, gallery, updates] = await Promise.all([
+  const [mediaOptions, gallery] = await Promise.all([
     can(actor, 'media.read')
       ? listMedia({ visibility: 'public', limit: 60 }).then((page) => page.items)
       : Promise.resolve([] as AdminMedia[]),
     can(actor, 'campaign_gallery.manage')
       ? listCampaignGallery(id).then((page) => page.items)
       : Promise.resolve(null as AdminGalleryItem[] | null),
-    listCampaignUpdates(id).then((page) => page.items) as Promise<AdminCampaignUpdate[]>,
   ]);
 
   const isPublic = ['published', 'active', 'paused', 'completed'].includes(campaign.status);
@@ -295,25 +291,6 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
         </CardHeader>
         <CardContent className="p-6">
           <FaqsPanel campaignId={campaign.id} faqs={faqs.items} />
-        </CardContent>
-      </Card>
-
-      {/* Progress Updates Panel */}
-      <Card className="border-border">
-        <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Progress & Field Impact Updates</CardTitle>
-          <p className="text-caption text-muted-foreground mt-1">
-            Chronological field reports communicating milestones and impact to donors.
-          </p>
-        </CardHeader>
-        <CardContent className="p-6">
-          <CampaignUpdatesPanel
-            campaignId={campaign.id}
-            slug={campaign.slug}
-            updates={updates}
-            canCreate={can(actor, 'campaign_update.create')}
-            canPublish={can(actor, 'campaign_update.publish')}
-          />
         </CardContent>
       </Card>
 

@@ -1,12 +1,11 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ArrowLeft, Menu } from 'lucide-react';
 
-import { BrandGlyph } from '@/components/layout/brand-mark';
-import { siteConfig } from '@/lib/site-config';
 import { DonorAvatar } from './donor-avatar';
 import { useDashboardMobile } from './dashboard-mobile-context';
 
@@ -56,22 +55,19 @@ export function DashboardMobileHeader({
     <header className="bg-surface/95 border-border/60 sticky top-0 z-40 border-b px-4 py-3 backdrop-blur-md">
       <div className="flex items-center justify-between gap-3">
         {isHome ? (
-          /* Brand Lockup matching Mockup 1: Logo icon + 2-line title */
+          /* Brand Lockup: Sailent Foundation Logo */
           <Link
             href="/"
-            className="focus-visible:outline-ring flex items-center gap-2.5 rounded-sm focus-visible:outline-2"
+            className="focus-visible:outline-ring flex items-center rounded-sm focus-visible:outline-2"
           >
-            <span className="bg-primary/10 text-primary grid size-9 shrink-0 place-items-center rounded-full">
-              <BrandGlyph className="size-5" />
-            </span>
-            <span className="flex flex-col leading-tight">
-              <span className="font-display text-foreground text-sm font-bold tracking-tight">
-                {siteConfig.name}
-              </span>
-              <span className="text-muted-foreground text-[0.625rem] font-medium uppercase tracking-wider">
-                {siteConfig.tagline.split('•')[0]?.trim() || 'Foundation'}
-              </span>
-            </span>
+            <Image
+              src="/images/sailent-logo.png"
+              alt="Sailent Foundation"
+              width={2048}
+              height={746}
+              priority
+              className="h-8 w-auto object-contain sm:h-9"
+            />
           </Link>
         ) : (
           /* Subpage Back Arrow + Title matching Mockup 2 & 4 */

@@ -8,6 +8,7 @@ import { Button, cn, formatCurrency } from '@sailent/ui';
 import { FormStatus } from '@/components/admin/form-shell';
 import { setProductStatus, type ActionState } from '@/lib/admin/actions';
 
+import { ProductImage } from './product-image';
 import type { CatalogueProduct } from './types';
 
 const STATUS_STYLE: Record<CatalogueProduct['status'], string> = {
@@ -88,15 +89,26 @@ export function ProductTable({ products }: { products: CatalogueProduct[] }) {
             {products.map((product) => (
               <tr key={product.id} className={cn(product.status === 'archived' && 'opacity-60')}>
                 <td className="px-4 py-3">
-                  <Link
-                    href={`/admin/products/${product.id}`}
-                    className="text-body-sm focus-visible:outline-ring rounded-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2"
-                  >
-                    {product.name}
-                  </Link>
-                  <p className="text-caption text-muted-foreground line-clamp-1">
-                    {product.description}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <ProductImage
+                      image={product.image}
+                      slug={product.slug}
+                      name={product.name}
+                      className="size-11 shrink-0"
+                      size={44}
+                    />
+                    <div className="min-w-0">
+                      <Link
+                        href={`/admin/products/${product.id}`}
+                        className="text-body-sm focus-visible:outline-ring rounded-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2"
+                      >
+                        {product.name}
+                      </Link>
+                      <p className="text-caption text-muted-foreground line-clamp-1">
+                        {product.description}
+                      </p>
+                    </div>
+                  </div>
                 </td>
                 <td data-numeric="" className="text-body-sm px-4 py-3 text-right tabular-nums">
                   {formatCurrency(product.defaultPrice)}

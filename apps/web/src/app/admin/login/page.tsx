@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Alert, Button, Input, Label, Card, CardContent } from '@sailent/ui';
-import { ShieldCheck, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 import { signIn, type LoginState } from '@/lib/auth/actions';
 
@@ -49,9 +50,16 @@ export default function AdminLoginPage() {
     <main className="bg-muted/40 flex min-h-dvh flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="bg-primary/10 text-primary mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
+          <Link href="/" className="mb-3 inline-flex">
+            <Image
+              src="/images/sailent-logo.png"
+              alt="Sailent Foundation"
+              width={2048}
+              height={746}
+              priority
+              className="h-12 w-auto object-contain sm:h-14"
+            />
+          </Link>
           <h1 className="font-display text-foreground text-2xl font-bold tracking-tight">
             Sailent Foundation
           </h1>

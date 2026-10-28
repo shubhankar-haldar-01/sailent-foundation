@@ -6,6 +6,7 @@ import { Check, PackageSearch, Search } from 'lucide-react';
 
 import { Button, Input, cn, formatCurrency } from '@sailent/ui';
 
+import { ProductImage } from './product-image';
 import type { CatalogueProduct } from './types';
 
 export interface ProductSelectorProps {
@@ -147,6 +148,14 @@ export function ProductSelector({
                   >
                     {isSelected ? <Check className="size-3" strokeWidth={3} /> : null}
                   </span>
+
+                  <ProductImage
+                    image={product.image}
+                    slug={product.slug}
+                    name={product.name}
+                    className="size-14 sm:size-16"
+                    size={64}
+                  />
 
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-baseline justify-between gap-x-3">
