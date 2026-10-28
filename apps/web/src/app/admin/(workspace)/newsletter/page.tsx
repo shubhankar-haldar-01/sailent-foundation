@@ -1,4 +1,22 @@
 import Link from 'next/link';
+import { MailCheck } from 'lucide-react';
+
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@sailent/ui';
 
 import { AdminApiError, listNewsletterSubscribers, type NewsletterStatus } from '@/lib/admin/api';
 
@@ -33,101 +51,128 @@ export default async function AdminNewsletterPage({
     data = await listNewsletterSubscribers({ status: active, page: params.page });
   } catch (error) {
     return (
-      <p
-        role="alert"
-        className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-      >
-        {error instanceof AdminApiError ? error.message : 'Could not load subscriptions.'}
-      </p>
+      <Card className="border-destructive/30 bg-destructive/5">
+        <CardContent className="text-body-sm text-destructive p-4">
+          {error instanceof AdminApiError ? error.message : 'Could not load subscriptions.'}
+        </CardContent>
+      </Card>
     );
   }
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'subscribed':
+        return <Badge variant="success">Subscribed</Badge>;
+      case 'pending':
+        return <Badge variant="warning">Awaiting confirmation</Badge>;
+      case 'unsubscribed':
+        return <Badge variant="neutral">Unsubscribed</Badge>;
+      default:
+        return <Badge variant="neutral">{status}</Badge>;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">Newsletter</h1>
-        <p className="text-body-sm text-muted-foreground mt-1 max-w-2xl">
-          People who asked for the newsletter from the website. Only confirmed addresses count as
-          subscribed. This site does not send newsletters; it keeps the record of who agreed to
-          receive one, and every confirmation email carries an unsubscribe link.
-        </p>
-      </header>
+      <PageHeader
+        title="Newsletter Subscribers"
+        description="Subscriber consent directory following double opt-in verification. Used for audit records and broadcast audience exports."
+        count={data.counts.subscribed}
+      />
 
-      <nav aria-label="Filter by status" className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-1.5">
         {FILTERS.map((filter) => {
           const count = filter.value === 'all' ? undefined : (data.counts[filter.value] ?? 0);
+          const isActive = active === filter.value;
           return (
             <Link
               key={filter.value}
               href={`/admin/newsletter?status=${filter.value}`}
-              aria-current={active === filter.value ? 'page' : undefined}
-              className={
-                active === filter.value
-                  ? 'bg-foreground text-background text-body-sm rounded-full px-3 py-1.5 font-semibold'
-                  : 'border-border text-body-sm hover:bg-muted rounded-full border px-3 py-1.5'
-              }
+              aria-current={isActive ? 'page' : undefined}
+              className={`text-caption rounded-full px-3 py-1 font-medium capitalize transition-colors ${
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+              }`}
             >
               {filter.label}
               {count !== undefined ? ` (${count})` : ''}
             </Link>
           );
         })}
-      </nav>
+      </div>
 
-      {data.items.length === 0 ? (
-        <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-8 text-center">
-          Nobody here yet.
-        </p>
-      ) : (
-        <div className="border-border overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[36rem] text-left">
-            <thead className="bg-muted/60 text-caption text-muted-foreground uppercase">
-              <tr>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Email
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Since
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-border divide-y">
-              {data.items.map((row) => (
-                <tr key={row.id}>
-                  <td className="text-body-sm break-all px-4 py-3">{row.email}</td>
-                  <td className="text-body-sm px-4 py-3">{row.status}</td>
-                  <td className="text-body-sm text-muted-foreground px-4 py-3">
-                    {new Date(
-                      row.unsubscribedAt ?? row.confirmedAt ?? row.createdAt,
-                    ).toLocaleDateString('en-IN')}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MailCheck className="text-primary size-4" />
+            Verified Subscribers
+          </CardTitle>
+          <CardDescription>Showing {data.items.length} records in current view</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.items.length === 0 ? (
+            <div className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed py-12 text-center">
+              No subscriber records found.
+            </div>
+          ) : (
+            <div className="border-border/70 overflow-hidden rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="font-semibold">Email Address</TableHead>
+                    <TableHead className="font-semibold">Subscription Status</TableHead>
+                    <TableHead className="text-right font-semibold">Consent Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.items.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="text-body-sm font-mono font-medium">
+                        {row.email}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(row.status)}</TableCell>
+                      <TableCell className="text-body-sm text-muted-foreground text-right font-mono">
+                        {new Date(
+                          row.unsubscribedAt ?? row.confirmedAt ?? row.createdAt,
+                        ).toLocaleDateString('en-IN')}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
-      {data.pagination.totalPages > 1 ? (
-        <nav aria-label="Pages" className="text-body-sm flex gap-4">
-          {data.pagination.page > 1 ? (
-            <Link href={`/admin/newsletter?status=${active}&page=${data.pagination.page - 1}`}>
-              Previous
-            </Link>
+          {data.pagination.totalPages > 1 ? (
+            <div className="border-border mt-4 flex items-center justify-between border-t pt-4">
+              <p className="text-body-sm text-muted-foreground">
+                Page {data.pagination.page} of {data.pagination.totalPages}
+              </p>
+              <div className="flex gap-2">
+                {data.pagination.page > 1 ? (
+                  <Button asChild variant="secondary" size="sm">
+                    <Link
+                      href={`/admin/newsletter?status=${active}&page=${data.pagination.page - 1}`}
+                    >
+                      Previous
+                    </Link>
+                  </Button>
+                ) : null}
+                {data.pagination.hasNext ? (
+                  <Button asChild variant="secondary" size="sm">
+                    <Link
+                      href={`/admin/newsletter?status=${active}&page=${data.pagination.page + 1}`}
+                    >
+                      Next
+                    </Link>
+                  </Button>
+                ) : null}
+              </div>
+            </div>
           ) : null}
-          <span>
-            Page {data.pagination.page} of {data.pagination.totalPages}
-          </span>
-          {data.pagination.hasNext ? (
-            <Link href={`/admin/newsletter?status=${active}&page=${data.pagination.page + 1}`}>
-              Next
-            </Link>
-          ) : null}
-        </nav>
-      ) : null}
+        </CardContent>
+      </Card>
     </div>
   );
 }

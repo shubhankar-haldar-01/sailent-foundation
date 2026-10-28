@@ -1,3 +1,14 @@
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  PageHeader,
+  Badge,
+} from '@sailent/ui';
+import { ShieldCheck, Lock, AlertCircle } from 'lucide-react';
+
 import { listRoles, getRole, type AdminRoleDetail } from '@/lib/admin/api';
 
 export const dynamic = 'force-dynamic';
@@ -26,39 +37,52 @@ export const dynamic = 'force-dynamic';
  */
 export default async function AdminRolesPage() {
   const roles = await listRoles();
-
   const details = await Promise.all(roles.map((role) => getRole(role.key).catch(() => null)));
 
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">Roles and permissions</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          Read-only. Guards check <strong>permissions</strong>, never role names, so what a screen
-          allows is decided by this list rather than by who you are.
-        </p>
-      </header>
+      <PageHeader
+        title="Roles and permissions"
+        description="Guards check explicit permissions, never role names. What any screen or action allows is governed by this verified capability matrix."
+      />
 
       {roles.length === 0 ? (
-        <p className="border-border text-body text-muted-foreground rounded-lg border border-dashed p-10 text-center">
-          No roles are defined. Seed reference data with <code>pnpm db:seed --reference</code>.
-        </p>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+            <AlertCircle className="text-muted-foreground/40 mb-3 h-10 w-10" />
+            <p className="text-foreground text-sm font-medium">No roles are defined</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Seed reference data with <code>pnpm db:seed --reference</code>.
+            </p>
+          </CardContent>
+        </Card>
       ) : null}
 
       {details
         .filter((detail): detail is AdminRoleDetail => detail !== null)
         .map((role) => (
           <section key={role.key} className="space-y-4">
-            <div className="border-border rounded-lg border p-5">
-              <h2 className="text-h3 font-semibold">{role.key}</h2>
-              {role.description ? (
-                <p className="text-body-sm text-muted-foreground mt-1">{role.description}</p>
-              ) : null}
-              <p className="text-body-sm text-muted-foreground mt-3">
-                {role.permissions.length} permissions
-                {typeof role.userCount === 'number' ? ` · ${role.userCount} account(s)` : ''}
-              </p>
-            </div>
+            <Card>
+              <CardHeader className="flex flex-row items-start justify-between pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="text-primary h-5 w-5" />
+                    <CardTitle className="text-lg font-bold">{role.key}</CardTitle>
+                    <Badge variant="accent" className="font-mono text-xs">
+                      {role.permissions.length} permissions
+                    </Badge>
+                  </div>
+                  {role.description ? (
+                    <CardDescription className="mt-1.5">{role.description}</CardDescription>
+                  ) : null}
+                </div>
+                {typeof role.userCount === 'number' ? (
+                  <Badge variant="neutral">
+                    {role.userCount} {role.userCount === 1 ? 'account' : 'accounts'}
+                  </Badge>
+                ) : null}
+              </CardHeader>
+            </Card>
 
             <PermissionTable permissions={role.permissions} />
           </section>
@@ -80,56 +104,61 @@ function PermissionTable({
   }
 
   return (
-    <div className="border-border overflow-x-auto rounded-lg border">
-      <table className="text-body-sm w-full">
-        <caption className="sr-only">Permissions granted by this role, grouped by resource</caption>
-        <thead className="bg-surface-sunken text-caption text-muted-foreground uppercase">
-          <tr>
-            <th scope="col" className="px-4 py-3 text-left font-semibold">
-              Permission
-            </th>
-            <th scope="col" className="px-4 py-3 text-left font-semibold">
-              What it allows
-            </th>
-            <th scope="col" className="px-4 py-3 text-left font-semibold">
-              Re-auth
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {[...byResource.entries()]
-            .sort(([a], [b]) => a.localeCompare(b))
-            .flatMap(([resource, group]) => [
-              <tr
-                key={`${resource}-header`}
-                className="border-border bg-surface-sunken/50 border-t"
-              >
-                <th
-                  scope="colgroup"
-                  colSpan={3}
-                  className="text-caption text-muted-foreground px-4 py-2 text-left font-semibold uppercase"
-                >
-                  {resource.replace(/_/g, ' ')}
-                </th>
-              </tr>,
-              ...group.map((permission) => (
-                <tr key={permission.key} className="border-border border-t">
-                  <td className="px-4 py-3 font-mono text-xs">{permission.key}</td>
-                  <td className="text-muted-foreground px-4 py-3">
-                    {permission.description ?? '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    {permission.isSensitive ? (
-                      <span className="text-warning font-medium">Required</span>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                </tr>
-              )),
-            ])}
-        </tbody>
-      </table>
-    </div>
+    <Card className="overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <caption className="sr-only">
+            Permissions granted by this role, grouped by resource
+          </caption>
+          <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
+            <tr>
+              <th scope="col" className="px-5 py-3.5">
+                Permission Key
+              </th>
+              <th scope="col" className="px-5 py-3.5">
+                Allowed Operations
+              </th>
+              <th scope="col" className="px-5 py-3.5">
+                Re-Authentication
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-border divide-y">
+            {[...byResource.entries()]
+              .sort(([a], [b]) => a.localeCompare(b))
+              .flatMap(([resource, group]) => [
+                <tr key={`${resource}-header`} className="bg-muted/20">
+                  <th
+                    scope="colgroup"
+                    colSpan={3}
+                    className="text-foreground px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
+                  >
+                    {resource.replace(/_/g, ' ')}
+                  </th>
+                </tr>,
+                ...group.map((permission) => (
+                  <tr key={permission.key} className="hover:bg-muted/30 transition-colors">
+                    <td className="text-foreground px-5 py-3 font-mono text-xs">
+                      {permission.key}
+                    </td>
+                    <td className="text-muted-foreground px-5 py-3 text-xs">
+                      {permission.description ?? '—'}
+                    </td>
+                    <td className="px-5 py-3">
+                      {permission.isSensitive ? (
+                        <Badge variant="warning" className="gap-1 text-[11px]">
+                          <Lock className="h-3 w-3" /> 5-Min Reauth
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
+                  </tr>
+                )),
+              ])}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }

@@ -27,6 +27,7 @@ export interface AddCampaignProductInput {
   targetQuantity?: number | null;
   maxPerDonation?: number;
   sortOrder?: number;
+  isMostNeeded?: boolean;
 }
 
 export interface UpdateCampaignProductInput {
@@ -34,6 +35,7 @@ export interface UpdateCampaignProductInput {
   targetQuantity?: number | null;
   maxPerDonation?: number;
   sortOrder?: number;
+  isMostNeeded?: boolean;
 }
 
 /**
@@ -113,6 +115,7 @@ export class CampaignProductsService {
       providedQuantity: campaignProducts.providedQuantity,
       maxPerDonation: campaignProducts.maxPerDonation,
       sortOrder: campaignProducts.sortOrder,
+      isMostNeeded: campaignProducts.isMostNeeded,
       status: campaignProducts.status,
       isActive: campaignProducts.isActive,
       createdAt: campaignProducts.createdAt,
@@ -235,6 +238,7 @@ export class CampaignProductsService {
       targetQuantity: input.targetQuantity ?? null,
       maxPerDonation: input.maxPerDonation ?? 999,
       sortOrder: input.sortOrder ?? 100,
+      isMostNeeded: input.isMostNeeded ?? false,
       isActive: true,
       status: 'active' as const,
       deletedAt: null,
@@ -315,6 +319,7 @@ export class CampaignProductsService {
     if (input.targetQuantity !== undefined) fields.targetQuantity = input.targetQuantity;
     if (input.maxPerDonation !== undefined) fields.maxPerDonation = input.maxPerDonation;
     if (input.sortOrder !== undefined) fields.sortOrder = input.sortOrder;
+    if (input.isMostNeeded !== undefined) fields.isMostNeeded = input.isMostNeeded;
 
     await this.database.db
       .update(campaignProducts)

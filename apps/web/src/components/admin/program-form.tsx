@@ -68,6 +68,7 @@ export function ProgramForm({
             </option>
           ))}
         </select>
+        <p className="text-caption text-muted-foreground">Thematic focus area for this program.</p>
         {state.fieldErrors?.categoryId ? (
           <p className="text-caption text-destructive">{state.fieldErrors.categoryId}</p>
         ) : null}

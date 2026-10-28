@@ -1,24 +1,30 @@
 import Link from 'next/link';
+import { Plus, Search, Users } from 'lucide-react';
 
-import { Button, formatDate } from '@sailent/ui';
+import { Button, Card, CardContent, formatDate, PageHeader } from '@sailent/ui';
 
 import { StatusPill } from '@/components/admin/status-pill';
 import { adminFetch, type AdminTeamMember, type Paginated } from '@/lib/admin/api';
-import { currentActor, can } from '@/lib/auth/session';
+import { can, currentActor } from '@/lib/auth/session';
 
 export const dynamic = 'force-dynamic';
 
+const STATUSES = [
+  { value: 'all', label: 'All' },
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+] as const;
+
 /**
- * The public team directory, as staff see it.
+ * Team directory.
  *
- * Ordered by `displayOrder` — the order the public page uses — rather than by
- * when somebody was added, because the question this screen answers most often
- * is "why is this person above that one".
+ * Distinct from Volunteers: team members represent public leadership, trustees
+ * and staff shown in the "Our Team" section of the public site.
  */
 export default async function AdminTeamPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }) {
   const params = await searchParams;
   const actor = await currentActor();
@@ -27,125 +33,167 @@ export default async function AdminTeamPage({
     query: {
       status: params.status ?? 'all',
       q: params.q,
-      page: params.page,
       limit: 50,
       sort: 'displayOrder',
     },
   });
 
-  const statuses = ['all', 'draft', 'published', 'archived'] as const;
   const active = params.status ?? 'all';
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">Team</h1>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            {data.pagination.total} total. Everyone here is a real person whose name and photograph
-            go on a public page — nothing is published until you publish it.
-          </p>
-        </div>
-        {can(actor, 'team.manage') ? (
-          <Button asChild>
-            <Link href="/admin/team/new">Add someone</Link>
-          </Button>
-        ) : null}
-      </header>
+      <PageHeader
+        title="Team Directory"
+        count={data.pagination.total}
+        description="Public team members and leadership profiles displayed on the public About page."
+        actions={
+          can(actor, 'team.manage') ? (
+            <Button asChild className="gap-1.5">
+              <Link href="/admin/team/new">
+                <Plus className="size-4" aria-hidden="true" />
+                Add team member
+              </Link>
+            </Button>
+          ) : null
+        }
+      />
 
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Filter and Search Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <nav aria-label="Filter by status" className="flex flex-wrap gap-1.5">
-          {statuses.map((status) => (
-            <Link
-              key={status}
-              href={`/admin/team?status=${status}`}
-              aria-current={active === status ? 'page' : undefined}
-              className={`text-body-sm rounded-md px-3 py-1.5 capitalize ${
-                active === status
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {status}
-            </Link>
-          ))}
+          {STATUSES.map((status) => {
+            const isSelected = active === status.value;
+            const href = `/admin/team?status=${status.value}${params.q ? `&q=${encodeURIComponent(params.q)}` : ''}`;
+            return (
+              <Link
+                key={status.value}
+                href={href}
+                aria-current={isSelected ? 'page' : undefined}
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-medium capitalize transition-colors ${
+                  isSelected
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                {status.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        <form className="ml-auto flex gap-2" action="/admin/team">
-          <input type="hidden" name="status" value={active} />
-          <input
-            type="search"
-            name="q"
-            defaultValue={params.q ?? ''}
-            placeholder="Search name or role"
-            aria-label="Search team"
-            className="border-input bg-surface text-body-sm h-9 rounded-md border px-3"
-          />
+        <form
+          className="flex w-full items-center gap-2 sm:w-auto"
+          method="get"
+          action="/admin/team"
+        >
+          {active !== 'all' ? <input type="hidden" name="status" value={active} /> : null}
+          <div className="relative w-full sm:w-64">
+            <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+            <input
+              type="search"
+              name="q"
+              defaultValue={params.q ?? ''}
+              placeholder="Search name or role..."
+              aria-label="Search team"
+              className="border-input bg-surface focus:border-primary focus:ring-primary h-9 w-full rounded-lg border pl-9 pr-3 text-sm focus:outline-none focus:ring-1"
+            />
+          </div>
           <Button type="submit" variant="secondary" size="sm">
             Search
           </Button>
+          {params.q ? (
+            <Button asChild variant="ghost" size="sm">
+              <Link href={`/admin/team${active !== 'all' ? `?status=${active}` : ''}`}>Clear</Link>
+            </Button>
+          ) : null}
         </form>
       </div>
 
       {data.items.length === 0 ? (
-        <p className="border-border text-body text-muted-foreground rounded-lg border border-dashed p-10 text-center">
-          Nobody matches this view.
-        </p>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+            <Users className="text-muted-foreground/40 mb-3 h-10 w-10" />
+            <p className="text-foreground text-sm font-medium">No team members found</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {params.q
+                ? `No team members match “${params.q}”.`
+                : 'No team members match the selected status filter.'}
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="border-border overflow-x-auto rounded-lg border">
-          <table className="text-body-sm w-full">
-            <thead className="bg-surface-sunken text-caption text-muted-foreground uppercase">
-              <tr>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Name
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Department
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Type
-                </th>
-                <th scope="col" className="px-4 py-3 text-right font-semibold">
-                  Order
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Updated
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((member) => (
-                <tr key={member.id} className="border-border border-t">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/team/${member.id}/edit`}
-                      className="hover:text-primary font-medium"
-                    >
-                      {member.name}
-                    </Link>
-                    <p className="text-caption text-muted-foreground">{member.designation}</p>
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3">{member.department ?? '—'}</td>
-                  <td className="text-muted-foreground px-4 py-3 capitalize">
-                    {member.memberType}
-                  </td>
-                  <td data-numeric="" className="px-4 py-3 text-right tabular-nums">
-                    {member.displayOrder}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusPill status={member.status} />
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3">
-                    {formatDate(member.updatedAt)}
-                  </td>
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <caption className="sr-only">
+                Team directory members ordered by public display rank.
+              </caption>
+              <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
+                <tr>
+                  <th scope="col" className="px-5 py-3.5">
+                    Team Member
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Department
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Role Type
+                  </th>
+                  <th scope="col" className="px-5 py-3.5 text-right">
+                    Display Order
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Status
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Last Updated
+                  </th>
+                  <th scope="col" className="px-5 py-3.5 text-right">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-border divide-y">
+                {data.items.map((member) => (
+                  <tr key={member.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-5 py-3.5">
+                      <Link
+                        href={`/admin/team/${member.id}/edit`}
+                        className="text-foreground hover:text-primary font-medium transition-colors"
+                      >
+                        {member.name}
+                      </Link>
+                      <p className="text-muted-foreground mt-0.5 text-xs">{member.designation}</p>
+                    </td>
+                    <td className="text-foreground px-5 py-3.5 text-xs">
+                      {member.department ?? 'General'}
+                    </td>
+                    <td className="text-muted-foreground px-5 py-3.5 text-xs capitalize">
+                      {member.memberType}
+                    </td>
+                    <td
+                      data-numeric=""
+                      className="text-foreground px-5 py-3.5 text-right font-mono text-xs tabular-nums"
+                    >
+                      {member.displayOrder}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <StatusPill status={member.status} />
+                    </td>
+                    <td className="text-muted-foreground px-5 py-3.5 text-xs">
+                      {formatDate(member.updatedAt)}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-3.5 text-right">
+                      <Button asChild variant="ghost" size="sm">
+                        <Link href={`/admin/team/${member.id}/edit`}>Edit</Link>
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
     </div>
   );

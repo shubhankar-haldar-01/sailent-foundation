@@ -133,6 +133,9 @@ export interface AdminCampaign {
     surplus: number;
   };
   daysRemaining: number | null;
+  presetAmounts?: number[] | null;
+  supportProvides?: string | null;
+  videoUrl?: string | null;
   updatedAt: string;
 }
 
@@ -141,10 +144,15 @@ export interface AdminCategory {
   key: string;
   name: string;
   slug: string;
+  description?: string | null;
+  icon?: string | null;
   kind: 'program' | 'campaign' | 'both' | 'blog';
+  displayOrder?: number;
   isActive: boolean;
   programCount: number;
   campaignCount: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // ---------------------------------------------------------------------------

@@ -16,6 +16,25 @@
 /* Design tokens, themes, base layer and project utilities. */
 @import '@sailent/ui/styles/tokens.css';
 
+@layer base {
+  button,
+  [role='button'],
+  input[type='button'],
+  input[type='submit'],
+  input[type='reset'],
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role='button'][aria-disabled='true'],
+  input[type='button']:disabled,
+  input[type='submit']:disabled,
+  input[type='reset']:disabled {
+    cursor: not-allowed;
+  }
+}
+
 /* Print styles: clean output without web navigation chrome */
 @media print {
   @page {

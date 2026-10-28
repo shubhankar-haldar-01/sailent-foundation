@@ -1,4 +1,20 @@
 import Link from 'next/link';
+import { MailCheck } from 'lucide-react';
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@sailent/ui';
 
 import { ActivePill } from '@/components/admin/notification-panels';
 import { AdminApiError, listNotificationTemplates } from '@/lib/admin/api';
@@ -19,67 +35,73 @@ export default async function AdminTemplatesPage() {
     ({ items } = await listNotificationTemplates());
   } catch (error) {
     return (
-      <p
-        role="alert"
-        className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-      >
-        {error instanceof AdminApiError ? error.message : 'Could not load the templates.'}
-      </p>
+      <Card className="border-destructive/30 bg-destructive/5">
+        <CardContent className="text-body-sm text-destructive p-4">
+          {error instanceof AdminApiError ? error.message : 'Could not load the templates.'}
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">Email templates</h1>
-        <p className="text-body-sm text-muted-foreground mt-1 max-w-2xl">
-          The wording of every transactional email. Editing one saves a new version; an inactive
-          template falls back to the built-in wording rather than stopping the email.
-        </p>
-      </header>
+      <PageHeader
+        title="Email Notification Templates"
+        description="Transactional email copy for receipts, event confirmations, volunteer updates, and auth notices. Modifying a template versions it dynamically."
+        count={items.length}
+      />
 
-      <div className="border-border overflow-x-auto rounded-lg border">
-        <table className="w-full min-w-[44rem] text-left">
-          <thead className="bg-muted/60 text-caption text-muted-foreground uppercase">
-            <tr>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                Email
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                Subject
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                Version
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                State
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-border divide-y">
-            {items.map((template) => (
-              <tr key={template.id} className="hover:bg-muted/40 align-top">
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/admin/notification-templates/${template.id}`}
-                    className="text-body-sm hover:text-info-action font-semibold"
-                  >
-                    {template.name}
-                  </Link>
-                  <p className="text-caption text-muted-foreground mt-0.5 font-mono">
-                    {template.slug}
-                  </p>
-                </td>
-                <td className="text-body-sm text-muted-foreground px-4 py-3">{template.subject}</td>
-                <td className="text-body-sm text-muted-foreground px-4 py-3">{template.version}</td>
-                <td className="px-4 py-3">
-                  <ActivePill isActive={template.isActive} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MailCheck className="text-primary size-4" />
+            Configured Templates
+          </CardTitle>
+          <CardDescription>
+            {items.length} transactional templates registered in processor
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="border-border/70 overflow-hidden rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40">
+                  <TableHead className="font-semibold">Template Name & Slug</TableHead>
+                  <TableHead className="font-semibold">Default Subject Line</TableHead>
+                  <TableHead className="font-semibold">Version</TableHead>
+                  <TableHead className="text-right font-semibold">Active State</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((template) => (
+                  <TableRow key={template.id} className="align-top">
+                    <TableCell className="max-w-xs">
+                      <Link
+                        href={`/admin/notification-templates/${template.id}`}
+                        className="text-body-sm hover:text-primary block font-semibold transition-colors"
+                      >
+                        {template.name}
+                      </Link>
+                      <p className="text-caption text-muted-foreground/80 mt-0.5 font-mono">
+                        {template.slug}
+                      </p>
+                    </TableCell>
+                    <TableCell className="text-body-sm text-muted-foreground max-w-sm truncate">
+                      {template.subject}
+                    </TableCell>
+                    <TableCell className="text-body-sm text-muted-foreground font-mono">
+                      v{template.version}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <ActivePill isActive={template.isActive} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

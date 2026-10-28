@@ -132,6 +132,9 @@ export interface Campaign extends Omit<CampaignCardModel, 'coverImage'> {
   beneficiariesReached: number;
   startsAt: string;
   isFeatured: boolean;
+  presetAmounts?: number[] | null;
+  supportProvides?: string | null;
+  videoUrl?: string | null;
 
   /**
    * Computed by the API (Phase 4) and passed straight through.

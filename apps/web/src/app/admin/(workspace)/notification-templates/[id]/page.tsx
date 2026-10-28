@@ -1,5 +1,6 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
 
 import { ActivePill, TemplateEditor } from '@/components/admin/notification-panels';
 import { AdminApiError, getNotificationTemplate } from '@/lib/admin/api';
@@ -22,32 +23,31 @@ export default async function AdminTemplatePage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6">
-      <nav aria-label="Breadcrumb" className="text-body-sm text-muted-foreground">
-        <Link href="/admin/notification-templates" className="hover:text-foreground">
-          Email templates
-        </Link>
-      </nav>
+      <PageHeader
+        title={template.name}
+        description={`Identifier: ${template.slug} · Active revision version ${template.version}`}
+        status={<ActivePill isActive={template.isActive} />}
+      />
 
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">{template.name}</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          <span className="font-mono">{template.slug}</span> · version {template.version} ·{' '}
-          <ActivePill isActive={template.isActive} />
-        </p>
-        {template.description ? (
-          <p className="text-body-sm text-muted-foreground mt-2 max-w-2xl">
-            {template.description}
-          </p>
-        ) : null}
-      </header>
-
-      {can(actor, 'notification.template.manage') ? (
-        <TemplateEditor template={template} />
-      ) : (
-        <p className="border-border text-body-sm text-muted-foreground rounded-lg border p-5">
-          You can read this template but not change it.
-        </p>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Template Specification & Content</CardTitle>
+          <CardDescription>
+            {template.description ||
+              'Modify email subject and body copy. Interpolation tokens are replaced dynamically at dispatch time.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {can(actor, 'notification.template.manage') ? (
+            <TemplateEditor template={template} />
+          ) : (
+            <p className="border-border/60 text-body-sm text-muted-foreground bg-muted/20 rounded-lg border p-5">
+              You have read-only access to this email template. Editing requires
+              notification.template.manage permission.
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

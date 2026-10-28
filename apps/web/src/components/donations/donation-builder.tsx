@@ -123,8 +123,12 @@ export function DonationBuilder({
   className,
 }: DonationBuilderProps) {
   const [quantities, setQuantities] = React.useState<Record<string, number>>({});
+  const effectivePresets =
+    campaign.presetAmounts && campaign.presetAmounts.length > 0
+      ? campaign.presetAmounts
+      : PRESET_AMOUNTS;
   const [customAmount, setCustomAmount] = React.useState(() =>
-    preselectSmallestAmount && campaign.status === 'active' ? String(PRESET_AMOUNTS[0]) : '',
+    preselectSmallestAmount && campaign.status === 'active' ? String(effectivePresets[0]) : '',
   );
   /**
    * The builder and the checkout are ONE component with two stages, not two
@@ -322,6 +326,7 @@ export function DonationBuilder({
       mode={mode}
       {...(campaign.products.length > 0 ? { onModeChange: chooseMode } : {})}
       progress={progress}
+      presetAmounts={campaign.presetAmounts ?? undefined}
       {...(assurances ? { assurances } : {})}
     />
   );
@@ -409,12 +414,14 @@ export function DonationBuilder({
                     onQuantityChange={(next: number) => setQuantity(product.id, next)}
                     disabled={isPaused || isClosed}
                     /*
-                      "Most Needed" marks the FIRST card and only the first.
-                      Products arrive in the order the campaign team set, so the
-                      first is the one they put first — and a badge on three of
-                      four cards says nothing at all.
+                      "Most Needed" marks cards explicitly flagged as `isMostNeeded`.
+                      If none are explicitly flagged, it defaults to the first product (index === 0).
                     */
-                    featured={index === 0}
+                    featured={
+                      campaign.products.some((p) => p.isMostNeeded)
+                        ? Boolean(product.isMostNeeded)
+                        : index === 0
+                    }
                   />
                 </li>
               ))}

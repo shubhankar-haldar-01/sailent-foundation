@@ -1,7 +1,17 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ExternalLink } from 'lucide-react';
 
-import { formatDate } from '@sailent/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  formatDate,
+} from '@sailent/ui';
 
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
@@ -47,54 +57,52 @@ export default async function AdminBlogPostPage({ params }: { params: Promise<{ 
   const media = can(actor, 'media.read')
     ? await listMedia({ visibility: 'public', limit: 12 }).catch(() => null)
     : null;
-  /*
-    `{ items }`, not a bare array: the API's response interceptor wraps a list
-    in that envelope, which every other caller of this endpoint already knows.
-    Typing it as an array typechecked perfectly and then failed at runtime with
-    "c.map is not a function" — on the server, so the whole page 500'd.
 
-    No `kind` filter, deliberately. Reusing the shared taxonomy is the point:
-    an article about the education programme belongs under the education the
-    rest of the site already names, so every category is offered.
-  */
   const categories = await adminFetch<{ items: AdminCategory[] }>('admin/categories')
     .then((result) => result.items)
     .catch(() => []);
 
   return (
     <div className="space-y-6">
-      <nav aria-label="Breadcrumb" className="text-body-sm text-muted-foreground">
-        <Link href="/admin/blog" className="hover:text-foreground">
-          Blog
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span>{post.title}</span>
-      </nav>
+      <PageHeader
+        title={post.title}
+        description={`Author: ${post.authorName ?? 'None recorded'} · Last updated ${formatDate(
+          post.updatedAt,
+        )}`}
+        status={<StatusPill status={post.status} />}
+        actions={
+          post.status === 'published' ? (
+            <Button asChild variant="secondary" size="sm">
+              <Link href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1.5 size-4" />
+                View live
+              </Link>
+            </Button>
+          ) : null
+        }
+      />
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">{post.title}</h1>
-          <p className="text-body-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
-            <StatusPill status={post.status} />
-            <span>·</span>
-            <span>{post.authorName ?? 'No author recorded'}</span>
-            <span>·</span>
-            <span>Updated {formatDate(post.updatedAt)}</span>
-            {post.status === 'published' ? (
-              <>
-                <span>·</span>
-                <Link href={`/blog/${post.slug}`} className="hover:text-foreground underline">
-                  View it live
-                </Link>
-              </>
-            ) : null}
-          </p>
-        </div>
-      </header>
+      {can(actor, 'blog.publish') ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Publishing & Status</CardTitle>
+            <CardDescription>Control publication status and public visibility.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BlogStatusControls post={post} />
+          </CardContent>
+        </Card>
+      ) : null}
 
-      {can(actor, 'blog.publish') ? <BlogStatusControls post={post} /> : null}
-
-      <BlogForm post={post} mediaOptions={media?.items ?? []} categories={categories} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Article Content & Metadata</CardTitle>
+          <CardDescription>Edit title, category, media, excerpt, and body content.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BlogForm post={post} mediaOptions={media?.items ?? []} categories={categories} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -43,37 +43,9 @@ const IMPACT_PROGRAMS = [
 ];
 
 /**
- * Soft botanical leaf branch silhouette matching the background accent.
- */
-function LeafBranch({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 160 220"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M20 200 C40 160 80 120 140 80"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path d="M45 170 C35 150 45 130 65 140 C75 155 60 175 45 170Z" fill="currentColor" />
-      <path d="M75 140 C95 130 105 145 95 160 C80 165 70 150 75 140Z" fill="currentColor" />
-      <path d="M85 115 C75 95 85 80 105 90 C115 105 100 120 85 115Z" fill="currentColor" />
-      <path d="M115 90 C135 80 145 95 135 110 C120 115 110 100 115 90Z" fill="currentColor" />
-      <path d="M130 60 C125 40 140 30 155 45 C155 60 140 70 130 60Z" fill="currentColor" />
-    </svg>
-  );
-}
-
-/**
  * Who We Are & What We Do section.
  *
  * 100% precision match to the approved visual reference:
- * - Soft sky-blue backdrop with subtle decorative botanical silhouettes and orange accent arc.
  * - Prominent white rounded container card with gentle elevation.
  * - 3-column layout:
  *   1. Left: "ABOUT US ——" eyebrow, "Who We Are" heading (with orange "Are"), description, and blue pill button.
@@ -86,27 +58,6 @@ export function WhoWeAre() {
       aria-labelledby="who-we-are-title"
       className="bg-background border-border dark:bg-background relative overflow-hidden border-b py-8 sm:py-10 lg:py-14"
     >
-      {/* Decorative botanical branch on bottom-left */}
-      <LeafBranch className="pointer-events-none absolute -bottom-8 -left-6 h-52 w-40 text-sky-200/50 dark:text-sky-950/40" />
-
-      {/* Thin curved orange arc on bottom-left */}
-      <svg
-        viewBox="0 0 200 120"
-        fill="none"
-        className="pointer-events-none absolute bottom-2 left-6 h-20 w-36 text-[#EB6A1F]/50 dark:text-[#EB6A1F]/30"
-        aria-hidden="true"
-      >
-        <path
-          d="M 10 110 C 40 40 120 20 190 60"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-      </svg>
-
-      {/* Decorative botanical branch on right edge */}
-      <LeafBranch className="pointer-events-none absolute -right-6 top-1/2 h-60 w-44 -translate-y-1/2 rotate-180 text-sky-200/50 dark:text-sky-950/40" />
-
       <PageShell>
         {/* Main White Rounded Card Container */}
         <div className="border-border bg-surface dark:border-border dark:bg-surface relative mx-auto w-full rounded-[28px] border p-6 shadow-[0_12px_44px_rgba(0,0,0,0.06)] sm:rounded-[36px] sm:p-8 md:p-10 lg:p-12 dark:shadow-[0_12px_44px_rgba(0,0,0,0.4)]">

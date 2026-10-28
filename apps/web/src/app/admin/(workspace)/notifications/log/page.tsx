@@ -1,4 +1,21 @@
 import Link from 'next/link';
+import { Send, ArrowLeft } from 'lucide-react';
+
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@sailent/ui';
 
 import { RetryButton, StatusIcon } from '@/components/admin/notification-panels';
 import { AdminApiError, sendLog } from '@/lib/admin/api';
@@ -38,108 +55,123 @@ export default async function AdminSendLogPage({
     });
   } catch (error) {
     return (
-      <p
-        role="alert"
-        className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-      >
-        {error instanceof AdminApiError ? error.message : 'Could not load the send log.'}
-      </p>
+      <Card className="border-destructive/30 bg-destructive/5">
+        <CardContent className="text-body-sm text-destructive p-4">
+          {error instanceof AdminApiError ? error.message : 'Could not load the send log.'}
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">Send log</h1>
-        <p className="text-body-sm text-muted-foreground mt-1 max-w-2xl">
-          {data.pagination.total} entries. Every transactional message the platform has produced,
-          and what happened to it. Recipients are shown by record, not by address.
-        </p>
-      </header>
+      <PageHeader
+        title="Transaction Send Log"
+        description="Delivery tracking for every transactional email produced by the platform. Recipients are identified by record ID to safeguard donor privacy."
+        count={data.pagination.total}
+        actions={
+          <Button asChild variant="secondary" size="sm">
+            <Link href="/admin/notifications">
+              <ArrowLeft className="mr-1.5 size-4" />
+              Alerts Feed
+            </Link>
+          </Button>
+        }
+      />
 
-      <nav aria-label="Filter by status" className="flex flex-wrap gap-2">
-        {STATUSES.map((status) => (
-          <Link
-            key={status}
-            href={
-              status === 'all'
-                ? '/admin/notifications/log'
-                : `/admin/notifications/log?status=${status}`
-            }
-            aria-current={active === status ? 'page' : undefined}
-            className={
-              active === status
-                ? 'bg-foreground text-background text-body-sm rounded-full px-3 py-1.5 font-semibold'
-                : 'border-border text-body-sm hover:bg-muted rounded-full border px-3 py-1.5'
-            }
-          >
-            {status === 'all' ? 'All' : status[0]!.toUpperCase() + status.slice(1)}
-          </Link>
-        ))}
-      </nav>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {STATUSES.map((status) => {
+          const isActive = active === status;
+          return (
+            <Link
+              key={status}
+              href={
+                status === 'all'
+                  ? '/admin/notifications/log'
+                  : `/admin/notifications/log?status=${status}`
+              }
+              aria-current={isActive ? 'page' : undefined}
+              className={`text-caption rounded-full px-3 py-1 font-medium capitalize transition-colors ${
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+              }`}
+            >
+              {status}
+            </Link>
+          );
+        })}
+      </div>
 
-      {data.items.length === 0 ? (
-        <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-8 text-center">
-          Nothing here yet.
-        </p>
-      ) : (
-        <div className="border-border overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[52rem] text-left">
-            <thead className="bg-muted/60 text-caption text-muted-foreground uppercase">
-              <tr>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  What
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Channel
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  When
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-border divide-y">
-              {data.items.map((entry) => (
-                <tr key={entry.id} className="hover:bg-muted/40 align-top">
-                  <td className="px-4 py-3">
-                    <span className="text-body-sm inline-flex items-center gap-1.5 font-semibold">
-                      <StatusIcon status={entry.status} />
-                      {entry.status}
-                    </span>
-                    {entry.error ? (
-                      <p className="text-caption text-destructive mt-1 max-w-56">{entry.error}</p>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="text-body-sm font-semibold">{entry.title}</p>
-                    <p className="text-caption text-muted-foreground mt-0.5 font-mono">
-                      {entry.type}
-                      {entry.templateVersion ? ` · template v${entry.templateVersion}` : ''}
-                    </p>
-                  </td>
-                  <td className="text-body-sm text-muted-foreground px-4 py-3">{entry.channel}</td>
-                  <td className="text-body-sm text-muted-foreground px-4 py-3">
-                    {new Date(entry.createdAt).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3">
-                    {entry.status === 'failed' &&
-                    entry.channel === 'email' &&
-                    can(actor, 'notification.send') ? (
-                      <RetryButton id={entry.id} retryCount={entry.retryCount} />
-                    ) : null}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Send className="text-primary size-4" />
+            Dispatch Log Records
+          </CardTitle>
+          <CardDescription>
+            Showing {data.items.length} {active} transactional records
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.items.length === 0 ? (
+            <div className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed py-12 text-center">
+              No transmission records matching current criteria.
+            </div>
+          ) : (
+            <div className="border-border/70 overflow-hidden rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="font-semibold">Delivery Status</TableHead>
+                    <TableHead className="font-semibold">Message & Template</TableHead>
+                    <TableHead className="font-semibold">Transport Channel</TableHead>
+                    <TableHead className="font-semibold">Queued At</TableHead>
+                    <TableHead className="text-right font-semibold">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.items.map((entry) => (
+                    <TableRow key={entry.id} className="align-top">
+                      <TableCell>
+                        <div className="text-body-sm inline-flex items-center gap-1.5 font-semibold capitalize">
+                          <StatusIcon status={entry.status} />
+                          {entry.status}
+                        </div>
+                        {entry.error ? (
+                          <p className="text-caption text-destructive mt-1 max-w-xs break-words">
+                            {entry.error}
+                          </p>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="max-w-md">
+                        <p className="text-body-sm font-semibold">{entry.title}</p>
+                        <p className="text-caption text-muted-foreground/80 mt-0.5 font-mono">
+                          {entry.type}
+                          {entry.templateVersion ? ` · template v${entry.templateVersion}` : ''}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-body-sm text-muted-foreground text-caption font-mono uppercase">
+                        {entry.channel}
+                      </TableCell>
+                      <TableCell className="text-body-sm text-muted-foreground font-mono">
+                        {new Date(entry.createdAt).toLocaleString('en-IN')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {entry.status === 'failed' &&
+                        entry.channel === 'email' &&
+                        can(actor, 'notification.send') ? (
+                          <RetryButton id={entry.id} retryCount={entry.retryCount} />
+                        ) : null}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

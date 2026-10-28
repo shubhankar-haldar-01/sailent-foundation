@@ -1,7 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, ilike, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, isNull, notInArray, or, sql, type SQL } from 'drizzle-orm';
 
-import { campaigns, categories, programs, type DatabaseClient } from '@sailent/database';
+import {
+  campaignGallery,
+  campaigns,
+  categories,
+  donations,
+  programs,
+  type DatabaseClient,
+} from '@sailent/database';
 import {
   campaignProgress,
   canTransitionCampaign,
@@ -48,6 +55,10 @@ export interface CampaignWriteInput {
   stopAtGoal?: boolean;
   allowCustomAmount?: boolean;
   minDonationAmount?: number;
+  presetAmounts?: number[] | null;
+  supportProvides?: string | null;
+  videoUrl?: string | null;
+  galleryMediaIds?: string[] | null;
   isFeatured?: boolean;
   featuredOrder?: number | null;
   impactNotes?: { label: string; value: number; unit?: string }[] | null;
@@ -287,6 +298,20 @@ export class CampaignsService {
 
     if (!created) throw new ConflictException('Could not create the campaign.');
 
+    if (input.galleryMediaIds && input.galleryMediaIds.length > 0) {
+      for (let i = 0; i < input.galleryMediaIds.length; i++) {
+        await this.database.db
+          .insert(campaignGallery)
+          .values({
+            campaignId: created.id,
+            mediaId: input.galleryMediaIds[i]!,
+            displayOrder: (i + 1) * 10,
+            visibility: 'public',
+          })
+          .onConflictDoNothing();
+      }
+    }
+
     await this.audit.record({
       action: 'campaign.create',
       entityType: 'campaign',
@@ -364,6 +389,36 @@ export class CampaignsService {
         })
         .where(eq(campaigns.id, id));
     });
+
+    if (input.galleryMediaIds !== undefined) {
+      const targetMediaIds = input.galleryMediaIds ?? [];
+      if (targetMediaIds.length === 0) {
+        await this.database.db.delete(campaignGallery).where(eq(campaignGallery.campaignId, id));
+      } else {
+        await this.database.db
+          .delete(campaignGallery)
+          .where(
+            and(
+              eq(campaignGallery.campaignId, id),
+              notInArray(campaignGallery.mediaId, targetMediaIds),
+            ),
+          );
+        for (let i = 0; i < targetMediaIds.length; i++) {
+          await this.database.db
+            .insert(campaignGallery)
+            .values({
+              campaignId: id,
+              mediaId: targetMediaIds[i]!,
+              displayOrder: (i + 1) * 10,
+              visibility: 'public',
+            })
+            .onConflictDoUpdate({
+              target: [campaignGallery.campaignId, campaignGallery.mediaId],
+              set: { displayOrder: (i + 1) * 10 },
+            });
+        }
+      }
+    }
 
     // A change to the fundraising goal is called out separately in the audit
     // trail: it is the one edit that changes what the campaign is asking for.
@@ -453,6 +508,58 @@ export class CampaignsService {
     });
 
     return this.getById(id);
+  }
+
+  async delete(id: string, actor: AuthenticatedActor, context: AuditContext) {
+    const [row] = await this.database.db
+      .select({
+        id: campaigns.id,
+        title: campaigns.title,
+        status: campaigns.status,
+        amountRaised: campaigns.amountRaised,
+        donorCount: campaigns.donorCount,
+      })
+      .from(campaigns)
+      .where(and(eq(campaigns.id, id), isNull(campaigns.deletedAt)))
+      .limit(1);
+
+    if (!row) throw new NotFoundException('Campaign');
+
+    if (row.amountRaised > 0 || row.donorCount > 0) {
+      throw new ConflictException(
+        'Campaigns that have received donations cannot be deleted. Archive it instead.',
+      );
+    }
+
+    const [donation] = await this.database.db
+      .select({ id: donations.id })
+      .from(donations)
+      .where(eq(donations.campaignId, id))
+      .limit(1);
+
+    if (donation) {
+      throw new ConflictException(
+        'Campaigns with recorded donations cannot be deleted. Archive it instead.',
+      );
+    }
+
+    await this.database.db
+      .update(campaigns)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(eq(campaigns.id, id));
+
+    await this.audit.record({
+      action: 'campaign.delete',
+      entityType: 'campaign',
+      entityId: id,
+      userId: actor.id,
+      oldValues: { title: row.title, status: row.status },
+      newValues: { deletedAt: new Date().toISOString() },
+      severity: 'critical',
+      ...context,
+    });
+
+    return { success: true };
   }
 
   // -------------------------------------------------------------------------
@@ -555,6 +662,9 @@ export class CampaignsService {
       'stopAtGoal',
       'allowCustomAmount',
       'minDonationAmount',
+      'presetAmounts',
+      'supportProvides',
+      'videoUrl',
       'isFeatured',
       'featuredOrder',
       'impactNotes',

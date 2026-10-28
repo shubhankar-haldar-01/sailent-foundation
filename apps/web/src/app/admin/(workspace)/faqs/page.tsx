@@ -1,4 +1,7 @@
 import { FAQ_CATEGORIES } from '@sailent/validation';
+import { HelpCircle } from 'lucide-react';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
 
 import { CreateFaqForm, FaqRow } from '@/components/admin/faq-admin';
 import { AdminApiError, listGeneralFaqs } from '@/lib/admin/api';
@@ -20,48 +23,68 @@ export default async function AdminFaqsPage() {
     faqs = await listGeneralFaqs();
   } catch (error) {
     return (
-      <p
-        role="alert"
-        className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-      >
-        {error instanceof AdminApiError ? error.message : 'Could not load the FAQs.'}
-      </p>
+      <Card className="border-destructive/30 bg-destructive/5">
+        <CardContent className="text-body-sm text-destructive p-4">
+          {error instanceof AdminApiError ? error.message : 'Could not load the FAQs.'}
+        </CardContent>
+      </Card>
     );
   }
 
   const canManage = can(actor, 'faq.manage');
 
   return (
-    <div className="space-y-8">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">FAQs</h1>
-          <p className="text-body-sm text-muted-foreground mt-1 max-w-2xl">
-            The questions on the public FAQ page, by section. Only published ones appear there.
-            Questions about a single campaign are edited on that campaign.
-          </p>
-        </div>
-      </header>
+    <div className="space-y-6">
+      <PageHeader
+        title="Frequently Asked Questions"
+        description="Public site FAQs organized by topic section. Campaign-specific FAQs are managed on their respective campaign."
+        count={faqs.length}
+      />
 
-      {canManage ? <CreateFaqForm /> : null}
+      {canManage ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <HelpCircle className="text-primary size-4" />
+              Add FAQ Question
+            </CardTitle>
+            <CardDescription>
+              Create a new general question and answer to publish under a category section.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CreateFaqForm />
+          </CardContent>
+        </Card>
+      ) : null}
 
       {faqs.length === 0 ? (
-        <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-8 text-center">
-          No questions yet. The FAQ page shows a short note until one is published.
-        </p>
+        <Card>
+          <CardContent className="text-body-sm text-muted-foreground py-12 text-center">
+            No questions yet. The public FAQ page shows a placeholder message until at least one
+            item is published.
+          </CardContent>
+        </Card>
       ) : (
         FAQ_CATEGORIES.map((category) => {
           const items = faqs.filter((faq) => (faq.category ?? 'general') === category.id);
           if (items.length === 0) return null;
           return (
-            <section key={category.id} className="space-y-2">
-              <h2 className="text-h3 font-semibold">{category.label}</h2>
-              <div className="border-border divide-border divide-y rounded-lg border">
-                {items.map((faq) => (
-                  <FaqRow key={faq.id} faq={faq} canManage={canManage} />
-                ))}
-              </div>
-            </section>
+            <Card key={category.id}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">{category.label}</CardTitle>
+                <CardDescription>
+                  {items.length} {items.length === 1 ? 'question' : 'questions'} in this section
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border-border/70 divide-border/70 divide-y overflow-hidden rounded-lg border">
+                  {items.map((faq) => (
+                    <FaqRow key={faq.id} faq={faq} canManage={canManage} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           );
         })
       )}

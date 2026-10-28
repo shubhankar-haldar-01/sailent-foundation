@@ -1,6 +1,6 @@
 import Link from 'next/link';
-
-import { Button, formatDate } from '@sailent/ui';
+import { Button, Card, CardContent, PageHeader, formatDate } from '@sailent/ui';
+import { Shield, Key, Search } from 'lucide-react';
 
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
@@ -48,8 +48,6 @@ export default async function AdminUsersPage({
         />
       );
     }
-    // Shown rather than thrown: a failed list is a bad moment to replace the
-    // whole screen with an error page the operator cannot act on.
     failure =
       error instanceof AdminApiError ? error.message : 'Could not load staff accounts just now.';
   }
@@ -59,38 +57,33 @@ export default async function AdminUsersPage({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">Staff accounts</h1>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            {data ? `${data.pagination.total} total. ` : ''}
-            Everyone here holds <strong>SUPER_ADMIN</strong> — the only administrative role. Donors
-            and volunteers are separate and do not appear on this screen.
-          </p>
-        </div>
-        {can(actor, 'user.invite') ? <InviteUserForm /> : null}
-      </header>
+      <PageHeader
+        title="Staff accounts"
+        description="Everyone here holds SUPER_ADMIN — the only administrative role. Donors and volunteers are separate and do not appear on this screen."
+        count={data ? data.pagination.total : undefined}
+        actions={can(actor, 'user.invite') ? <InviteUserForm /> : undefined}
+      />
 
       {failure ? (
-        <p
+        <div
           role="alert"
-          className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
+          className="border-destructive/30 bg-destructive/5 text-destructive rounded-xl border p-4 text-sm"
         >
           {failure}
-        </p>
+        </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <nav aria-label="Filter by status" className="flex flex-wrap gap-1.5">
           {statuses.map((status) => (
             <Link
               key={status}
               href={status === 'all' ? '/admin/users' : `/admin/users?status=${status}`}
               aria-current={active === status ? 'page' : undefined}
-              className={`text-body-sm rounded-md px-3 py-1.5 capitalize ${
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-medium capitalize transition-colors ${
                 active === status
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
               {status}
@@ -98,16 +91,19 @@ export default async function AdminUsersPage({
           ))}
         </nav>
 
-        <form className="ml-auto flex gap-2" action="/admin/users">
+        <form className="flex w-full items-center gap-2 sm:w-auto" action="/admin/users">
           <input type="hidden" name="status" value={active} />
-          <input
-            type="search"
-            name="q"
-            defaultValue={params.q ?? ''}
-            placeholder="Search name or email"
-            aria-label="Search staff accounts"
-            className="border-input bg-surface text-body-sm h-9 rounded-md border px-3"
-          />
+          <div className="relative w-full sm:w-64">
+            <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+            <input
+              type="search"
+              name="q"
+              defaultValue={params.q ?? ''}
+              placeholder="Search name or email"
+              aria-label="Search staff accounts"
+              className="border-input bg-surface focus:border-primary focus:ring-primary h-9 w-full rounded-lg border pl-9 pr-3 text-sm focus:outline-none focus:ring-1"
+            />
+          </div>
           <Button type="submit" variant="secondary" size="sm">
             Search
           </Button>
@@ -115,64 +111,79 @@ export default async function AdminUsersPage({
       </div>
 
       {data && data.items.length === 0 ? (
-        <p className="border-border text-body text-muted-foreground rounded-lg border border-dashed p-10 text-center">
-          {params.q
-            ? `No staff account matches “${params.q}”.`
-            : 'No staff account matches this view.'}
-        </p>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+            <Shield className="text-muted-foreground/40 mb-3 h-10 w-10" />
+            <p className="text-foreground text-sm font-medium">No staff accounts found</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {params.q
+                ? `No staff account matches “${params.q}”.`
+                : 'No staff accounts match the selected status filter.'}
+            </p>
+          </CardContent>
+        </Card>
       ) : null}
 
       {data && data.items.length > 0 ? (
-        <div className="border-border overflow-x-auto rounded-lg border">
-          <table className="text-body-sm w-full">
-            <caption className="sr-only">Staff accounts</caption>
-            <thead className="bg-surface-sunken text-caption text-muted-foreground uppercase">
-              <tr>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Name
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Second factor
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Last signed in
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Added
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((user) => (
-                <tr key={user.id} className="border-border border-t">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/users/${user.id}`}
-                      className="hover:text-primary font-medium"
-                    >
-                      {user.firstName} {user.lastName ?? ''}
-                    </Link>
-                    <p className="text-caption text-muted-foreground">{user.email}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusPill status={user.status} />
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3">
-                    {/* Whether one is enrolled. The secret is never returned by the API. */}
-                    {user.totpEnabled ? 'Enrolled' : 'None'}
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3">
-                    {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3">{formatDate(user.createdAt)}</td>
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <caption className="sr-only">Staff accounts</caption>
+              <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
+                <tr>
+                  <th scope="col" className="px-5 py-3.5">
+                    Name & Email
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Status
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Second Factor
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Last Signed In
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Added
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-border divide-y">
+                {data.items.map((user) => (
+                  <tr key={user.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-5 py-3.5">
+                      <Link
+                        href={`/admin/users/${user.id}`}
+                        className="text-foreground hover:text-primary font-medium transition-colors"
+                      >
+                        {user.firstName} {user.lastName ?? ''}
+                      </Link>
+                      <p className="text-muted-foreground mt-0.5 text-xs">{user.email}</p>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <StatusPill status={user.status} />
+                    </td>
+                    <td className="px-5 py-3.5">
+                      {user.totpEnabled ? (
+                        <span className="text-success inline-flex items-center gap-1.5 text-xs font-medium">
+                          <Key className="h-3.5 w-3.5" /> Enrolled
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">None</span>
+                      )}
+                    </td>
+                    <td className="text-muted-foreground px-5 py-3.5 text-xs">
+                      {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}
+                    </td>
+                    <td className="text-muted-foreground px-5 py-3.5 text-xs">
+                      {formatDate(user.createdAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       ) : null}
 
       {data && data.pagination.total > data.items.length ? (
@@ -204,8 +215,8 @@ function Pagination({
   };
 
   return (
-    <nav aria-label="Pages" className="flex items-center justify-between">
-      <p className="text-body-sm text-muted-foreground">
+    <nav aria-label="Pages" className="flex items-center justify-between pt-2">
+      <p className="text-muted-foreground text-xs">
         Page {page} of {pages}
       </p>
       <div className="flex gap-2">

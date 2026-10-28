@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { Button } from '@sailent/ui';
+import { Button, ConfirmationDialog } from '@sailent/ui';
 
 import { FormStatus } from '@/components/admin/form-shell';
 import type { ActionState } from '@/lib/admin/actions';
@@ -28,6 +28,8 @@ export function StatusActions({
   labels,
   reasonRequired = [],
   confirmRequired = [],
+  deleteAction,
+  canDelete = false,
 }: {
   entityId: string;
   slug?: string;
@@ -38,15 +40,42 @@ export function StatusActions({
   labels: Record<string, { endpoint: string; label: string }>;
   reasonRequired?: string[];
   confirmRequired?: string[];
+  deleteAction?: (prev: ActionState, form: FormData) => Promise<ActionState>;
+  canDelete?: boolean;
 }) {
   const [state, formAction, pending] = React.useActionState<ActionState, FormData>(action, {});
+  const [deleteState, deleteFormAction, deletePending] = React.useActionState<
+    ActionState,
+    FormData
+  >(deleteAction ?? (async () => ({ ok: false })), {});
   const [reasonFor, setReasonFor] = React.useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = React.useState<string | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
 
   const options = allowed.filter((target) => labels[target]);
+
+  const handleConfirmStatus = async () => {
+    if (!confirmTarget) return;
+    const formData = new FormData();
+    formData.append('id', entityId);
+    if (slug) formData.append('slug', slug);
+    formData.append('action', labels[confirmTarget]!.endpoint);
+    await formAction(formData);
+    setConfirmTarget(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    const formData = new FormData();
+    formData.append('id', entityId);
+    if (slug) formData.append('slug', slug);
+    await deleteFormAction(formData);
+    setConfirmDeleteOpen(false);
+  };
 
   return (
     <div className="space-y-3">
       <FormStatus state={state} />
+      <FormStatus state={deleteState} />
 
       {reasonFor ? (
         <form
@@ -106,6 +135,21 @@ export function StatusActions({
               );
             }
 
+            if (needsConfirm) {
+              return (
+                <Button
+                  key={target}
+                  type="button"
+                  size="sm"
+                  variant={target === 'archived' ? 'secondary' : 'primary'}
+                  disabled={pending}
+                  onClick={() => setConfirmTarget(target)}
+                >
+                  {meta.label}
+                </Button>
+              );
+            }
+
             return (
               <form key={target} action={formAction}>
                 <input type="hidden" name="id" value={entityId} />
@@ -116,27 +160,54 @@ export function StatusActions({
                   size="sm"
                   variant={target === 'archived' ? 'secondary' : 'primary'}
                   disabled={pending}
-                  onClick={(event) => {
-                    // A confirmation for the ones that remove something from
-                    // public view. Native confirm is deliberate: it cannot be
-                    // missed, and it works before hydration.
-                    if (
-                      needsConfirm &&
-                      !window.confirm(
-                        `${meta.label}? This can be undone, but the page comes off the site immediately.`,
-                      )
-                    ) {
-                      event.preventDefault();
-                    }
-                  }}
                 >
                   {meta.label}
                 </Button>
               </form>
             );
           })}
+
+          {canDelete && deleteAction ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              disabled={deletePending || pending}
+              onClick={() => setConfirmDeleteOpen(true)}
+            >
+              {deletePending ? 'Deleting…' : 'Delete campaign'}
+            </Button>
+          ) : null}
         </div>
       )}
+
+      {/* Branded confirmation dialog for status transitions (e.g. archiving) */}
+      <ConfirmationDialog
+        open={Boolean(confirmTarget)}
+        onOpenChange={(open) => !open && setConfirmTarget(null)}
+        title={confirmTarget ? `${labels[confirmTarget]?.label}?` : ''}
+        description="This can be undone, but the page and record will be removed from public view immediately."
+        confirmLabel={confirmTarget ? labels[confirmTarget]?.label : 'Confirm'}
+        variant={confirmTarget === 'archived' ? 'secondary' : 'primary'}
+        icon="warning"
+        loading={pending}
+        onConfirm={handleConfirmStatus}
+        error={state.error}
+      />
+
+      {/* Branded confirmation dialog for deletion */}
+      <ConfirmationDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Delete this campaign permanently?"
+        description="This campaign and its configuration will be permanently deleted. This action cannot be undone."
+        confirmLabel="Delete campaign"
+        variant="destructive"
+        icon="danger"
+        loading={deletePending}
+        onConfirm={handleConfirmDelete}
+        error={deleteState.error}
+      />
     </div>
   );
 }

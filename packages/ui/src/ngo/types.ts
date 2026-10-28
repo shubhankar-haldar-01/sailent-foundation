@@ -41,6 +41,7 @@ export interface ProductDonationModel {
   providedQuantity: number;
   status: 'active' | 'inactive' | 'fulfilled';
   maxPerDonation: number;
+  isMostNeeded?: boolean;
 }
 
 export interface ProgramCardModel {

@@ -1,5 +1,6 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
 
 import { StoryForm } from '@/components/admin/story-form';
 import { listMedia } from '@/lib/admin/api';
@@ -22,22 +23,22 @@ export default async function NewStoryPage() {
 
   return (
     <div className="space-y-6">
-      <nav aria-label="Breadcrumb" className="text-body-sm text-muted-foreground">
-        <Link href="/admin/stories" className="hover:text-foreground">
-          Success stories
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span>New</span>
-      </nav>
+      <PageHeader
+        title="Draft Success Story"
+        description="Saved as a draft. Nothing is public until verified and published deliberately."
+      />
 
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">Draft a story</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          Saved as a draft. Nothing is public until you publish it deliberately.
-        </p>
-      </header>
-
-      <StoryForm mediaOptions={media?.items ?? []} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Story Details & Subject</CardTitle>
+          <CardDescription>
+            Record beneficiary quotes, subject consent, location, and associated campaigns.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <StoryForm mediaOptions={media?.items ?? []} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

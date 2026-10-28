@@ -1,5 +1,20 @@
 import Link from 'next/link';
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@sailent/ui';
+
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import { UploadPanel, VisibilityBadge } from '@/components/admin/document-library';
 import { DOCUMENT_TYPE_LABELS, formatBytes } from '@/lib/admin/documents';
@@ -79,110 +94,101 @@ export default async function AdminDocumentsPage({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">Reports &amp; documents</h1>
-          <p className="text-body-sm text-muted-foreground mt-1 max-w-2xl">
-            {data ? `${data.pagination.total} documents. ` : ''}
-            Nothing here is published to the website. A document reaches a visitor only when it is
-            marked public <em>and</em> attached to a campaign — there is no public document library.
-          </p>
-        </div>
-        {can(actor, 'document.manage') ? <UploadPanel campaigns={campaigns} /> : null}
-      </header>
+      <PageHeader
+        title="Institutional Documents"
+        description="Audited financials, compliance filings, governance policies, and internal reports. Documents remain internal unless marked public and attached to a campaign."
+        count={data?.pagination.total}
+        actions={can(actor, 'document.manage') ? <UploadPanel campaigns={campaigns} /> : null}
+      />
 
       {failure ? (
-        <p
-          role="alert"
-          className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-        >
-          {failure}
-        </p>
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="text-body-sm text-destructive p-4">{failure}</CardContent>
+        </Card>
       ) : null}
 
-      <nav aria-label="Filter by visibility" className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-1.5">
         {filters.map((filter) => {
           const href =
             filter === 'all' ? '/admin/documents' : `/admin/documents?visibility=${filter}`;
+          const isActive = active === filter;
           return (
             <Link
               key={filter}
               href={href}
-              aria-current={active === filter ? 'page' : undefined}
-              className={
-                active === filter
-                  ? 'bg-foreground text-background text-body-sm rounded-full px-3 py-1.5 font-semibold'
-                  : 'border-border text-body-sm hover:bg-muted rounded-full border px-3 py-1.5'
-              }
+              aria-current={isActive ? 'page' : undefined}
+              className={`text-caption rounded-full px-3 py-1 font-medium capitalize transition-colors ${
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+              }`}
             >
-              {filter === 'all'
-                ? 'All'
-                : filter === 'admin_only'
-                  ? 'Admin only'
-                  : filter[0]!.toUpperCase() + filter.slice(1)}
+              {filter === 'all' ? 'All' : filter === 'admin_only' ? 'Admin only' : filter}
             </Link>
           );
         })}
-      </nav>
+      </div>
 
-      {data && data.items.length === 0 ? (
-        <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-8 text-center">
-          No documents yet. Annual reports, audited statements and policies live here.
-        </p>
-      ) : null}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Document Repository</CardTitle>
+          <CardDescription>
+            {data ? `${data.pagination.total} documents catalogued` : 'Document files'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data && data.items.length === 0 ? (
+            <div className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed py-12 text-center">
+              No documents yet. Annual reports, audited statements and policies live here.
+            </div>
+          ) : null}
 
-      {data && data.items.length > 0 ? (
-        <div className="border-border overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[46rem] text-left">
-            <thead className="bg-muted/60 text-caption text-muted-foreground uppercase">
-              <tr>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Title
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Type
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Visibility
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Year
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Size
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-border divide-y">
-              {data.items.map((document) => (
-                <tr key={document.id} className="hover:bg-muted/40">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/documents/${document.id}`}
-                      className="text-body-sm hover:text-info-action font-semibold"
-                    >
-                      {document.title}
-                    </Link>
-                    <p className="text-caption text-muted-foreground mt-0.5">{document.fileName}</p>
-                  </td>
-                  <td className="text-body-sm px-4 py-3">
-                    {DOCUMENT_TYPE_LABELS[document.documentType] ?? document.documentType}
-                  </td>
-                  <td className="px-4 py-3">
-                    <VisibilityBadge visibility={document.visibility} />
-                  </td>
-                  <td className="text-body-sm text-muted-foreground px-4 py-3">
-                    {document.financialYear ?? '—'}
-                  </td>
-                  <td className="text-body-sm text-muted-foreground px-4 py-3">
-                    {formatBytes(document.sizeBytes)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
+          {data && data.items.length > 0 ? (
+            <div className="border-border/70 overflow-hidden rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="font-semibold">Document Title</TableHead>
+                    <TableHead className="font-semibold">Document Type</TableHead>
+                    <TableHead className="font-semibold">Visibility</TableHead>
+                    <TableHead className="font-semibold">Financial Year</TableHead>
+                    <TableHead className="text-right font-semibold">File Size</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.items.map((document) => (
+                    <TableRow key={document.id}>
+                      <TableCell className="max-w-md">
+                        <Link
+                          href={`/admin/documents/${document.id}`}
+                          className="text-body-sm hover:text-primary block font-semibold transition-colors"
+                        >
+                          {document.title}
+                        </Link>
+                        <p className="text-caption text-muted-foreground/80 mt-0.5 font-mono">
+                          {document.fileName}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-body-sm text-muted-foreground">
+                        {DOCUMENT_TYPE_LABELS[document.documentType] ?? document.documentType}
+                      </TableCell>
+                      <TableCell>
+                        <VisibilityBadge visibility={document.visibility} />
+                      </TableCell>
+                      <TableCell className="text-body-sm text-muted-foreground font-mono">
+                        {document.financialYear ?? '—'}
+                      </TableCell>
+                      <TableCell className="text-body-sm text-muted-foreground text-right font-mono">
+                        {formatBytes(document.sizeBytes)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
     </div>
   );
 }

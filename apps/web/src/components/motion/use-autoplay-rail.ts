@@ -60,7 +60,7 @@ export interface AutoplayRail {
 export function useAutoplayRail(
   /** Number of items, so the hook re-measures when the list changes. */
   itemCount: number,
-  { intervalMs = 5000 }: { intervalMs?: number } = {},
+  { intervalMs = 4000 }: { intervalMs?: number } = {},
 ): AutoplayRail {
   const ref = React.useRef<HTMLUListElement>(null);
 
@@ -72,6 +72,16 @@ export function useAutoplayRail(
   const [canScroll, setCanScroll] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
   const [isVisible, setIsVisible] = React.useState(true);
+  const [isInteracting, setIsInteracting] = React.useState(false);
+  const resumeTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const pauseTemporarily = React.useCallback((durationMs = 4000) => {
+    setIsInteracting(true);
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      setIsInteracting(false);
+    }, durationMs);
+  }, []);
 
   /**
    * Scroll so the next card's leading edge meets the row's.
@@ -92,25 +102,27 @@ export function useAutoplayRail(
     const offsets = items.map((item) => item.getBoundingClientRect().left - edge);
 
     if (direction === 1) {
-      // Within a few pixels of the end: back to the start. The tolerance is
-      // for sub-pixel layout, which otherwise leaves it stuck one frame short
-      // and looping between the last two cards forever.
-      if (element.scrollLeft + element.clientWidth >= element.scrollWidth - 4) {
+      // Within a few pixels of the end, or if no more items ahead: loop back to the start.
+      if (element.scrollLeft + element.clientWidth >= element.scrollWidth - 10) {
         element.scrollTo({ left: 0, behavior });
         return;
       }
-      const next = offsets.find((offset) => offset > 4);
-      element.scrollBy({ left: next ?? element.clientWidth, behavior });
+      const next = offsets.find((offset) => offset > 10);
+      if (next === undefined) {
+        element.scrollTo({ left: 0, behavior });
+        return;
+      }
+      element.scrollBy({ left: next, behavior });
       return;
     }
 
-    if (element.scrollLeft <= 4) {
+    if (element.scrollLeft <= 10) {
       element.scrollTo({ left: element.scrollWidth, behavior });
       return;
     }
     // The last card still starting left of the edge — the one that scrolled
     // off most recently.
-    const previous = [...offsets].reverse().find((offset) => offset < -4);
+    const previous = [...offsets].reverse().find((offset) => offset < -10);
     element.scrollBy({ left: previous ?? -element.clientWidth, behavior });
   }, []);
 
@@ -142,25 +154,46 @@ export function useAutoplayRail(
     };
   }, [itemCount]);
 
-  /** Stop for good once the user takes the wheel. */
+  /** Pause temporarily while the user interacts horizontally, and resume after idle. */
   React.useEffect(() => {
     const element = ref.current;
     if (!element) return;
 
-    const surrender = () => setWanted(false);
+    const onWheel = (e: WheelEvent) => {
+      // Only pause if the user is scrolling HORIZONTALLY across the rail.
+      // Vertical wheel scrolling is normal page scrolling and must not stop the rail.
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        pauseTemporarily(4000);
+      }
+    };
 
-    // Input events, NOT `scroll`. This hook's own `scrollBy` fires `scroll`,
-    // so listening for that would have the timer switch itself off on its
-    // first tick.
-    const events = ['pointerdown', 'wheel', 'touchstart', 'keydown'] as const;
-    for (const name of events) {
-      element.addEventListener(name, surrender, { passive: true });
-    }
+    const onPointerDown = () => {
+      pauseTemporarily(4000);
+    };
+
+    const onTouchStart = () => {
+      pauseTemporarily(4000);
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        pauseTemporarily(4000);
+      }
+    };
+
+    element.addEventListener('wheel', onWheel, { passive: true });
+    element.addEventListener('pointerdown', onPointerDown, { passive: true });
+    element.addEventListener('touchstart', onTouchStart, { passive: true });
+    element.addEventListener('keydown', onKeyDown, { passive: true });
 
     return () => {
-      for (const name of events) element.removeEventListener(name, surrender);
+      element.removeEventListener('wheel', onWheel);
+      element.removeEventListener('pointerdown', onPointerDown);
+      element.removeEventListener('touchstart', onTouchStart);
+      element.removeEventListener('keydown', onKeyDown);
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
     };
-  }, []);
+  }, [pauseTemporarily]);
 
   /** A hidden tab and an off-screen row both count as not watching. */
   React.useEffect(() => {
@@ -172,7 +205,7 @@ export function useAutoplayRail(
 
     const observer = new IntersectionObserver(
       (entries) => setIsVisible(entries.some((entry) => entry.isIntersecting) && !document.hidden),
-      { threshold: 0.4 },
+      { threshold: 0.1 },
     );
     observer.observe(element);
 
@@ -206,7 +239,7 @@ export function useAutoplayRail(
     };
   }, []);
 
-  const isPlaying = wanted && canPlay && !isHovered && isVisible;
+  const isPlaying = wanted && canPlay && !isHovered && !isInteracting && isVisible;
 
   React.useEffect(() => {
     if (!isPlaying) return;
@@ -217,7 +250,7 @@ export function useAutoplayRail(
   return {
     ref,
     // What the CONTROL should say. It reads "playing" while merely paused by a
-    // hover, because a button that flips to "Play" as the pointer crosses the
+    // hover or interaction, because a button that flips to "Play" as the pointer crosses the
     // row would be unusable — it would change under the cursor on the way to
     // being clicked.
     isPlaying: wanted && canPlay,
@@ -225,6 +258,6 @@ export function useAutoplayRail(
     canScroll,
     toggle: () => setWanted((playing) => !playing),
     advance,
-    surrender: () => setWanted(false),
+    surrender: () => pauseTemporarily(5000),
   };
 }

@@ -175,26 +175,15 @@ export function CampaignCard({
           {/*
             Three-column peach/mint statistics discs (Donors, Raised, Goal) with dividers
           */}
-          <dl
-            className={cn(
-              '-mx-2 grid items-stretch gap-x-1.5',
-              campaign.donorCount >= 5
-                ? 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]'
-                : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]',
-            )}
-          >
-            {campaign.donorCount >= 5 ? (
-              <>
-                <Figure
-                  label="Donors"
-                  value={formatNumber(campaign.donorCount)}
-                  icon={Users}
-                  iconClassName="text-wash-coral-ink"
-                  discClassName="bg-wash-coral"
-                />
-                <FigureDivider />
-              </>
-            ) : null}
+          <dl className="-mx-2 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch gap-x-1.5">
+            <Figure
+              label="Donors"
+              value={formatNumber(campaign.donorCount ?? 0)}
+              icon={Users}
+              iconClassName="text-wash-coral-ink"
+              discClassName="bg-wash-coral"
+            />
+            <FigureDivider />
             <Figure
               label="Raised"
               value={formatCurrency(raised)}

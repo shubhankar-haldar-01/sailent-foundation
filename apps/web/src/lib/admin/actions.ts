@@ -1,5 +1,8 @@
 'use server';
 
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { randomBytes } from 'node:crypto';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -7,6 +10,7 @@ import { SOCIAL_NETWORKS } from '@sailent/validation';
 
 import {
   AdminApiError,
+  type AdminMedia,
   adminFetch,
   adminUpload,
   previewNotificationTemplate,
@@ -105,6 +109,17 @@ function rupeesToPaise(form: FormData, key: string): number | undefined {
   return Math.round(rupees * 100);
 }
 
+function presetAmountsFromForm(form: FormData): number[] | null | undefined {
+  const raw = text(form, 'presetAmounts');
+  if (raw === undefined) return undefined;
+  if (raw === '') return null;
+  const parsed = raw
+    .split(',')
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  return parsed.length > 0 ? parsed : null;
+}
+
 // ---------------------------------------------------------------------------
 // Programs
 // ---------------------------------------------------------------------------
@@ -183,15 +198,29 @@ export async function changeProgramStatus(
 // ---------------------------------------------------------------------------
 
 export async function createCampaign(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const title = text(form, 'title');
+  const programId = text(form, 'programId');
+  const categoryId = text(form, 'categoryId');
+
+  const fieldErrors: Record<string, string> = {};
+  if (!title) fieldErrors.title = 'A title is required.';
+  if (!programId) fieldErrors.programId = 'Select a program for this campaign.';
+  if (!categoryId) fieldErrors.categoryId = 'Select a category for this campaign.';
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { ok: false, fieldErrors, error: 'Please fill in all required fields.' };
+  }
+
   let created: { id: string };
   try {
     created = await adminFetch<{ id: string }>('admin/campaigns', {
       method: 'POST',
       body: {
-        title: text(form, 'title'),
+        title,
         slug: text(form, 'slug'),
-        programId: text(form, 'programId'),
-        categoryId: text(form, 'categoryId'),
+        programId,
+        categoryId,
+        coverImage: form.has('coverImage') ? text(form, 'coverImage') : undefined,
         shortDescription: text(form, 'shortDescription'),
         location: text(form, 'location'),
         state: text(form, 'state'),
@@ -199,6 +228,16 @@ export async function createCampaign(_prev: ActionState, form: FormData): Promis
         beneficiaryTarget: text(form, 'beneficiaryTarget')
           ? Number(text(form, 'beneficiaryTarget'))
           : undefined,
+        description: text(form, 'description'),
+        supportProvides: text(form, 'supportProvides'),
+        videoUrl: text(form, 'videoUrl'),
+        galleryMediaIds: form.get('galleryMediaIds')
+          ? String(form.get('galleryMediaIds')).split(',').filter(Boolean)
+          : undefined,
+        beneficiaryContext: text(form, 'beneficiaryContext'),
+        fundUtilization: text(form, 'fundUtilization'),
+        internalNotes: text(form, 'internalNotes'),
+        presetAmounts: presetAmountsFromForm(form),
         startDate: text(form, 'startDate'),
         endDate: text(form, 'endDate'),
         ...featuredFields(form),
@@ -214,27 +253,49 @@ export async function createCampaign(_prev: ActionState, form: FormData): Promis
 
 export async function updateCampaign(_prev: ActionState, form: FormData): Promise<ActionState> {
   const id = String(form.get('id'));
+  const title = text(form, 'title');
+  const programId = text(form, 'programId');
+  const categoryId = text(form, 'categoryId');
+
+  const fieldErrors: Record<string, string> = {};
+  if (!title) fieldErrors.title = 'A title is required.';
+  if (!programId) fieldErrors.programId = 'Select a program for this campaign.';
+  if (!categoryId) fieldErrors.categoryId = 'Select a category for this campaign.';
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { ok: false, fieldErrors, error: 'Please fill in all required fields.' };
+  }
+
   try {
     await adminFetch(`admin/campaigns/${id}`, {
       method: 'PATCH',
       body: {
-        title: text(form, 'title'),
+        title,
         slug: text(form, 'slug'),
-        programId: text(form, 'programId') ?? null,
-        categoryId: text(form, 'categoryId') ?? null,
+        programId,
+        categoryId,
+        coverImage: form.has('coverImage') ? (text(form, 'coverImage') ?? null) : undefined,
         shortDescription: text(form, 'shortDescription'),
         description: text(form, 'description'),
-        beneficiaryContext: text(form, 'beneficiaryContext'),
+        supportProvides: text(form, 'supportProvides'),
+        videoUrl: text(form, 'videoUrl'),
+        galleryMediaIds: form.has('galleryMediaIds')
+          ? String(form.get('galleryMediaIds')).split(',').filter(Boolean)
+          : undefined,
+        beneficiaryContext: form.has('beneficiaryContext')
+          ? text(form, 'beneficiaryContext')
+          : undefined,
         location: text(form, 'location'),
         state: text(form, 'state'),
         fundraisingGoal: rupeesToPaise(form, 'fundraisingGoal'),
         beneficiaryTarget: text(form, 'beneficiaryTarget')
           ? Number(text(form, 'beneficiaryTarget'))
           : undefined,
-        startDate: text(form, 'startDate') ?? null,
-        endDate: text(form, 'endDate') ?? null,
-        fundUtilization: text(form, 'fundUtilization'),
-        internalNotes: text(form, 'internalNotes'),
+        presetAmounts: presetAmountsFromForm(form),
+        startDate: form.has('startDate') ? (text(form, 'startDate') ?? null) : undefined,
+        endDate: form.has('endDate') ? (text(form, 'endDate') ?? null) : undefined,
+        fundUtilization: form.has('fundUtilization') ? text(form, 'fundUtilization') : undefined,
+        internalNotes: form.has('internalNotes') ? text(form, 'internalNotes') : undefined,
         ...featuredFields(form),
       },
     });
@@ -275,6 +336,23 @@ export async function changeCampaignStatus(
   revalidatePath(`/admin/campaigns/${id}/edit`);
   revalidatePath('/admin/campaigns');
   return { ok: true };
+}
+
+export async function deleteCampaignAction(
+  _prev: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const id = String(form.get('id'));
+  const slug = text(form, 'slug');
+  try {
+    await adminFetch(`admin/campaigns/${id}`, { method: 'DELETE' });
+  } catch (error) {
+    return toState(error);
+  }
+
+  if (slug) revalidateCatalogue(slug);
+  revalidatePath('/admin/campaigns');
+  redirect('/admin/campaigns');
 }
 
 // ---------------------------------------------------------------------------
@@ -385,15 +463,35 @@ export async function setProductStatus(_prev: ActionState, form: FormData): Prom
  */
 export async function addCampaignProduct(_prev: ActionState, form: FormData): Promise<ActionState> {
   const campaignId = String(form.get('campaignId'));
+  const fieldErrors: Record<string, string> = {};
+
+  const pricePaise = rupeesToPaise(form, 'price');
+  if (pricePaise === undefined || pricePaise <= 0) {
+    fieldErrors.price = 'Please enter a valid price greater than ₹0.';
+  }
+
+  const rawTarget = text(form, 'targetQuantity');
+  if (!rawTarget) {
+    fieldErrors.targetQuantity = 'Target quantity is required.';
+  } else {
+    const numTarget = Number(rawTarget);
+    if (!Number.isFinite(numTarget) || numTarget <= 0 || !Number.isInteger(numTarget)) {
+      fieldErrors.targetQuantity = 'Target quantity must be a positive whole number.';
+    }
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { ok: false, fieldErrors, error: 'Please correct the highlighted fields.' };
+  }
+
   try {
     await adminFetch(`admin/campaigns/${campaignId}/products`, {
       method: 'POST',
       body: {
         productId: text(form, 'productId'),
-        price: rupeesToPaise(form, 'price'),
-        targetQuantity: text(form, 'targetQuantity')
-          ? Number(text(form, 'targetQuantity'))
-          : undefined,
+        price: pricePaise,
+        targetQuantity: Number(rawTarget),
+        isMostNeeded: form.get('isMostNeeded') === 'on' || form.get('isMostNeeded') === 'true',
       },
     });
   } catch (error) {
@@ -411,11 +509,37 @@ export async function updateCampaignProduct(
 ): Promise<ActionState> {
   const campaignId = String(form.get('campaignId'));
   const productId = String(form.get('productId'));
+
+  const fieldErrors: Record<string, string> = {};
+
+  if (form.has('price')) {
+    const pricePaise = rupeesToPaise(form, 'price');
+    if (pricePaise === undefined || pricePaise <= 0) {
+      fieldErrors.price = 'Please enter a valid price greater than ₹0.';
+    }
+  }
+
+  if (form.has('targetQuantity')) {
+    const rawTarget = text(form, 'targetQuantity');
+    if (!rawTarget) {
+      fieldErrors.targetQuantity = 'Target quantity is required.';
+    } else {
+      const numTarget = Number(rawTarget);
+      if (!Number.isFinite(numTarget) || numTarget <= 0 || !Number.isInteger(numTarget)) {
+        fieldErrors.targetQuantity = 'Target quantity must be a positive whole number.';
+      }
+    }
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { ok: false, fieldErrors, error: 'Please correct the highlighted fields.' };
+  }
+
   try {
     await adminFetch(`admin/campaigns/${campaignId}/products/${productId}`, {
       method: 'PATCH',
       body: {
-        price: rupeesToPaise(form, 'price'),
+        price: form.has('price') ? rupeesToPaise(form, 'price') : undefined,
         targetQuantity:
           text(form, 'targetQuantity') === undefined
             ? undefined
@@ -423,6 +547,11 @@ export async function updateCampaignProduct(
         maxPerDonation: text(form, 'maxPerDonation')
           ? Number(text(form, 'maxPerDonation'))
           : undefined,
+        isMostNeeded: form.has('hasIsMostNeeded')
+          ? form.get('isMostNeeded') === 'on' || form.get('isMostNeeded') === 'true'
+          : form.has('isMostNeeded')
+            ? form.get('isMostNeeded') === 'on' || form.get('isMostNeeded') === 'true'
+            : undefined,
       },
     });
   } catch (error) {
@@ -1534,7 +1663,7 @@ export async function uploadMedia(_prev: ActionState, form: FormData): Promise<A
 
   try {
     const forwarded = new FormData();
-    forwarded.append('file', file);
+    forwarded.append('file', file, file.name);
     forwarded.append('altText', String(form.get('altText') ?? '').trim());
     const caption = String(form.get('caption') ?? '').trim();
     if (caption) forwarded.append('caption', caption);
@@ -1545,6 +1674,105 @@ export async function uploadMedia(_prev: ActionState, form: FormData): Promise<A
     return { ok: true };
   } catch (error) {
     return toState(error);
+  }
+}
+
+export interface DirectUploadResult {
+  ok: boolean;
+  error?: string;
+  media?: AdminMedia;
+}
+
+/**
+ * Direct inline image upload from a form/picker without leaving the page.
+ */
+export async function uploadMediaDirect(form: FormData): Promise<DirectUploadResult> {
+  const file = form.get('file');
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: 'Choose an image to upload.' };
+  }
+
+  try {
+    const forwarded = new FormData();
+    forwarded.append('file', file, file.name);
+    const rawAlt = String(form.get('altText') ?? '').trim();
+    const fallbackAlt =
+      file.name
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[-_]+/g, ' ')
+        .trim() || 'Uploaded photograph';
+    forwarded.append('altText', rawAlt || fallbackAlt);
+    const caption = String(form.get('caption') ?? '').trim();
+    if (caption) forwarded.append('caption', caption);
+    forwarded.append('visibility', String(form.get('visibility') ?? 'public'));
+
+    const created = await adminUpload<AdminMedia>('admin/media', forwarded);
+    revalidateMedia();
+    return { ok: true, media: created };
+  } catch (error) {
+    const state = toState(error);
+    return { ok: false, error: state.error || 'Failed to upload photograph.' };
+  }
+}
+
+export interface VideoUploadResult {
+  ok: boolean;
+  error?: string;
+  url?: string;
+}
+
+/**
+ * Direct video file upload from local machine for campaign About visual media.
+ */
+export async function uploadCampaignVideo(form: FormData): Promise<VideoUploadResult> {
+  const file = form.get('file');
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: 'Please choose a video file.' };
+  }
+
+  const allowedExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.m4v'];
+  const ext = path.extname(file.name).toLowerCase();
+  if (!allowedExtensions.includes(ext) && !file.type.startsWith('video/')) {
+    return {
+      ok: false,
+      error: 'Please choose a valid video file (MP4, WebM, OGG, or MOV).',
+    };
+  }
+
+  // Maximum 100MB limit for video upload
+  const maxBytes = 100 * 1024 * 1024;
+  if (file.size > maxBytes) {
+    return { ok: false, error: 'Video file size must be under 100MB.' };
+  }
+
+  try {
+    const safeExt = allowedExtensions.includes(ext) ? ext : '.mp4';
+    const filename = `campaign-video-${Date.now()}-${randomBytes(8).toString('hex')}${safeExt}`;
+
+    const cwd = process.cwd();
+    let targetDir = path.resolve(cwd, 'public/uploads/videos');
+    if (
+      !fs.existsSync(path.resolve(cwd, 'public')) &&
+      fs.existsSync(path.resolve(cwd, 'apps/web/public'))
+    ) {
+      targetDir = path.resolve(cwd, 'apps/web/public/uploads/videos');
+    }
+
+    fs.mkdirSync(targetDir, { recursive: true });
+    const filePath = path.join(targetDir, filename);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    fs.writeFileSync(filePath, buffer);
+
+    return {
+      ok: true,
+      url: `/uploads/videos/${filename}`,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Failed to save video file.',
+    };
   }
 }
 
@@ -2258,6 +2486,108 @@ export async function setCampaignUpdateStatus(
     revalidateCatalogue(String(form.get('slug') ?? '') || undefined);
     for (const tag of ['impact']) revalidateTag(tag);
     revalidatePath(`/admin/campaigns/${campaignId}/edit`);
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Categories
+// ---------------------------------------------------------------------------
+
+export async function createCategoryAction(
+  _prev: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const name = text(form, 'name');
+  if (!name)
+    return { error: 'Category name is required.', fieldErrors: { name: 'Name is required' } };
+
+  const slug = text(form, 'slug');
+  const key = text(form, 'key');
+  const description = text(form, 'description');
+  const icon = text(form, 'icon');
+  const kind = text(form, 'kind') as 'program' | 'campaign' | 'both' | 'blog' | undefined;
+  const displayOrderRaw = text(form, 'displayOrder');
+  const displayOrder = displayOrderRaw !== undefined ? Number(displayOrderRaw) : undefined;
+  const isActive = form.get('isActive') === 'false' ? false : true;
+
+  try {
+    await adminFetch('admin/categories', {
+      method: 'POST',
+      body: {
+        name,
+        slug: slug || undefined,
+        key: key || undefined,
+        description: description || null,
+        icon: icon || null,
+        kind: kind || 'both',
+        displayOrder: Number.isFinite(displayOrder) ? displayOrder : 100,
+        isActive,
+      },
+    });
+
+    revalidateCatalogue();
+    revalidatePath('/admin/categories');
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+export async function updateCategoryAction(
+  _prev: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const id = text(form, 'id');
+  if (!id) return { error: 'Category ID is required.' };
+
+  const name = text(form, 'name');
+  const slug = text(form, 'slug');
+  const description = text(form, 'description');
+  const icon = text(form, 'icon');
+  const kind = text(form, 'kind') as 'program' | 'campaign' | 'both' | 'blog' | undefined;
+  const displayOrderRaw = text(form, 'displayOrder');
+  const displayOrder = displayOrderRaw !== undefined ? Number(displayOrderRaw) : undefined;
+  const isActive =
+    form.get('isActive') === 'true' ? true : form.get('isActive') === 'false' ? false : undefined;
+
+  const body: Record<string, unknown> = {};
+  if (name !== undefined) body.name = name;
+  if (slug !== undefined) body.slug = slug;
+  if (description !== undefined) body.description = description || null;
+  if (icon !== undefined) body.icon = icon || null;
+  if (kind !== undefined) body.kind = kind;
+  if (displayOrder !== undefined && Number.isFinite(displayOrder)) body.displayOrder = displayOrder;
+  if (isActive !== undefined) body.isActive = isActive;
+
+  try {
+    await adminFetch(`admin/categories/${id}`, {
+      method: 'PATCH',
+      body,
+    });
+
+    revalidateCatalogue();
+    revalidatePath('/admin/categories');
+    return { ok: true };
+  } catch (error) {
+    return toState(error);
+  }
+}
+
+export async function toggleCategoryStatusAction(
+  id: string,
+  isActive: boolean,
+): Promise<ActionState> {
+  try {
+    await adminFetch(`admin/categories/${id}`, {
+      method: 'PATCH',
+      body: { isActive },
+    });
+
+    revalidateCatalogue();
+    revalidatePath('/admin/categories');
     return { ok: true };
   } catch (error) {
     return toState(error);

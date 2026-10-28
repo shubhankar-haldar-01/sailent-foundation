@@ -2,25 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  CalendarDays,
-  CreditCard,
-  HandHeart,
-  Heart,
-  LayoutGrid,
-  LogOut,
-  Newspaper,
-  Settings,
-  User,
-} from 'lucide-react';
+import { CalendarDays, CreditCard, HandHeart, Heart, LayoutGrid, LogOut, User } from 'lucide-react';
 
 import { cn } from '@sailent/ui';
 import { signOutDonor } from '@/lib/auth/donor-actions';
 
 /**
  * Every page of the account, in the desktop rail's order (`dashboard-nav.tsx`),
- * so a phone or tablet reaches the same places: the four the design draws
- * first, then Settings, Updates, Events and Volunteering (owner, 2026-10-21).
+ * so a phone or tablet reaches the same places.
  * "Saved Campaigns" is the Saved page — campaigns a donor bookmarked, not the
  * ones they gave to.
  */
@@ -29,8 +18,6 @@ const ACCOUNT_LINKS = [
   { label: 'Payments', href: '/dashboard/donations', icon: CreditCard },
   { label: 'Saved Campaigns', href: '/dashboard/saved', icon: Heart },
   { label: 'Profile', href: '/dashboard/profile', icon: User },
-  { label: 'Settings', href: '/dashboard/settings', icon: Settings },
-  { label: 'Updates', href: '/dashboard/updates', icon: Newspaper },
   { label: 'Events', href: '/dashboard/events', icon: CalendarDays },
   { label: 'Volunteering', href: '/dashboard/volunteering', icon: HandHeart },
 ] as const;

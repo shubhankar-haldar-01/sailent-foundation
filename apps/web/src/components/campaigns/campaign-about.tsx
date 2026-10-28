@@ -75,7 +75,11 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
     <section id="campaign-about" aria-labelledby="about-heading" className="mt-12 scroll-mt-32">
       <SectionHeading id="about-heading" size="md" title="About This Campaign" />
 
-      <CampaignGallery images={campaign.gallery} title={campaign.title} />
+      <CampaignGallery
+        images={campaign.gallery}
+        title={campaign.title}
+        videoUrl={campaign.videoUrl}
+      />
 
       <div className="@container mt-4">
         <div className="@2xl:grid-cols-2 grid gap-3">
@@ -107,8 +111,8 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
             </AboutCard>
           ) : null}
 
-          {/* What support provides — a checklist with prices -------------------- */}
-          {products.length > 0 ? (
+          {/* What support provides — custom narrative or product summary -------- */}
+          {campaign.supportProvides || products.length > 0 ? (
             <AboutCard
               id="about-provide"
               icon={PackageCheck}
@@ -117,24 +121,24 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
               className="@2xl:col-span-2"
             >
               {/*
-                A SUMMARY, NOT THE LIST AGAIN. Every item, its price and what it
-                is are on the cards under "Choose How You Want to Help"; this
-                says what giving them means and points back up to them.
+                A SUMMARY, NOT THE LIST AGAIN. If the campaign team entered a
+                specific explanation of what support provides, show it; otherwise
+                summarize the products attached above.
               */}
               <p className="text-body text-muted-foreground-strong max-w-[68ch] leading-relaxed">
-                Your support pays for{' '}
-                {products.length === 1 ? 'the item' : `the ${formatNumber(products.length)} items`}{' '}
-                listed above, at the prices shown, delivered to the people this campaign serves.
-                Choose items, give an amount of your own, or both — an amount you choose is used
-                where it is needed most.
+                {campaign.supportProvides
+                  ? campaign.supportProvides
+                  : `Your support pays for ${products.length === 1 ? 'the item' : `the ${formatNumber(products.length)} items`} listed above, at the prices shown, delivered to the people this campaign serves. Choose items, give an amount of your own, or both — an amount you choose is used where it is needed most.`}
               </p>
-              <a
-                href="#give"
-                className="text-body-sm text-primary focus-visible:outline-ring mt-3 inline-flex items-center gap-1.5 rounded-sm font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
-              >
-                <ArrowUp className="size-4" aria-hidden="true" />
-                See the items and their prices
-              </a>
+              {products.length > 0 ? (
+                <a
+                  href="#give"
+                  className="text-body-sm text-primary focus-visible:outline-ring mt-3 inline-flex items-center gap-1.5 rounded-sm font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                >
+                  <ArrowUp className="size-4" aria-hidden="true" />
+                  See the items and their prices
+                </a>
+              ) : null}
             </AboutCard>
           ) : null}
 
@@ -286,6 +290,8 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
 export function hasAboutContent(campaign: Campaign): boolean {
   return (
     campaign.story.length > 0 ||
+    Boolean(campaign.supportProvides?.trim()) ||
+    Boolean(campaign.videoUrl?.trim()) ||
     campaign.products.some((product) => product.status !== 'inactive') ||
     campaign.goalAmount > 0 ||
     campaign.beneficiaryContext.trim().length > 0 ||

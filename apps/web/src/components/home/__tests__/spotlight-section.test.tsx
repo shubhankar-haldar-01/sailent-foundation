@@ -29,6 +29,9 @@ beforeAll(() => {
       dispatchEvent: () => false,
     }),
   });
+
+  window.HTMLElement.prototype.scrollBy = function () {};
+  window.HTMLElement.prototype.scrollTo = function () {};
 });
 
 describe('SpotlightSection', () => {
@@ -57,41 +60,26 @@ describe('SpotlightSection', () => {
     expect(screen.getAllByText('Changemakers').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders continuous circular marquee with accessible pause control and no visible arrow buttons', () => {
+  it('renders accessible pause and resume animation controls', () => {
     render(<SpotlightSection />);
 
-    // Arrow buttons removed per user request
-    expect(
-      screen.queryByRole('button', { name: /previous publication slide/i }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /next publication slide/i }),
-    ).not.toBeInTheDocument();
-
-    // Marquee list exists
-    const railList = screen.getByRole('list', {
-      name: /media publications spotlight/i,
-    });
-    expect(railList).toBeInTheDocument();
-
-    // Accessible pause control exists and toggles state
     const pauseBtn = screen.getByRole('button', {
-      name: /pause the scrolling list of spotlight publications/i,
+      name: /pause publication showcase animation/i,
     });
     expect(pauseBtn).toBeInTheDocument();
+
     fireEvent.click(pauseBtn);
     expect(
-      screen.getByRole('button', {
-        name: /resume the scrolling list of spotlight publications/i,
-      }),
+      screen.getByRole('button', { name: /resume publication showcase animation/i }),
     ).toBeInTheDocument();
   });
 
-  it('does not render pagination indicator pills per design request', () => {
-    render(<SpotlightSection />);
+  it('renders continuous marquee tracks for seamless looping', () => {
+    const { container } = render(<SpotlightSection />);
 
-    expect(screen.queryAllByRole('tab')).toHaveLength(0);
-    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+    const tracks = container.querySelectorAll('.spotlight-continuous-track');
+    expect(tracks).toHaveLength(2);
+    expect(tracks[1]).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('renders custom publication items when provided', () => {

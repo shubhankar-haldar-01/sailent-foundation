@@ -1,5 +1,6 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
 
 import { BlogForm } from '@/components/admin/blog-form';
 import { adminFetch, listMedia, type AdminCategory } from '@/lib/admin/api';
@@ -36,22 +37,20 @@ export default async function NewBlogPostPage() {
 
   return (
     <div className="space-y-6">
-      <nav aria-label="Breadcrumb" className="text-body-sm text-muted-foreground">
-        <Link href="/admin/blog" className="hover:text-foreground">
-          Blog
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span>New</span>
-      </nav>
+      <PageHeader
+        title="Write Article"
+        description="Saved as a draft. Nothing is made public until published deliberately."
+      />
 
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">Write a post</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          Saved as a draft. Nothing is public until you publish it deliberately.
-        </p>
-      </header>
-
-      <BlogForm mediaOptions={media?.items ?? []} categories={categories} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Article Details</CardTitle>
+          <CardDescription>Compose title, slug, excerpt, content, and metadata.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BlogForm mediaOptions={media?.items ?? []} categories={categories} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

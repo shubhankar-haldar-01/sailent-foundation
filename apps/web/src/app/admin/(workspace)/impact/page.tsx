@@ -1,6 +1,23 @@
 import Link from 'next/link';
+import { Plus, Search, Award, CheckCircle2, AlertCircle } from 'lucide-react';
 
-import { Button, formatDate } from '@sailent/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  formatDate,
+} from '@sailent/ui';
 
 import { StatusPill } from '@/components/admin/status-pill';
 import { adminFetch, type AdminImpactRecord, type Paginated } from '@/lib/admin/api';
@@ -34,32 +51,33 @@ export default async function AdminImpactPage({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">Impact records</h1>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            {data.pagination.total} total. These are the evidence behind every published figure that
-            is not a live database total — a number here needs a method before it can go out.
-          </p>
-        </div>
-        {can(actor, 'impact.create') ? (
-          <Button asChild>
-            <Link href="/admin/impact/new">Record an impact</Link>
-          </Button>
-        ) : null}
-      </header>
+      <PageHeader
+        title="Impact Verification Records"
+        description="Statutory evidentiary records behind all claimed impact metrics. Non-database figures require recorded verification methods prior to publication."
+        count={data.pagination.total}
+        actions={
+          can(actor, 'impact.create') ? (
+            <Button asChild>
+              <Link href="/admin/impact/new">
+                <Plus className="mr-1.5 size-4" />
+                Record Impact
+              </Link>
+            </Button>
+          ) : null
+        }
+      />
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <nav aria-label="Filter by status" className="flex flex-wrap gap-1.5">
           {statuses.map((status) => (
             <Link
               key={status}
               href={`/admin/impact?status=${status}`}
               aria-current={active === status ? 'page' : undefined}
-              className={`text-body-sm rounded-md px-3 py-1.5 capitalize ${
+              className={`text-caption rounded-full px-3 py-1 font-medium capitalize transition-colors ${
                 active === status
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
               }`}
             >
               {status}
@@ -67,97 +85,107 @@ export default async function AdminImpactPage({
           ))}
         </nav>
 
-        <form className="ml-auto flex gap-2" action="/admin/impact">
+        <form className="flex items-center gap-2" action="/admin/impact">
           <input type="hidden" name="status" value={active} />
-          <input
-            type="search"
-            name="q"
-            defaultValue={params.q ?? ''}
-            placeholder="Search title or place"
-            aria-label="Search impact records"
-            className="border-input bg-surface text-body-sm h-9 rounded-md border px-3"
-          />
+          <div className="relative">
+            <Search className="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2" />
+            <input
+              type="search"
+              name="q"
+              defaultValue={params.q ?? ''}
+              placeholder="Search title or location..."
+              aria-label="Search impact records"
+              className="border-input bg-surface text-body-sm shadow-xs focus-visible:outline-ring h-9 w-64 rounded-md border pl-8 pr-3 focus-visible:outline-2"
+            />
+          </div>
           <Button type="submit" variant="secondary" size="sm">
             Search
           </Button>
         </form>
       </div>
 
-      {data.items.length === 0 ? (
-        <p className="border-border text-body text-muted-foreground rounded-lg border border-dashed p-10 text-center">
-          No records match this view.
-        </p>
-      ) : (
-        <div className="border-border overflow-x-auto rounded-lg border">
-          <table className="text-body-sm w-full">
-            <thead className="bg-surface-sunken text-caption text-muted-foreground uppercase">
-              <tr>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Record
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Belongs to
-                </th>
-                <th scope="col" className="px-4 py-3 text-right font-semibold">
-                  Figure
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Evidence
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Date
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((record) => {
-                const claimsFigure = record.metricValue !== null;
-                return (
-                  <tr key={record.id} className="border-border border-t">
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/impact/${record.id}/edit`}
-                        className="hover:text-primary font-medium"
-                      >
-                        {record.title}
-                      </Link>
-                      <p className="text-caption text-muted-foreground">{record.location ?? '—'}</p>
-                    </td>
-                    <td className="text-muted-foreground px-4 py-3">
-                      {record.campaignTitle ?? record.eventTitle ?? record.programTitle ?? '—'}
-                    </td>
-                    <td data-numeric="" className="px-4 py-3 text-right tabular-nums">
-                      {claimsFigure
-                        ? `${record.metricValue!.toLocaleString('en-IN')}${
-                            record.metricUnit ? ` ${record.metricUnit}` : ''
-                          }`
-                        : '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      {!claimsFigure ? (
-                        <span className="text-muted-foreground">Not needed</span>
-                      ) : record.verificationMethod ? (
-                        <span className="text-success">Recorded</span>
-                      ) : (
-                        <span className="text-destructive">Missing</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusPill status={record.status} />
-                    </td>
-                    <td className="text-muted-foreground px-4 py-3">
-                      {formatDate(record.impactDate)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Award className="text-primary size-4" />
+            Verified Metrics & Records
+          </CardTitle>
+          <CardDescription>{data.pagination.total} total records in repository</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.items.length === 0 ? (
+            <div className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed py-12 text-center">
+              No records match this view.
+            </div>
+          ) : (
+            <div className="border-border/70 overflow-hidden rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="font-semibold">Record Title & Location</TableHead>
+                    <TableHead className="font-semibold">Associated Entity</TableHead>
+                    <TableHead className="text-right font-semibold">Claimed Metric</TableHead>
+                    <TableHead className="font-semibold">Evidence Status</TableHead>
+                    <TableHead className="font-semibold">Publication Status</TableHead>
+                    <TableHead className="text-right font-semibold">Impact Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.items.map((record) => {
+                    const claimsFigure = record.metricValue !== null;
+                    return (
+                      <TableRow key={record.id}>
+                        <TableCell className="max-w-md">
+                          <Link
+                            href={`/admin/impact/${record.id}/edit`}
+                            className="text-body-sm hover:text-primary block font-semibold transition-colors"
+                          >
+                            {record.title}
+                          </Link>
+                          <p className="text-caption text-muted-foreground/80 mt-0.5">
+                            {record.location ?? '—'}
+                          </p>
+                        </TableCell>
+                        <TableCell className="text-body-sm text-muted-foreground">
+                          {record.campaignTitle ?? record.eventTitle ?? record.programTitle ?? '—'}
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-semibold tabular-nums">
+                          {claimsFigure
+                            ? `${record.metricValue!.toLocaleString('en-IN')}${
+                                record.metricUnit ? ` ${record.metricUnit}` : ''
+                              }`
+                            : '—'}
+                        </TableCell>
+                        <TableCell>
+                          {!claimsFigure ? (
+                            <span className="text-caption text-muted-foreground">Not required</span>
+                          ) : record.verificationMethod ? (
+                            <Badge variant="success" className="gap-1">
+                              <CheckCircle2 className="size-3" />
+                              Recorded
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive" className="gap-1">
+                              <AlertCircle className="size-3" />
+                              Missing method
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <StatusPill status={record.status} />
+                        </TableCell>
+                        <TableCell className="text-body-sm text-muted-foreground text-right">
+                          {formatDate(record.impactDate)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

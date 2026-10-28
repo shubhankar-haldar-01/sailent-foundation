@@ -86,9 +86,7 @@ const PROTECTED = [
   '/dashboard/donations',
   '/dashboard/saved',
   '/dashboard/events',
-  '/dashboard/updates',
   '/dashboard/profile',
-  '/dashboard/settings',
 ];
 
 // =========================================================================
@@ -243,8 +241,6 @@ test.describe('signed in as a donor', () => {
       ['Payments', '/dashboard/donations'],
       [wide ? 'Saved' : 'Saved Campaigns', '/dashboard/saved'],
       ['Profile', '/dashboard/profile'],
-      ['Settings', '/dashboard/settings'],
-      ['Updates', '/dashboard/updates'],
       ['Events', '/dashboard/events'],
       ['Volunteering', '/dashboard/volunteering'],
     ];
@@ -427,28 +423,6 @@ test.describe('signed in as a donor', () => {
       actually shows, which is the thing being asserted.
     */
     await expect(page.getByText(donor.donorCode).filter({ visible: true }).first()).toBeVisible();
-  });
-
-  test('settings save, and transactional mail is not offered as a choice', async ({ page }) => {
-    await page.goto('/dashboard/settings');
-    await settle(page);
-
-    const newsletter = page.getByLabel(/newsletter/i);
-    await newsletter.check();
-
-    const save = page.getByRole('button', { name: /save preferences/i });
-    await save.scrollIntoViewIfNeeded();
-    await settle(page);
-    await submitAndWait(page, save);
-
-    // Persistence, not the banner — same reasoning as the profile test above:
-    // before hydration the form posts natively, which saves but draws no
-    // confirmation. The reload proves the preference stuck.
-    await page.reload();
-    await expect(page.getByLabel(/newsletter/i)).toBeChecked();
-
-    // A donor cannot switch off the record of their own giving.
-    await expect(page.getByText(/receipts and sign-in codes are always sent/i)).toBeVisible();
   });
 
   test('the dashboard has no accessibility violations', async ({ page }) => {

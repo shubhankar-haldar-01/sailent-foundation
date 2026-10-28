@@ -1,6 +1,15 @@
 import Link from 'next/link';
+import { ChevronLeft, ChevronRight, FileCheck, FileWarning, Search, Users } from 'lucide-react';
 
-import { formatCurrency, formatDate } from '@sailent/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  formatCurrency,
+  formatDate,
+  PageHeader,
+} from '@sailent/ui';
 
 import { adminFetch, type Paginated } from '@/lib/admin/api';
 
@@ -18,7 +27,6 @@ interface AdminDonor {
   donationCount: number;
   lastDonatedAt: string | null;
   isAnonymous: boolean;
-  /** Whether a PAN is on file. Never the number itself. */
   hasTaxId: boolean;
   createdAt: string;
 }
@@ -26,20 +34,8 @@ interface AdminDonor {
 /**
  * Donors.
  *
- * ══════════════════════════════════════════════════════════════════════════
- * THE PAN IS NOT ON THIS SCREEN AT ANY PERMISSION LEVEL, AND IT IS NOT
- * SEARCHABLE.
- *
- * The list reports only WHETHER a tax id is on file, because that is the
- * operational question — can this donor be included in the Form 10BD filing?
- * The number itself lives on the detail page and requires
- * `donor.read_sensitive`.
- *
- * Search deliberately does not cover it either. A search that matched on a PAN
- * would let somebody confirm a number they already suspected by reading the
- * result count, and an oracle is a disclosure however the row is filtered
- * afterwards.
- * ══════════════════════════════════════════════════════════════════════════
+ * The PAN is not on this screen at any permission level, and it is not searchable.
+ * The list reports whether a tax ID is on file for Form 10BD eligibility.
  */
 export default async function AdminDonorsPage({
   searchParams,
@@ -57,117 +53,193 @@ export default async function AdminDonorsPage({
     },
   });
 
+  const activeDonated = params.hasDonated ?? 'all';
+
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-h1 font-semibold">Donors</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          {data.pagination.total} records. Lifetime totals are maintained by payment capture and
-          cannot be edited.
-        </p>
-      </header>
+      <PageHeader
+        title="Donors"
+        count={data.pagination.total}
+        description="Every donor who has signed up or given. Lifetime totals reflect successful donations only."
+      />
 
-      <form method="get" className="flex flex-wrap gap-2">
-        <input
-          type="search"
-          name="q"
-          defaultValue={params.q ?? ''}
-          placeholder="Name, email, phone or donor code"
-          aria-label="Search donors"
-          className="border-input bg-surface text-body-sm h-10 min-w-0 flex-1 rounded-md border px-3"
-        />
-        <select
-          name="hasDonated"
-          defaultValue={params.hasDonated ?? 'all'}
-          aria-label="Filter by giving"
-          className="border-input bg-surface text-body-sm h-10 rounded-md border px-3"
+      {/* Filter and Search Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <nav aria-label="Filter by giving status" className="flex flex-wrap gap-1.5">
+          {[
+            { value: 'all', label: 'All Donors' },
+            { value: 'true', label: 'Have Donated' },
+            { value: 'false', label: 'Never Donated' },
+          ].map((status) => {
+            const isSelected = activeDonated === status.value;
+            const href = `/admin/donors?hasDonated=${status.value}${params.q ? `&q=${encodeURIComponent(params.q)}` : ''}`;
+            return (
+              <Link
+                key={status.value}
+                href={href}
+                aria-current={isSelected ? 'page' : undefined}
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-medium capitalize transition-colors ${
+                  isSelected
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                {status.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <form
+          className="flex w-full items-center gap-2 sm:w-auto"
+          method="get"
+          action="/admin/donors"
         >
-          <option value="all">All records</option>
-          <option value="true">Has donated</option>
-          <option value="false">No donations</option>
-        </select>
-        <button
-          type="submit"
-          className="bg-primary text-primary-foreground text-body-sm h-10 rounded-md px-4 font-medium"
-        >
-          Search
-        </button>
-      </form>
+          {activeDonated !== 'all' ? (
+            <input type="hidden" name="hasDonated" value={activeDonated} />
+          ) : null}
+          <div className="relative w-full sm:w-64">
+            <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+            <input
+              type="search"
+              name="q"
+              defaultValue={params.q ?? ''}
+              placeholder="Search name, email, code..."
+              aria-label="Search donors"
+              className="border-input bg-surface focus:border-primary focus:ring-primary h-9 w-full rounded-lg border pl-9 pr-3 text-sm focus:outline-none focus:ring-1"
+            />
+          </div>
+          <Button type="submit" variant="secondary" size="sm">
+            Search
+          </Button>
+          {params.q ? (
+            <Button asChild variant="ghost" size="sm">
+              <Link
+                href={`/admin/donors${activeDonated !== 'all' ? `?hasDonated=${activeDonated}` : ''}`}
+              >
+                Clear
+              </Link>
+            </Button>
+          ) : null}
+        </form>
+      </div>
 
       {data.items.length === 0 ? (
-        <p className="text-body-sm text-muted-foreground border-border rounded-lg border border-dashed px-6 py-10 text-center">
-          No donors match that search.
-        </p>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+            <Users className="text-muted-foreground/40 mb-3 h-10 w-10" />
+            <p className="text-foreground text-sm font-medium">No donors found</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {params.q
+                ? `No donors match “${params.q}”.`
+                : 'No donors match the selected giving filter.'}
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="border-border overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[46rem] text-left">
-            <thead className="border-border bg-muted/40 border-b">
-              <tr>
-                <Th>Donor</Th>
-                <Th>Contact</Th>
-                <Th numeric>Given</Th>
-                <Th numeric>Donations</Th>
-                <Th>Last gift</Th>
-                <Th>PAN</Th>
-              </tr>
-            </thead>
-            <tbody className="divide-border divide-y">
-              {data.items.map((donor) => {
-                const name =
-                  [donor.firstName, donor.lastName].filter(Boolean).join(' ').trim() || '—';
-
-                return (
-                  <tr key={donor.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/donors/${donor.id}`}
-                        className="text-body-sm focus-visible:outline-ring rounded-sm font-medium hover:underline focus-visible:outline-2"
-                      >
-                        {name}
-                      </Link>
-                      {donor.donorCode ? (
-                        <span data-numeric="" className="text-caption text-muted-foreground block">
-                          {donor.donorCode}
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <caption className="sr-only">
+                Donors directory with giving totals, donation counts and tax id status.
+              </caption>
+              <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
+                <tr>
+                  <th scope="col" className="px-5 py-3.5">
+                    Donor
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Contact
+                  </th>
+                  <th scope="col" className="px-5 py-3.5 text-right">
+                    Lifetime Given
+                  </th>
+                  <th scope="col" className="px-5 py-3.5 text-right">
+                    Gifts
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Last Gift
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    PAN / Tax ID
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-border divide-y">
+                {data.items.map((donor) => {
+                  const name =
+                    [donor.firstName, donor.lastName].filter(Boolean).join(' ').trim() || '—';
+                  return (
+                    <tr key={donor.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-5 py-3.5">
+                        <Link
+                          href={`/admin/donors/${donor.id}`}
+                          className="text-foreground hover:text-primary font-medium transition-colors"
+                        >
+                          {name}
+                        </Link>
+                        <div className="mt-0.5 flex items-center gap-2">
+                          {donor.donorCode ? (
+                            <span
+                              data-numeric=""
+                              className="text-muted-foreground font-mono text-xs"
+                            >
+                              {donor.donorCode}
+                            </span>
+                          ) : null}
+                          {donor.isAnonymous ? (
+                            <span className="text-muted-foreground text-xs italic">
+                              (Anonymous to public)
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="text-muted-foreground px-5 py-3.5 text-xs">
+                        <span className="text-foreground block font-medium">
+                          {donor.email ?? '—'}
                         </span>
-                      ) : null}
-                      {donor.isAnonymous ? (
-                        <span className="text-caption text-muted-foreground block">
-                          Gives anonymously
+                        <span data-numeric="" className="text-muted-foreground">
+                          {donor.phone ?? '—'}
                         </span>
-                      ) : null}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-body-sm block break-all">{donor.email ?? '—'}</span>
-                      <span data-numeric="" className="text-caption text-muted-foreground">
-                        {donor.phone ?? '—'}
-                      </span>
-                    </td>
-                    <td data-numeric="" className="px-4 py-3 text-right text-sm tabular-nums">
-                      {formatCurrency(donor.totalDonated)}
-                    </td>
-                    <td data-numeric="" className="px-4 py-3 text-right text-sm tabular-nums">
-                      {donor.donationCount}
-                    </td>
-                    <td className="text-body-sm px-4 py-3">
-                      {donor.lastDonatedAt ? formatDate(donor.lastDonatedAt) : '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={
-                          donor.hasTaxId
-                            ? 'text-caption bg-success-subtle text-success inline-flex rounded-full px-2 py-0.5 font-medium'
-                            : 'text-caption bg-muted text-muted-foreground inline-flex rounded-full px-2 py-0.5 font-medium'
-                        }
+                      </td>
+                      <td
+                        data-numeric=""
+                        className="text-foreground px-5 py-3.5 text-right text-xs font-semibold tabular-nums"
                       >
-                        {donor.hasTaxId ? 'On file' : 'Missing'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                        {formatCurrency(donor.totalDonated)}
+                      </td>
+                      <td
+                        data-numeric=""
+                        className="text-muted-foreground px-5 py-3.5 text-right text-xs tabular-nums"
+                      >
+                        {donor.donationCount}
+                      </td>
+                      <td className="text-muted-foreground px-5 py-3.5 text-xs">
+                        {donor.lastDonatedAt ? formatDate(donor.lastDonatedAt) : 'Never'}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {donor.hasTaxId ? (
+                          <Badge variant="success" className="gap-1 text-[11px] font-normal">
+                            <FileCheck className="size-3" aria-hidden="true" />
+                            On file
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="neutral"
+                            className="text-muted-foreground gap-1 text-[11px] font-normal"
+                          >
+                            <FileWarning className="size-3 opacity-60" aria-hidden="true" />
+                            Missing
+                          </Badge>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
 
       {data.pagination.totalPages > 1 ? (
@@ -179,17 +251,6 @@ export default async function AdminDonorsPage({
         />
       ) : null}
     </div>
-  );
-}
-
-function Th({ children, numeric }: { children: React.ReactNode; numeric?: boolean }) {
-  return (
-    <th
-      scope="col"
-      className={`text-caption text-muted-foreground px-4 py-2.5 font-medium ${numeric ? 'text-right' : ''}`}
-    >
-      {children}
-    </th>
   );
 }
 
@@ -207,30 +268,34 @@ function Pagination({
   const href = (target: number) => {
     const search = new URLSearchParams();
     if (query.q) search.set('q', query.q);
-    if (query.hasDonated) search.set('hasDonated', query.hasDonated);
+    if (query.hasDonated && query.hasDonated !== 'all') search.set('hasDonated', query.hasDonated);
     search.set('page', String(target));
     return `/admin/donors?${search.toString()}`;
   };
 
   return (
-    <nav aria-label="Pages" className="flex items-center justify-between gap-4">
-      {page > 1 ? (
-        <Link href={href(page - 1)} className="text-body-sm font-medium underline">
-          ← Previous
-        </Link>
-      ) : (
-        <span />
-      )}
-      <span className="text-caption text-muted-foreground">
+    <nav aria-label="Donors pagination" className="flex items-center justify-between pt-2">
+      <p className="text-muted-foreground text-xs">
         Page {page} of {totalPages}
-      </span>
-      {hasNext ? (
-        <Link href={href(page + 1)} className="text-body-sm font-medium underline">
-          Next →
-        </Link>
-      ) : (
-        <span />
-      )}
+      </p>
+      <div className="flex gap-2">
+        {page > 1 ? (
+          <Button asChild variant="secondary" size="sm">
+            <Link href={href(page - 1)} className="gap-1">
+              <ChevronLeft className="size-4" aria-hidden="true" />
+              Previous
+            </Link>
+          </Button>
+        ) : null}
+        {hasNext ? (
+          <Button asChild variant="secondary" size="sm">
+            <Link href={href(page + 1)} className="gap-1">
+              Next
+              <ChevronRight className="size-4" aria-hidden="true" />
+            </Link>
+          </Button>
+        ) : null}
+      </div>
     </nav>
   );
 }

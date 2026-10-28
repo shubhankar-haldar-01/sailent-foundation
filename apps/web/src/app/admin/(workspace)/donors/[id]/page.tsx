@@ -1,8 +1,32 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  History,
+  Lock,
+  Mail,
+  ShieldAlert,
+  User,
+  UserCog,
+} from 'lucide-react';
 
-import { Card, formatCurrency, formatDate } from '@sailent/ui';
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  formatCurrency,
+  formatDate,
+  PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@sailent/ui';
 
 import { DonorCorrectionForm } from '@/components/admin/donor-correction-form';
 import { AdminApiError, adminFetch } from '@/lib/admin/api';
@@ -59,20 +83,7 @@ interface AdminDonorDetail {
 /**
  * One donor.
  *
- * ══════════════════════════════════════════════════════════════════════════
- * THE DRIFT BANNER IS THE POINT OF THIS SCREEN.
- *
- * `totalDonated` and `donationCount` on the donor row are CACHES, written
- * inside the payment-capture transaction (decision A6). Everything else in the
- * platform reads them. This is the one place that also re-derives them from the
- * donations table and shows both — because this is where somebody comes when
- * they suspect the cache is wrong, and a screen that read the cache would just
- * confirm it to itself.
- *
- * When they disagree, that is a reconciliation job, not something to fix by
- * typing a number in: there is deliberately no way to edit either figure, here
- * or anywhere.
- * ══════════════════════════════════════════════════════════════════════════
+ * Shows cached lifetime totals vs re-derived totals to expose any reconciliation drift.
  */
 export default async function AdminDonorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -89,94 +100,207 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
   const name =
     [donor.firstName, donor.lastName].filter(Boolean).join(' ').trim() || 'Unnamed donor';
   const sensitive = can(actor, 'donor.read_sensitive');
+  const canUpdate = can(actor, 'donor.update');
   const drifted =
     donor.recomputed.totalDonated !== donor.totalDonated ||
     donor.recomputed.donationCount !== donor.donationCount;
 
   return (
-    <div className="space-y-8">
-      <Link
-        href="/admin/donors"
-        className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
-      >
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        All donors
-      </Link>
+    <div className="space-y-6">
+      <PageHeader
+        title={name}
+        breadcrumb={
+          <Link
+            href="/admin/donors"
+            className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Back to donors
+          </Link>
+        }
+        description={`${donor.donorCode ? `Donor Code: ${donor.donorCode} · ` : ''}Member since ${formatDate(donor.createdAt)}`}
+        status={
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="capitalize">
+              {donor.donorType}
+            </Badge>
+            {donor.isAnonymous ? <Badge variant="neutral">Anonymous to public</Badge> : null}
+            {donor.hasTaxId ? (
+              <Badge variant="success">PAN on file</Badge>
+            ) : (
+              <Badge variant="neutral">PAN missing</Badge>
+            )}
+          </div>
+        }
+      />
 
-      <header>
-        <h1 className="text-h1 font-semibold">{name}</h1>
-        <p data-numeric="" className="text-body-sm text-muted-foreground mt-1">
-          {donor.donorCode ?? '—'} · since {formatDate(donor.createdAt)}
-        </p>
-      </header>
-
+      {/* Drift reconciliation banner */}
       {drifted ? (
-        <Card className="border-warning/40 bg-warning-subtle/40 flex gap-3 p-4">
-          <AlertTriangle
-            className="text-warning-foreground mt-0.5 size-5 shrink-0"
-            aria-hidden="true"
-          />
-          <div>
-            <p className="text-body-sm font-semibold">Cached totals do not match the donations</p>
-            <p className="text-body-sm text-muted-foreground mt-1">
-              The donor record says {formatCurrency(donor.totalDonated)} across{' '}
-              {donor.donationCount}; the donations table sums to{' '}
-              {formatCurrency(donor.recomputed.totalDonated)} across{' '}
-              {donor.recomputed.donationCount}. These figures are written only by payment capture,
-              so a mismatch is a reconciliation job — there is no way to correct it by hand, and
-              there should not be.
-            </p>
+        <Card className="border-warning/50 bg-warning-subtle/30 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle
+              className="text-warning-foreground mt-0.5 size-5 shrink-0"
+              aria-hidden="true"
+            />
+            <div>
+              <p className="text-body-sm text-warning-foreground font-semibold">
+                Cached totals do not match historical donations
+              </p>
+              <p className="text-body-sm text-muted-foreground mt-1">
+                The donor profile caches {formatCurrency(donor.totalDonated)} across{' '}
+                {donor.donationCount} donations. The historical table sums to{' '}
+                {formatCurrency(donor.recomputed.totalDonated)} across{' '}
+                {donor.recomputed.donationCount} donations. Lifetime caches update strictly on
+                payment capture transactions; a mismatch indicates a database reconciliation job is
+                required.
+              </p>
+            </div>
           </div>
         </Card>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <dl className="divide-border divide-y">
-            <Row label="Email" value={donor.email ?? '—'} />
-            <Row label="Phone" value={donor.phone ?? '—'} mono />
-            <Row label="Type" value={donor.donorType} />
-            <Row label="Public listing" value={donor.isAnonymous ? 'Anonymous' : 'Named'} />
-            <Row label="Source" value={donor.source ?? '—'} />
-          </dl>
+      {/* KPI Top Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-border">
+          <CardContent className="p-4">
+            <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
+              Lifetime Given
+            </p>
+            <p
+              data-numeric=""
+              className="font-display text-h2 text-foreground mt-1 font-bold tabular-nums"
+            >
+              {formatCurrency(donor.totalDonated)}
+            </p>
+          </CardContent>
         </Card>
 
-        <Card>
-          <dl className="divide-border divide-y">
-            <Row label="Total given" value={formatCurrency(donor.totalDonated)} mono />
-            <Row label="Donations" value={String(donor.donationCount)} mono />
-            <Row
-              label="First gift"
-              value={donor.firstDonatedAt ? formatDate(donor.firstDonatedAt) : '—'}
-            />
-            <Row
-              label="Last gift"
-              value={donor.lastDonatedAt ? formatDate(donor.lastDonatedAt) : '—'}
-            />
-            <Row label="Tax id on file" value={donor.hasTaxId ? 'Yes' : 'No'} />
-          </dl>
+        <Card className="border-border">
+          <CardContent className="p-4">
+            <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
+              Total Contributions
+            </p>
+            <p
+              data-numeric=""
+              className="font-display text-h2 text-foreground mt-1 font-bold tabular-nums"
+            >
+              {donor.donationCount}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border">
+          <CardContent className="p-4">
+            <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
+              First Gift Date
+            </p>
+            <p className="text-body text-foreground mt-2 font-medium">
+              {donor.firstDonatedAt ? formatDate(donor.firstDonatedAt) : 'No gifts recorded'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border">
+          <CardContent className="p-4">
+            <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
+              Last Gift Date
+            </p>
+            <p className="text-body text-foreground mt-2 font-medium">
+              {donor.lastDonatedAt ? formatDate(donor.lastDonatedAt) : '—'}
+            </p>
+          </CardContent>
         </Card>
       </div>
 
-      {/* Sensitive block — present only when the API returned it. --------- */}
-      {sensitive ? (
-        <section aria-labelledby="sensitive-heading">
-          <h2 id="sensitive-heading" className="text-h3 font-semibold">
-            Address and tax identification
-          </h2>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            Visible because you hold <code>donor.read_sensitive</code>. Needed for the annual Form
-            10BD filing.
-          </p>
-          <Card className="mt-3">
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Contact and Profile Card */}
+        <Card className="border-border">
+          <CardHeader className="border-border border-b pb-4">
+            <div className="flex items-center gap-2">
+              <User className="text-primary size-5" aria-hidden="true" />
+              <CardTitle className="text-base font-semibold">Contact & Profile</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <dl className="divide-border divide-y">
+              <Row label="Email" value={donor.email ?? '—'} />
+              <Row label="Phone" value={donor.phone ?? '—'} mono />
+              <Row label="Donor Type" value={donor.donorType} />
+              <Row
+                label="Public Listing"
+                value={donor.isAnonymous ? 'Anonymous' : 'Named publicly'}
+              />
+              <Row label="Acquisition Source" value={donor.source ?? 'Direct website'} />
+            </dl>
+          </CardContent>
+        </Card>
+
+        {/* Communication Consents Card */}
+        <Card className="border-border">
+          <CardHeader className="border-border border-b pb-4">
+            <div className="flex items-center gap-2">
+              <Mail className="text-primary size-5" aria-hidden="true" />
+              <CardTitle className="text-base font-semibold">Communication Consents</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
             <dl className="divide-border divide-y">
               <Row
-                label="Tax id"
-                value={donor.taxIdNumber ? `${donor.taxIdType ?? '—'} · ${donor.taxIdNumber}` : '—'}
+                label="Primary Consent"
+                value={donor.communicationConsent ? 'Granted' : 'Revoked / Withheld'}
+              />
+              <Row label="Email Channel" value={donor.emailOptIn ? 'Opted In' : 'Opted Out'} />
+              <Row label="SMS Channel" value={donor.smsOptIn ? 'Opted In' : 'Opted Out'} />
+              <Row
+                label="WhatsApp Channel"
+                value={donor.whatsappOptIn ? 'Opted In' : 'Opted Out'}
+              />
+              <Row
+                label="Campaign & Impact Updates"
+                value={donor.notifyCampaignUpdates ? 'Subscribed' : 'Off'}
+              />
+              <Row
+                label="Quarterly Newsletter"
+                value={donor.notifyNewsletter ? 'Subscribed' : 'Off'}
+              />
+            </dl>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Sensitive Tax & Address block (requires donor.read_sensitive) */}
+      {sensitive ? (
+        <Card className="border-border">
+          <CardHeader className="border-border border-b pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="text-primary size-5" aria-hidden="true" />
+                <CardTitle className="text-base font-semibold">
+                  Statutory Tax & Address Information
+                </CardTitle>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                donor.read_sensitive
+              </Badge>
+            </div>
+            <p className="text-caption text-muted-foreground mt-1">
+              Protected statutory data required for annual Form 10BD filing with the Income Tax
+              Department.
+            </p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <dl className="divide-border divide-y">
+              <Row
+                label="PAN / Tax Identification"
+                value={
+                  donor.taxIdNumber
+                    ? `${donor.taxIdType ?? 'PAN'} · ${donor.taxIdNumber}`
+                    : 'None recorded'
+                }
                 mono
               />
               <Row
-                label="Address"
+                label="Registered Address"
                 value={
                   [
                     donor.addressLine1,
@@ -184,106 +308,121 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
                     donor.city,
                     donor.state,
                     donor.postalCode,
+                    donor.country,
                   ]
                     .filter(Boolean)
-                    .join(', ') || '—'
+                    .join(', ') || 'None recorded'
                 }
               />
-              <Row label="Internal notes" value={donor.internalNotes ?? '—'} />
+              <Row label="Internal Staff Notes" value={donor.internalNotes ?? '—'} />
             </dl>
-          </Card>
-        </section>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-border bg-muted/10 p-5">
+          <div className="flex items-center gap-3">
+            <Lock className="text-muted-foreground size-5 shrink-0" aria-hidden="true" />
+            <p className="text-caption text-muted-foreground">
+              Statutory tax ID and address records are restricted. They require the sensitive{' '}
+              <code>donor.read_sensitive</code> permission with recent re-authentication.
+            </p>
+          </div>
+        </Card>
+      )}
+
+      {/* Donor Record Correction Form (Audit-logged) */}
+      {canUpdate ? (
+        <Card className="border-border">
+          <CardHeader className="border-border border-b pb-4">
+            <div className="flex items-center gap-2">
+              <UserCog className="text-primary size-5" aria-hidden="true" />
+              <CardTitle className="text-base font-semibold">Correct Donor Record</CardTitle>
+            </div>
+            <p className="text-caption text-muted-foreground mt-1">
+              Updates to donor profile details are recorded in the immutable audit log with a
+              mandatory justification reason.
+            </p>
+          </CardHeader>
+          <CardContent className="p-6">
+            <DonorCorrectionForm donor={donor} />
+          </CardContent>
+        </Card>
       ) : null}
 
-      {/* Preferences ------------------------------------------------------ */}
-      <section aria-labelledby="prefs-heading">
-        <h2 id="prefs-heading" className="text-h3 font-semibold">
-          Communication preferences
-        </h2>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          Set by the donor. Shown here so you can see why a message did or did not reach them — they
-          are not editable from this screen.
-        </p>
-        <Card className="mt-3">
-          <dl className="divide-border divide-y">
-            <Row label="Consents to contact" value={donor.communicationConsent ? 'Yes' : 'No'} />
-            <Row
-              label="Channels"
-              value={
-                [
-                  donor.emailOptIn && 'Email',
-                  donor.smsOptIn && 'SMS',
-                  donor.whatsappOptIn && 'WhatsApp',
-                ]
-                  .filter(Boolean)
-                  .join(', ') || 'None'
-              }
-            />
-            <Row
-              label="Topics"
-              value={
-                [
-                  donor.notifyCampaignUpdates && 'Campaign updates',
-                  donor.notifyImpactUpdates && 'Impact reports',
-                  donor.notifyNewsletter && 'Newsletter',
-                ]
-                  .filter(Boolean)
-                  .join(', ') || 'None'
-              }
-            />
-          </dl>
-        </Card>
-      </section>
-
-      {/* Giving history --------------------------------------------------- */}
-      <section aria-labelledby="history-heading">
-        <h2 id="history-heading" className="text-h3 font-semibold">
-          Giving history
-        </h2>
-        {donor.donations.length === 0 ? (
-          <p className="text-body-sm text-muted-foreground border-border mt-3 rounded-lg border border-dashed px-6 py-8 text-center">
-            No donations recorded.
-          </p>
-        ) : (
-          <ul className="border-border divide-border mt-3 divide-y rounded-lg border">
-            {donor.donations.map((donation) => (
-              <li key={donation.id}>
-                <Link
-                  href={`/admin/donations/${donation.id}`}
-                  className="hover:bg-muted/40 flex items-center justify-between gap-4 px-4 py-3"
-                >
-                  <span className="min-w-0">
-                    <span className="text-body-sm block truncate font-medium">
-                      {donation.campaignTitle ?? 'General fund'}
-                    </span>
-                    <span data-numeric="" className="text-caption text-muted-foreground">
-                      {donation.reference} · {formatDate(donation.donationDate)} · {donation.status}
-                    </span>
-                  </span>
-                  <span data-numeric="" className="text-body-sm shrink-0 font-medium tabular-nums">
-                    {formatCurrency(donation.amount)}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {can(actor, 'donor.update') ? <DonorCorrectionForm donor={donor} /> : null}
+      {/* Donations History */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <div className="flex items-center gap-2">
+            <History className="text-primary size-5" aria-hidden="true" />
+            <CardTitle className="text-base font-semibold">Donation History</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {donor.donations.length === 0 ? (
+            <p className="text-body-sm text-muted-foreground p-6 text-center">
+              No completed donations on record for this donor.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Reference</TableHead>
+                    <TableHead>Campaign</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {donor.donations.map((donation) => (
+                    <TableRow key={donation.id}>
+                      <TableCell>
+                        <Link
+                          href={`/admin/donations/${donation.id}`}
+                          className="text-primary font-medium hover:underline"
+                        >
+                          {donation.reference}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {donation.campaignTitle ?? 'General Foundation'}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold tabular-nums">
+                        {formatCurrency(donation.amount)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={donation.status === 'successful' ? 'success' : 'neutral'}
+                          className="text-xs capitalize"
+                        >
+                          {donation.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-caption text-muted-foreground">
+                        {formatDate(donation.donationDate)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Row({ label, value, mono }: { label: string; value: string | null; mono?: boolean }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 px-4 py-2.5">
-      <dt className="text-caption text-muted-foreground shrink-0">{label}</dt>
+    <div className="flex items-baseline justify-between gap-4 px-5 py-3">
+      <dt className="text-caption text-muted-foreground shrink-0 font-medium">{label}</dt>
       <dd
         {...(mono ? { 'data-numeric': '' } : {})}
-        className="text-body-sm min-w-0 break-words text-right"
+        className="text-body-sm text-foreground min-w-0 break-words text-right font-medium"
       >
-        {value}
+        {value ?? '—'}
       </dd>
     </div>
   );

@@ -1,11 +1,21 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ExternalLink } from 'lucide-react';
+
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+} from '@sailent/ui';
 
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import { StoryForm, StoryStatusControls } from '@/components/admin/story-form';
-import { AdminApiError, getStory, type AdminStory } from '@/lib/admin/api';
-import { listMedia } from '@/lib/admin/api';
+import { AdminApiError, getStory, type AdminStory, listMedia } from '@/lib/admin/api';
 import { currentActor, can } from '@/lib/auth/session';
 
 export const dynamic = 'force-dynamic';
@@ -43,50 +53,54 @@ export default async function AdminStoryPage({ params }: { params: Promise<{ id:
     : null;
 
   return (
-    <div className="space-y-8">
-      <nav aria-label="Breadcrumb" className="text-body-sm text-muted-foreground">
-        <Link href="/admin/stories" className="hover:text-foreground">
-          Success stories
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span>{story.title}</span>
-      </nav>
-
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">{story.title}</h1>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            /stories/{story.slug}
-            {story.status === 'published' ? (
-              <>
-                {' · '}
-                <Link href={`/stories/${story.slug}`} className="hover:text-foreground underline">
-                  View on the site
-                </Link>
-              </>
-            ) : null}
-          </p>
-        </div>
-        <StatusPill status={story.status} />
-      </header>
+    <div className="space-y-6">
+      <PageHeader
+        title={story.title}
+        description={`Slug: /stories/${story.slug}`}
+        status={<StatusPill status={story.status} />}
+        actions={
+          story.status === 'published' ? (
+            <Button asChild variant="secondary" size="sm">
+              <Link href={`/stories/${story.slug}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1.5 size-4" />
+                View live
+              </Link>
+            </Button>
+          ) : null
+        }
+      />
 
       {can(actor, 'story.publish') ? (
-        <section className="space-y-3">
-          <h2 className="text-h3 font-semibold">Publishing</h2>
-          <StoryStatusControls story={story} canArchive={can(actor, 'story.archive')} />
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Publishing Controls</CardTitle>
+            <CardDescription>
+              Consent verification is required before making any story public.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <StoryStatusControls story={story} canArchive={can(actor, 'story.archive')} />
+          </CardContent>
+        </Card>
       ) : null}
 
-      <section className="space-y-4">
-        <h2 className="text-h3 font-semibold">Edit</h2>
-        {can(actor, 'story.update') ? (
-          <StoryForm story={story} mediaOptions={media?.items ?? []} />
-        ) : (
-          <p className="text-body-sm text-muted-foreground">
-            You do not have permission to edit stories.
-          </p>
-        )}
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Story Content & Metadata</CardTitle>
+          <CardDescription>
+            Subject details, quotes, narrative, media attachments, and permissions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {can(actor, 'story.update') ? (
+            <StoryForm story={story} mediaOptions={media?.items ?? []} />
+          ) : (
+            <p className="text-body-sm text-muted-foreground">
+              You do not have permission to edit stories.
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

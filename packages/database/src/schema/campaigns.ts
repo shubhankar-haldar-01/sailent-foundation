@@ -87,6 +87,12 @@ export const campaigns = pgTable(
     stopAtGoal: boolean('stop_at_goal').notNull().default(false),
     allowCustomAmount: boolean('allow_custom_amount').notNull().default(true),
     minDonationAmount: money('min_donation_amount').notNull().default(1000),
+    /** Preset quick-select rupee amounts for custom donations (e.g. [500, 1000, 2500]). */
+    presetAmounts: jsonb('preset_amounts').$type<number[]>(),
+    /** Custom narrative for "What Will Your Support Provide?". Falls back to product summary. */
+    supportProvides: text('support_provides'),
+    /** Video URL (YouTube, Vimeo, or direct video) displayed in About This Campaign gallery. */
+    videoUrl: text('video_url'),
 
     isFeatured: boolean('is_featured').notNull().default(false),
     featuredOrder: integer('featured_order'),
@@ -124,7 +130,10 @@ export const campaigns = pgTable(
      * one, and `CampaignsService.assertPublishable` enforces the same thing at
      * the transition, so a draft cannot slip out with a zero goal either.
      */
-    check('campaigns_goal_positive_when_public', sql`status = 'draft' OR fundraising_goal > 0`),
+    check(
+      'campaigns_goal_positive_when_public',
+      sql`status IN ('draft', 'archived') OR fundraising_goal > 0`,
+    ),
     check('campaigns_raised_non_negative', sql`amount_raised >= 0`),
     check('campaigns_donor_count_non_negative', sql`donor_count >= 0`),
     check(
@@ -188,6 +197,7 @@ export const campaignProducts = pgTable(
      * offering the same product, and independent of the product's own status.
      */
     isActive: boolean('is_active').notNull().default(true),
+    isMostNeeded: boolean('is_most_needed').notNull().default(false),
     sku: varchar('sku', { length: 64 }),
 
     ...timestamps,

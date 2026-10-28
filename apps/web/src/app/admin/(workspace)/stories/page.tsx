@@ -1,6 +1,23 @@
 import Link from 'next/link';
+import { Plus, Search, BookOpen, AlertCircle, CheckCircle2 } from 'lucide-react';
 
-import { Button, formatDate } from '@sailent/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  formatDate,
+} from '@sailent/ui';
 
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
@@ -57,42 +74,39 @@ export default async function AdminStoriesPage({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">Success stories</h1>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            {data ? `${data.pagination.total} total. ` : ''}
-            Each one is somebody’s account of their own life. A story that names a person cannot be
-            published until they have agreed, or it has been anonymised.
-          </p>
-        </div>
-        {can(actor, 'story.create') ? (
-          <Button asChild>
-            <Link href="/admin/stories/new">Draft a story</Link>
-          </Button>
-        ) : null}
-      </header>
+      <PageHeader
+        title="Impact Stories"
+        description="First-person beneficiary accounts. Named subjects require recorded consent prior to publication."
+        count={data?.pagination.total}
+        actions={
+          can(actor, 'story.create') ? (
+            <Button asChild>
+              <Link href="/admin/stories/new">
+                <Plus className="mr-1.5 size-4" />
+                Draft Story
+              </Link>
+            </Button>
+          ) : null
+        }
+      />
 
       {failure ? (
-        <p
-          role="alert"
-          className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-        >
-          {failure}
-        </p>
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="text-body-sm text-destructive p-4">{failure}</CardContent>
+        </Card>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <nav aria-label="Filter by status" className="flex flex-wrap gap-1.5">
           {statuses.map((status) => (
             <Link
               key={status}
               href={status === 'all' ? '/admin/stories' : `/admin/stories?status=${status}`}
               aria-current={active === status ? 'page' : undefined}
-              className={`text-body-sm rounded-md px-3 py-1.5 capitalize ${
+              className={`text-caption rounded-full px-3 py-1 font-medium capitalize transition-colors ${
                 active === status
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
               }`}
             >
               {status}
@@ -100,111 +114,134 @@ export default async function AdminStoriesPage({
           ))}
         </nav>
 
-        <form className="ml-auto flex gap-2" action="/admin/stories">
+        <form className="flex items-center gap-2" action="/admin/stories">
           <input type="hidden" name="status" value={active} />
-          <input
-            type="search"
-            name="q"
-            defaultValue={params.q ?? ''}
-            placeholder="Search title, person or place"
-            aria-label="Search stories"
-            className="border-input bg-surface text-body-sm h-9 rounded-md border px-3"
-          />
+          <div className="relative">
+            <Search className="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2" />
+            <input
+              type="search"
+              name="q"
+              defaultValue={params.q ?? ''}
+              placeholder="Search title, person, place..."
+              aria-label="Search stories"
+              className="border-input bg-surface text-body-sm shadow-xs focus-visible:outline-ring h-9 w-64 rounded-md border pl-8 pr-3 focus-visible:outline-2"
+            />
+          </div>
           <Button type="submit" variant="secondary" size="sm">
             Search
           </Button>
         </form>
       </div>
 
-      {data && data.items.length === 0 ? (
-        <p className="border-border text-body text-muted-foreground rounded-lg border border-dashed p-10 text-center">
-          {params.q ? `No story matches “${params.q}”.` : 'No story matches this view.'}
-        </p>
-      ) : null}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <BookOpen className="text-primary size-4" />
+            Stories Library
+          </CardTitle>
+          <CardDescription>
+            {data ? `${data.pagination.total} stories in current view` : 'Story entries'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data && data.items.length === 0 ? (
+            <div className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed py-12 text-center">
+              {params.q ? `No story matches “${params.q}”.` : 'No story matches this view.'}
+            </div>
+          ) : null}
 
-      {data && data.items.length > 0 ? (
-        <div className="border-border overflow-x-auto rounded-lg border">
-          <table className="text-body-sm w-full">
-            <caption className="sr-only">Success stories</caption>
-            <thead className="bg-surface-sunken text-caption text-muted-foreground uppercase">
-              <tr>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Title
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Person
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Consent
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Updated
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((story) => (
-                <tr key={story.id} className="border-border border-t">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/stories/${story.id}`}
-                      className="hover:text-primary font-medium"
-                    >
-                      {story.title}
-                    </Link>
-                    <p className="text-caption text-muted-foreground">
-                      {story.programTitle ?? story.campaignTitle ?? story.location ?? '—'}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusPill status={story.status} />
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3">
-                    {story.subjectName ?? 'Nobody named'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <ConsentCell story={story} />
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3">{formatDate(story.updatedAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
+          {data && data.items.length > 0 ? (
+            <div className="border-border/70 overflow-hidden rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="font-semibold">Story Title & Context</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">Subject Person</TableHead>
+                    <TableHead className="font-semibold">Consent Verification</TableHead>
+                    <TableHead className="text-right font-semibold">Last Updated</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.items.map((story) => (
+                    <TableRow key={story.id}>
+                      <TableCell className="max-w-md">
+                        <Link
+                          href={`/admin/stories/${story.id}`}
+                          className="text-body-sm hover:text-primary block truncate font-semibold transition-colors"
+                        >
+                          {story.title}
+                        </Link>
+                        <p className="text-caption text-muted-foreground/80 mt-0.5">
+                          {story.programTitle ?? story.campaignTitle ?? story.location ?? '—'}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <StatusPill status={story.status} />
+                      </TableCell>
+                      <TableCell className="text-body-sm text-muted-foreground">
+                        {story.subjectName ?? <span className="italic">Nobody named</span>}
+                      </TableCell>
+                      <TableCell>
+                        <ConsentCell story={story} />
+                      </TableCell>
+                      <TableCell className="text-body-sm text-muted-foreground text-right">
+                        {formatDate(story.updatedAt)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : null}
 
-      {data && data.pagination.totalPages > 1 ? (
-        <nav aria-label="Pages" className="flex items-center justify-between">
-          <p className="text-body-sm text-muted-foreground">
-            Page {data.pagination.page} of {data.pagination.totalPages}
-          </p>
-          <div className="flex gap-2">
-            {data.pagination.page > 1 ? (
-              <Button asChild variant="secondary" size="sm">
-                <Link href={pageHref(params, data.pagination.page - 1)}>Previous</Link>
-              </Button>
-            ) : null}
-            {data.pagination.page < data.pagination.totalPages ? (
-              <Button asChild variant="secondary" size="sm">
-                <Link href={pageHref(params, data.pagination.page + 1)}>Next</Link>
-              </Button>
-            ) : null}
-          </div>
-        </nav>
-      ) : null}
+          {data && data.pagination.totalPages > 1 ? (
+            <div className="border-border mt-4 flex items-center justify-between border-t pt-4">
+              <p className="text-body-sm text-muted-foreground">
+                Page {data.pagination.page} of {data.pagination.totalPages}
+              </p>
+              <div className="flex gap-2">
+                {data.pagination.page > 1 ? (
+                  <Button asChild variant="secondary" size="sm">
+                    <Link href={pageHref(params, data.pagination.page - 1)}>Previous</Link>
+                  </Button>
+                ) : null}
+                {data.pagination.page < data.pagination.totalPages ? (
+                  <Button asChild variant="secondary" size="sm">
+                    <Link href={pageHref(params, data.pagination.page + 1)}>Next</Link>
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 /** Says what is true, and — where it matters — what it prevents. */
 function ConsentCell({ story }: { story: AdminStorySummary }) {
-  if (!story.subjectName) return <span className="text-muted-foreground">Not needed</span>;
-  if (story.isAnonymised) return <span className="text-muted-foreground">Anonymised</span>;
-  if (story.consentObtained) return <span className="text-success">Recorded</span>;
-  return <span className="text-warning font-medium">Missing — cannot publish</span>;
+  if (!story.subjectName) {
+    return <span className="text-caption text-muted-foreground">Not needed</span>;
+  }
+  if (story.isAnonymised) {
+    return <Badge variant="neutral">Anonymised</Badge>;
+  }
+  if (story.consentObtained) {
+    return (
+      <Badge variant="success" className="gap-1">
+        <CheckCircle2 className="size-3" />
+        Recorded
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="warning" className="gap-1">
+      <AlertCircle className="size-3" />
+      Missing Consent
+    </Badge>
+  );
 }
 
 function pageHref(params: { status?: string; q?: string }, page: number) {

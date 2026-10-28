@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import { Plus } from 'lucide-react';
 
-import { Button } from '@sailent/ui';
+import { Button, PageHeader, SearchInput } from '@sailent/ui';
 
 import { ProductTable } from '@/components/products/product-table';
 import type { CatalogueProduct } from '@/components/products/types';
@@ -9,20 +10,17 @@ import { can, currentActor } from '@/lib/auth/session';
 
 export const dynamic = 'force-dynamic';
 
-const STATUSES = ['all', 'active', 'inactive', 'archived'] as const;
+const STATUSES = [
+  { value: 'all', label: 'All products' },
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+  { value: 'archived', label: 'Archived' },
+] as const;
 
 /**
  * The product catalogue.
  *
- * A top-level page rather than something under a campaign, because a product is
- * not a child of one. It outlives every campaign that offers it, is edited by
- * different people, and carries its own permissions — filing it under campaigns
- * would reproduce in the interface the exact confusion the schema change
- * removed from the database.
- *
- * `status` defaults to the API's own default, which excludes archived entries.
- * An operator picking a product should not scroll past things the organisation
- * retired; the filter is there for whoever is auditing the catalogue.
+ * Defined once, offered by any campaign. Each campaign sets its own price.
  */
 export default async function AdminProductsPage({
   searchParams,
@@ -46,45 +44,68 @@ export default async function AdminProductsPage({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">Products</h1>
-          <p className="text-body-sm text-muted-foreground mt-1 max-w-prose">
-            Defined once, offered by any campaign. Each campaign sets its own price — editing a
-            product here never changes what a campaign charges or what a donor has already paid.
-          </p>
-        </div>
-        {can(actor, 'product.create') ? (
-          <Button asChild>
-            <Link href="/admin/products/new">New product</Link>
-          </Button>
-        ) : null}
-      </header>
+      <PageHeader
+        title="Products"
+        count={data.pagination.total}
+        description="Shared product catalogue. Items can be offered across multiple campaigns with custom campaign pricing."
+        actions={
+          can(actor, 'product.create') ? (
+            <Button asChild className="gap-1.5">
+              <Link href="/admin/products/new">
+                <Plus className="size-4" aria-hidden="true" />
+                New product
+              </Link>
+            </Button>
+          ) : null
+        }
+      />
 
-      <nav aria-label="Filter by status" className="flex flex-wrap gap-1.5">
-        {STATUSES.map((status) => (
-          <Link
-            key={status}
-            href={
-              status === 'all' ? '/admin/products?status=all' : `/admin/products?status=${status}`
-            }
-            aria-current={active === status ? 'page' : undefined}
-            className={`text-body-sm rounded-md px-3 py-1.5 capitalize ${
-              active === status
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {status}
-          </Link>
-        ))}
-      </nav>
+      {/* Filter and Search Bar */}
+      <div className="border-border bg-surface flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
+        <nav aria-label="Filter by status" className="flex flex-wrap items-center gap-1.5">
+          {STATUSES.map((status) => {
+            const isSelected = active === status.value;
+            const href = `/admin/products?status=${status.value}${params.q ? `&q=${encodeURIComponent(params.q)}` : ''}`;
+            return (
+              <Link
+                key={status.value}
+                href={href}
+                aria-current={isSelected ? 'page' : undefined}
+                className={`text-body-sm focus-visible:outline-ring rounded-md px-3 py-1.5 font-medium capitalize transition-colors focus-visible:outline-2 ${
+                  isSelected
+                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                {status.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <form method="get" action="/admin/products" className="flex items-center gap-2">
+          {active !== 'all' ? <input type="hidden" name="status" value={active} /> : null}
+          <SearchInput
+            name="q"
+            defaultValue={params.q ?? ''}
+            placeholder="Search products..."
+            aria-label="Search products"
+            className="w-full sm:w-64"
+          />
+          <Button type="submit" variant="secondary" size="sm">
+            Search
+          </Button>
+          {params.q ? (
+            <Button asChild variant="ghost" size="sm">
+              <Link href={`/admin/products${active !== 'all' ? `?status=${active}` : ''}`}>
+                Clear
+              </Link>
+            </Button>
+          ) : null}
+        </form>
+      </div>
 
       <ProductTable products={data.items} />
-
-      <p className="text-body-sm text-muted-foreground">
-        {data.pagination.total} product{data.pagination.total === 1 ? '' : 's'}.
-      </p>
     </div>
   );
 }

@@ -70,6 +70,7 @@ export function CampaignDonationSummary({
   mode,
   onModeChange,
   progress,
+  presetAmounts,
   assurances,
   className,
 }: {
@@ -93,6 +94,8 @@ export function CampaignDonationSummary({
   onModeChange?: (mode: 'amount' | 'products') => void;
   /** Omitted where the page already shows the campaign's progress elsewhere. */
   progress?: CampaignProgressFigures;
+  /** Custom preset rupee amounts. Defaults to PRESET_AMOUNTS. */
+  presetAmounts?: readonly number[] | number[];
   /**
    * The assurances (80G, secure payments, trusted), shown as a panel at the
    * foot of the card, under the payment methods and Share Campaign.
@@ -237,31 +240,41 @@ export function CampaignDonationSummary({
             {formatCurrency(customPaise)}
           </span>
         </div>
-        <div role="group" aria-labelledby={amountLabelId} className="mt-1 grid grid-cols-5 gap-1.5">
-          {PRESET_AMOUNTS.map((rupees, index) => {
-            const pressed = customPaise === rupees * 100;
-            return (
-              <button
-                key={rupees}
-                ref={index === 0 ? amountRef : undefined}
-                type="button"
-                aria-pressed={pressed}
-                disabled={customDisabled}
-                onClick={() => onCustomAmountChange(pressed ? '' : String(rupees))}
-                data-numeric=""
-                className={cn(
-                  'text-caption focus-visible:outline-ring h-8 rounded-lg border font-semibold tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60',
-                  pressed
-                    ? // `-ink-strong` on the mint wash: the ordinary ink is 4.31:1.
-                      'border-success bg-wash-mint text-wash-mint-ink-strong'
-                    : 'border-border bg-surface hover:border-foreground/30',
-                )}
-              >
-                {formatCurrency(rupees * 100)}
-              </button>
-            );
-          })}
-        </div>
+        {(() => {
+          const presets =
+            presetAmounts && presetAmounts.length > 0 ? presetAmounts : PRESET_AMOUNTS;
+          return (
+            <div
+              role="group"
+              aria-labelledby={amountLabelId}
+              className="mt-1 flex flex-wrap gap-1.5"
+            >
+              {presets.map((rupees, index) => {
+                const pressed = customPaise === rupees * 100;
+                return (
+                  <button
+                    key={rupees}
+                    ref={index === 0 ? amountRef : undefined}
+                    type="button"
+                    aria-pressed={pressed}
+                    disabled={customDisabled}
+                    onClick={() => onCustomAmountChange(pressed ? '' : String(rupees))}
+                    data-numeric=""
+                    className={cn(
+                      'text-caption focus-visible:outline-ring h-8 min-w-[52px] flex-1 rounded-lg border font-semibold tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60',
+                      pressed
+                        ? // `-ink-strong` on the mint wash: the ordinary ink is 4.31:1.
+                          'border-success bg-wash-mint text-wash-mint-ink-strong'
+                        : 'border-border bg-surface hover:border-foreground/30',
+                    )}
+                  >
+                    {formatCurrency(rupees * 100)}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Total ---------------------------------------------------------- */}

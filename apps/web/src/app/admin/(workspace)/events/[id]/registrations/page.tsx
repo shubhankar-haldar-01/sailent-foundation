@@ -1,7 +1,24 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft, Users, ShieldAlert } from 'lucide-react';
 
-import { Badge, Button, formatDate } from '@sailent/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  formatDate,
+} from '@sailent/ui';
 
 import { AttendanceSheet } from '@/components/admin/attendance-sheet';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
@@ -67,15 +84,29 @@ export default async function EventRegistrationsPage({
     if (error instanceof AdminApiError && error.code === 'REAUTH_REQUIRED') {
       needsReauth = true;
     } else if (error instanceof AdminApiError && error.status === 403) {
-      // A genuine permission failure, which is a different thing and gets a
-      // different message — telling somebody to re-enter a password for
-      // something they still could not do is a dead end.
       return (
         <div className="space-y-6">
-          <h1 className="font-display text-h1 font-bold tracking-tight">{event.title}</h1>
-          <p className="border-border text-body text-muted-foreground rounded-lg border border-dashed p-10 text-center">
-            You do not have permission to see who is attending this event.
-          </p>
+          <PageHeader
+            title={event.title}
+            description="Event attendee list and attendance tracking"
+            actions={
+              <Button asChild variant="secondary" size="sm">
+                <Link href={`/admin/events/${event.id}/edit`}>
+                  <ArrowLeft className="mr-1.5 size-4" />
+                  Back to event
+                </Link>
+              </Button>
+            }
+          />
+          <Card className="border-warning/30 bg-warning/5">
+            <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+              <ShieldAlert className="text-warning mb-2 size-8" />
+              <p className="text-body font-medium">Access Restricted</p>
+              <p className="text-body-sm text-muted-foreground mt-1 max-w-md">
+                You do not have permission to view attendee details for this event.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       );
     } else {
@@ -85,22 +116,35 @@ export default async function EventRegistrationsPage({
 
   const past = new Date(event.startDate).getTime() < Date.now();
 
+  const getStatusBadge = (regStatus: string) => {
+    switch (regStatus) {
+      case 'attended':
+        return <Badge variant="success">Attended</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive">Cancelled</Badge>;
+      case 'no_show':
+        return <Badge variant="warning">No show</Badge>;
+      default:
+        return <Badge variant="neutral">{regStatus.replace('_', ' ')}</Badge>;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">{event.title}</h1>
-          <p className="text-body-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
-            <span>{formatDate(event.startDate)}</span>
-            <Badge variant={event.registrationStatus === 'cancelled' ? 'destructive' : 'neutral'}>
-              {event.registrationStatus}
-            </Badge>
-          </p>
-        </div>
-        <Button asChild variant="secondary">
-          <Link href={`/admin/events/${event.id}/edit`}>Back to the event</Link>
-        </Button>
-      </header>
+      <PageHeader
+        title={event.title}
+        description={`Scheduled for ${formatDate(event.startDate)} · ${
+          event.capacity !== null ? `${event.capacity} total seats` : 'Open capacity'
+        }`}
+        actions={
+          <Button asChild variant="secondary" size="sm">
+            <Link href={`/admin/events/${event.id}/edit`}>
+              <ArrowLeft className="mr-1.5 size-4" />
+              Edit Event
+            </Link>
+          </Button>
+        }
+      />
 
       {needsReauth ? (
         <ReauthPanel
@@ -110,105 +154,104 @@ export default async function EventRegistrationsPage({
       ) : null}
 
       {data ? (
-        <>
-          <nav aria-label="Filter attendees" className="flex flex-wrap gap-1.5">
-            {(['coming', 'attended', 'no_show', 'cancelled', 'all'] as const).map((option) => {
-              // `coming` is the DEFAULT view and is expressed by sending no
-              // status at all — the API excludes cancellations unless asked.
-              const query = option === 'coming' ? '' : `?status=${option}`;
-              const isActive = option === 'coming' ? !status : status === option;
-              return (
-                <Link
-                  key={option}
-                  href={`/admin/events/${id}/registrations${query}`}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`text-body-sm rounded-md px-3 py-1.5 capitalize ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {option.replace('_', ' ')}
-                </Link>
-              );
-            })}
-          </nav>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Users className="text-primary size-4" />
+                    Attendee Register
+                  </CardTitle>
+                  <CardDescription>
+                    {data.pagination.total} {data.pagination.total === 1 ? 'person' : 'people'}{' '}
+                    registered
+                    {event.capacity !== null ? ` · ${event.capacity} places total` : ''}
+                  </CardDescription>
+                </div>
+                <nav aria-label="Filter attendees" className="flex flex-wrap gap-1.5">
+                  {(['coming', 'attended', 'no_show', 'cancelled', 'all'] as const).map(
+                    (option) => {
+                      const query = option === 'coming' ? '' : `?status=${option}`;
+                      const isActive = option === 'coming' ? !status : status === option;
+                      return (
+                        <Link
+                          key={option}
+                          href={`/admin/events/${id}/registrations${query}`}
+                          aria-current={isActive ? 'page' : undefined}
+                          className={`text-caption rounded-full px-3 py-1 font-medium capitalize transition-colors ${
+                            isActive
+                              ? 'bg-primary text-primary-foreground shadow-xs'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+                          }`}
+                        >
+                          {option.replace('_', ' ')}
+                        </Link>
+                      );
+                    },
+                  )}
+                </nav>
+              </div>
+            </CardHeader>
 
-          <p className="text-body-sm text-muted-foreground">
-            {data.pagination.total} {data.pagination.total === 1 ? 'person' : 'people'}
-            {event.capacity !== null ? ` · ${event.capacity} places` : null}
-          </p>
-
-          {/*
-            The register is offered only once the event has started. The API
-            refuses attendance for an event that has not happened — an
-            attendance figure dated before the thing took place is exactly the
-            number decision A14 exists to keep off the site — so showing the
-            sheet early would only produce a refusal.
-          */}
-          {past && can(actor, 'event.attendance') ? (
-            <section aria-labelledby="register">
-              <h2 id="register" className="text-h3 font-semibold">
-                Attendance
-              </h2>
-              <p className="text-body-sm text-muted-foreground mb-4 mt-1">
-                Leave a row on “Leave” and its record is not touched. Somebody who cancelled and
-                came anyway has to register again first.
-              </p>
-              <AttendanceSheet eventId={event.id} registrations={data.items} />
-            </section>
-          ) : (
-            <div className="border-border overflow-x-auto rounded-lg border">
-              <table className="text-body-sm w-full">
-                <thead className="bg-surface-sunken text-caption text-muted-foreground uppercase">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 text-left font-semibold">
-                      Name
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-left font-semibold">
-                      Contact
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-right font-semibold">
-                      Places
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-left font-semibold">
-                      Status
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-left font-semibold">
-                      Registered
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.items.map((entry) => (
-                    <tr key={entry.id} className="border-border border-t">
-                      <td className="px-4 py-3 font-medium">{entry.fullName}</td>
-                      <td className="text-muted-foreground px-4 py-3">
-                        {entry.email}
-                        <p className="text-caption">{entry.phone}</p>
-                      </td>
-                      <td data-numeric="" className="px-4 py-3 text-right tabular-nums">
-                        {entry.attendeeCount}
-                      </td>
-                      <td className="text-muted-foreground px-4 py-3 capitalize">
-                        {entry.status.replace('_', ' ')}
-                      </td>
-                      <td className="text-muted-foreground px-4 py-3">
-                        {formatDate(entry.registeredAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {data.items.length === 0 ? (
-            <p className="border-border text-body text-muted-foreground rounded-lg border border-dashed p-10 text-center">
-              Nobody matches this view.
-            </p>
-          ) : null}
-        </>
+            <CardContent>
+              {past && can(actor, 'event.attendance') ? (
+                <div className="space-y-4">
+                  <div className="border-border/60 bg-muted/30 rounded-lg border p-4">
+                    <h3 className="text-body-sm font-semibold">Mark Attendance</h3>
+                    <p className="text-caption text-muted-foreground mt-0.5">
+                      Leave a row on “Leave” and its record is not touched. Somebody who cancelled
+                      and came anyway must register again first.
+                    </p>
+                  </div>
+                  <AttendanceSheet eventId={event.id} registrations={data.items} />
+                </div>
+              ) : (
+                <>
+                  {data.items.length === 0 ? (
+                    <div className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed py-12 text-center">
+                      Nobody matches this view.
+                    </div>
+                  ) : (
+                    <div className="border-border/70 overflow-hidden rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/40">
+                            <TableHead className="font-semibold">Attendee</TableHead>
+                            <TableHead className="font-semibold">Contact</TableHead>
+                            <TableHead className="text-right font-semibold">Places</TableHead>
+                            <TableHead className="font-semibold">Status</TableHead>
+                            <TableHead className="text-right font-semibold">Registered</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {data.items.map((entry) => (
+                            <TableRow key={entry.id}>
+                              <TableCell className="font-medium">{entry.fullName}</TableCell>
+                              <TableCell className="text-body-sm text-muted-foreground">
+                                <div>{entry.email}</div>
+                                <div className="text-caption text-muted-foreground/80 font-mono">
+                                  {entry.phone}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-mono tabular-nums">
+                                {entry.attendeeCount}
+                              </TableCell>
+                              <TableCell>{getStatusBadge(entry.status)}</TableCell>
+                              <TableCell className="text-body-sm text-muted-foreground text-right">
+                                {formatDate(entry.registeredAt)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       ) : null}
     </div>
   );

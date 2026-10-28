@@ -1,7 +1,17 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-
-import { formatDate } from '@sailent/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  PageHeader,
+  Badge,
+  formatDate,
+} from '@sailent/ui';
+import { Shield, Key, ArrowLeft } from 'lucide-react';
 
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
@@ -60,99 +70,144 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="space-y-8">
-      <nav aria-label="Breadcrumb" className="text-body-sm text-muted-foreground">
-        <Link href="/admin/users" className="hover:text-foreground">
-          Staff accounts
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span>
-          {user.firstName} {user.lastName ?? ''}
-        </span>
-      </nav>
+      <div className="flex items-center gap-2">
+        <Button asChild variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
+          <Link href="/admin/users">
+            <ArrowLeft className="h-4 w-4" />
+            Back to staff accounts
+          </Link>
+        </Button>
+      </div>
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">
-            {user.firstName} {user.lastName ?? ''}
-          </h1>
-          <p className="text-body-sm text-muted-foreground mt-1">{user.email}</p>
-        </div>
-        <StatusPill status={user.status} />
-      </header>
+      <PageHeader
+        title={`${user.firstName} ${user.lastName ?? ''}`}
+        description={user.email}
+        status={<StatusPill status={user.status} />}
+      />
 
-      <section className="grid gap-8 lg:grid-cols-2">
-        <div className="space-y-4">
-          <h2 className="text-h3 font-semibold">Details</h2>
-          <dl className="border-border text-body-sm divide-border divide-y rounded-lg border">
-            <Row label="Role">
-              {user.roles.length > 0 ? (
-                user.roles.map((role) => role.key).join(', ')
-              ) : (
-                <span className="text-warning">
-                  No role — this account cannot administer anything
-                </span>
-              )}
-            </Row>
-            <Row label="Second factor">
-              {/* Enrolment only. The secret is never returned by the API. */}
-              {user.totpEnabled ? 'Enrolled' : 'Not enrolled'}
-            </Row>
-            <Row label="Last signed in">
-              {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}
-            </Row>
-            <Row label="Added">{formatDate(user.createdAt)}</Row>
-            <Row label="Phone">{user.phone ?? '—'}</Row>
-          </dl>
+      <div className="grid gap-8 lg:grid-cols-2">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Shield className="text-primary h-4 w-4" />
+                Account Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="divide-border divide-y text-sm">
+                <div className="flex items-baseline justify-between py-3">
+                  <dt className="text-muted-foreground">Role</dt>
+                  <dd className="text-foreground font-medium">
+                    {user.roles.length > 0 ? (
+                      user.roles.map((role) => (
+                        <Badge key={role.key} variant="accent">
+                          {role.key}
+                        </Badge>
+                      ))
+                    ) : (
+                      <Badge variant="warning">No role assigned</Badge>
+                    )}
+                  </dd>
+                </div>
+                <div className="flex items-baseline justify-between py-3">
+                  <dt className="text-muted-foreground">Second factor</dt>
+                  <dd className="text-foreground font-medium">
+                    {user.totpEnabled ? (
+                      <span className="text-success inline-flex items-center gap-1.5 text-xs font-medium">
+                        <Key className="h-3.5 w-3.5" /> Enrolled
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">Not enrolled</span>
+                    )}
+                  </dd>
+                </div>
+                <div className="flex items-baseline justify-between py-3">
+                  <dt className="text-muted-foreground">Last signed in</dt>
+                  <dd className="text-foreground font-medium">
+                    {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}
+                  </dd>
+                </div>
+                <div className="flex items-baseline justify-between py-3">
+                  <dt className="text-muted-foreground">Added on</dt>
+                  <dd className="text-foreground font-medium">{formatDate(user.createdAt)}</dd>
+                </div>
+                <div className="flex items-baseline justify-between py-3">
+                  <dt className="text-muted-foreground">Phone number</dt>
+                  <dd className="text-foreground font-medium">{user.phone ?? '—'}</dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
 
           {user.roles.length === 0 && can(actor, 'user.assign_role') && !isSelf ? (
-            <div className="border-border rounded-lg border p-5">
-              <h3 className="text-h4 mb-3 font-semibold">Grant the administrative role</h3>
-              <GrantRoleForm user={user} />
-            </div>
+            <Card className="border-warning/30 bg-warning/5">
+              <CardHeader>
+                <CardTitle className="text-warning text-base">Grant Administrative Role</CardTitle>
+                <CardDescription>
+                  This account currently has no active permissions and cannot manage any modules.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <GrantRoleForm user={user} />
+              </CardContent>
+            </Card>
           ) : null}
         </div>
 
-        <div className="space-y-4">
-          <h2 className="text-h3 font-semibold">Edit</h2>
-          {can(actor, 'user.update') ? (
-            <EditUserForm user={user} />
-          ) : (
-            <p className="text-body-sm text-muted-foreground">
-              You do not have permission to edit staff accounts.
-            </p>
-          )}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Edit Account</CardTitle>
+              <CardDescription>Update name, email, or contact phone details.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {can(actor, 'user.update') ? (
+                <EditUserForm user={user} />
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  You do not have permission to edit staff accounts.
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </section>
+      </div>
 
       {user.status === 'invited' && can(actor, 'user.invite') ? (
-        <section className="space-y-3">
-          <h2 className="text-h3 font-semibold">Invitation</h2>
-          <ResendInvitationForm user={user} />
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Invitation Management</CardTitle>
+            <CardDescription>
+              This user has been invited but has not yet accepted and activated their account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResendInvitationForm user={user} />
+          </CardContent>
+        </Card>
       ) : null}
 
       {can(actor, 'user.suspend') ? (
-        <section className="space-y-3">
-          <h2 className="text-h3 font-semibold">Access</h2>
-          {isSelf ? (
-            <p className="text-body-sm text-muted-foreground border-border rounded-lg border border-dashed p-5">
-              You cannot suspend your own account. Somebody locking themselves out is the one
-              failure this control cannot recover from.
-            </p>
-          ) : (
-            <UserStatusControls user={user} />
-          )}
-        </section>
+        <Card className="border-destructive/20">
+          <CardHeader>
+            <CardTitle className="text-base">Access & Account Status</CardTitle>
+            <CardDescription>
+              Suspend or reactivate staff access to the administration console.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isSelf ? (
+              <p className="border-border text-muted-foreground rounded-lg border border-dashed p-4 text-xs">
+                You cannot suspend your own account. Somebody locking themselves out is the one
+                failure this control cannot recover from.
+              </p>
+            ) : (
+              <UserStatusControls user={user} />
+            )}
+          </CardContent>
+        </Card>
       ) : null}
-    </div>
-  );
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4 px-4 py-3">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-right font-medium">{children}</dd>
     </div>
   );
 }

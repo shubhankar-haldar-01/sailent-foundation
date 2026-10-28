@@ -9,38 +9,75 @@ import { MediaFrame } from '@/components/media/media-frame';
 import type { MediaRef } from '@/lib/mock/types';
 
 /**
- * The campaign's photographs — one at a time, with an arrow on each side.
+ * Parses a video URL (YouTube, Vimeo, or direct MP4/video link) into an embeddable format.
+ */
+export function getVideoEmbedUrl(url: string | null | undefined): {
+  type: 'youtube' | 'vimeo' | 'direct';
+  embedUrl: string;
+} | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  // YouTube match: regular watch URL, youtu.be, embed, shorts
+  const ytMatch = trimmed.match(
+    /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i,
+  );
+  if (ytMatch && ytMatch[1]) {
+    return {
+      type: 'youtube',
+      embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1`,
+    };
+  }
+
+  // Vimeo match: vimeo.com/123456789
+  const vimeoMatch = trimmed.match(/(?:vimeo\.com\/)(\d+)/i);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return {
+      type: 'vimeo',
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?dnt=1`,
+    };
+  }
+
+  // Direct video or other source
+  return {
+    type: 'direct',
+    embedUrl: trimmed,
+  };
+}
+
+/**
+ * The campaign's gallery photographs and video — one at a time, with an arrow on each side.
  *
  * ══════════════════════════════════════════════════════════════════════════
- * ONE PHOTOGRAPH, AT THE TOP OF "ABOUT THIS CAMPAIGN".
+ * AT THE TOP OF "ABOUT THIS CAMPAIGN".
  *
  * It sits between the About heading and the text cards, so the reader sees
- * the work before reading about it. The arrows step through the campaign's
- * gallery and a counter says where they are. No caption is shown under the
- * photo; each one's description is its alt text, for screen readers.
- *
- * A SCROLL CONTAINER, NOT A TRANSFORM. Slides sit in a `scroll-snap` row, so
- * swiping works before JavaScript arrives and the browser does the
- * animation; the arrows only scroll that row, and the photo shown is read back
- * from its position, so a swipe and an arrow never disagree. The row itself is
- * focusable — axe requires a keyboard way into any region that scrolls — and
- * the arrow keys then scroll it natively.
- *
- * THE PICTURES ARE THE CAMPAIGN'S, from the media library through
- * `campaign_gallery`; the frame draws its placeholder only where no file has
- * been uploaded yet. No autoplay: nothing moves unless somebody asks.
+ * the work (images & video) before reading about it. The arrows step through
+ * the campaign's gallery slides and a counter says where they are.
  * ══════════════════════════════════════════════════════════════════════════
  */
-export function CampaignGallery({ images, title }: { images: MediaRef[]; title: string }) {
+export function CampaignGallery({
+  images,
+  title,
+  videoUrl,
+}: {
+  images: MediaRef[];
+  title: string;
+  videoUrl?: string | null;
+}) {
   const railRef = React.useRef<HTMLUListElement>(null);
   const [active, setActive] = React.useState(0);
+
+  const video = React.useMemo(() => getVideoEmbedUrl(videoUrl), [videoUrl]);
+  const totalSlides = (video ? 1 : 0) + images.length;
 
   const onScroll = React.useCallback(() => {
     const rail = railRef.current;
     if (!rail) return;
     const index = Math.round(rail.scrollLeft / Math.max(rail.clientWidth, 1));
-    setActive(Math.min(Math.max(index, 0), Math.max(images.length - 1, 0)));
-  }, [images.length]);
+    setActive(Math.min(Math.max(index, 0), Math.max(totalSlides - 1, 0)));
+  }, [totalSlides]);
 
   const show = (index: number) => {
     const rail = railRef.current;
@@ -49,9 +86,9 @@ export function CampaignGallery({ images, title }: { images: MediaRef[]; title: 
     setActive(index);
   };
 
-  if (images.length === 0) return null;
+  if (totalSlides === 0) return null;
 
-  const hasMany = images.length > 1;
+  const hasMany = totalSlides > 1;
 
   return (
     <figure className="mt-4">
@@ -60,10 +97,34 @@ export function CampaignGallery({ images, title }: { images: MediaRef[]; title: 
           ref={railRef}
           onScroll={onScroll}
           tabIndex={0}
-          aria-label={`${title} — photos`}
+          aria-label={`${title} — gallery`}
           // `rail` hides the scrollbar without disabling the scrolling.
           className="rail focus-visible:outline-ring absolute inset-0 flex snap-x snap-mandatory overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-4"
         >
+          {video ? (
+            <li
+              key="campaign-video"
+              className="relative h-full w-full shrink-0 basis-full snap-start bg-black"
+            >
+              {video.type === 'direct' ? (
+                <video
+                  src={video.embedUrl}
+                  controls
+                  playsInline
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <iframe
+                  src={video.embedUrl}
+                  title={`${title} — video presentation`}
+                  className="h-full w-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              )}
+            </li>
+          ) : null}
+
           {images.map((image, index) => (
             <li
               key={`${image.seed}-${index}`}
@@ -84,22 +145,22 @@ export function CampaignGallery({ images, title }: { images: MediaRef[]; title: 
           <>
             <Arrow
               side="left"
-              label="Previous photo"
+              label="Previous slide"
               disabled={active === 0}
               onClick={() => show(active - 1)}
             />
             <Arrow
               side="right"
-              label="Next photo"
-              disabled={active === images.length - 1}
+              label="Next slide"
+              disabled={active === totalSlides - 1}
               onClick={() => show(active + 1)}
             />
             <span
               data-numeric=""
-              className="text-caption absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 font-semibold text-white"
+              className="text-caption backdrop-blur-xs absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 font-semibold text-white"
             >
-              <span className="sr-only">Photo </span>
-              {active + 1} / {images.length}
+              <span className="sr-only">Slide </span>
+              {active + 1} / {totalSlides}
             </span>
           </>
         ) : null}

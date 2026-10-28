@@ -1,4 +1,16 @@
 import Link from 'next/link';
+import { Bell, CheckCircle2, History } from 'lucide-react';
+
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+} from '@sailent/ui';
 
 import { MarkAllReadButton, MarkReadButton } from '@/components/admin/notification-panels';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
@@ -32,22 +44,24 @@ export default async function AdminNotificationsPage({
 
     return (
       <div className="space-y-6">
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="font-display text-h1 font-bold tracking-tight">Notifications</h1>
-            <p className="text-body-sm text-muted-foreground mt-1 max-w-2xl">
-              What the platform needs you to know — chiefly, emails that did not go out. The full
-              record of every send is in the{' '}
-              <Link href="/admin/notifications/log" className="hover:text-foreground underline">
-                send log
-              </Link>
-              .
-            </p>
-          </div>
-          <MarkAllReadButton disabled={unread === 0} />
-        </header>
+        <PageHeader
+          title="Staff Alerts & Notifications"
+          description="Operational system alerts, batch failures, and webhook execution notices for your administrator account."
+          count={unread}
+          actions={
+            <div className="flex items-center gap-2">
+              <Button asChild variant="secondary" size="sm">
+                <Link href="/admin/notifications/log">
+                  <History className="mr-1.5 size-4" />
+                  View Send Log
+                </Link>
+              </Button>
+              <MarkAllReadButton disabled={unread === 0} />
+            </div>
+          }
+        />
 
-        <nav aria-label="Filter" className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {[
             { label: 'All', href: '/admin/notifications', active: !unreadOnly },
             { label: 'Unread', href: '/admin/notifications?unread=true', active: unreadOnly },
@@ -56,46 +70,73 @@ export default async function AdminNotificationsPage({
               key={filter.label}
               href={filter.href}
               aria-current={filter.active ? 'page' : undefined}
-              className={
+              className={`text-caption rounded-full px-3 py-1 font-medium capitalize transition-colors ${
                 filter.active
-                  ? 'bg-foreground text-background text-body-sm rounded-full px-3 py-1.5 font-semibold'
-                  : 'border-border text-body-sm hover:bg-muted rounded-full border px-3 py-1.5'
-              }
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+              }`}
             >
               {filter.label}
             </Link>
           ))}
-        </nav>
+        </div>
 
-        {data.items.length === 0 ? (
-          <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-8 text-center">
-            Nothing to report. Failed sends appear here.
-          </p>
-        ) : (
-          <ul className="border-border divide-border divide-y rounded-lg border">
-            {data.items.map((item) => (
-              <li
-                key={item.id}
-                className={item.readAt ? 'flex gap-4 p-4' : 'bg-info-subtle/40 flex gap-4 p-4'}
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-body-sm font-semibold">{item.title}</p>
-                  <p className="text-body-sm text-muted-foreground mt-0.5">{item.message}</p>
-                  <p className="text-caption text-muted-foreground mt-1">
-                    {new Date(item.createdAt).toLocaleString()}
-                  </p>
-                </div>
-                {item.readAt ? (
-                  <span className="text-caption text-muted-foreground shrink-0 self-start pt-1">
-                    Read
-                  </span>
-                ) : (
-                  <MarkReadButton id={item.id} />
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Bell className="text-primary size-4" />
+              Notification Feed
+            </CardTitle>
+            <CardDescription>
+              Showing {data.items.length} {unreadOnly ? 'unread' : 'total'} notification items
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {data.items.length === 0 ? (
+              <div className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed py-12 text-center">
+                Nothing to report. System alerts and failed transactional tasks appear here.
+              </div>
+            ) : (
+              <div className="border-border/70 divide-border/70 divide-y overflow-hidden rounded-lg border">
+                {data.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`flex items-start justify-between gap-4 p-4 transition-colors ${
+                      item.readAt ? 'bg-surface' : 'bg-primary/5'
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-body-sm text-foreground font-semibold">
+                          {item.title}
+                        </span>
+                        {!item.readAt ? (
+                          <Badge variant="accent" className="text-caption font-normal">
+                            Unread
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <p className="text-body-sm text-muted-foreground">{item.message}</p>
+                      <p className="text-caption text-muted-foreground/80 pt-1 font-mono">
+                        {new Date(item.createdAt).toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    {item.readAt ? (
+                      <span className="text-caption text-muted-foreground/70 flex shrink-0 items-center gap-1 self-start pt-1 font-mono">
+                        <CheckCircle2 className="text-muted-foreground/60 size-3" />
+                        Read
+                      </span>
+                    ) : (
+                      <div className="shrink-0 pt-0.5">
+                        <MarkReadButton id={item.id} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   } catch (error) {
@@ -103,12 +144,11 @@ export default async function AdminNotificationsPage({
       return <ReauthPanel returnTo="/admin/notifications" what="These are your notifications." />;
     }
     return (
-      <p
-        role="alert"
-        className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-      >
-        {error instanceof AdminApiError ? error.message : 'Could not load your notifications.'}
-      </p>
+      <Card className="border-destructive/30 bg-destructive/5">
+        <CardContent className="text-body-sm text-destructive p-4">
+          {error instanceof AdminApiError ? error.message : 'Could not load your notifications.'}
+        </CardContent>
+      </Card>
     );
   }
 }

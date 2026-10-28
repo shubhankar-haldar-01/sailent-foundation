@@ -1,6 +1,15 @@
 import Link from 'next/link';
+import { Search, Image as ImageIcon } from 'lucide-react';
 
-import { Button } from '@sailent/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+} from '@sailent/ui';
 
 import { MediaTile, UploadPanel } from '@/components/admin/media-library';
 import { AdminApiError, listMedia, type AdminMedia, type Paginated } from '@/lib/admin/api';
@@ -37,38 +46,30 @@ export default async function AdminMediaPage({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">Media</h1>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            {data ? `${data.pagination.total} images. ` : ''}
-            Every image carries alt text, because one that does not is unusable to anybody reading
-            the site with a screen reader.
-          </p>
-        </div>
-        {can(actor, 'media.create') ? <UploadPanel /> : null}
-      </header>
+      <PageHeader
+        title="Media Assets"
+        description="Public and private media assets. Every image requires accessible alt text before public publication."
+        count={data?.pagination.total}
+        actions={can(actor, 'media.create') ? <UploadPanel /> : null}
+      />
 
       {failure ? (
-        <p
-          role="alert"
-          className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-        >
-          {failure}
-        </p>
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="text-body-sm text-destructive p-4">{failure}</CardContent>
+        </Card>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <nav aria-label="Filter by visibility" className="flex flex-wrap gap-1.5">
           {filters.map((filter) => (
             <Link
               key={filter}
               href={filter === 'all' ? '/admin/media' : `/admin/media?visibility=${filter}`}
               aria-current={active === filter ? 'page' : undefined}
-              className={`text-body-sm rounded-md px-3 py-1.5 capitalize ${
+              className={`text-caption rounded-full px-3 py-1 font-medium capitalize transition-colors ${
                 active === filter
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
               }`}
             >
               {filter}
@@ -76,59 +77,80 @@ export default async function AdminMediaPage({
           ))}
         </nav>
 
-        <form className="ml-auto flex gap-2" action="/admin/media">
+        <form className="flex items-center gap-2" action="/admin/media">
           <input type="hidden" name="visibility" value={active} />
-          <input
-            type="search"
-            name="q"
-            defaultValue={params.q ?? ''}
-            placeholder="Search alt text or caption"
-            aria-label="Search media"
-            className="border-input bg-surface text-body-sm h-9 rounded-md border px-3"
-          />
+          <div className="relative">
+            <Search className="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2" />
+            <input
+              type="search"
+              name="q"
+              defaultValue={params.q ?? ''}
+              placeholder="Search alt text, caption..."
+              aria-label="Search media"
+              className="border-input bg-surface text-body-sm shadow-xs focus-visible:outline-ring h-9 w-64 rounded-md border pl-8 pr-3 focus-visible:outline-2"
+            />
+          </div>
           <Button type="submit" variant="secondary" size="sm">
             Search
           </Button>
         </form>
       </div>
 
-      {data && data.items.length === 0 ? (
-        <p className="border-border text-body text-muted-foreground rounded-lg border border-dashed p-10 text-center">
-          {params.q
-            ? `No image matches “${params.q}”.`
-            : 'Nothing here yet. Upload an image to get started.'}
-        </p>
-      ) : null}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ImageIcon className="text-primary size-4" />
+            Image Library
+          </CardTitle>
+          <CardDescription>
+            {data ? `${data.pagination.total} assets found` : 'Asset gallery'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data && data.items.length === 0 ? (
+            <div className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed py-12 text-center">
+              {params.q
+                ? `No image matches “${params.q}”.`
+                : 'Nothing here yet. Upload an image to get started.'}
+            </div>
+          ) : null}
 
-      {data && data.items.length > 0 ? (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {data.items.map((item) => (
-            <Link key={item.id} href={`/admin/media/${item.id}`} className="contents">
-              <MediaTile item={item} />
-            </Link>
-          ))}
-        </ul>
-      ) : null}
+          {data && data.items.length > 0 ? (
+            <ul className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {data.items.map((item) => (
+                <li key={item.id}>
+                  <Link
+                    href={`/admin/media/${item.id}`}
+                    className="focus-visible:outline-ring block rounded-lg"
+                  >
+                    <MediaTile item={item} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
-      {data && data.pagination.totalPages > 1 ? (
-        <nav aria-label="Pages" className="flex items-center justify-between">
-          <p className="text-body-sm text-muted-foreground">
-            Page {data.pagination.page} of {data.pagination.totalPages}
-          </p>
-          <div className="flex gap-2">
-            {data.pagination.page > 1 ? (
-              <Button asChild variant="secondary" size="sm">
-                <Link href={pageHref(params, data.pagination.page - 1)}>Previous</Link>
-              </Button>
-            ) : null}
-            {data.pagination.page < data.pagination.totalPages ? (
-              <Button asChild variant="secondary" size="sm">
-                <Link href={pageHref(params, data.pagination.page + 1)}>Next</Link>
-              </Button>
-            ) : null}
-          </div>
-        </nav>
-      ) : null}
+          {data && data.pagination.totalPages > 1 ? (
+            <div className="border-border mt-6 flex items-center justify-between border-t pt-4">
+              <p className="text-body-sm text-muted-foreground">
+                Page {data.pagination.page} of {data.pagination.totalPages}
+              </p>
+              <div className="flex gap-2">
+                {data.pagination.page > 1 ? (
+                  <Button asChild variant="secondary" size="sm">
+                    <Link href={pageHref(params, data.pagination.page - 1)}>Previous</Link>
+                  </Button>
+                ) : null}
+                {data.pagination.page < data.pagination.totalPages ? (
+                  <Button asChild variant="secondary" size="sm">
+                    <Link href={pageHref(params, data.pagination.page + 1)}>Next</Link>
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
     </div>
   );
 }

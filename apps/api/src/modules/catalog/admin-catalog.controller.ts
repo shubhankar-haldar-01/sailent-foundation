@@ -38,14 +38,17 @@ import { CategoriesService } from './categories.service.js';
 import { ProgramsService } from './programs.service.js';
 import {
   CreateCampaignDto,
+  CreateCategoryDto,
   CreateProgramDto,
   StatusChangeDto,
+  UpdateCategoryDto,
   addGalleryItemSchema,
   campaignChildParams,
   campaignIdParam,
   campaignListQuerySchema,
   campaignStatusSchema,
   createCampaignSchema,
+  createCategorySchema,
   createFaqSchema,
   createProgramSchema,
   createUpdateSchema,
@@ -55,6 +58,7 @@ import {
   updateStatusSchema,
   reorderSchema,
   updateCampaignSchema,
+  updateCategorySchema,
   updateFaqSchema,
   updateGalleryItemSchema,
   updateProgramSchema,
@@ -106,6 +110,40 @@ export class AdminCatalogController {
   @ApiQuery({ name: 'kind', required: false, enum: ['program', 'campaign'] })
   listCategories(@Query('kind') kind?: 'program' | 'campaign') {
     return this.categories.list({ kind, activeOnly: false });
+  }
+
+  @RequirePermission('category.read')
+  @Get('categories/:id')
+  @ApiOperation({ summary: 'One category with its full record' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  getCategory(@Param(new ZodValidationPipe(uuidParam)) params: { id: string }) {
+    return this.categories.getById(params.id);
+  }
+
+  @RequirePermission('category.manage')
+  @Post('categories')
+  @ApiOperation({ summary: 'Create a new category in the catalogue' })
+  @ApiBody({ type: CreateCategoryDto })
+  createCategory(
+    @Body(new ZodValidationPipe(createCategorySchema)) body: never,
+    @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
+  ) {
+    return this.categories.create(body, actor, this.context(request));
+  }
+
+  @RequirePermission('category.manage')
+  @Patch('categories/:id')
+  @ApiOperation({ summary: 'Update an existing category' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiBody({ type: UpdateCategoryDto })
+  updateCategory(
+    @Param(new ZodValidationPipe(uuidParam)) params: { id: string },
+    @Body(new ZodValidationPipe(updateCategorySchema)) body: never,
+    @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
+  ) {
+    return this.categories.update(params.id, body, actor, this.context(request));
   }
 
   // =========================================================================
@@ -413,7 +451,6 @@ export class AdminCatalogController {
   }
 
   @RequirePermission('campaign.archive')
-  @Sensitive()
   @Post('campaigns/:id/archive')
   @HttpCode(200)
   @ApiOperation({ summary: 'Archive a campaign — removed from public listings' })
@@ -431,6 +468,19 @@ export class AdminCatalogController {
       actor,
       this.context(request),
     );
+  }
+
+  @RequirePermission('campaign.delete')
+  @Delete('campaigns/:id')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Delete a draft or archived campaign with no donations' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  deleteCampaign(
+    @Param(new ZodValidationPipe(uuidParam)) params: { id: string },
+    @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
+  ) {
+    return this.campaigns.delete(params.id, actor, this.context(request));
   }
 
   // =========================================================================

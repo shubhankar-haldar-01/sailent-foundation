@@ -66,5 +66,6 @@ export interface CampaignProductRow {
   maxPerDonation: number;
   sortOrder: number;
   isActive: boolean;
+  isMostNeeded: boolean;
   progress: { percent: number; fulfilled: number; target: number | null };
 }

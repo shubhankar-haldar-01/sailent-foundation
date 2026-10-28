@@ -155,7 +155,7 @@ export async function updateDonorSettings(
     return toState(error);
   }
 
-  revalidatePath('/dashboard/settings');
+  revalidatePath('/dashboard');
   return { ok: true };
 }
 

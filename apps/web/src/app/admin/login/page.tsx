@@ -2,15 +2,15 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-
-import { Alert, Button, Input, Label } from '@sailent/ui';
+import { Alert, Button, Input, Label, Card, CardContent } from '@sailent/ui';
+import { ShieldCheck, Lock } from 'lucide-react';
 
 import { signIn, type LoginState } from '@/lib/auth/actions';
 
 /**
  * Staff sign-in.
  *
- * Deliberately plain. This page's only jobs are to take two fields and to be
+ * Deliberately plain and secure. This page's only jobs are to take two fields and to be
  * unambiguous about failure — the API returns the same message for an unknown
  * address and a wrong password, and this page does not embellish it, because
  * the whole point of that uniformity is that it cannot be used to discover
@@ -46,75 +46,104 @@ export default function AdminLoginPage() {
   const [password, setPassword] = React.useState('');
 
   return (
-    <main className="bg-surface-sunken grid min-h-dvh place-items-center px-4 py-12">
-      <div className="bg-surface border-border w-full max-w-sm rounded-xl border p-7 shadow-sm">
-        <h1 className="font-display text-h2 font-bold tracking-tight">Staff sign-in</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          Sailent Foundation administration.
+    <main className="bg-muted/40 flex min-h-dvh flex-col items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <div className="bg-primary/10 text-primary mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl">
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <h1 className="font-display text-foreground text-2xl font-bold tracking-tight">
+            Sailent Foundation
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm">Staff Administration Console</p>
+        </div>
+
+        <Card className="shadow-sm">
+          <CardContent className="p-8">
+            <form action={action} className="space-y-4">
+              {state.error ? <Alert variant="destructive">{state.error}</Alert> : null}
+
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Email address</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="username"
+                  required
+                  autoFocus
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="admin@sailent.org"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link
+                    href="/admin/forgot-password"
+                    className="text-primary text-xs hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="••••••••••••"
+                />
+              </div>
+
+              {/* Revealed only once the API asks for it, so accounts that do not
+                  use a second factor never see an empty box they must ignore. */}
+              {state.needsTotp ? (
+                <div className="border-border mt-3 space-y-1.5 border-t pt-1">
+                  <div className="text-warning mb-1 flex items-center gap-1.5 text-xs font-medium">
+                    <Lock className="h-3.5 w-3.5" />
+                    Two-Factor Authentication Required
+                  </div>
+                  <Label htmlFor="totpCode">Authenticator code</Label>
+                  <Input
+                    id="totpCode"
+                    name="totpCode"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    placeholder="123456"
+                    required
+                    autoFocus
+                    className="text-center font-mono text-lg tracking-widest"
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    Enter the six-digit code from your authenticator app.
+                  </p>
+                </div>
+              ) : null}
+
+              <Button
+                type="submit"
+                variant="primary"
+                fullWidth
+                size="lg"
+                disabled={pending}
+                className="mt-2"
+              >
+                {pending ? 'Signing in…' : 'Sign in to Console'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <p className="text-muted-foreground mt-6 text-center text-xs">
+          Protected administrative system. Unauthorized access attempts are monitored and logged.
         </p>
-
-        <form action={action} className="mt-7 space-y-4">
-          {state.error ? <Alert variant="destructive">{state.error}</Alert> : null}
-
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email address</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="username"
-              required
-              autoFocus
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </div>
-
-          {/* Revealed only once the API asks for it, so accounts that do not
-              use a second factor never see an empty box they must ignore. */}
-          {state.needsTotp ? (
-            <div className="space-y-1.5">
-              <Label htmlFor="totpCode">Authenticator code</Label>
-              <Input
-                id="totpCode"
-                name="totpCode"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                placeholder="123456"
-                required
-                autoFocus
-              />
-              <p className="text-caption text-muted-foreground">
-                The six-digit code from your authenticator app.
-              </p>
-            </div>
-          ) : null}
-
-          <Button type="submit" fullWidth size="lg" disabled={pending}>
-            {pending ? 'Signing in…' : 'Sign in'}
-          </Button>
-          <Link
-            href="/admin/forgot-password"
-            className="text-body-sm text-primary block text-center underline underline-offset-4"
-          >
-            Forgot your password?
-          </Link>
-        </form>
       </div>
     </main>
   );

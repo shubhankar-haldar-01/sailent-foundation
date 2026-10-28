@@ -520,6 +520,7 @@ export class ContentService {
         maxPerDonation: campaignProducts.maxPerDonation,
         status: campaignProducts.status,
         sortOrder: campaignProducts.sortOrder,
+        isMostNeeded: campaignProducts.isMostNeeded,
       })
       .from(campaignProducts)
       .innerJoin(products, eq(products.id, campaignProducts.productId))

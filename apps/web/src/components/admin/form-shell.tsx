@@ -76,6 +76,7 @@ export function TextArea({
   onChange,
   ref,
   maxLength,
+  placeholder,
   className,
 }: {
   name: string;
@@ -92,6 +93,7 @@ export function TextArea({
    */
   ref?: React.Ref<HTMLTextAreaElement>;
   maxLength?: number;
+  placeholder?: string;
   className?: string;
   /**
    * Optional, and the field stays UNCONTROLLED.
@@ -110,6 +112,7 @@ export function TextArea({
       name={name}
       rows={rows}
       maxLength={maxLength}
+      placeholder={placeholder}
       defaultValue={defaultValue ?? ''}
       onChange={onChange ? (event) => onChange(event.target.value) : undefined}
       aria-invalid={errors?.[name] ? true : undefined}

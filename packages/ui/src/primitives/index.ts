@@ -23,3 +23,4 @@ export * from './table';
 export * from './breadcrumb';
 export * from './pagination';
 export * from './toast';
+export * from './alert-dialog';

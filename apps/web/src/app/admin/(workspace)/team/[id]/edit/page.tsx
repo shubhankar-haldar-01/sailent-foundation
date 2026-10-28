@@ -1,6 +1,11 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
+
+import { Card, CardContent, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
 
 import { StatusActions } from '@/components/admin/status-actions';
+import { StatusPill } from '@/components/admin/status-pill';
 import { TeamForm } from '@/components/admin/team-form';
 import { changeTeamStatus } from '@/lib/admin/actions';
 import { adminFetch, AdminApiError, type AdminTeamMember } from '@/lib/admin/api';
@@ -9,11 +14,6 @@ import { PROGRAM_TRANSITIONS } from '@sailent/validation';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * The three states a team member moves through are the same three a programme
- * moves through, with the same rules, so the same transition table drives both.
- * A second copy saying the same thing is a second copy to forget to update.
- */
 const LABELS = {
   published: { endpoint: 'published', label: 'Publish' },
   draft: { endpoint: 'draft', label: 'Unpublish' },
@@ -34,46 +34,83 @@ export default async function EditTeamMemberPage({ params }: { params: Promise<{
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">{member.name}</h1>
-          <p className="text-body-sm text-muted-foreground mt-1">{member.designation}</p>
-        </div>
-      </header>
+      <PageHeader
+        title={member.name}
+        breadcrumb={
+          <Link
+            href="/admin/team"
+            className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Back to team
+          </Link>
+        }
+        description={`${member.designation}${member.department ? ` · ${member.department}` : ''}`}
+        status={<StatusPill status={member.status} />}
+      />
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
-        <TeamForm member={member} />
-
-        <aside className="border-border space-y-4 rounded-lg border p-4">
-          <h2 className="text-body-sm font-semibold">Publication</h2>
-          {can(actor, 'team.manage') ? (
-            <StatusActions
-              entityId={member.id}
-              slug={member.slug}
-              current={member.status}
-              allowed={PROGRAM_TRANSITIONS[member.status] ?? []}
-              action={changeTeamStatus}
-              labels={LABELS}
-              reasonRequired={['archived']}
-              confirmRequired={['archived']}
-            />
-          ) : (
-            <p className="text-caption text-muted-foreground">
-              You do not have permission to change this.
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+        {/* Left: Form */}
+        <Card className="border-border">
+          <CardHeader className="border-border border-b pb-4">
+            <CardTitle className="text-base font-semibold">Team Member Profile</CardTitle>
+            <p className="text-caption text-muted-foreground mt-1">
+              Update name, designation, or biography.
             </p>
-          )}
+          </CardHeader>
+          <CardContent className="p-6">
+            <TeamForm member={member} />
+          </CardContent>
+        </Card>
+
+        {/* Right: Publication controls */}
+        <div className="space-y-6">
+          <Card className="border-border">
+            <CardHeader className="border-border border-b pb-4">
+              <CardTitle className="text-base font-semibold">Publication Lifecycle</CardTitle>
+              <p className="text-caption text-muted-foreground mt-1">
+                {member.status === 'published'
+                  ? 'Currently visible on the public About page directory.'
+                  : 'Draft state. Hidden from public website view.'}
+              </p>
+            </CardHeader>
+            <CardContent className="p-6">
+              {can(actor, 'team.manage') ? (
+                <StatusActions
+                  entityId={member.id}
+                  slug={member.slug}
+                  current={member.status}
+                  allowed={PROGRAM_TRANSITIONS[member.status] ?? []}
+                  action={changeTeamStatus}
+                  labels={LABELS}
+                  reasonRequired={['archived']}
+                  confirmRequired={['archived']}
+                />
+              ) : (
+                <p className="text-caption text-muted-foreground">
+                  You do not have permission to change publication state.
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
           {member.slugHistory?.length ? (
-            <div className="border-border border-t pt-4">
-              <h2 className="text-body-sm font-semibold">Previous addresses</h2>
-              <ul className="text-caption text-muted-foreground mt-2 space-y-1">
-                {member.slugHistory.map((entry) => (
-                  <li key={entry.slug}>/team/{entry.slug} — redirects here</li>
-                ))}
-              </ul>
-            </div>
+            <Card className="border-border">
+              <CardHeader className="border-border border-b pb-4">
+                <CardTitle className="text-base font-semibold">Previous Addresses</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <ul className="text-caption text-muted-foreground space-y-1">
+                  {member.slugHistory.map((entry) => (
+                    <li key={entry.slug} className="font-mono text-xs">
+                      /team/{entry.slug} — redirects here
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
           ) : null}
-        </aside>
+        </div>
       </div>
     </div>
   );

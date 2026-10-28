@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
 
-import { Button, Input, Progress, cn, formatCurrency } from '@sailent/ui';
+import { Button, ConfirmationDialog, Input, Progress, cn, formatCurrency } from '@sailent/ui';
 
 import { Field, FormStatus, SubmitButton } from '@/components/admin/form-shell';
 import {
@@ -90,16 +90,16 @@ export function CampaignProductManager({
           />
 
           {selected ? (
-            <form action={addAction} className="space-y-4">
+            <form key={selected.id} action={addAction} className="space-y-4">
               <input type="hidden" name="campaignId" value={campaignId} />
               <input type="hidden" name="productId" value={selected.id} />
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
-                  label="This campaign’s price (₹)"
+                  label="This campaign’s price (₹) *"
                   name="price"
                   errors={addState.fieldErrors}
-                  hint={`The catalogue suggests ${formatCurrency(selected.defaultPrice)}. Leave as-is unless this campaign genuinely differs.`}
+                  hint={`The catalogue suggests ${formatCurrency(selected.defaultPrice)}. Required.`}
                 >
                   <Input
                     id="price"
@@ -107,21 +107,45 @@ export function CampaignProductManager({
                     type="number"
                     min={1}
                     step={1}
-                    // Pre-filled from the catalogue rather than copied
-                    // silently, so the operator sees the number they are
-                    // agreeing to and can change it here.
+                    required
                     defaultValue={selected.defaultPrice / 100}
                   />
                 </Field>
 
                 <Field
-                  label="Target quantity"
+                  label="Target quantity *"
                   name="targetQuantity"
                   errors={addState.fieldErrors}
-                  hint="Leave blank for open-ended — no progress bar, just a count."
+                  hint="Units targeted for this campaign. Required."
                 >
-                  <Input id="targetQuantity" name="targetQuantity" type="number" min={0} />
+                  <Input
+                    id="targetQuantity"
+                    name="targetQuantity"
+                    type="number"
+                    min={1}
+                    required
+                    placeholder="e.g. 100"
+                  />
                 </Field>
+              </div>
+
+              <div className="border-border/70 bg-surface-warm/40 rounded-lg border p-3">
+                <label className="flex cursor-pointer items-center gap-2.5">
+                  <input
+                    type="checkbox"
+                    name="isMostNeeded"
+                    id="addIsMostNeeded"
+                    value="true"
+                    className="border-border text-primary focus:ring-primary size-4 rounded focus:ring-offset-0"
+                  />
+                  <div className="min-w-0">
+                    <span className="text-body-sm text-foreground font-semibold">Most Needed</span>
+                    <p className="text-caption text-muted-foreground">
+                      Display an orange &ldquo;Most Needed&rdquo; badge on this product card on the
+                      campaign page.
+                    </p>
+                  </div>
+                </label>
               </div>
 
               <SubmitButton pending={addPending}>Add “{selected.name}”</SubmitButton>
@@ -145,10 +169,19 @@ function CampaignProductItem({
     {},
   );
   const [, toggleAction] = React.useActionState<ActionState, FormData>(setProductActive, {});
-  const [removeState, removeAction] = React.useActionState<ActionState, FormData>(
+  const [removeState, removeAction, removePending] = React.useActionState<ActionState, FormData>(
     removeCampaignProduct,
     {},
   );
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = React.useState(false);
+
+  const handleConfirmRemove = async () => {
+    const formData = new FormData();
+    formData.append('campaignId', campaignId);
+    formData.append('productId', product.id);
+    await removeAction(formData);
+    setConfirmRemoveOpen(false);
+  };
 
   const divergesFromCatalogue = product.price !== product.defaultPrice;
   const isFunded = product.providedQuantity > 0;
@@ -156,17 +189,22 @@ function CampaignProductItem({
   return (
     <li className="space-y-3 px-4 py-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-body-sm font-medium">
-          {product.name}
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-body-sm font-medium">{product.name}</p>
+          {product.isMostNeeded ? (
+            <span className="bg-primary text-primary-foreground rounded-md px-2 py-1 text-[11px] font-semibold leading-none tracking-wide">
+              Most Needed
+            </span>
+          ) : null}
           {!product.isActive ? (
-            <span className="text-caption text-muted-foreground ml-2">(hidden on the page)</span>
+            <span className="text-caption text-muted-foreground">(hidden on the page)</span>
           ) : null}
           {product.productStatus !== 'active' ? (
-            <span className="text-caption text-warning-foreground ml-2">
+            <span className="text-caption text-warning-foreground">
               catalogue: {product.productStatus}
             </span>
           ) : null}
-        </p>
+        </div>
         <p data-numeric="" className="text-body-sm tabular-nums">
           {formatCurrency(product.price)}
           <span className="text-muted-foreground"> / {product.unit}</span>
@@ -239,26 +277,28 @@ function CampaignProductItem({
           <FormStatus state={editState} />
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="Price (₹)" name="price" errors={editState.fieldErrors}>
+            <Field label="Price (₹) *" name="price" errors={editState.fieldErrors}>
               <Input
                 id="price"
                 name="price"
                 type="number"
                 min={1}
+                required
                 defaultValue={product.price / 100}
               />
             </Field>
             <Field
-              label="Target"
+              label="Target *"
               name="targetQuantity"
               errors={editState.fieldErrors}
-              hint={isFunded ? `At least ${product.providedQuantity}.` : undefined}
+              hint={isFunded ? `At least ${product.providedQuantity}. Required.` : 'Required.'}
             >
               <Input
                 id="targetQuantity"
                 name="targetQuantity"
                 type="number"
-                min={product.providedQuantity}
+                min={Math.max(1, product.providedQuantity)}
+                required
                 defaultValue={product.targetQuantity ?? ''}
               />
             </Field>
@@ -273,6 +313,27 @@ function CampaignProductItem({
             </Field>
           </div>
 
+          <div className="border-border/70 bg-surface-warm/40 rounded-lg border p-3">
+            <input type="hidden" name="hasIsMostNeeded" value="true" />
+            <label className="flex cursor-pointer items-center gap-2.5">
+              <input
+                type="checkbox"
+                name="isMostNeeded"
+                id={`isMostNeeded-${product.id}`}
+                value="true"
+                defaultChecked={product.isMostNeeded}
+                className="border-border text-primary focus:ring-primary size-4 rounded focus:ring-offset-0"
+              />
+              <div className="min-w-0">
+                <span className="text-body-sm text-foreground font-semibold">Most Needed</span>
+                <p className="text-caption text-muted-foreground">
+                  Display an orange &ldquo;Most Needed&rdquo; badge on this product card on the
+                  campaign page.
+                </p>
+              </div>
+            </label>
+          </div>
+
           <p className="text-caption text-muted-foreground">
             A price change applies to the next donation only. Donations already taken keep the price
             they were charged.
@@ -282,13 +343,26 @@ function CampaignProductItem({
         </form>
       </details>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <form action={toggleAction}>
           <input type="hidden" name="campaignId" value={campaignId} />
           <input type="hidden" name="productId" value={product.id} />
           <input type="hidden" name="active" value={product.isActive ? 'false' : 'true'} />
           <Button type="submit" size="sm" variant="secondary">
             {product.isActive ? 'Hide from the page' : 'Show on the page'}
+          </Button>
+        </form>
+
+        <form action={editAction}>
+          <input type="hidden" name="campaignId" value={campaignId} />
+          <input type="hidden" name="productId" value={product.id} />
+          <input
+            type="hidden"
+            name="isMostNeeded"
+            value={product.isMostNeeded ? 'false' : 'true'}
+          />
+          <Button type="submit" size="sm" variant={product.isMostNeeded ? 'primary' : 'secondary'}>
+            {product.isMostNeeded ? '★ Most Needed' : '☆ Mark Most Needed'}
           </Button>
         </form>
 
@@ -304,24 +378,29 @@ function CampaignProductItem({
             Already funded — hide it rather than removing it, so the record stays intact.
           </p>
         ) : (
-          <form
-            action={removeAction}
-            onSubmit={(event) => {
-              if (
-                !window.confirm(
-                  `Stop offering “${product.name}” on this campaign? The product stays in the catalogue.`,
-                )
-              ) {
-                event.preventDefault();
-              }
-            }}
-          >
-            <input type="hidden" name="campaignId" value={campaignId} />
-            <input type="hidden" name="productId" value={product.id} />
-            <Button type="submit" size="sm" variant="ghost">
+          <>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={removePending}
+              onClick={() => setConfirmRemoveOpen(true)}
+            >
               Remove
             </Button>
-          </form>
+            <ConfirmationDialog
+              open={confirmRemoveOpen}
+              onOpenChange={setConfirmRemoveOpen}
+              title={`Remove “${product.name}”?`}
+              description="Stop offering this product on this campaign? The product remains in the global catalogue."
+              confirmLabel="Remove product"
+              variant="destructive"
+              icon="danger"
+              loading={removePending}
+              onConfirm={handleConfirmRemove}
+              error={removeState.error}
+            />
+          </>
         )}
       </div>
     </li>

@@ -106,6 +106,7 @@ export const addCampaignProductSchema = z.object({
   targetQuantity: z.number().int().nonnegative().max(1_000_000).nullish(),
   maxPerDonation: z.number().int().positive().max(9999).optional(),
   sortOrder: z.number().int().min(0).max(9999).optional(),
+  isMostNeeded: z.boolean().optional(),
 });
 
 export const updateCampaignProductSchema = addCampaignProductSchema

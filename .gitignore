@@ -39,3 +39,6 @@ pnpm-debug.log*
 .sentryclirc
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
+
+# local user uploads
+apps/web/public/uploads/

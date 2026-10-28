@@ -4,202 +4,313 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  AlertTriangle,
+  BarChart3,
   Bell,
+  BookOpen,
+  Calendar,
+  CircleDollarSign,
+  FileCode2,
   FileText,
-  HeartHandshake,
+  Globe,
+  Heart,
+  HelpCircle,
+  History,
+  Image,
+  Layers,
   LayoutDashboard,
+  ListOrdered,
+  Mail,
   Megaphone,
-  Settings,
-  Users,
-  Wallet,
+  MessageSquare,
+  Package,
+  Receipt,
+  Scale,
+  Shield,
+  ShieldCheck,
+  Sliders,
+  Sparkles,
+  Tag,
+  Target,
+  UserCheck,
+  UserCog,
+  type LucideIcon,
 } from 'lucide-react';
-import { cn } from '@sailent/ui';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, cn } from '@sailent/ui';
 
-/**
- * Admin sidebar.
- *
- * Groups follow the Phase 0 admin IA (docs/information-architecture.md §8.2),
- * including the review that added a dedicated FINANCE group: reconciliation
- * and the Form 10BD statutory deadline are a distinct job done by a
- * distinct role, and burying a 31 May legal deadline inside a fundraising menu
- * is how deadlines get missed.
- *
- * In Phase 3 this list is filtered by the viewer's permissions, so a user never
- * sees a menu item leading to a 403. That filtering is COSMETIC — the API
- * enforces independently (decision A9).
- */
-
-interface AdminNavItem {
+export interface AdminNavItem {
   label: string;
   href: string;
-  /** The phase that implements it. Rendered as a hint while unbuilt. */
+  icon: LucideIcon;
   phase?: string;
+  permission?: string;
 }
 
-interface AdminNavGroup {
+export interface AdminNavGroup {
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
   items: AdminNavItem[];
 }
 
 export const adminNav: AdminNavGroup[] = [
   {
     label: 'Overview',
-    icon: LayoutDashboard,
-    items: [{ label: 'Dashboard', href: '/admin' }],
+    items: [{ label: 'Dashboard', href: '/admin', icon: LayoutDashboard }],
   },
   {
     label: 'Fundraising',
-    icon: Megaphone,
     items: [
-      { label: 'Donations', href: '/admin/donations' },
-      { label: 'Campaigns', href: '/admin/campaigns' },
-      /**
-       * A top-level entry, not one nested under campaigns.
-       *
-       * A product is not a child of a campaign — it outlives every campaign
-       * that offers it. Filing it under one would reproduce in the navigation
-       * the confusion Phase 5 removed from the schema. The per-campaign
-       * offerings are edited on the campaign, where the price belongs.
-       */
-      { label: 'Products', href: '/admin/products' },
+      {
+        label: 'Donations',
+        href: '/admin/donations',
+        icon: CircleDollarSign,
+        permission: 'donation.read',
+      },
+      {
+        label: 'Campaigns',
+        href: '/admin/campaigns',
+        icon: Megaphone,
+        permission: 'campaign.read',
+      },
+      { label: 'Products', href: '/admin/products', icon: Package, permission: 'product.view' },
     ],
   },
   {
     label: 'Finance',
-    icon: Wallet,
     items: [
-      { label: 'Reconciliation', href: '/admin/reconciliation' },
-      // Phase 11: what reconciliation could not settle on its own. Read-only.
-      { label: 'Payment exceptions', href: '/admin/payments' },
-      { label: 'Tax compliance', href: '/admin/tax' },
-      /*
-        Phase 10.12. "Reports" sits under Finance rather than in a group of its
-        own: `information-architecture.md` §8.2 gives it one, but every figure
-        it shows is money, volunteers or impact over a range — and the two
-        entries above are reports as well. Three destinations for one idea is
-        the menu that makes people guess.
-      */
-      { label: 'Reports', href: '/admin/reports' },
+      {
+        label: 'Reconciliation',
+        href: '/admin/reconciliation',
+        icon: Scale,
+        permission: 'payment.manage',
+      },
+      {
+        label: 'Payment exceptions',
+        href: '/admin/payments',
+        icon: AlertTriangle,
+        permission: 'payment.read',
+      },
+      { label: 'Tax compliance', href: '/admin/tax', icon: Receipt, permission: 'tax.read' },
+      { label: 'Reports', href: '/admin/reports', icon: BarChart3, permission: 'report.view' },
     ],
   },
   {
     label: 'People',
-    icon: Users,
     items: [
-      { label: 'Donors', href: '/admin/donors' },
-      /*
-        ONE entry, not two. Applications used to be listed separately, and they
-        are the same screen: an application IS a volunteer whose status has not
-        been decided yet. The list opens on the review queue for that reason.
-      */
-      { label: 'Volunteers', href: '/admin/volunteers' },
-      { label: 'Team / Staff', href: '/admin/team' },
+      { label: 'Donors', href: '/admin/donors', icon: Heart, permission: 'donor.read' },
+      {
+        label: 'Volunteers',
+        href: '/admin/volunteers',
+        icon: UserCheck,
+        permission: 'volunteer.read',
+      },
+      { label: 'Team / Staff', href: '/admin/team', icon: ShieldCheck, permission: 'team.read' },
     ],
   },
   {
     label: 'Programs & work',
-    icon: HeartHandshake,
     items: [
-      { label: 'Programs', href: '/admin/programs' },
-      { label: 'Events', href: '/admin/events' },
-      { label: 'Impact records', href: '/admin/impact' },
-      { label: 'Success stories', href: '/admin/stories' },
+      { label: 'Programs', href: '/admin/programs', icon: Layers, permission: 'program.read' },
+      { label: 'Categories', href: '/admin/categories', icon: Tag, permission: 'category.read' },
+      { label: 'Events', href: '/admin/events', icon: Calendar, permission: 'event.read' },
+      { label: 'Impact records', href: '/admin/impact', icon: Target, permission: 'impact.read' },
+      {
+        label: 'Success stories',
+        href: '/admin/stories',
+        icon: Sparkles,
+        permission: 'story.read',
+      },
     ],
   },
   {
     label: 'Content',
-    icon: FileText,
     items: [
-      { label: 'Pages', href: '/admin/pages' },
-      { label: 'Blog', href: '/admin/blog' },
-      { label: 'Media library', href: '/admin/media' },
-      // Phase 13: the general questions on /faq. Campaign FAQs stay on the campaign.
-      { label: 'FAQs', href: '/admin/faqs' },
-      /*
-        ONE ENTRY, NOT TWO.
-
-        There was also a top-level "Reports" group pointing at `/admin/reports`.
-        Annual reports, audited accounts and legal filings ARE documents, and
-        two admin destinations for one drawer of PDFs is a menu that makes
-        people guess. They are internal by design — the public `/reports` and
-        `/transparency` pages were removed — so this is the only place they
-        appear anywhere in the platform.
-      */
-      { label: 'Reports & documents', href: '/admin/documents' },
+      { label: 'Pages', href: '/admin/pages', icon: Globe, permission: 'page.read' },
+      { label: 'Blog', href: '/admin/blog', icon: BookOpen, permission: 'blog.read' },
+      { label: 'Media library', href: '/admin/media', icon: Image, permission: 'media.read' },
+      { label: 'FAQs', href: '/admin/faqs', icon: HelpCircle, permission: 'faq.read' },
+      {
+        label: 'Reports & documents',
+        href: '/admin/documents',
+        icon: FileText,
+        permission: 'document.read',
+      },
     ],
   },
   {
-    /*
-      "Communication", as `information-architecture.md` §8.2 names it. Messages
-      and Newsletter arrived in Phase 13 with their tables (migration 0023).
-    */
     label: 'Communication',
-    icon: Bell,
     items: [
-      { label: 'Messages', href: '/admin/messages' },
-      { label: 'Newsletter', href: '/admin/newsletter' },
-      { label: 'Notifications', href: '/admin/notifications' },
-      { label: 'Email templates', href: '/admin/notification-templates' },
-      { label: 'Send log', href: '/admin/notifications/log' },
+      {
+        label: 'Messages',
+        href: '/admin/messages',
+        icon: MessageSquare,
+        permission: 'contact.read',
+      },
+      { label: 'Newsletter', href: '/admin/newsletter', icon: Mail, permission: 'newsletter.read' },
+      {
+        label: 'Notifications',
+        href: '/admin/notifications',
+        icon: Bell,
+        permission: 'notification.read',
+      },
+      {
+        label: 'Email templates',
+        href: '/admin/notification-templates',
+        icon: FileCode2,
+        permission: 'notification.manage',
+      },
+      {
+        label: 'Send log',
+        href: '/admin/notifications/log',
+        icon: ListOrdered,
+        permission: 'notification.read',
+      },
     ],
   },
   {
     label: 'System',
-    icon: Settings,
     items: [
-      { label: 'Users', href: '/admin/users' },
-      { label: 'Roles & permissions', href: '/admin/roles' },
-      { label: 'Settings', href: '/admin/settings' },
-      { label: 'Audit logs', href: '/admin/audit-logs' },
+      { label: 'Users', href: '/admin/users', icon: UserCog, permission: 'user.read' },
+      { label: 'Roles & permissions', href: '/admin/roles', icon: Shield, permission: 'role.read' },
+      { label: 'Settings', href: '/admin/settings', icon: Sliders, permission: 'settings.read' },
+      { label: 'Audit logs', href: '/admin/audit-logs', icon: History, permission: 'audit.read' },
     ],
   },
 ];
 
-export function AdminSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+export function AdminSidebarContent({
+  onNavigate,
+  isCollapsed = false,
+  actor,
+}: {
+  onNavigate?: () => void;
+  isCollapsed?: boolean;
+  actor?: { id: string; permissions: string[] };
+}) {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Admin" className="flex flex-col gap-6 p-4">
-      {adminNav.map((group) => {
-        const Icon = group.icon;
-        return (
-          <div key={group.label}>
-            <p className="text-overline tracking-(--text-overline--letter-spacing) text-muted-foreground mb-2 flex items-center gap-2 px-2 uppercase">
-              <Icon className="size-3.5" aria-hidden="true" />
-              {group.label}
-            </p>
-            <ul className="space-y-0.5">
-              {group.items.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onNavigate}
-                      aria-current={isActive ? 'page' : undefined}
-                      className={cn(
-                        'text-body-sm flex min-h-9 items-center justify-between gap-2 rounded-md px-2 py-1.5 transition-colors',
-                        'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
-                        isActive
-                          ? 'bg-accent text-accent-foreground font-medium'
-                          : 'text-foreground hover:bg-muted',
-                      )}
-                    >
-                      <span>{item.label}</span>
-                      {item.phase ? (
-                        <span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-[0.6875rem]">
-                          {item.phase}
-                        </span>
-                      ) : null}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        );
-      })}
-    </nav>
+    <TooltipProvider delayDuration={150}>
+      <nav
+        aria-label="Admin"
+        className={cn(
+          'flex flex-col transition-all duration-200',
+          isCollapsed ? 'gap-4 p-2' : 'gap-5 p-3',
+        )}
+      >
+        {adminNav.map((group, groupIdx) => {
+          // Filter items by actor permissions if provided
+          const visibleItems = group.items.filter((item) => {
+            if (!item.permission || !actor?.permissions) return true;
+            return actor.permissions.includes(item.permission);
+          });
+
+          if (visibleItems.length === 0) return null;
+
+          return (
+            <div key={group.label} className="space-y-1">
+              {!isCollapsed ? (
+                <div className="px-2 pb-1 pt-1.5">
+                  <p className="text-muted-foreground/80 text-[0.6875rem] font-bold uppercase tracking-wider">
+                    {group.label}
+                  </p>
+                </div>
+              ) : groupIdx > 0 ? (
+                <div className="border-border/60 my-2 border-t" aria-hidden="true" />
+              ) : null}
+
+              <ul className="space-y-0.5">
+                {visibleItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive =
+                    item.href === '/admin'
+                      ? pathname === '/admin' || pathname === '/admin/'
+                      : pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+                  if (isCollapsed) {
+                    return (
+                      <li key={item.href}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link
+                              href={item.href}
+                              onClick={onNavigate}
+                              aria-current={isActive ? 'page' : undefined}
+                              className={cn(
+                                'flex size-10 items-center justify-center rounded-xl transition-all',
+                                'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
+                                isActive
+                                  ? 'bg-primary text-primary-foreground shadow-xs'
+                                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                              )}
+                            >
+                              <Icon className="size-4 shrink-0" aria-hidden="true" />
+                              <span className="sr-only">{item.label}</span>
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" sideOffset={12} className="font-medium">
+                            <div className="flex items-center gap-1.5">
+                              <span>{item.label}</span>
+                              {item.phase ? (
+                                <span className="bg-muted text-muted-foreground rounded px-1 text-[0.625rem]">
+                                  {item.phase}
+                                </span>
+                              ) : null}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </li>
+                    );
+                  }
+
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={onNavigate}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={cn(
+                          'group relative flex min-h-9 items-center justify-between gap-2.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors',
+                          'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
+                          isActive
+                            ? 'bg-primary/10 text-primary font-semibold'
+                            : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
+                        )}
+                      >
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <Icon
+                            className={cn(
+                              'size-4 shrink-0 transition-colors',
+                              isActive
+                                ? 'text-primary'
+                                : 'text-muted-foreground group-hover:text-foreground',
+                            )}
+                            aria-hidden="true"
+                          />
+                          <span className="truncate">{item.label}</span>
+                        </div>
+
+                        {/* Active indicator bar */}
+                        {isActive ? (
+                          <span
+                            className="bg-primary absolute bottom-1.5 left-0 top-1.5 w-1 rounded-r-full"
+                            aria-hidden="true"
+                          />
+                        ) : null}
+
+                        {item.phase ? (
+                          <span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-[0.625rem] font-normal">
+                            {item.phase}
+                          </span>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
+      </nav>
+    </TooltipProvider>
   );
 }

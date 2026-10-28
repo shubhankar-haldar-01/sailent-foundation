@@ -1,7 +1,16 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft, ExternalLink, Eye } from 'lucide-react';
 
-import { formatDate } from '@sailent/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  formatDate,
+  PageHeader,
+} from '@sailent/ui';
 
 import { ProgramForm } from '@/components/admin/program-form';
 import { StatusActions } from '@/components/admin/status-actions';
@@ -39,7 +48,6 @@ interface ProgramDetail {
   slugHistory: { slug: string; changedAt: string }[];
 }
 
-/** Program lifecycle, mirroring PROGRAM_TRANSITIONS on the server. */
 const PROGRAM_LABELS = {
   published: { endpoint: 'publish', label: 'Publish' },
   draft: { endpoint: 'unpublish', label: 'Take back to draft' },
@@ -70,111 +78,151 @@ export default async function EditProgramPage({ params }: { params: Promise<{ id
     : [];
 
   return (
-    <div className="space-y-8">
-      <header>
-        <Link href="/admin/programs" className="text-body-sm text-muted-foreground hover:underline">
-          ← Programs
-        </Link>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-h1 font-bold tracking-tight">{program.title}</h1>
-          <StatusPill status={program.status} />
-        </div>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          /{program.slug} · updated {formatDate(program.updatedAt)}
-          {program.status === 'published' ? (
-            <>
-              {' · '}
-              <Link href={`/programs/${program.slug}`} target="_blank" className="hover:underline">
-                View on the site
-              </Link>
-            </>
-          ) : (
-            <>
-              {' · '}
-              <Link
-                href={`/admin/preview/program/${program.slug}`}
-                className="text-primary hover:underline"
-              >
-                Preview
-              </Link>
-            </>
-          )}
-        </p>
-      </header>
-
-      <section className="border-border rounded-lg border p-5">
-        <h2 className="text-h4 font-semibold">Publication</h2>
-        <p className="text-body-sm text-muted-foreground mb-4 mt-1">
-          {program.status === 'published'
-            ? 'This program is visible on the public site.'
-            : 'Not visible publicly.'}
-        </p>
-        <StatusActions
-          entityId={program.id}
-          current={program.status}
-          allowed={transitions.program[program.status] ?? []}
-          action={changeProgramStatus}
-          labels={PROGRAM_LABELS}
-          confirmRequired={['archived']}
-        />
-      </section>
-
-      <section>
-        <h2 className="text-h4 mb-4 font-semibold">Details</h2>
-        <ProgramForm categories={categories.items.filter((c) => c.isActive)} program={program} />
-      </section>
-
-      {can(actor, 'program.update') ? (
-        <section>
-          <h2 className="text-h4 mb-1 font-semibold">Cover image</h2>
-          <p className="text-body-sm text-muted-foreground mb-4 max-w-prose">
-            Shown at the top of the programme page and on its card (Phase 13). Public images from
-            the media library only.
-          </p>
-          <CoverImagePanel
-            kind="program"
-            id={program.id}
-            slug={program.slug}
-            current={program.coverImage}
-            options={mediaOptions}
-          />
-        </section>
-      ) : null}
-
-      {program.campaigns.length > 0 ? (
-        <section>
-          <h2 className="text-h4 mb-3 font-semibold">Campaigns in this program</h2>
-          <ul className="border-border divide-border divide-y rounded-lg border">
-            {program.campaigns.map((campaign) => (
-              <li key={campaign.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                <Link
-                  href={`/admin/campaigns/${campaign.id}/edit`}
-                  className="text-body-sm hover:text-primary font-medium"
-                >
-                  {campaign.title}
+    <div className="space-y-6">
+      <PageHeader
+        title={program.title}
+        breadcrumb={
+          <Link
+            href="/admin/programs"
+            className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Back to programs
+          </Link>
+        }
+        description={`/${program.slug} · Updated ${formatDate(program.updatedAt)}`}
+        status={<StatusPill status={program.status} />}
+        actions={
+          <div className="flex items-center gap-2">
+            {program.status === 'published' ? (
+              <Button asChild variant="secondary" size="sm" className="gap-1.5">
+                <Link href={`/programs/${program.slug}`} target="_blank">
+                  View on site
+                  <ExternalLink className="size-3.5" aria-hidden="true" />
                 </Link>
-                <StatusPill status={campaign.status} />
-              </li>
-            ))}
-          </ul>
-        </section>
+              </Button>
+            ) : (
+              <Button asChild variant="secondary" size="sm" className="gap-1.5">
+                <Link href={`/admin/preview/program/${program.slug}`}>
+                  <Eye className="size-3.5" aria-hidden="true" />
+                  Preview draft
+                </Link>
+              </Button>
+            )}
+          </div>
+        }
+      />
+
+      {/* Lifecycle Transitions Card */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <CardTitle className="text-base font-semibold">Publication Lifecycle</CardTitle>
+          <p className="text-caption text-muted-foreground mt-1">
+            {program.status === 'published'
+              ? 'This program is currently visible on the public website.'
+              : 'Draft status. Visible to administrators only.'}
+          </p>
+        </CardHeader>
+        <CardContent className="p-6">
+          <StatusActions
+            entityId={program.id}
+            current={program.status}
+            allowed={transitions.program[program.status] ?? []}
+            action={changeProgramStatus}
+            labels={PROGRAM_LABELS}
+            confirmRequired={['archived']}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Program Details Card */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <CardTitle className="text-base font-semibold">Program Information & Focus</CardTitle>
+          <p className="text-caption text-muted-foreground mt-1">
+            Core description, problem context, strategic approach, and target communities.
+          </p>
+        </CardHeader>
+        <CardContent className="p-6">
+          <ProgramForm categories={categories.items.filter((c) => c.isActive)} program={program} />
+        </CardContent>
+      </Card>
+
+      {/* Cover Image Panel */}
+      {can(actor, 'program.update') ? (
+        <Card className="border-border">
+          <CardHeader className="border-border border-b pb-4">
+            <CardTitle className="text-base font-semibold">Hero Cover Image</CardTitle>
+            <p className="text-caption text-muted-foreground mt-1">
+              Banner image displayed on the program page and promotional program cards. Public media
+              library assets only.
+            </p>
+          </CardHeader>
+          <CardContent className="p-6">
+            <CoverImagePanel
+              kind="program"
+              id={program.id}
+              slug={program.slug}
+              current={program.coverImage}
+              options={mediaOptions}
+            />
+          </CardContent>
+        </Card>
       ) : null}
 
+      {/* Attached Campaigns Card */}
+      {program.campaigns.length > 0 ? (
+        <Card className="border-border">
+          <CardHeader className="border-border border-b pb-4">
+            <CardTitle className="text-base font-semibold">Associated Campaigns</CardTitle>
+            <p className="text-caption text-muted-foreground mt-1">
+              Active and completed fundraising campaigns organized under this programmatic umbrella.
+            </p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ul className="divide-border divide-y">
+              {program.campaigns.map((campaign) => (
+                <li
+                  key={campaign.id}
+                  className="hover:bg-muted/20 flex items-center justify-between gap-3 px-6 py-3.5 transition-colors"
+                >
+                  <Link
+                    href={`/admin/campaigns/${campaign.id}/edit`}
+                    className="text-body-sm hover:text-primary text-foreground font-medium hover:underline"
+                  >
+                    {campaign.title}
+                  </Link>
+                  <StatusPill status={campaign.status} />
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Slug History Card */}
       {program.slugHistory.length > 0 ? (
-        <section>
-          <h2 className="text-h4 mb-2 font-semibold">Previous addresses</h2>
-          <p className="text-body-sm text-muted-foreground mb-3">
-            Each of these still redirects here, permanently. Old links and printed material keep
-            working.
-          </p>
-          <ul className="text-body-sm text-muted-foreground space-y-1">
-            {program.slugHistory.map((entry) => (
-              <li key={entry.slug}>
-                <code>/programs/{entry.slug}</code> — retired {formatDate(entry.changedAt)}
-              </li>
-            ))}
-          </ul>
-        </section>
+        <Card className="border-border">
+          <CardHeader className="border-border border-b pb-4">
+            <CardTitle className="text-base font-semibold">Permanent URL Redirects</CardTitle>
+            <p className="text-caption text-muted-foreground mt-1">
+              Historical URLs preserved as permanent 301 redirects to ensure external links do not
+              break.
+            </p>
+          </CardHeader>
+          <CardContent className="p-6">
+            <ul className="text-body-sm text-muted-foreground space-y-2">
+              {program.slugHistory.map((entry) => (
+                <li key={entry.slug} className="flex items-center gap-2">
+                  <code className="text-caption bg-muted text-foreground rounded px-2 py-0.5">
+                    /programs/{entry.slug}
+                  </code>
+                  <span>— retired on {formatDate(entry.changedAt)}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );

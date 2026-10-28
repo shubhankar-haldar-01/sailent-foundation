@@ -1,4 +1,21 @@
-import { formatCurrency, formatDate } from '@sailent/ui';
+import { AlertTriangle, Clock, Webhook } from 'lucide-react';
+
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  formatCurrency,
+  formatDate,
+  PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@sailent/ui';
 
 import { Stat } from '@/components/admin/report-controls';
 import { AdminApiError, paymentExceptions, type PaymentExceptions } from '@/lib/admin/api';
@@ -6,28 +23,15 @@ import { AdminApiError, paymentExceptions, type PaymentExceptions } from '@/lib/
 export const dynamic = 'force-dynamic';
 
 const STATUS_LABELS: Record<string, string> = {
-  failed: 'Failed — Razorpay is retrying',
+  failed: 'Failed — Gateway retrying',
   needs_review: 'Needs review',
   pending: 'Never finished',
 };
 
 /**
- * Payment exceptions (Phase 11).
+ * Payment exceptions.
  *
- * ══════════════════════════════════════════════════════════════════════════
- * WHAT NEEDS A HUMAN, AND NOTHING THAT CHANGES A PAYMENT.
- *
- * Reconciliation runs on its own every few minutes: it records payments
- * Razorpay confirms and cancels checkouts nobody paid for. What is left here
- * is what it cannot decide — a webhook that failed or never finished, an event
- * flagged because an amount, currency or order did not match or a refund was
- * raised in the Razorpay dashboard, and a donation still pending well after it
- * should have settled.
- *
- * There is no button to mark anything successful. A donation becomes
- * successful only on a payment Razorpay confirms; look each one up in the
- * Razorpay dashboard by its payment or order id.
- * ══════════════════════════════════════════════════════════════════════════
+ * What automatic reconciliation could not settle on its own.
  */
 export default async function AdminPaymentExceptionsPage() {
   let report: PaymentExceptions;
@@ -35,12 +39,14 @@ export default async function AdminPaymentExceptionsPage() {
     report = await paymentExceptions();
   } catch (error) {
     return (
-      <p
-        role="alert"
-        className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-      >
-        {error instanceof AdminApiError ? error.message : 'Could not load payment exceptions.'}
-      </p>
+      <div className="p-6">
+        <p
+          role="alert"
+          className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
+        >
+          {error instanceof AdminApiError ? error.message : 'Could not load payment exceptions.'}
+        </p>
+      </div>
     );
   }
 
@@ -48,22 +54,22 @@ export default async function AdminPaymentExceptionsPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">Payment exceptions</h1>
-        <p className="text-body-sm text-muted-foreground mt-1 max-w-2xl">
-          What reconciliation could not settle on its own. Nothing here changes a payment: look each
-          one up in the Razorpay dashboard by its payment or order id. Pending donations are checked
-          against Razorpay after {thresholds.reconcileAfterMinutes} minutes and cancelled after{' '}
-          {thresholds.expireAfterHours} hours if nothing was paid.
-        </p>
-      </header>
+      <PageHeader
+        title="Payment exceptions"
+        description={`Unresolved transactions requiring manual operator review. Pending checkouts expire after ${thresholds.expireAfterHours} hours.`}
+      />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <Stat label="Needs review" value={summary.needsReview} hint="Mismatches and refunds" />
+      {/* KPI Stats Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Stat
+          label="Needs review"
+          value={summary.needsReview}
+          hint="Mismatches, partials and refunds"
+        />
         <Stat
           label="Failed webhooks"
           value={summary.failedWebhooks}
-          hint="Razorpay retries these"
+          hint="Razorpay delivery retry queue"
         />
         <Stat
           label="Unfinished webhooks"
@@ -76,155 +82,180 @@ export default async function AdminPaymentExceptionsPage() {
           hint={`Pending over ${thresholds.stuckDonationMinutes} minutes`}
         />
         <Stat
-          label="Overdue"
+          label="Overdue checkouts"
           value={summary.overdueDonations}
-          hint={`Pending past ${thresholds.expireAfterHours} hours`}
+          hint={`Pending past ${thresholds.expireAfterHours} hours limit`}
         />
-        <Stat label="Cancelled (7 days)" value={summary.cancelledLast7Days} hint="Expired unpaid" />
+        <Stat
+          label="Cancelled (7 days)"
+          value={summary.cancelledLast7Days}
+          hint="Expired unpaid checkouts"
+        />
       </div>
 
       {summary.overdueDonations > 0 ? (
-        <p
-          role="alert"
-          className="border-destructive/40 bg-destructive/5 text-body-sm rounded-lg border p-4"
-        >
-          Some donations are still pending past the expiry cutoff. Reconciliation leaves a donation
-          pending when Razorpay holds a captured or authorised payment it could not record, or when
-          it is not running. Check each one in the Razorpay dashboard, and check that the worker is
-          running.
-        </p>
+        <Card className="border-destructive/40 bg-destructive/5 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="text-destructive mt-0.5 size-5 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="text-body-sm text-destructive font-semibold">
+                Overdue checkout sessions detected
+              </p>
+              <p className="text-body-sm text-muted-foreground mt-1">
+                Some donations have remained pending past the expiry threshold. Reconciliation
+                preserves pending status if Razorpay holds a captured payment that has not yet
+                linked to the database, or if the background worker queue is delayed. Verify the
+                payment IDs in the Razorpay dashboard.
+              </p>
+            </div>
+          </div>
+        </Card>
       ) : null}
 
-      <section aria-labelledby="webhook-exceptions" className="space-y-3">
-        <h2 id="webhook-exceptions" className="text-h3 font-semibold">
-          Webhook events
-        </h2>
-        {report.webhooks.length === 0 ? (
-          <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-8 text-center">
-            No webhook needs attention.
-          </p>
-        ) : (
-          <div className="border-border overflow-x-auto rounded-lg border">
-            <table className="w-full min-w-[52rem] text-left">
-              <thead className="bg-muted/60 text-caption text-muted-foreground uppercase">
-                <tr>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Received
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Event
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    State
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Payment / order
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Donation
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Detail
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-border divide-y">
-                {report.webhooks.map((row) => (
-                  <tr key={row.id}>
-                    <td className="text-body-sm text-muted-foreground px-4 py-2">
-                      {formatDate(row.receivedAt)}
-                    </td>
-                    <td className="text-body-sm px-4 py-2 font-mono">{row.eventType}</td>
-                    <td className="text-body-sm px-4 py-2">
-                      {STATUS_LABELS[row.processingStatus] ?? row.processingStatus}
-                    </td>
-                    <td className="text-caption px-4 py-2 font-mono">
-                      <span className="block">{row.providerPaymentId ?? '—'}</span>
-                      <span className="text-muted-foreground block">
-                        {row.providerOrderId ?? '—'}
-                      </span>
-                    </td>
-                    <td className="text-body-sm px-4 py-2">
-                      {row.donationReference ? (
-                        <>
-                          <span className="block font-mono">{row.donationReference}</span>
-                          <span className="text-caption text-muted-foreground block">
-                            {row.donationStatus}
-                          </span>
-                        </>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="text-caption text-muted-foreground max-w-xs px-4 py-2">
-                      {row.error ?? '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Webhook Events Table */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <div className="flex items-center gap-2">
+            <Webhook className="text-primary size-5" aria-hidden="true" />
+            <CardTitle className="text-base font-semibold">Webhook Exception Log</CardTitle>
           </div>
-        )}
-      </section>
-
-      <section aria-labelledby="stuck-donations" className="space-y-3">
-        <h2 id="stuck-donations" className="text-h3 font-semibold">
-          Stuck donations
-        </h2>
-        {report.stuckDonations.length === 0 ? (
-          <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-8 text-center">
-            No donation has been pending for more than {thresholds.stuckDonationMinutes} minutes.
+          <p className="text-caption text-muted-foreground mt-1">
+            Incoming Razorpay event notifications that failed processing or flagged order
+            discrepancies.
           </p>
-        ) : (
-          <div className="border-border overflow-x-auto rounded-lg border">
-            <table className="w-full min-w-[44rem] text-left">
-              <thead className="bg-muted/60 text-caption text-muted-foreground uppercase">
-                <tr>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Reference
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Campaign
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Amount
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Razorpay order
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Started
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-border divide-y">
-                {report.stuckDonations.map((row) => (
-                  <tr key={row.id}>
-                    <td className="text-body-sm px-4 py-2 font-mono">
-                      {row.reference}
-                      {row.overdue ? (
-                        <span className="text-caption text-destructive ml-2 font-sans font-semibold">
-                          Overdue
+        </CardHeader>
+        <CardContent className="p-0">
+          {report.webhooks.length === 0 ? (
+            <p className="text-body-sm text-muted-foreground p-8 text-center">
+              All incoming payment webhooks processed successfully. No exceptions pending.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Received</TableHead>
+                    <TableHead>Event Type</TableHead>
+                    <TableHead>State</TableHead>
+                    <TableHead>Payment / Order ID</TableHead>
+                    <TableHead>Donation</TableHead>
+                    <TableHead>Error Detail</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {report.webhooks.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="text-caption text-muted-foreground">
+                        {formatDate(row.receivedAt)}
+                      </TableCell>
+                      <TableCell className="text-foreground font-mono text-xs">
+                        {row.eventType}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={row.processingStatus === 'failed' ? 'destructive' : 'warning'}
+                          className="text-xs capitalize"
+                        >
+                          {STATUS_LABELS[row.processingStatus] ?? row.processingStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-caption font-mono">
+                        <span className="text-foreground block">
+                          {row.providerPaymentId ?? '—'}
                         </span>
-                      ) : null}
-                    </td>
-                    <td className="text-body-sm px-4 py-2">{row.campaignTitle ?? '—'}</td>
-                    <td className="text-body-sm px-4 py-2 tabular-nums">
-                      {formatCurrency(row.amount)}
-                    </td>
-                    <td className="text-caption px-4 py-2 font-mono">
-                      {row.providerOrderId ?? 'No order'}
-                    </td>
-                    <td className="text-body-sm text-muted-foreground px-4 py-2">
-                      {formatDate(row.createdAt)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <span className="text-muted-foreground block text-xs">
+                          {row.providerOrderId ?? '—'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {row.donationReference ? (
+                          <>
+                            <span className="text-foreground block font-mono text-xs font-medium">
+                              {row.donationReference}
+                            </span>
+                            <span className="text-caption text-muted-foreground block capitalize">
+                              {row.donationStatus}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-caption text-destructive max-w-xs break-words">
+                        {row.error ?? '—'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Stuck Donations Table */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <div className="flex items-center gap-2">
+            <Clock className="text-primary size-5" aria-hidden="true" />
+            <CardTitle className="text-base font-semibold">Stuck Checkout Sessions</CardTitle>
           </div>
-        )}
-      </section>
+          <p className="text-caption text-muted-foreground mt-1">
+            Donations awaiting payment confirmation exceeding {thresholds.stuckDonationMinutes}{' '}
+            minutes.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          {report.stuckDonations.length === 0 ? (
+            <p className="text-body-sm text-muted-foreground p-8 text-center">
+              No stuck donation sessions detected.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Reference</TableHead>
+                    <TableHead>Campaign</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Gateway Order</TableHead>
+                    <TableHead>Session Started</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {report.stuckDonations.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="text-foreground font-mono text-xs font-semibold">
+                        {row.reference}
+                        {row.overdue ? (
+                          <Badge
+                            variant="destructive"
+                            className="ml-2 px-1.5 py-0 text-[0.625rem] font-semibold"
+                          >
+                            Overdue
+                          </Badge>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {row.campaignTitle ?? 'General Foundation'}
+                      </TableCell>
+                      <TableCell className="text-foreground text-right font-semibold tabular-nums">
+                        {formatCurrency(row.amount)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground font-mono text-xs">
+                        {row.providerOrderId ?? 'No order created'}
+                      </TableCell>
+                      <TableCell className="text-caption text-muted-foreground">
+                        {formatDate(row.createdAt)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

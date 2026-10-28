@@ -1,3 +1,6 @@
+import { Card, CardContent, PageHeader, Alert } from '@sailent/ui';
+import { ShieldAlert } from 'lucide-react';
+
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import { SettingsForm } from '@/components/admin/settings-form';
 import { AdminApiError, getSettings } from '@/lib/admin/api';
@@ -22,9 +25,15 @@ export default async function AdminSettingsPage() {
 
   if (!can(actor, 'settings.read')) {
     return (
-      <p className="border-border text-body text-muted-foreground rounded-lg border border-dashed p-10 text-center">
-        You do not have permission to view organisation settings.
-      </p>
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+          <ShieldAlert className="text-muted-foreground/40 mb-3 h-10 w-10" />
+          <p className="text-foreground text-sm font-medium">Access Restricted</p>
+          <p className="text-muted-foreground mt-1 text-xs">
+            You do not have permission to view or manage organisation settings.
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -33,13 +42,10 @@ export default async function AdminSettingsPage() {
 
     return (
       <div className="space-y-6">
-        <header>
-          <h1 className="font-display text-h1 font-bold tracking-tight">Settings</h1>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            The organisation’s own settings. Changes are recorded in the audit log and require a
-            recent re-authentication.
-          </p>
-        </header>
+        <PageHeader
+          title="Organisation settings"
+          description="The organisation’s statutory details and operational defaults. Changes are recorded in the immutable audit log and require recent 5-minute re-authentication."
+        />
 
         <SettingsForm settings={settings} />
       </div>
@@ -54,17 +60,15 @@ export default async function AdminSettingsPage() {
       );
     }
 
-    // A missing row is a real, actionable message from the API rather than a
-    // crash — it means reference data has not been seeded.
     return (
       <div className="space-y-4">
-        <h1 className="font-display text-h1 font-bold tracking-tight">Settings</h1>
-        <p
-          role="alert"
-          className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-        >
+        <PageHeader
+          title="Organisation settings"
+          description="The organisation’s statutory details and operational defaults."
+        />
+        <Alert variant="destructive">
           {error instanceof AdminApiError ? error.message : 'Could not load settings just now.'}
-        </p>
+        </Alert>
       </div>
     );
   }

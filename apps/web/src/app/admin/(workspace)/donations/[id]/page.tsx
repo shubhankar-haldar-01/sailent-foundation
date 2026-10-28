@@ -1,8 +1,19 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft, CreditCard, FileCheck2, HeartHandshake, User } from 'lucide-react';
 
-import { formatCurrency, formatDate } from '@sailent/ui';
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  formatCurrency,
+  formatDate,
+  PageHeader,
+} from '@sailent/ui';
 
+import { DonationStatusBadge } from '@/components/admin/donations-table';
 import { AdminApiError, adminFetch } from '@/lib/admin/api';
 
 export const dynamic = 'force-dynamic';
@@ -53,14 +64,7 @@ interface DonationDetail {
 /**
  * One donation.
  *
- * ══════════════════════════════════════════════════════════════════════════
- * THE LINE ITEMS ARE THE HISTORICAL RECORD.
- *
- * Every price shown is the SNAPSHOT taken when the donor paid, read from the
- * donation's own rows. It is not a join onto the catalogue and it does not
- * change when a product is repriced. A donation from March reads what March
- * charged, forever, and that is the difference between a receipt and a guess.
- * ══════════════════════════════════════════════════════════════════════════
+ * Line items are historical snapshots. Prices reflect what was charged at payment time.
  */
 export default async function AdminDonationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -74,162 +78,246 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
   }
 
   return (
-    <div className="space-y-8">
-      <header>
-        <Link
-          href="/admin/donations"
-          className="text-body-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-        >
-          ← Donations
-        </Link>
-        <div className="mt-2 flex flex-wrap items-baseline gap-3">
-          <h1 data-numeric="" className="font-display text-h1 font-bold tracking-tight">
-            {donation.reference}
-          </h1>
-          <span className="text-body-sm text-muted-foreground capitalize">
-            {donation.status.replace('_', ' ')} · {donation.donationType}
-          </span>
-        </div>
-        <p data-numeric="" className="font-display text-h2 mt-2 font-bold tabular-nums">
-          {formatCurrency(donation.amount)}
-        </p>
-      </header>
+    <div className="space-y-6">
+      <PageHeader
+        title={donation.reference}
+        breadcrumb={
+          <Link
+            href="/admin/donations"
+            className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Back to donations
+          </Link>
+        }
+        status={<DonationStatusBadge status={donation.status} />}
+        description={`Recorded on ${formatDate(donation.createdAt)} · Type: ${donation.donationType}`}
+      />
 
-      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
-        <section aria-labelledby="what-was-funded" className="space-y-4">
-          <h2 id="what-was-funded" className="text-h3 font-semibold">
-            What was funded
-          </h2>
-          <p className="text-body-sm text-muted-foreground">
-            These are the prices the donor was charged, stored on the donation. Repricing the
-            product or the campaign does not change them.
-          </p>
-          <ul className="border-border divide-border divide-y rounded-lg border">
-            {donation.items.map((item, index) => (
-              <li
-                key={`${item.itemName}-${index}`}
-                className="flex items-baseline justify-between gap-4 px-4 py-3"
+      {/* Top Highlight Summary Card */}
+      <Card className="bg-surface/80 border-border">
+        <CardContent className="p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-caption text-muted-foreground font-semibold uppercase tracking-wider">
+                Total Donation Amount
+              </p>
+              <p
+                data-numeric=""
+                className="font-display text-h1 text-foreground mt-1 font-bold tabular-nums tracking-tight"
               >
-                <span className="min-w-0">
-                  <span className="text-body-sm block font-medium">{item.itemName}</span>
-                  <span className="text-caption text-muted-foreground">
-                    {item.itemType === 'custom'
-                      ? 'Additional amount'
-                      : `${item.quantity} × ${formatCurrency(item.unitPrice)}`}
-                  </span>
-                </span>
-                <span data-numeric="" className="text-body-sm shrink-0 tabular-nums">
-                  {formatCurrency(item.totalPrice)}
-                </span>
-              </li>
-            ))}
-          </ul>
+                {formatCurrency(donation.amount)}
+              </p>
+              {donation.completedAt ? (
+                <p className="text-caption text-muted-foreground mt-0.5">
+                  Completed on {formatDate(donation.completedAt)}
+                </p>
+              ) : null}
+            </div>
 
-          {donation.campaignSlug ? (
-            <p className="text-body-sm">
-              Campaign:{' '}
-              <Link
-                href={`/campaigns/${donation.campaignSlug}`}
-                className="underline underline-offset-4"
-              >
-                {donation.campaignTitle}
-              </Link>
-            </p>
-          ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="capitalize">
+                {donation.donationType} gift
+              </Badge>
+              {donation.anonymous ? <Badge variant="neutral">Anonymous to public</Badge> : null}
+              {donation.receiptNumber ? (
+                <Badge variant="success" className="font-mono text-xs">
+                  Receipt #{donation.receiptNumber}
+                </Badge>
+              ) : (
+                <Badge variant="neutral">No receipt</Badge>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-          {donation.donorMessage ? (
-            <blockquote className="border-border text-body-sm text-muted-foreground border-l-2 pl-4">
-              “{donation.donorMessage}”
-            </blockquote>
-          ) : null}
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        {/* Left Column: What was funded */}
+        <section aria-labelledby="what-was-funded" className="space-y-6">
+          <Card className="border-border">
+            <CardHeader className="border-border border-b pb-4">
+              <div className="flex items-center gap-2">
+                <HeartHandshake className="text-primary size-5" aria-hidden="true" />
+                <CardTitle id="what-was-funded" className="text-base font-semibold">
+                  What Was Funded
+                </CardTitle>
+              </div>
+              <p className="text-caption text-muted-foreground mt-1">
+                Historical snapshot recorded at capture. Repricing products does not alter this
+                record.
+              </p>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ul className="divide-border divide-y">
+                {donation.items.map((item, index) => (
+                  <li
+                    key={`${item.itemName}-${index}`}
+                    className="hover:bg-muted/20 flex items-baseline justify-between gap-4 px-5 py-3.5 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <span className="text-body-sm text-foreground block font-medium">
+                        {item.itemName}
+                      </span>
+                      <span className="text-caption text-muted-foreground">
+                        {item.itemType === 'custom'
+                          ? 'Additional custom gift'
+                          : `${item.quantity} × ${formatCurrency(item.unitPrice)}`}
+                      </span>
+                    </div>
+                    <span
+                      data-numeric=""
+                      className="text-body-sm text-foreground shrink-0 font-semibold tabular-nums"
+                    >
+                      {formatCurrency(item.totalPrice)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {donation.campaignTitle ? (
+                <div className="border-border bg-muted/20 flex items-center justify-between gap-2 border-t px-5 py-3">
+                  <span className="text-caption text-muted-foreground">Associated campaign:</span>
+                  {donation.campaignSlug ? (
+                    <Link
+                      href={`/campaigns/${donation.campaignSlug}`}
+                      className="text-body-sm text-primary font-medium hover:underline"
+                    >
+                      {donation.campaignTitle}
+                    </Link>
+                  ) : (
+                    <span className="text-body-sm font-medium">{donation.campaignTitle}</span>
+                  )}
+                </div>
+              ) : null}
+
+              {donation.donorMessage ? (
+                <div className="border-border bg-muted/10 border-t p-5">
+                  <p className="text-caption text-muted-foreground mb-1 font-semibold uppercase">
+                    Donor Note
+                  </p>
+                  <blockquote className="border-primary/40 text-body-sm text-foreground/90 border-l-2 pl-3 italic">
+                    “{donation.donorMessage}”
+                  </blockquote>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
         </section>
 
-        <div className="space-y-8">
-          <section aria-labelledby="donor" className="space-y-3">
-            <h2 id="donor" className="text-h3 font-semibold">
-              Donor
-            </h2>
-            {donation.donorName === null ? (
-              <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-4">
-                Donor identity is hidden. It needs the <code>donation.read_pii</code> permission,
-                which is sensitive and requires a recent re-authentication.
-              </p>
-            ) : (
-              <dl className="border-border divide-border divide-y rounded-lg border">
-                <Row label="Name" value={donation.donorName} />
-                <Row label="Email" value={donation.donorEmail} />
-                <Row label="Phone" value={donation.donorPhone} />
-                {donation.anonymous ? (
-                  <Row label="Public display" value="Anonymous (finance can still identify them)" />
-                ) : null}
-              </dl>
-            )}
-          </section>
+        {/* Right Column: Donor, Payment, Receipt */}
+        <div className="space-y-6">
+          {/* Donor Card */}
+          <Card className="border-border">
+            <CardHeader className="border-border border-b pb-4">
+              <div className="flex items-center gap-2">
+                <User className="text-primary size-5" aria-hidden="true" />
+                <CardTitle className="text-base font-semibold">Donor Details</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {donation.donorName === null ? (
+                <div className="p-5">
+                  <p className="border-border text-caption text-muted-foreground rounded-lg border border-dashed p-4 text-center">
+                    Donor identity is protected. It requires sensitive permission{' '}
+                    <code>donation.read_pii</code> with recent re-authentication.
+                  </p>
+                </div>
+              ) : (
+                <dl className="divide-border divide-y">
+                  <Row label="Name" value={donation.donorName} />
+                  <Row label="Email" value={donation.donorEmail} />
+                  <Row label="Phone" value={donation.donorPhone} />
+                  {donation.anonymous ? (
+                    <Row
+                      label="Public preference"
+                      value="Anonymous to public (finance retains record)"
+                    />
+                  ) : null}
+                </dl>
+              )}
+            </CardContent>
+          </Card>
 
-          <section aria-labelledby="payment" className="space-y-3">
-            <h2 id="payment" className="text-h3 font-semibold">
-              Payment
-            </h2>
-            {donation.payment === null ? (
-              <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-4">
-                Payment details are hidden. They need the <code>payment.read</code> permission.
-              </p>
-            ) : (
-              <dl className="border-border divide-border divide-y rounded-lg border">
-                <Row label="State" value={donation.payment.status} />
-                <Row label="Razorpay order" value={donation.payment.providerOrderId} mono />
-                <Row label="Razorpay payment" value={donation.payment.providerPaymentId} mono />
-                <Row label="Method" value={donation.payment.method} />
-                {donation.payment.cardLast4 ? (
+          {/* Payment Card */}
+          <Card className="border-border">
+            <CardHeader className="border-border border-b pb-4">
+              <div className="flex items-center gap-2">
+                <CreditCard className="text-primary size-5" aria-hidden="true" />
+                <CardTitle className="text-base font-semibold">
+                  Payment Gateway Transaction
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {donation.payment === null ? (
+                <div className="p-5">
+                  <p className="border-border text-caption text-muted-foreground rounded-lg border border-dashed p-4 text-center">
+                    Payment details require the <code>payment.read</code> permission.
+                  </p>
+                </div>
+              ) : (
+                <dl className="divide-border divide-y">
+                  <Row label="Status" value={donation.payment.status} />
+                  <Row label="Gateway order" value={donation.payment.providerOrderId} mono />
+                  <Row label="Payment ID" value={donation.payment.providerPaymentId} mono />
+                  <Row label="Payment method" value={donation.payment.method} />
+                  {donation.payment.cardLast4 ? (
+                    <Row
+                      label="Card"
+                      value={`${donation.payment.cardNetwork ?? 'Card'} ending •••• ${donation.payment.cardLast4}`}
+                    />
+                  ) : null}
                   <Row
-                    label="Card"
-                    value={`${donation.payment.cardNetwork ?? 'Card'} ending ${donation.payment.cardLast4}`}
+                    label="Paid at"
+                    value={donation.payment.paidAt ? formatDate(donation.payment.paidAt) : null}
                   />
-                ) : null}
-                <Row
-                  label="Paid at"
-                  value={donation.payment.paidAt ? formatDate(donation.payment.paidAt) : null}
-                />
-                {donation.payment.fee !== null ? (
-                  <Row label="Provider fee" value={formatCurrency(donation.payment.fee)} />
-                ) : null}
-                {/*
-                  FCRA: the organisation is not registered to accept foreign
-                  contributions, so one received in error has to be spotted and
-                  returned rather than kept.
-                */}
-                {donation.payment.isInternational ? (
-                  <Row label="⚠ International" value="Foreign contribution — review under FCRA" />
-                ) : null}
-                {donation.payment.failureReason ? (
-                  <Row label="Failure" value={donation.payment.failureReason} />
-                ) : null}
-              </dl>
-            )}
-          </section>
+                  {donation.payment.fee !== null ? (
+                    <Row label="Gateway fee" value={formatCurrency(donation.payment.fee)} />
+                  ) : null}
+                  {donation.payment.isInternational ? (
+                    <Row
+                      label="⚠ International"
+                      value="Foreign contribution — requires FCRA review"
+                    />
+                  ) : null}
+                  {donation.payment.failureReason ? (
+                    <Row label="Failure reason" value={donation.payment.failureReason} />
+                  ) : null}
+                </dl>
+              )}
+            </CardContent>
+          </Card>
 
-          <section aria-labelledby="receipt" className="space-y-3">
-            <h2 id="receipt" className="text-h3 font-semibold">
-              Receipt
-            </h2>
-            {donation.receiptNumber ? (
-              <dl className="border-border divide-border divide-y rounded-lg border">
-                <Row label="Number" value={donation.receiptNumber} mono />
-                <Row
-                  label="Issued"
-                  value={donation.receiptIssuedAt ? formatDate(donation.receiptIssuedAt) : null}
-                />
-              </dl>
-            ) : (
-              <p className="text-body-sm text-muted-foreground">
-                No receipt — one is issued when a payment is captured.
+          {/* Receipt Card */}
+          <Card className="border-border">
+            <CardHeader className="border-border border-b pb-4">
+              <div className="flex items-center gap-2">
+                <FileCheck2 className="text-primary size-5" aria-hidden="true" />
+                <CardTitle className="text-base font-semibold">Payment Receipt</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-5">
+              {donation.receiptNumber ? (
+                <dl className="border-border divide-border divide-y rounded-lg border">
+                  <Row label="Receipt Number" value={donation.receiptNumber} mono />
+                  <Row
+                    label="Issued Date"
+                    value={donation.receiptIssuedAt ? formatDate(donation.receiptIssuedAt) : null}
+                  />
+                </dl>
+              ) : (
+                <p className="text-body-sm text-muted-foreground">
+                  No receipt generated. Receipts are numbered and issued from the gapless book upon
+                  payment capture.
+                </p>
+              )}
+              <p className="text-caption text-muted-foreground mt-3">
+                A receipt acknowledges receipt of funds. Statutory tax deduction certificates (Form
+                10BE) are issued annually by the Income Tax Department following Form 10BD filing.
               </p>
-            )}
-            <p className="text-caption text-muted-foreground">
-              A receipt acknowledges a payment. It is not an 80G certificate: that is Form 10BE,
-              issued by the Income Tax Department after the annual Form 10BD filing.
-            </p>
-          </section>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
@@ -238,11 +326,11 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
 
 function Row({ label, value, mono }: { label: string; value: string | null; mono?: boolean }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 px-4 py-2.5">
-      <dt className="text-caption text-muted-foreground shrink-0">{label}</dt>
+    <div className="flex items-baseline justify-between gap-4 px-5 py-3">
+      <dt className="text-caption text-muted-foreground shrink-0 font-medium">{label}</dt>
       <dd
         {...(mono ? { 'data-numeric': '' } : {})}
-        className="text-body-sm min-w-0 break-words text-right"
+        className="text-body-sm text-foreground min-w-0 break-words text-right font-medium"
       >
         {value ?? '—'}
       </dd>

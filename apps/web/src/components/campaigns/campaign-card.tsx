@@ -7,7 +7,6 @@ import { Button, Skeleton, cn, formatCurrency, formatNumber, percentOf } from '@
 import { SaveCampaignHeart } from '@/components/dashboard/save-campaign-button';
 import { CategoryIcon, categoryTone } from '@/components/home/category-icon';
 import { CoinsSolid, PeopleSolid, TargetSolid } from '@/components/home/focus-icons';
-import { FacebookSolid, WhatsAppLogo } from '@/components/layout/social-icons';
 import {
   CAMPAIGN_STATE_NAMES,
   STATUS_VISUALS,
@@ -32,15 +31,12 @@ const CTA_ARROW =
 /**
  * Campaign card — the listing's card, on /campaigns, the homepage and programme pages.
  *
- * Image, category, title, figures/share action, and donate button.
- * Supports `variant="featured"` (compact action bar with Share buttons) and
- * `variant="standard"` (3 figures: Donors / Raised / Goal + progress bar).
+ * Image, category, title, 3 key figures (Donors / Raised / Goal), progress bar, and donate button.
  */
 export function CampaignCard({
   campaign,
   save,
   showStatus = false,
-  variant = 'standard',
   className,
 }: {
   campaign: Campaign;
@@ -49,7 +45,6 @@ export function CampaignCard({
   variant?: 'standard' | 'featured';
   className?: string;
 }) {
-  const isFeatured = variant === 'featured';
   const detailHref = `/campaigns/${campaign.slug}`;
   const tone = categoryTone(campaign.category);
 
@@ -59,28 +54,7 @@ export function CampaignCard({
   const barWidth = Math.min(100, Math.max(percent, raised > 0 ? 2 : 0));
   const isOpen = acceptsDonationsNow(campaign);
   const state = campaignState(campaign.status, campaign.donation?.state);
-  const stateBadge =
-    !isFeatured && state && (showStatus || state !== 'active') ? STATUS_VISUALS[state] : null;
-
-  const handleShare = (platform: 'facebook' | 'whatsapp') => {
-    if (typeof window === 'undefined') return;
-    const url = `${window.location.origin}/campaigns/${campaign.slug}`;
-    const title = campaign.title;
-    if (platform === 'whatsapp') {
-      const text = `Support "${title}" on Sailent Foundation: ${url}`;
-      window.open(
-        `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
-        '_blank',
-        'noopener,noreferrer',
-      );
-    } else if (platform === 'facebook') {
-      window.open(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-        '_blank',
-        'noopener,noreferrer',
-      );
-    }
-  };
+  const stateBadge = state && (showStatus || state !== 'active') ? STATUS_VISUALS[state] : null;
 
   return (
     <article
@@ -161,12 +135,7 @@ export function CampaignCard({
         ) : null}
       </div>
 
-      <div
-        className={cn(
-          'flex flex-1 flex-col',
-          isFeatured ? 'px-0.5 pb-0.5 pt-3' : 'px-1 pb-1 pt-2.5',
-        )}
-      >
+      <div className="flex flex-1 flex-col px-1 pb-1 pt-2.5">
         {/*
           The display face, large, as the owner's card design sets it. Ordinary
           wrapping rather than the base layer's `balance` (which evens two lines
@@ -188,155 +157,91 @@ export function CampaignCard({
           the row lands on the same line however long each title runs — the bar
           is what a reader compares ACROSS cards.
         */}
-        {variant === 'featured' ? (
-          <div className="mt-auto flex items-center justify-between gap-2 pt-4">
-            {/* Share with Facebook and WhatsApp icons */}
-            <div className="relative z-10 flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-[#64748B] dark:text-slate-400">
-                Share:
-              </span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleShare('facebook');
-                }}
-                aria-label="Share on Facebook"
-                className="sm:size-7.5 flex size-7 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-[#64748B] transition-colors hover:bg-slate-200 hover:text-[#0F172A] dark:bg-slate-800 dark:hover:bg-slate-700"
-              >
-                <FacebookSolid className="size-3.5" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleShare('whatsapp');
-                }}
-                aria-label="Share on WhatsApp"
-                className="sm:size-7.5 flex size-7 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-[#64748B] transition-colors hover:bg-slate-200 hover:text-[#0F172A] dark:bg-slate-800 dark:hover:bg-slate-700"
-              >
-                <WhatsAppLogo className="size-3.5" aria-hidden="true" />
-              </button>
-            </div>
-
-            {/* Donate Now Button */}
-            <div className="relative z-10">
-              <Button
-                asChild
-                className={cn(
-                  'h-9 rounded-full px-5 text-[0.8125rem] font-bold sm:px-6',
-                  CTA_MOTION,
-                )}
-              >
-                <Link href={isOpen ? `${detailHref}#give` : detailHref}>Donate Now</Link>
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-auto pt-2">
-            {/*
+        <div className="mt-auto pt-2">
+          {/*
               Equal columns, each figure centred in its own, with the dividers
-              between them (owner request, 2026-10-08: smaller, evenly aligned).
-              Without a donor count the two remaining figures share the row.
+              between them (owner design, 2026-10-08): Donors, Raised, and Goal.
             */}
-            <dl
-              className={cn(
-                '-mx-2 grid items-stretch gap-x-1.5',
-                campaign.donorCount >= 5
-                  ? 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]'
-                  : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]',
-              )}
-            >
-              {campaign.donorCount >= 5 ? (
-                <>
-                  <Figure
-                    label="Donors"
-                    value={formatNumber(campaign.donorCount)}
-                    icon={PeopleSolid}
-                    iconClassName="text-wash-coral-ink"
-                    discClassName="bg-wash-coral"
-                  />
-                  <FigureDivider />
-                </>
-              ) : null}
-              <Figure
-                label="Raised"
-                value={formatCurrency(raised)}
-                valueClassName="text-success"
-                icon={CoinsSolid}
-                iconClassName="text-success"
-                discClassName="bg-wash-mint"
-              />
-              <FigureDivider />
-              <Figure
-                label="Goal"
-                value={formatCurrency(goal)}
-                icon={TargetSolid}
-                iconClassName="text-wash-coral-ink"
-                discClassName="bg-wash-coral"
-              />
-            </dl>
+          <dl className="-mx-2 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch gap-x-1.5">
+            <Figure
+              label="Donors"
+              value={formatNumber(campaign.donorCount ?? 0)}
+              icon={PeopleSolid}
+              iconClassName="text-wash-coral-ink"
+              discClassName="bg-wash-coral"
+            />
+            <FigureDivider />
+            <Figure
+              label="Raised"
+              value={formatCurrency(raised)}
+              valueClassName="text-success"
+              icon={CoinsSolid}
+              iconClassName="text-success"
+              discClassName="bg-wash-mint"
+            />
+            <FigureDivider />
+            <Figure
+              label="Goal"
+              value={formatCurrency(goal)}
+              icon={TargetSolid}
+              iconClassName="text-wash-coral-ink"
+              discClassName="bg-wash-coral"
+            />
+          </dl>
 
-            {goal > 0 ? (
-              <>
-                {/*
+          {goal > 0 ? (
+            <>
+              {/*
                   The brand orange, as the owner's card design draws it. The
                   percentage beside it carries the meaning; the bar is the cue.
                 */}
-                <div
-                  role="img"
-                  aria-label={`${percent}% of the ${formatCurrency(goal)} goal raised`}
-                  className="bg-muted mt-2.5 h-2 overflow-hidden rounded-full"
-                >
-                  <span
-                    aria-hidden="true"
-                    // Grows from empty to its value as the card lands.
-                    className="fill-in bg-primary block h-full rounded-full"
-                    style={{ width: `${barWidth}%` }}
-                  />
-                </div>
-                <p className="text-muted-foreground mt-1 flex items-baseline justify-between gap-3 text-[0.8125rem]">
-                  <span data-numeric="">
-                    <span className="text-primary font-bold">{percent}%</span> Complete
-                  </span>
-                  <span data-numeric="">
-                    {percent >= 100 ? 'Goal reached' : `${100 - percent}% to go`}
-                  </span>
-                </p>
-              </>
-            ) : null}
+              <div
+                role="img"
+                aria-label={`${percent}% of the ${formatCurrency(goal)} goal raised`}
+                className="bg-muted mt-2.5 h-2 overflow-hidden rounded-full"
+              >
+                <span
+                  aria-hidden="true"
+                  // Grows from empty to its value as the card lands.
+                  className="fill-in bg-primary block h-full rounded-full"
+                  style={{ width: `${barWidth}%` }}
+                />
+              </div>
+              <p className="text-muted-foreground mt-1 flex items-baseline justify-between gap-3 text-[0.8125rem]">
+                <span data-numeric="">
+                  <span className="text-primary font-bold">{percent}%</span> Complete
+                </span>
+                <span data-numeric="">
+                  {percent >= 100 ? 'Goal reached' : `${100 - percent}% to go`}
+                </span>
+              </p>
+            </>
+          ) : null}
 
-            {/* z-10 lifts the action above the card-wide overlay link. */}
-            <div className="relative z-10 mt-2.5">
-              {isOpen ? (
-                <Button
-                  asChild
-                  fullWidth
-                  className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}
-                >
-                  <Link href={`${detailHref}#give`}>
-                    Donate Now
-                    <ArrowRight aria-hidden="true" className={CTA_ARROW} />
-                  </Link>
-                </Button>
-              ) : (
-                <Button
-                  asChild
-                  variant="secondary"
-                  fullWidth
-                  className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}
-                >
-                  <Link href={detailHref}>
-                    {campaign.status === 'completed' ? 'See What Happened' : 'View Campaign'}
-                    <ArrowRight aria-hidden="true" className={CTA_ARROW} />
-                  </Link>
-                </Button>
-              )}
-            </div>
+          {/* z-10 lifts the action above the card-wide overlay link. */}
+          <div className="relative z-10 mt-2.5">
+            {isOpen ? (
+              <Button asChild fullWidth className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}>
+                <Link href={`${detailHref}#give`}>
+                  Donate Now
+                  <ArrowRight aria-hidden="true" className={CTA_ARROW} />
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                asChild
+                variant="secondary"
+                fullWidth
+                className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}
+              >
+                <Link href={detailHref}>
+                  {campaign.status === 'completed' ? 'See What Happened' : 'View Campaign'}
+                  <ArrowRight aria-hidden="true" className={CTA_ARROW} />
+                </Link>
+              </Button>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </article>
   );

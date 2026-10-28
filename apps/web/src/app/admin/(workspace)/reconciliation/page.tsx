@@ -1,4 +1,22 @@
-import { formatCurrency, formatDate } from '@sailent/ui';
+import Link from 'next/link';
+import { AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  formatCurrency,
+  formatDate,
+  PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@sailent/ui';
 
 import { RangePicker, Stat } from '@/components/admin/report-controls';
 import { AdminApiError, reconciliationReport } from '@/lib/admin/api';
@@ -15,20 +33,7 @@ function defaultRange(): { from: string; to: string } {
 /**
  * Reconciliation.
  *
- * ══════════════════════════════════════════════════════════════════════════
- * IT ANSWERS ONE QUESTION: WHAT NEEDS A HUMAN?
- *
- * A donation sits `pending` between the donor pressing pay and a
- * signature-verified webhook moving it forward (decision A3). Most resolve in
- * seconds. The ones that do not are either an abandoned checkout or money that
- * arrived and was never recorded — and from here those look identical, which
- * is exactly why somebody has to look rather than the platform guessing.
- *
- * Nothing on this screen changes a payment. Moving money is the job of a
- * payment Razorpay confirms — through the browser, the webhook, or the
- * automatic reconciliation (Phase 11); a button here that marked a donation successful
- * would be a button that takes an unverified word for it.
- * ══════════════════════════════════════════════════════════════════════════
+ * Operational monitoring for payment reconciliation queues.
  */
 export default async function AdminReconciliationPage({
   searchParams,
@@ -44,12 +49,16 @@ export default async function AdminReconciliationPage({
     report = await reconciliationReport(range);
   } catch (error) {
     return (
-      <p
-        role="alert"
-        className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-      >
-        {error instanceof AdminApiError ? error.message : 'Could not build that report.'}
-      </p>
+      <div className="p-6">
+        <p
+          role="alert"
+          className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
+        >
+          {error instanceof AdminApiError
+            ? error.message
+            : 'Could not build reconciliation report.'}
+        </p>
+      </div>
     );
   }
 
@@ -57,88 +66,123 @@ export default async function AdminReconciliationPage({
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">Reconciliation</h1>
-        <p className="text-body-sm text-muted-foreground mt-1 max-w-2xl">
-          What is unresolved. A donation becomes successful only on a payment Razorpay confirms — by
-          the donor&apos;s browser, the webhook, or the automatic reconciliation that checks pending
-          donations with Razorpay and cancels the ones nobody paid for. What it cannot settle is
-          listed under Payment exceptions.
-        </p>
-      </header>
+      <PageHeader
+        title="Reconciliation"
+        description="Monitor automated payment reconciliation between Razorpay gateway settlements and database donation records."
+      />
 
-      <RangePicker from={range.from} to={range.to} />
+      {/* Date Range Selector */}
+      <Card className="border-border">
+        <CardContent className="p-4">
+          <RangePicker from={range.from} to={range.to} />
+        </CardContent>
+      </Card>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Pending" value={summary.pending} hint={formatCurrency(summary.pendingPaise)} />
+      {/* KPI Stats Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="Stuck over an hour"
-          value={summary.stuckOverAnHour}
-          hint="Long past a slow webhook"
+          label="Pending Checkouts"
+          value={summary.pending}
+          hint={formatCurrency(summary.pendingPaise)}
         />
-        <Stat label="Failed" value={summary.failed} />
         <Stat
-          label="Captured without a receipt"
+          label="Stuck Over 1 Hour"
+          value={summary.stuckOverAnHour}
+          hint="Delayed beyond normal gateway webhook threshold"
+        />
+        <Stat
+          label="Failed Sessions"
+          value={summary.failed}
+          hint="Gateway rejected or donor aborted"
+        />
+        <Stat
+          label="Missing Receipt"
           value={summary.capturedWithoutReceipt}
-          hint="Should always be zero"
+          hint="Integrity check (must always be zero)"
         />
       </div>
 
       {summary.capturedWithoutReceipt > 0 ? (
-        <p
-          role="alert"
-          className="border-destructive/40 bg-destructive/5 text-body-sm rounded-lg border p-4"
-        >
-          A receipt number is allocated inside the same transaction that captures a payment, so this
-          figure should be zero. It is not. Tell an engineer before reconciling anything else.
-        </p>
+        <Card className="border-destructive/40 bg-destructive/5 p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="text-destructive mt-0.5 size-5 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="text-body-sm text-destructive font-semibold">
+                Critical Integrity Alert: Captured donation missing receipt number
+              </p>
+              <p className="text-body-sm text-muted-foreground mt-1">
+                Receipt numbers are allocated inside the payment-capture transaction from the
+                gapless financial book. This number is non-zero, indicating a failed transaction
+                step. Notify an engineer immediately before resolving pending payments.
+              </p>
+            </div>
+          </div>
+        </Card>
       ) : null}
 
-      <section aria-labelledby="unresolved" className="space-y-3">
-        <h2 id="unresolved" className="text-h3 font-semibold">
-          Oldest unresolved
-        </h2>
-        {report.oldestUnresolved.length === 0 ? (
-          <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-8 text-center">
-            Nothing is pending in this range.
-          </p>
-        ) : (
-          <div className="border-border overflow-x-auto rounded-lg border">
-            <table className="w-full min-w-[36rem] text-left">
-              <thead className="bg-muted/60 text-caption text-muted-foreground uppercase">
-                <tr>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Reference
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    State
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Amount
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Given
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-border divide-y">
-                {report.oldestUnresolved.map((row) => (
-                  <tr key={row.id}>
-                    <td className="text-body-sm px-4 py-2 font-mono">{row.reference}</td>
-                    <td className="text-body-sm px-4 py-2">{row.status}</td>
-                    <td className="text-body-sm px-4 py-2 tabular-nums">
-                      {formatCurrency(row.amountPaise)}
-                    </td>
-                    <td className="text-body-sm text-muted-foreground px-4 py-2">
-                      {formatDate(row.donationDate)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Oldest Unresolved Queue */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <div className="flex items-center gap-2">
+            <Clock className="text-primary size-5" aria-hidden="true" />
+            <CardTitle className="text-base font-semibold">Oldest Unresolved Checkouts</CardTitle>
           </div>
-        )}
-      </section>
+          <p className="text-caption text-muted-foreground mt-1">
+            Checkouts within the selected range that have not settled or cancelled.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          {report.oldestUnresolved.length === 0 ? (
+            <div className="p-8 text-center">
+              <CheckCircle2 className="text-success/80 mx-auto size-8" aria-hidden="true" />
+              <p className="text-body-sm text-foreground mt-2 font-medium">
+                All checkout sessions within this range are reconciled.
+              </p>
+              <p className="text-caption text-muted-foreground mt-0.5">
+                No stuck transactions found.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Reference</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Checkout Started</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {report.oldestUnresolved.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell>
+                        <Link
+                          href={`/admin/donations/${row.id}`}
+                          className="text-primary font-mono text-xs font-semibold hover:underline"
+                        >
+                          {row.reference}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="warning" className="text-xs capitalize">
+                          {row.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-foreground text-right font-semibold tabular-nums">
+                        {formatCurrency(row.amountPaise)}
+                      </TableCell>
+                      <TableCell className="text-caption text-muted-foreground">
+                        {formatDate(row.donationDate)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

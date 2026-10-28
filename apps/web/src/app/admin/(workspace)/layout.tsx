@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 
 import { AdminShell } from '@/components/admin/admin-shell';
 import { can, currentActor } from '@/lib/auth/session';
-import { unreadNotificationCount } from '@/lib/admin/api';
+import { getUser, unreadNotificationCount, type AdminUser } from '@/lib/admin/api';
 
 /**
  * Admin layout.
@@ -39,8 +39,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     }
   }
 
+  let user: AdminUser | null = null;
+  if (can(actor, 'user.read')) {
+    try {
+      user = await getUser(actor.id);
+    } catch {
+      user = null;
+    }
+  }
+
   return (
-    <AdminShell actor={actor} unreadCount={unreadCount}>
+    <AdminShell actor={actor} user={user} unreadCount={unreadCount}>
       {children}
     </AdminShell>
   );

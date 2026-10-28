@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { Injectable } from '@nestjs/common';
 import {
   DeleteObjectCommand,
   HeadObjectCommand,
@@ -61,12 +63,31 @@ export class StorageService {
    */
   get isConfigured(): boolean {
     const env = this.config.env;
+    if (!this.config.isProduction) return true;
     return Boolean(
       env.R2_ACCOUNT_ID &&
       env.R2_ACCESS_KEY_ID &&
       env.R2_SECRET_ACCESS_KEY &&
       env.R2_PUBLIC_BASE_URL,
     );
+  }
+
+  private get hasR2(): boolean {
+    const env = this.config.env;
+    return Boolean(
+      env.R2_ACCOUNT_ID &&
+      env.R2_ACCESS_KEY_ID &&
+      env.R2_SECRET_ACCESS_KEY &&
+      env.R2_PUBLIC_BASE_URL,
+    );
+  }
+
+  private getLocalStorageDir(): string {
+    const webPublicUploads = path.resolve(process.cwd(), '../web/public/uploads');
+    if (fs.existsSync(path.resolve(process.cwd(), '../web/public'))) {
+      return webPublicUploads;
+    }
+    return path.resolve(process.cwd(), 'public/uploads');
   }
 
   /**
@@ -80,7 +101,7 @@ export class StorageService {
    * where it belongs.
    */
   private getClient(): S3Client {
-    if (!this.isConfigured) throw new StorageNotConfiguredError();
+    if (!this.hasR2) throw new StorageNotConfiguredError();
     if (this.client) return this.client;
 
     const env = this.config.env;
@@ -156,6 +177,13 @@ export class StorageService {
     body: Buffer,
     contentType: string,
   ): Promise<StoredObject> {
+    if (!this.hasR2) {
+      const fullPath = path.join(this.getLocalStorageDir(), key);
+      fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+      fs.writeFileSync(fullPath, body);
+      return { key, size: body.byteLength, contentType };
+    }
+
     await this.getClient().send(
       new PutObjectCommand({
         Bucket: this.bucketFor(bucket),
@@ -175,6 +203,18 @@ export class StorageService {
   }
 
   async delete(bucket: StorageBucket, key: string): Promise<void> {
+    if (!this.hasR2) {
+      const fullPath = path.join(this.getLocalStorageDir(), key);
+      if (fs.existsSync(fullPath)) {
+        try {
+          fs.unlinkSync(fullPath);
+        } catch {
+          // Ignore local file removal failure if already unlinked
+        }
+      }
+      return;
+    }
+
     await this.getClient().send(
       new DeleteObjectCommand({ Bucket: this.bucketFor(bucket), Key: key }),
     );
@@ -189,6 +229,14 @@ export class StorageService {
    * can reach; public images are served by R2 directly, not proxied.
    */
   async read(bucket: StorageBucket, key: string): Promise<Buffer> {
+    if (!this.hasR2) {
+      const fullPath = path.join(this.getLocalStorageDir(), key);
+      if (!fs.existsSync(fullPath)) {
+        throw new Error(`Could not read ${key} from local storage.`);
+      }
+      return fs.readFileSync(fullPath);
+    }
+
     const result = await this.getClient().send(
       new GetObjectCommand({ Bucket: this.bucketFor(bucket), Key: key }),
     );
@@ -203,6 +251,11 @@ export class StorageService {
 
   /** Whether the object is actually there. Used to verify a round trip. */
   async exists(bucket: StorageBucket, key: string): Promise<boolean> {
+    if (!this.hasR2) {
+      const fullPath = path.join(this.getLocalStorageDir(), key);
+      return fs.existsSync(fullPath);
+    }
+
     try {
       await this.getClient().send(
         new HeadObjectCommand({ Bucket: this.bucketFor(bucket), Key: key }),
@@ -226,8 +279,11 @@ export class StorageService {
    */
   publicUrl(key: string): string | null {
     const base = this.config.env.R2_PUBLIC_BASE_URL;
-    if (!base) return null;
-    return `${base.replace(/\/+$/, '')}/${key}`;
+    if (base) return `${base.replace(/\/+$/, '')}/${key}`;
+    if (!this.config.isProduction) {
+      return `/uploads/${key}`;
+    }
+    return null;
   }
 
   /**
@@ -239,6 +295,10 @@ export class StorageService {
    * browser's history is useless by the time anybody finds it.
    */
   async signedUrl(key: string, expiresInSeconds = 900): Promise<string> {
+    if (!this.hasR2) {
+      return `/uploads/${key}`;
+    }
+
     return getSignedUrl(
       this.getClient(),
       new GetObjectCommand({ Bucket: this.bucketFor('private'), Key: key }),

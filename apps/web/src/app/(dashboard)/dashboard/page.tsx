@@ -3,23 +3,9 @@ import type { Metadata } from 'next';
 import { DashboardHero } from '@/components/dashboard/dashboard-hero';
 import { MyAccountNavCard } from '@/components/dashboard/my-account-nav-card';
 import { RecentPayments } from '@/components/dashboard/recent-payments';
-import {
-  ExploreCard,
-  FundedItemsCard,
-  ImpactCard,
-  ProfileCard,
-} from '@/components/dashboard/side-cards';
+import { FundedItemsCard, ImpactCard, ProfileCard } from '@/components/dashboard/side-cards';
 import { StatCards } from '@/components/dashboard/stat-cards';
-import { StayConnectedCard } from '@/components/dashboard/stay-connected-card';
-import { DASHBOARD_ROWS } from '@/components/dashboard/fit';
-import { SupportedCampaigns } from '@/components/dashboard/supported-campaigns';
-import { toMedia } from '@/lib/content/source';
-import {
-  donorFetch,
-  type DonorOverview,
-  type Paginated,
-  type SupportedCampaign,
-} from '@/lib/donor/api';
+import { donorFetch, type DonorOverview } from '@/lib/donor/api';
 import { buildMetadata } from '@/lib/seo/metadata';
 
 export const metadata: Metadata = buildMetadata({
@@ -32,9 +18,9 @@ export const dynamic = 'force-dynamic';
 
 /**
  * The dashboard (design, 2026-10-08): the welcome banner, three figures,
- * recent payments and the campaigns supported in the centre; the profile,
- * "Your Impact" and "Explore More Campaigns" on the right. On a phone the
- * right column follows the centre, in that order.
+ * and recent payments in the centre; the profile, "Your Impact" and
+ * "Explore More Campaigns" on the right. On a phone the right column
+ * follows the centre, in that order.
  *
  * ══════════════════════════════════════════════════════════════════════════
  * EVERY FIGURE ON THIS PAGE IS SUMMED FROM THIS DONOR'S OWN CONFIRMED
@@ -49,18 +35,8 @@ export const dynamic = 'force-dynamic';
  * ══════════════════════════════════════════════════════════════════════════
  */
 export default async function DashboardPage() {
-  const [overview, supported] = await Promise.all([
-    donorFetch<DonorOverview>('me/overview'),
-    donorFetch<Paginated<SupportedCampaign>>('me/campaigns', {
-      query: { page: 1, limit: DASHBOARD_ROWS },
-    }),
-  ]);
+  const overview = await donorFetch<DonorOverview>('me/overview');
   const { profile, impact, recentDonations } = overview;
-
-  const campaigns = supported.items.map((campaign) => ({
-    ...campaign,
-    cover: toMedia(campaign.coverImage, `campaign-${campaign.slug}`, campaign.title),
-  }));
 
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_18.5rem] xl:gap-5">
@@ -79,17 +55,10 @@ export default async function DashboardPage() {
 
         {/* 4. Recent Successful Payments */}
         <RecentPayments donations={recentDonations} />
-
-        {/* 5. Continue your impact campaigns */}
-        <SupportedCampaigns campaigns={campaigns} />
-
-        {/* 6. Stay Connected / Updates in Inbox (bottom card) */}
-        <StayConnectedCard />
       </div>
       <div className="hidden space-y-5 xl:block xl:space-y-4">
         <ProfileCard profile={profile} />
         <ImpactCard />
-        <ExploreCard />
         <FundedItemsCard items={impact.itemsProvided} />
       </div>
     </div>

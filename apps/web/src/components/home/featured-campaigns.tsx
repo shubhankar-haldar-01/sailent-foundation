@@ -107,23 +107,22 @@ export function FeaturedCampaigns({
           level with the lead, which is not where the design puts it.
         */}
         {/*
-          Featured Campaigns section heading (inspired by reference layout):
-          Centered eyebrow + dual-colored punchy headline + lead description.
+          Featured Campaigns section heading:
+          Centered eyebrow badge + punchy headline with proper spacing.
         */}
-        <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
-          <p className="text-foreground/80 dark:text-foreground/70 text-sm font-bold tracking-tight sm:text-base">
-            Featured Campaigns
-          </p>
+        <div className="mx-auto mb-6 flex max-w-5xl flex-col items-center text-center sm:mb-8 md:mb-10">
+          <div className="mb-2 flex items-center justify-center gap-2">
+            <span className="h-0.5 w-6 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+            <p className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
+              Featured Campaigns
+            </p>
+            <span className="h-0.5 w-6 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+          </div>
 
           <h2
             id="campaigns-title"
-            className="font-display mt-1.5 text-2xl font-black leading-[1.2] tracking-tight sm:text-3xl md:text-[2.25rem]"
+            className="font-display mt-1 text-2xl font-black leading-[1.2] tracking-tight sm:text-3xl md:text-[2.25rem]"
           >
-            {/*
-              The band's approved heading. The redesign's "Real Needs. Lasting
-              Change. Transforming Lives Together." had no recorded owner
-              decision, so the heading stays as approved (2026-10-21).
-            */}
             <span className="text-[#36335C] dark:text-indigo-200">Make a Real Difference</span>
           </h2>
         </div>
@@ -188,7 +187,7 @@ export function FeaturedCampaigns({
           ref={rail.ref}
           hidden={visible.length === 0}
           aria-label="Featured campaigns"
-          className="rail -mb-6 mt-4 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-2 pb-10 pt-4"
+          className="rail -mb-6 mt-2 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-2 pb-10 pt-2"
         >
           {visible.map((campaign, index) => (
             <li
@@ -198,7 +197,6 @@ export function FeaturedCampaigns({
             >
               <CampaignCard
                 campaign={campaign}
-                variant="featured"
                 className="w-full"
                 {...(viewer
                   ? {

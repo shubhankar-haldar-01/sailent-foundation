@@ -139,6 +139,13 @@ export const createCampaignSchema = z.object({
   stopAtGoal: z.boolean().optional(),
   allowCustomAmount: z.boolean().optional(),
   minDonationAmount: positivePaise.optional(),
+  /** Preset quick-select rupee amounts for custom donations (e.g. [500, 1000, 2500]). */
+  presetAmounts: z.array(z.number().int().positive().max(10_000_000)).max(8).nullish(),
+  supportProvides: z.string().max(8000).nullish(),
+  /** Video URL (YouTube, Vimeo, direct link) shown in About This Campaign gallery. */
+  videoUrl: z.string().max(1000).nullish(),
+  /** Media IDs to include in the campaign gallery, in order. */
+  galleryMediaIds: z.array(z.string().uuid()).max(50).nullish(),
   isFeatured: z.boolean().optional(),
   featuredOrder: z.number().int().min(0).max(9999).nullish(),
   impactNotes: z
@@ -322,4 +329,59 @@ export class CreateProductDto {
   @ApiProperty({ example: 'Notebooks, stationery, a bag and two uniforms.' }) description!: string;
   @ApiProperty({ example: 90000, description: 'Paise. ₹900 is 90000.' }) price!: number;
   @ApiPropertyOptional({ example: 500 }) targetQuantity?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Categories
+// ---------------------------------------------------------------------------
+
+export const createCategorySchema = z.object({
+  name: z.string().trim().min(1, 'A name is required').max(120),
+  slug: slugField.optional(),
+  key: z
+    .string()
+    .trim()
+    .max(64)
+    .regex(/^[A-Z0-9_]+$/, 'Use uppercase letters, numbers and underscores')
+    .optional(),
+  description: z.string().trim().max(1000).nullish(),
+  icon: z.string().trim().max(32).nullish(),
+  kind: z.enum(['program', 'campaign', 'both', 'blog']).optional().default('both'),
+  displayOrder: z.number().int().min(0).max(9999).optional().default(100),
+  isActive: z.boolean().optional().default(true),
+});
+
+export const updateCategorySchema = z
+  .object({
+    name: z.string().trim().min(1, 'A name is required').max(120).optional(),
+    slug: slugField.optional(),
+    description: z.string().trim().max(1000).nullish(),
+    icon: z.string().trim().max(32).nullish(),
+    kind: z.enum(['program', 'campaign', 'both', 'blog']).optional(),
+    displayOrder: z.number().int().min(0).max(9999).optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, 'Nothing to update');
+
+export class CreateCategoryDto {
+  @ApiProperty({ example: 'Disaster Relief' }) name!: string;
+  @ApiPropertyOptional({ example: 'disaster-relief' }) slug?: string;
+  @ApiPropertyOptional({ example: 'DISASTER_RELIEF' }) key?: string;
+  @ApiPropertyOptional({ example: 'Emergency response and rehabilitation.' }) description?: string;
+  @ApiPropertyOptional({ example: 'shield' }) icon?: string;
+  @ApiPropertyOptional({ enum: ['program', 'campaign', 'both', 'blog'], default: 'both' })
+  kind?: 'program' | 'campaign' | 'both' | 'blog';
+  @ApiPropertyOptional({ example: 10 }) displayOrder?: number;
+  @ApiPropertyOptional({ example: true }) isActive?: boolean;
+}
+
+export class UpdateCategoryDto {
+  @ApiPropertyOptional({ example: 'Disaster Relief' }) name?: string;
+  @ApiPropertyOptional({ example: 'disaster-relief' }) slug?: string;
+  @ApiPropertyOptional() description?: string;
+  @ApiPropertyOptional({ example: 'shield' }) icon?: string;
+  @ApiPropertyOptional({ enum: ['program', 'campaign', 'both', 'blog'] })
+  kind?: 'program' | 'campaign' | 'both' | 'blog';
+  @ApiPropertyOptional({ example: 10 }) displayOrder?: number;
+  @ApiPropertyOptional({ example: true }) isActive?: boolean;
 }

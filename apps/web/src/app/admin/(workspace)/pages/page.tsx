@@ -1,6 +1,22 @@
 import Link from 'next/link';
+import { Plus, LayoutTemplate } from 'lucide-react';
 
-import { Button, formatDate } from '@sailent/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  formatDate,
+} from '@sailent/ui';
 
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
@@ -46,108 +62,113 @@ export default async function AdminPagesPage({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">Pages</h1>
-          <p className="text-body-sm text-muted-foreground mt-1">
-            {data ? `${data.pagination.total} total. ` : ''}
-            Which approved sections a page shows, and in what order. A route without a published
-            page falls back to its built-in order.
-          </p>
-        </div>
-        {can(actor, 'page.create') ? (
-          <Button asChild>
-            <Link href="/admin/pages/new">Compose a page</Link>
-          </Button>
-        ) : null}
-      </header>
+      <PageHeader
+        title="Page Composer"
+        description="Configure which approved sections appear on primary site routes and their display sequence."
+        count={data?.pagination.total}
+        actions={
+          can(actor, 'page.create') ? (
+            <Button asChild>
+              <Link href="/admin/pages/new">
+                <Plus className="mr-1.5 size-4" />
+                Compose Page
+              </Link>
+            </Button>
+          ) : null
+        }
+      />
 
       {failure ? (
-        <p
-          role="alert"
-          className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-        >
-          {failure}
-        </p>
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="text-body-sm text-destructive p-4">{failure}</CardContent>
+        </Card>
       ) : null}
 
-      <nav aria-label="Filter by status" className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap items-center gap-1.5">
         {statuses.map((status) => (
           <Link
             key={status}
             href={status === 'all' ? '/admin/pages' : `/admin/pages?status=${status}`}
             aria-current={active === status ? 'page' : undefined}
-            className={`text-body-sm rounded-md px-3 py-1.5 capitalize ${
+            className={`text-caption rounded-full px-3 py-1 font-medium capitalize transition-colors ${
               active === status
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:text-foreground'
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
             }`}
           >
             {status}
           </Link>
         ))}
-      </nav>
+      </div>
 
-      {data && data.items.length === 0 ? (
-        <p className="border-border text-body text-muted-foreground rounded-lg border border-dashed p-10 text-center">
-          No page matches this view.
-        </p>
-      ) : null}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <LayoutTemplate className="text-primary size-4" />
+            Configured Layouts
+          </CardTitle>
+          <CardDescription>
+            {data ? `${data.pagination.total} pages configured` : 'Composed layouts'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data && data.items.length === 0 ? (
+            <div className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed py-12 text-center">
+              No page matches this view.
+            </div>
+          ) : null}
 
-      {data && data.items.length > 0 ? (
-        <div className="border-border overflow-x-auto rounded-lg border">
-          <table className="text-body-sm w-full">
-            <caption className="sr-only">Composed pages</caption>
-            <thead className="bg-surface-sunken text-caption text-muted-foreground uppercase">
-              <tr>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Route
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Sections
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Version
-                </th>
-                <th scope="col" className="px-4 py-3 text-left font-semibold">
-                  Updated
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((page) => (
-                <tr key={page.id} className="border-border border-t">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/pages/${page.id}`}
-                      className="hover:text-primary font-medium"
-                    >
-                      {page.title}
-                    </Link>
-                    <p className="text-caption text-muted-foreground">
-                      /{page.slug === 'home' ? '' : page.slug}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusPill status={page.status} />
-                    {page.scheduledAt && new Date(page.scheduledAt) > new Date() ? (
-                      <p className="text-caption text-warning mt-1">
-                        from {formatDate(page.scheduledAt)}
-                      </p>
-                    ) : null}
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3">{page.sectionCount}</td>
-                  <td className="text-muted-foreground px-4 py-3">v{page.version}</td>
-                  <td className="text-muted-foreground px-4 py-3">{formatDate(page.updatedAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
+          {data && data.items.length > 0 ? (
+            <div className="border-border/70 overflow-hidden rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="font-semibold">Route & Title</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="text-right font-semibold">Active Sections</TableHead>
+                    <TableHead className="font-semibold">Version</TableHead>
+                    <TableHead className="text-right font-semibold">Last Modified</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.items.map((page) => (
+                    <TableRow key={page.id}>
+                      <TableCell className="max-w-md">
+                        <Link
+                          href={`/admin/pages/${page.id}`}
+                          className="text-body-sm hover:text-primary block font-semibold transition-colors"
+                        >
+                          {page.title}
+                        </Link>
+                        <p className="text-caption text-muted-foreground/80 mt-0.5 font-mono">
+                          /{page.slug === 'home' ? '' : page.slug}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <StatusPill status={page.status} />
+                        {page.scheduledAt && new Date(page.scheduledAt) > new Date() ? (
+                          <p className="text-caption text-warning mt-1">
+                            from {formatDate(page.scheduledAt)}
+                          </p>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums">
+                        {page.sectionCount}
+                      </TableCell>
+                      <TableCell className="text-body-sm text-muted-foreground font-mono">
+                        v{page.version}
+                      </TableCell>
+                      <TableCell className="text-body-sm text-muted-foreground text-right">
+                        {formatDate(page.updatedAt)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
     </div>
   );
 }

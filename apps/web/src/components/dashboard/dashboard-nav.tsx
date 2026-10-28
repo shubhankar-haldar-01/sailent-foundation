@@ -2,16 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  Bookmark,
-  CalendarDays,
-  CreditCard,
-  HandHeart,
-  LayoutDashboard,
-  Newspaper,
-  Settings,
-  User,
-} from 'lucide-react';
+import { Bookmark, CalendarDays, CreditCard, HandHeart, LayoutDashboard, User } from 'lucide-react';
 
 import { cn } from '@sailent/ui';
 
@@ -23,11 +14,8 @@ import { cn } from '@sailent/ui';
  * second signal, not the signal, so it still reads correctly to somebody who
  * cannot separate the two shades.
  *
- * TWO GROUPS. The design's four — Dashboard, Payments, Profile, Settings —
- * and, under a rule, the rest of the account (saved campaigns, events,
- * volunteering, updates), which are real pages that must stay reachable.
- * "Campaigns Supported" is gone from here: supported campaigns are shown on
- * the dashboard itself (owner, 2026-10-08).
+ * TWO GROUPS: the primary account links (Dashboard, Payments, Profile) and,
+ * under a rule, the rest of the account (Saved, Events, Volunteering).
  *
  * Horizontal and scrollable on a phone, a vertical rail from `lg`. Every
  * target clears 44px.
@@ -36,14 +24,12 @@ const PRIMARY = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Payments', href: '/dashboard/donations', icon: CreditCard },
   { label: 'Profile', href: '/dashboard/profile', icon: User },
-  { label: 'Settings', href: '/dashboard/settings', icon: Settings },
 ] as const;
 
 const MORE = [
   { label: 'Saved', href: '/dashboard/saved', icon: Bookmark },
   { label: 'Events', href: '/dashboard/events', icon: CalendarDays },
   { label: 'Volunteering', href: '/dashboard/volunteering', icon: HandHeart },
-  { label: 'Updates', href: '/dashboard/updates', icon: Newspaper },
 ] as const;
 
 export function DashboardNav() {

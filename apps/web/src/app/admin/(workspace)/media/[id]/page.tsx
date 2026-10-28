@@ -1,7 +1,15 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { formatDate } from '@sailent/ui';
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  formatDate,
+} from '@sailent/ui';
 
 import { MediaDetailPanel } from '@/components/admin/media-library';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
@@ -29,62 +37,91 @@ export default async function AdminMediaItemPage({ params }: { params: Promise<{
   const src = item.url ?? item.signedUrl ?? null;
 
   return (
-    <div className="space-y-8">
-      <nav aria-label="Breadcrumb" className="text-body-sm text-muted-foreground">
-        <Link href="/admin/media" className="hover:text-foreground">
-          Media
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span>{item.altText}</span>
-      </nav>
+    <div className="space-y-6">
+      <PageHeader
+        title={item.altText || 'Media Asset'}
+        description={`Uploaded ${formatDate(item.createdAt)} · ${Math.round(item.sizeBytes / 1024)} KB`}
+        status={
+          <Badge variant={item.visibility === 'public' ? 'success' : 'neutral'}>
+            {item.visibility}
+          </Badge>
+        }
+      />
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="space-y-4">
-          <div className="border-border bg-surface-sunken overflow-hidden rounded-lg border">
-            {src ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={src} alt={item.altText} className="w-full object-contain" />
-            ) : (
-              <p className="text-body-sm text-muted-foreground p-10 text-center">
-                No preview — storage is not configured.
-              </p>
-            )}
-          </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Asset Preview</CardTitle>
+              <CardDescription>
+                {item.visibility === 'private'
+                  ? 'Private asset using temporary signed preview URL.'
+                  : 'Public asset rendered from permanent storage CDN.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="border-border/60 bg-muted/20 flex min-h-[260px] items-center justify-center overflow-hidden rounded-lg border p-2">
+                {src ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={src}
+                    alt={item.altText}
+                    className="max-h-[380px] w-full rounded object-contain"
+                  />
+                ) : (
+                  <p className="text-body-sm text-muted-foreground p-10 text-center">
+                    No preview available — storage driver not initialized.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-          <dl className="border-border text-body-sm divide-border divide-y rounded-lg border">
-            <Row label="Type">{item.mimeType}</Row>
-            <Row label="Size">{Math.round(item.sizeBytes / 1024)} KB</Row>
-            <Row label="Dimensions">
-              {item.width && item.height ? `${item.width} × ${item.height}` : 'Unknown'}
-            </Row>
-            <Row label="Visibility">{item.visibility}</Row>
-            <Row label="Uploaded">{formatDate(item.createdAt)}</Row>
-            {/*
-              The storage key is shown because an administrator chasing a
-              missing image needs it, and this screen is already behind
-              `media.read`. It is never on a public response.
-            */}
-            <Row label="Storage key">
-              <code className="break-all text-xs">{item.storageKey}</code>
-            </Row>
-          </dl>
-
-          {item.visibility === 'private' ? (
-            <p className="text-caption text-muted-foreground">
-              This is a private image. The preview above uses a link that expires — it is not a
-              permanent address and must not be shared.
-            </p>
-          ) : null}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Technical Specifications</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <dl className="text-body-sm divide-border/60 divide-y">
+                <Row label="MIME Type">{item.mimeType}</Row>
+                <Row label="File Size">{Math.round(item.sizeBytes / 1024)} KB</Row>
+                <Row label="Resolution">
+                  {item.width && item.height ? `${item.width} × ${item.height} px` : 'Unknown'}
+                </Row>
+                <Row label="Visibility Policy">
+                  <Badge variant={item.visibility === 'public' ? 'success' : 'neutral'}>
+                    {item.visibility}
+                  </Badge>
+                </Row>
+                <Row label="Uploaded At">{formatDate(item.createdAt)}</Row>
+                <Row label="Storage Object Key">
+                  <code className="text-caption text-muted-foreground break-all font-mono">
+                    {item.storageKey}
+                  </code>
+                </Row>
+              </dl>
+            </CardContent>
+          </Card>
         </div>
 
         <div>
-          {can(actor, 'media.update') ? (
-            <MediaDetailPanel item={item} />
-          ) : (
-            <p className="text-body-sm text-muted-foreground">
-              You do not have permission to edit media.
-            </p>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Metadata & Accessibility</CardTitle>
+              <CardDescription>
+                Configure alt text, descriptive captions, and visibility settings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {can(actor, 'media.update') ? (
+                <MediaDetailPanel item={item} />
+              ) : (
+                <p className="text-body-sm text-muted-foreground py-4">
+                  You do not have permission to edit media properties.
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
@@ -93,7 +130,7 @@ export default async function AdminMediaItemPage({ params }: { params: Promise<{
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+    <div className="flex items-baseline justify-between gap-4 py-2.5">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="text-right font-medium">{children}</dd>
     </div>

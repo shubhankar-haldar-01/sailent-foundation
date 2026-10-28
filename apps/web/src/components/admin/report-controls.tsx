@@ -1,4 +1,4 @@
-import { Button, Input } from '@sailent/ui';
+import { Button, Card, CardContent, Input } from '@sailent/ui';
 
 import { EXPORT_DATASETS, type ExportDataset } from '@sailent/validation';
 
@@ -114,10 +114,14 @@ export function Stat({
   hint?: string;
 }) {
   return (
-    <div className="border-border rounded-lg border p-4">
-      <p className="text-caption text-muted-foreground uppercase">{label}</p>
-      <p className="font-display text-h2 mt-1 font-bold tabular-nums">{value}</p>
-      {hint ? <p className="text-caption text-muted-foreground mt-1">{hint}</p> : null}
-    </div>
+    <Card className="border-border">
+      <CardContent className="p-4">
+        <p className="text-caption text-muted-foreground font-semibold uppercase tracking-wider">
+          {label}
+        </p>
+        <p className="font-display text-h2 text-foreground mt-1 font-bold tabular-nums">{value}</p>
+        {hint ? <p className="text-caption text-muted-foreground mt-1">{hint}</p> : null}
+      </CardContent>
+    </Card>
   );
 }

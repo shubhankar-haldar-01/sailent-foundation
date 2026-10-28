@@ -1,3 +1,5 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
+
 import { ImpactForm } from '@/components/admin/impact-form';
 import {
   adminFetch,
@@ -20,14 +22,22 @@ export default async function NewImpactRecordPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">Record an impact</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          Saved as a draft. A record claiming a figure cannot be published until it says how the
-          number was arrived at.
-        </p>
-      </header>
-      <ImpactForm programs={programs.items} campaigns={campaigns.items} events={events.items} />
+      <PageHeader
+        title="Record Impact Metric"
+        description="Saved as a draft. Claims of quantitative figures require method verification before publication."
+      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Metric & Verification Details</CardTitle>
+          <CardDescription>
+            Specify numbers, methodology, verification agent, and project associations.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ImpactForm programs={programs.items} campaigns={campaigns.items} events={events.items} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

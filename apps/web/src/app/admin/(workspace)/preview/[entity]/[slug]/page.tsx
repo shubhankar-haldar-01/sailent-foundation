@@ -1,7 +1,16 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-
-import { Alert, formatCurrency } from '@sailent/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  formatCurrency,
+} from '@sailent/ui';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
 
 import { StatusPill } from '@/components/admin/status-pill';
 import { AdminApiError, adminFetch, type Paginated } from '@/lib/admin/api';
@@ -62,74 +71,111 @@ export default async function PreviewPage({
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <Button asChild variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
+          <Link href={`/admin/${resource}`}>
+            <ArrowLeft className="h-4 w-4" />
+            Back to {entity === 'program' ? 'Programs' : 'Campaigns'}
+          </Link>
+        </Button>
+      </div>
+
       <Alert variant="warning">
-        <strong>Preview.</strong>{' '}
+        <span className="font-semibold">Internal Preview Mode.</span>{' '}
         {isPublic
-          ? 'This is live on the public site.'
-          : 'This is not published. Nobody outside the team can see it.'}
+          ? 'This record is published and currently live on the public website.'
+          : 'This record is a draft and not published. It is visible only to authorized staff.'}
       </Alert>
 
-      <header>
-        <Link
-          href={`/admin/${resource}`}
-          className="text-body-sm text-muted-foreground hover:underline"
-        >
-          ← {entity === 'program' ? 'Programs' : 'Campaigns'}
-        </Link>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-h1 font-bold tracking-tight">{String(record.title)}</h1>
-          <StatusPill status={status} />
-        </div>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          /{resource}/{slug}
-        </p>
-      </header>
+      <PageHeader
+        title={String(record.title)}
+        description={`/${resource}/${slug}`}
+        status={<StatusPill status={status} />}
+        actions={
+          isPublic ? (
+            <Button asChild variant="secondary" size="sm">
+              <Link href={`/${resource}/${slug}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                View Live Page
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
 
       {record.shortDescription ? (
-        <p className="text-body-lg text-muted-foreground max-w-prose leading-relaxed">
-          {String(record.shortDescription)}
-        </p>
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-muted-foreground mb-2 text-xs font-semibold uppercase tracking-wider">
+              Summary Lead
+            </h2>
+            <p className="text-foreground text-base leading-relaxed">
+              {String(record.shortDescription)}
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <p className="text-body-sm text-warning-foreground">
-          No short description yet — required before this can be published.
-        </p>
+        <Alert variant="destructive">
+          No short description provided. A summary description is required before publishing.
+        </Alert>
       )}
 
       {entity === 'campaign' ? (
-        <dl className="border-border grid gap-4 rounded-lg border p-5 sm:grid-cols-3">
-          <div>
-            <dt className="text-caption text-muted-foreground uppercase">Goal</dt>
-            <dd data-numeric="" className="text-h4 font-semibold tabular-nums">
-              {record.fundraisingGoal ? formatCurrency(Number(record.fundraisingGoal)) : '—'}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-caption text-muted-foreground uppercase">Program</dt>
-            <dd className="text-body-sm">{String(record.programTitle ?? 'Not attached')}</dd>
-          </div>
-          <div>
-            <dt className="text-caption text-muted-foreground uppercase">Category</dt>
-            <dd className="text-body-sm">{String(record.category ?? '—')}</dd>
-          </div>
-        </dl>
-      ) : null}
-
-      {record.description ? (
-        <div className="max-w-prose space-y-4">
-          {String(record.description)
-            .split(/\n{2,}/)
-            .filter(Boolean)
-            .map((paragraph, index) => (
-              <p key={index} className="text-body text-muted-foreground leading-relaxed">
-                {paragraph}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Card>
+            <CardContent className="p-5">
+              <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                Fundraising Goal
+              </span>
+              <p className="text-foreground mt-2 text-xl font-bold tabular-nums">
+                {record.fundraisingGoal ? formatCurrency(Number(record.fundraisingGoal)) : '—'}
               </p>
-            ))}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-5">
+              <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                Associated Program
+              </span>
+              <p className="text-foreground mt-2 text-sm font-medium">
+                {String(record.programTitle ?? 'Not attached')}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-5">
+              <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                Cause Category
+              </span>
+              <p className="text-foreground mt-2 text-sm font-medium capitalize">
+                {String(record.category ?? '—')}
+              </p>
+            </CardContent>
+          </Card>
         </div>
       ) : null}
 
-      <p className="text-caption text-muted-foreground">
-        This is a content check, not a rendering of the final page. Publish to see it in the real
-        layout.
+      {record.description ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Full Content Body</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {String(record.description)
+              .split(/\n{2,}/)
+              .filter(Boolean)
+              .map((paragraph, index) => (
+                <p key={index} className="text-foreground/90 text-sm leading-relaxed">
+                  {paragraph}
+                </p>
+              ))}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <p className="text-muted-foreground text-xs">
+        Note: This is an internal content review, not a layout simulation. Publish to render this
+        content inside the public web templates.
       </p>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { Button, Input } from '@sailent/ui';
+import { Button, ConfirmationDialog, Input } from '@sailent/ui';
 
 import { Field, FormStatus, SubmitButton, TextArea } from '@/components/admin/form-shell';
 import { createFaq, deleteFaq, setFaqPublished, type ActionState } from '@/lib/admin/actions';
@@ -32,11 +32,27 @@ export function FaqsPanel({ campaignId, faqs }: { campaignId: string; faqs: FaqR
     setFaqPublished,
     {},
   );
-  const [, deleteAction] = React.useActionState<ActionState, FormData>(deleteFaq, {});
+  const [deleteState, deleteAction, deletePending] = React.useActionState<ActionState, FormData>(
+    deleteFaq,
+    {},
+  );
+  const [deletingFaq, setDeletingFaq] = React.useState<{ id: string; question: string } | null>(
+    null,
+  );
+
+  const handleConfirmDelete = async () => {
+    if (!deletingFaq) return;
+    const formData = new FormData();
+    formData.append('campaignId', campaignId);
+    formData.append('faqId', deletingFaq.id);
+    await deleteAction(formData);
+    setDeletingFaq(null);
+  };
 
   return (
     <div className="space-y-5">
       <FormStatus state={publishState} />
+      <FormStatus state={deleteState} />
 
       {faqs.length === 0 ? (
         <p className="text-body-sm text-muted-foreground">
@@ -66,25 +82,36 @@ export function FaqsPanel({ campaignId, faqs }: { campaignId: string; faqs: FaqR
                     {faq.isPublished ? 'Unpublish' : 'Publish'}
                   </Button>
                 </form>
-                <form
-                  action={deleteAction}
-                  onSubmit={(event) => {
-                    if (!window.confirm('Delete this FAQ? This cannot be undone.')) {
-                      event.preventDefault();
-                    }
-                  }}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setDeletingFaq({ id: faq.id, question: faq.question })}
                 >
-                  <input type="hidden" name="campaignId" value={campaignId} />
-                  <input type="hidden" name="faqId" value={faq.id} />
-                  <Button type="submit" size="sm" variant="ghost">
-                    Delete
-                  </Button>
-                </form>
+                  Delete
+                </Button>
               </div>
             </li>
           ))}
         </ul>
       )}
+
+      <ConfirmationDialog
+        open={Boolean(deletingFaq)}
+        onOpenChange={(open) => !open && setDeletingFaq(null)}
+        title="Delete this FAQ?"
+        description={
+          deletingFaq
+            ? `Are you sure you want to delete “${deletingFaq.question}”? This action cannot be undone.`
+            : 'Are you sure you want to delete this FAQ? This action cannot be undone.'
+        }
+        confirmLabel="Delete FAQ"
+        variant="destructive"
+        icon="danger"
+        loading={deletePending}
+        onConfirm={handleConfirmDelete}
+        error={deleteState.error}
+      />
 
       <details className="border-border rounded-lg border p-4">
         <summary className="text-body-sm cursor-pointer font-medium">Add an FAQ</summary>

@@ -1,4 +1,14 @@
-import { formatCurrency } from '@sailent/ui';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  PageHeader,
+  Alert,
+  formatCurrency,
+} from '@sailent/ui';
+import { FileSpreadsheet, HeartHandshake, Flag, Users, Activity } from 'lucide-react';
 import { EXPORT_DATASET_KEYS, datasetPermission, type ExportDataset } from '@sailent/validation';
 
 import { ExportLinks, RangePicker, Stat } from '@/components/admin/report-controls';
@@ -87,181 +97,239 @@ export default async function AdminReportsPage({
   });
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">Reports</h1>
-        <p className="text-body-sm text-muted-foreground mt-1 max-w-2xl">
-          Donations, campaigns, volunteers and impact over a date range. These are internal figures
-          — they include pending and failed payments, which the public site never shows.
-        </p>
-      </header>
+    <div className="space-y-8">
+      <PageHeader
+        title="Administrative reports"
+        description="Donations, campaigns, volunteers, and verified impact over selected date range. Figures represent administrative ledger states including pending and reconciling items."
+      />
 
-      <RangePicker from={range.from} to={range.to} />
+      <Card>
+        <CardContent className="p-4">
+          <RangePicker from={range.from} to={range.to} />
+        </CardContent>
+      </Card>
 
       {params.exportError ? (
-        <p
-          role="alert"
-          className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-        >
+        <Alert variant="destructive">
           {params.exportMessage ?? 'That export could not be produced.'}
-        </p>
+        </Alert>
       ) : null}
 
-      {failure ? (
-        <p
-          role="alert"
-          className="border-destructive/40 bg-destructive/5 text-body-sm text-destructive rounded-lg border p-4"
-        >
-          {failure}
-        </p>
-      ) : null}
+      {failure ? <Alert variant="destructive">{failure}</Alert> : null}
 
       {donations ? (
         <section aria-labelledby="donations-report" className="space-y-4">
-          <h2 id="donations-report" className="text-h3 font-semibold">
-            Donations
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="flex items-center gap-2">
+            <HeartHandshake className="text-primary h-5 w-5" />
+            <h2 id="donations-report" className="text-foreground text-lg font-bold">
+              Donation Summary
+            </h2>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
             <Stat
-              label="Captured"
+              label="Captured Funds"
               value={formatCurrency(donations.totals.capturedPaise)}
               hint="Successful payments only"
             />
-            <Stat label="Donations" value={donations.totals.donations} hint="Every state" />
-            <Stat label="Distinct donors" value={donations.totals.distinctDonors} />
+            <Stat
+              label="Total Donations"
+              value={donations.totals.donations}
+              hint="Across all transaction states"
+            />
+            <Stat label="Distinct Donors" value={donations.totals.distinctDonors} />
           </div>
 
-          <div className="border-border overflow-x-auto rounded-lg border">
-            <table className="w-full min-w-[32rem] text-left">
-              <caption className="text-caption text-muted-foreground px-4 py-2 text-left">
-                By payment state — what the bank total will and will not include.
-              </caption>
-              <thead className="bg-muted/60 text-caption text-muted-foreground uppercase">
-                <tr>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    State
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Donations
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Amount
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-border divide-y">
-                {donations.byStatus.map((row) => (
-                  <tr key={row.status}>
-                    <td className="text-body-sm px-4 py-2 font-semibold">{row.status}</td>
-                    <td className="text-body-sm px-4 py-2 tabular-nums">{row.count}</td>
-                    <td className="text-body-sm px-4 py-2 tabular-nums">
-                      {formatCurrency(row.amountPaise)}
-                    </td>
-                  </tr>
-                ))}
-                {donations.byStatus.length === 0 ? (
+          <Card className="overflow-hidden">
+            <CardHeader className="border-border bg-muted/20 border-b px-5 py-3">
+              <CardTitle className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                Payment State Breakdown
+              </CardTitle>
+            </CardHeader>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[32rem] text-left text-sm">
+                <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
                   <tr>
-                    <td colSpan={3} className="text-body-sm text-muted-foreground px-4 py-4">
-                      No donations in this range.
-                    </td>
+                    <th scope="col" className="px-5 py-3">
+                      Payment State
+                    </th>
+                    <th scope="col" className="px-5 py-3">
+                      Transactions
+                    </th>
+                    <th scope="col" className="px-5 py-3">
+                      Total Amount
+                    </th>
                   </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-border divide-y">
+                  {donations.byStatus.map((row) => (
+                    <tr key={row.status} className="hover:bg-muted/30 transition-colors">
+                      <td className="text-foreground px-5 py-3 text-xs font-semibold uppercase">
+                        {row.status}
+                      </td>
+                      <td className="text-foreground px-5 py-3 tabular-nums">{row.count}</td>
+                      <td className="text-foreground px-5 py-3 font-semibold tabular-nums">
+                        {formatCurrency(row.amountPaise)}
+                      </td>
+                    </tr>
+                  ))}
+                  {donations.byStatus.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={3}
+                        className="text-muted-foreground px-5 py-6 text-center text-xs"
+                      >
+                        No donation records found in the selected date range.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </section>
       ) : null}
 
       {campaigns ? (
-        <section aria-labelledby="campaigns-report" className="space-y-3">
-          <h2 id="campaigns-report" className="text-h3 font-semibold">
-            Campaigns
-          </h2>
-          <div className="border-border overflow-x-auto rounded-lg border">
-            <table className="w-full min-w-[40rem] text-left">
-              <thead className="bg-muted/60 text-caption text-muted-foreground uppercase">
-                <tr>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Campaign
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Raised in range
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Donations
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-semibold">
-                    Lifetime
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-border divide-y">
-                {campaigns.items.slice(0, 15).map((row) => (
-                  <tr key={row.id}>
-                    <td className="text-body-sm px-4 py-2">{row.title}</td>
-                    <td className="text-body-sm px-4 py-2 tabular-nums">
-                      {formatCurrency(row.inRangePaise)}
-                    </td>
-                    <td className="text-body-sm px-4 py-2 tabular-nums">{row.inRangeDonations}</td>
-                    <td className="text-body-sm text-muted-foreground px-4 py-2 tabular-nums">
-                      {formatCurrency(row.lifetimePaise)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <section aria-labelledby="campaigns-report" className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Flag className="text-primary h-5 w-5" />
+            <h2 id="campaigns-report" className="text-foreground text-lg font-bold">
+              Campaign Performance
+            </h2>
           </div>
+
+          <Card className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[40rem] text-left text-sm">
+                <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
+                  <tr>
+                    <th scope="col" className="px-5 py-3">
+                      Campaign Title
+                    </th>
+                    <th scope="col" className="px-5 py-3">
+                      Raised in Range
+                    </th>
+                    <th scope="col" className="px-5 py-3">
+                      Donations in Range
+                    </th>
+                    <th scope="col" className="px-5 py-3">
+                      Lifetime Raised
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-border divide-y">
+                  {campaigns.items.slice(0, 15).map((row) => (
+                    <tr key={row.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="text-foreground px-5 py-3 font-medium">{row.title}</td>
+                      <td className="text-foreground px-5 py-3 font-semibold tabular-nums">
+                        {formatCurrency(row.inRangePaise)}
+                      </td>
+                      <td className="text-foreground px-5 py-3 tabular-nums">
+                        {row.inRangeDonations}
+                      </td>
+                      <td className="text-muted-foreground px-5 py-3 tabular-nums">
+                        {formatCurrency(row.lifetimePaise)}
+                      </td>
+                    </tr>
+                  ))}
+                  {campaigns.items.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="text-muted-foreground px-5 py-6 text-center text-xs"
+                      >
+                        No campaign activity found in the selected date range.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </section>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {volunteers ? (
-          <section aria-labelledby="volunteers-report" className="space-y-3">
-            <h2 id="volunteers-report" className="text-h3 font-semibold">
-              Volunteers
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Stat label="Active" value={volunteers.standing.activeVolunteers} />
+          <section aria-labelledby="volunteers-report" className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Users className="text-primary h-5 w-5" />
+              <h2 id="volunteers-report" className="text-foreground text-lg font-bold">
+                Volunteer Activity
+              </h2>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Stat label="Active Volunteers" value={volunteers.standing.activeVolunteers} />
               <Stat
-                label="Verified hours"
+                label="Verified Hours"
                 value={volunteers.standing.verifiedHours}
-                hint="From attendance, rounded down"
+                hint="From validated attendance"
               />
             </div>
-            <p className="text-body-sm text-muted-foreground">
-              {volunteers.appliedInRange.reduce((total, row) => total + row.count, 0)} applied in
-              this range.
+            <p className="text-muted-foreground text-xs">
+              {volunteers.appliedInRange.reduce((total, row) => total + row.count, 0)} new volunteer
+              applications submitted in this period.
             </p>
           </section>
         ) : null}
 
         {impact ? (
-          <section aria-labelledby="impact-report" className="space-y-3">
-            <h2 id="impact-report" className="text-h3 font-semibold">
-              Impact
-            </h2>
+          <section aria-labelledby="impact-report" className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Activity className="text-primary h-5 w-5" />
+              <h2 id="impact-report" className="text-foreground text-lg font-bold">
+                Impact Metrics
+              </h2>
+            </div>
+
             {impact.items.length === 0 ? (
-              <p className="text-body-sm text-muted-foreground">No impact records in this range.</p>
+              <Card className="border-dashed">
+                <CardContent className="text-muted-foreground p-6 text-center text-xs">
+                  No verified impact entries recorded in this range.
+                </CardContent>
+              </Card>
             ) : (
-              <ul className="border-border divide-border divide-y rounded-lg border">
-                {impact.items.map((row) => (
-                  <li key={row.metricType} className="flex justify-between gap-4 px-4 py-2">
-                    <span className="text-body-sm">{row.metricType}</span>
-                    <span className="text-body-sm tabular-nums">
-                      {row.total.toLocaleString()}{' '}
-                      <span className="text-muted-foreground">
-                        ({row.published} of {row.records} published)
+              <Card className="overflow-hidden">
+                <ul className="divide-border divide-y">
+                  {impact.items.map((row) => (
+                    <li
+                      key={row.metricType}
+                      className="hover:bg-muted/30 flex items-center justify-between p-4 text-sm transition-colors"
+                    >
+                      <span className="text-foreground font-medium capitalize">
+                        {row.metricType.replace(/_/g, ' ')}
                       </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                      <span className="text-foreground font-semibold tabular-nums">
+                        {row.total.toLocaleString()}{' '}
+                        <span className="text-muted-foreground text-xs font-normal">
+                          ({row.published} of {row.records} published)
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
             )}
           </section>
         ) : null}
       </div>
 
-      <ExportLinks from={range.from} to={range.to} allowed={exportable} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileSpreadsheet className="text-primary h-4 w-4" />
+            Statutory & Operational Data Exports
+          </CardTitle>
+          <CardDescription>
+            Download verifiable CSV records for reconciliation and compliance reporting.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ExportLinks from={range.from} to={range.to} allowed={exportable} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,6 +1,18 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { AlertCircle, ExternalLink, ShieldCheck } from 'lucide-react';
 
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+} from '@sailent/ui';
+
+import { StatusPill } from '@/components/admin/status-pill';
 import { ImpactForm } from '@/components/admin/impact-form';
 import { StatusActions } from '@/components/admin/status-actions';
 import { changeImpactStatus } from '@/lib/admin/actions';
@@ -53,65 +65,86 @@ export default async function EditImpactRecordPage({
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">{record.title}</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          {record.isPublic ? (
-            <Link href={`/impact/${record.slug}`} className="text-primary hover:underline">
-              View the public page
-            </Link>
-          ) : (
-            'Not published.'
-          )}
-        </p>
-      </header>
+      <PageHeader
+        title={record.title}
+        description={`Slug: /impact/${record.slug}`}
+        status={<StatusPill status={record.status} />}
+        actions={
+          record.isPublic ? (
+            <Button asChild variant="secondary" size="sm">
+              <Link href={`/impact/${record.slug}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1.5 size-4" />
+                View live
+              </Link>
+            </Button>
+          ) : null
+        }
+      />
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
-        <ImpactForm
-          record={record}
-          programs={programs.items}
-          campaigns={campaigns.items}
-          events={events.items}
-        />
-
-        <aside className="border-border space-y-4 rounded-lg border p-4">
-          <h2 className="text-body-sm font-semibold">Publication</h2>
-
-          {/*
-            Said here as well as in the form, because this is the panel somebody
-            is looking at when they press publish and it is refused. Decision
-            A14: a figure nobody can check is a figure that should not be
-            published.
-          */}
-          {blocked ? (
-            <p className="text-caption text-destructive">
-              This record claims a figure with no stated method, so publishing will be refused.
-            </p>
-          ) : null}
-
-          {can(actor, 'impact.publish') ? (
-            <StatusActions
-              entityId={record.id}
-              slug={record.slug}
-              current={record.status}
-              allowed={PROGRAM_TRANSITIONS[record.status] ?? []}
-              action={changeImpactStatus}
-              labels={LABELS}
-              reasonRequired={['archived']}
-              confirmRequired={['archived']}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Record Details & Metrics</CardTitle>
+            <CardDescription>
+              Quantitative numbers, methodology statements, and verification records.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ImpactForm
+              record={record}
+              programs={programs.items}
+              campaigns={campaigns.items}
+              events={events.items}
             />
-          ) : (
-            <p className="text-caption text-muted-foreground">
-              You do not have permission to publish.
-            </p>
-          )}
+          </CardContent>
+        </Card>
 
-          {record.verifiedBy ? (
-            <p className="text-caption text-muted-foreground border-border border-t pt-4">
-              Publishing stamps you as the person who stood behind this figure.
-            </p>
-          ) : null}
-        </aside>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ShieldCheck className="text-primary size-4" />
+                Publication Lifecycle
+              </CardTitle>
+              <CardDescription>Status workflow control</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {blocked ? (
+                <div className="border-destructive/30 bg-destructive/5 text-caption text-destructive flex items-start gap-2.5 rounded-md border p-3">
+                  <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                  <span>
+                    This record claims a figure with no stated verification method. Publication will
+                    be refused by the API.
+                  </span>
+                </div>
+              ) : null}
+
+              {can(actor, 'impact.publish') ? (
+                <StatusActions
+                  entityId={record.id}
+                  slug={record.slug}
+                  current={record.status}
+                  allowed={PROGRAM_TRANSITIONS[record.status] ?? []}
+                  action={changeImpactStatus}
+                  labels={LABELS}
+                  reasonRequired={['archived']}
+                  confirmRequired={['archived']}
+                />
+              ) : (
+                <p className="text-caption text-muted-foreground">
+                  You do not have permission to publish impact records.
+                </p>
+              )}
+
+              {record.verifiedBy ? (
+                <p className="text-caption text-muted-foreground border-border/60 border-t pt-3">
+                  Publication stamps your staff identity as the verified authority behind this
+                  figure.
+                </p>
+              ) : null}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

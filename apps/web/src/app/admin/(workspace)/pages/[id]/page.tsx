@@ -1,7 +1,17 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ExternalLink } from 'lucide-react';
 
-import { formatDate } from '@sailent/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  formatDate,
+} from '@sailent/ui';
 
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
@@ -36,50 +46,65 @@ export default async function AdminPageDetail({ params }: { params: Promise<{ id
     throw error;
   }
 
+  const liveHref = page.slug === 'home' ? '/' : `/${page.slug}`;
+
   return (
     <div className="space-y-6">
-      <nav aria-label="Breadcrumb" className="text-body-sm text-muted-foreground">
-        <Link href="/admin/pages" className="hover:text-foreground">
-          Pages
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span>{page.title}</span>
-      </nav>
-
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">{page.title}</h1>
-        <p className="text-body-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
-          <StatusPill status={page.status} />
-          <span>·</span>
-          <span>/{page.slug === 'home' ? '' : page.slug}</span>
-          <span>·</span>
-          <span>version {page.version}</span>
-          <span>·</span>
-          <span>Updated {formatDate(page.updatedAt)}</span>
-          {page.isLive ? (
-            <>
-              <span>·</span>
-              <Link
-                href={page.slug === 'home' ? '/' : `/${page.slug}`}
-                className="hover:text-foreground underline"
-              >
-                View it live
+      <PageHeader
+        title={page.title}
+        description={`Target route: /${page.slug === 'home' ? '' : page.slug} · Version ${
+          page.version
+        } · Updated ${formatDate(page.updatedAt)}`}
+        status={<StatusPill status={page.status} />}
+        actions={
+          page.isLive ? (
+            <Button asChild variant="secondary" size="sm">
+              <Link href={liveHref} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1.5 size-4" />
+                View live
               </Link>
-            </>
-          ) : null}
-        </p>
-      </header>
+            </Button>
+          ) : null
+        }
+      />
 
-      {can(actor, 'page.publish') ? <PageStatusControls page={page} /> : null}
+      {can(actor, 'page.publish') ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Publishing & Status</CardTitle>
+            <CardDescription>
+              Control publication status and scheduling for this route layout.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PageStatusControls page={page} />
+          </CardContent>
+        </Card>
+      ) : null}
 
-      <PageComposer page={page} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Section Structure</CardTitle>
+          <CardDescription>
+            Arrange approved sections, configure section options, and save layout updates.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PageComposer page={page} />
+        </CardContent>
+      </Card>
 
-      <section aria-labelledby="revisions-heading" className="border-border border-t pt-6">
-        <h2 id="revisions-heading" className="text-h4 mb-3 font-semibold">
-          Version history
-        </h2>
-        <PageRevisions page={page} />
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Version History & Rollbacks</CardTitle>
+          <CardDescription>
+            Audit changes made to this route layout and revert to previous versions if needed.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PageRevisions page={page} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

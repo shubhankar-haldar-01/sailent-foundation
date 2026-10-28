@@ -1,7 +1,18 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft, ExternalLink, Eye } from 'lucide-react';
 
-import { Progress, formatCurrency, formatDate } from '@sailent/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Progress,
+  formatCurrency,
+  formatDate,
+  PageHeader,
+} from '@sailent/ui';
 
 import { CampaignForm } from '@/components/admin/campaign-form';
 import { FaqsPanel, type FaqRow } from '@/components/admin/campaign-children';
@@ -9,12 +20,8 @@ import { CampaignProductManager } from '@/components/products/campaign-product-m
 import type { CampaignProductRow, CatalogueProduct } from '@/components/products/types';
 import { StatusActions } from '@/components/admin/status-actions';
 import { StatusPill } from '@/components/admin/status-pill';
-import { changeCampaignStatus } from '@/lib/admin/actions';
-import {
-  CampaignUpdatesPanel,
-  CoverImagePanel,
-  GalleryPanel,
-} from '@/components/admin/campaign-media';
+import { changeCampaignStatus, deleteCampaignAction } from '@/lib/admin/actions';
+import { CampaignUpdatesPanel } from '@/components/admin/campaign-media';
 import { can, currentActor } from '@/lib/auth/session';
 import {
   AdminApiError,
@@ -43,13 +50,6 @@ interface CampaignDetail extends AdminCampaign {
   slugHistory: { slug: string; changedAt: string }[];
 }
 
-/**
- * The six-state lifecycle, mapped to endpoints and labels.
- *
- * Which of these render is decided by the transition table fetched from the
- * API, so this object describes HOW to perform a move, never WHETHER one is
- * available.
- */
 const CAMPAIGN_LABELS = {
   published: { endpoint: 'publish', label: 'Publish' },
   active: { endpoint: 'activate', label: 'Open for donations' },
@@ -75,18 +75,11 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
       adminFetch<CampaignDetail>(`admin/campaigns/${id}`),
       adminFetch<{ campaign: Record<string, string[]> }>('admin/campaigns/transitions'),
       adminFetch<Paginated<AdminProgram>>('admin/programs', {
-        query: { status: 'published', limit: 100, sort: 'title' },
+        query: { status: 'all', limit: 100, sort: 'title' },
       }),
       adminFetch<{ items: AdminCategory[] }>('admin/categories', { query: { kind: 'campaign' } }),
       adminFetch<{ items: CampaignProductRow[] }>(`admin/campaigns/${id}/products`),
       adminFetch<{ items: FaqRow[] }>(`admin/campaigns/${id}/faqs`),
-      /**
-       * The catalogue, ALREADY FILTERED to what this campaign does not offer.
-       *
-       * Filtering server-side rather than in the picker is what makes a
-       * duplicate impossible to choose rather than merely refused. The unique
-       * index would reject the insert either way; this means nobody reaches it.
-       */
       adminFetch<Paginated<CatalogueProduct>>('admin/products', {
         query: { notInCampaignId: id, status: 'active', limit: 100, sort: 'name' },
       }),
@@ -96,10 +89,6 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
     throw error;
   }
 
-  /*
-    Phase 13 — cover, gallery and progress updates. Each is loaded only for
-    someone who may use it; the API enforces the same permissions.
-  */
   const actor = await currentActor();
   const [mediaOptions, gallery, updates] = await Promise.all([
     can(actor, 'media.read')
@@ -114,193 +103,243 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
   const isPublic = ['published', 'active', 'paused', 'completed'].includes(campaign.status);
 
   return (
-    <div className="space-y-8">
-      <header>
-        <Link
-          href="/admin/campaigns"
-          className="text-body-sm text-muted-foreground hover:underline"
-        >
-          ← Campaigns
-        </Link>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-h1 font-bold tracking-tight">{campaign.title}</h1>
-          <StatusPill status={campaign.status} />
-        </div>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          /{campaign.slug} · updated {formatDate(campaign.updatedAt)}
-          {' · '}
+    <div className="space-y-6">
+      <PageHeader
+        title={campaign.title}
+        breadcrumb={
           <Link
-            href={
-              isPublic ? `/campaigns/${campaign.slug}` : `/admin/preview/campaign/${campaign.slug}`
-            }
-            target={isPublic ? '_blank' : undefined}
-            className="text-primary hover:underline"
+            href="/admin/campaigns"
+            className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
           >
-            {isPublic ? 'View on the site' : 'Preview'}
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Back to campaigns
           </Link>
-        </p>
-      </header>
-
-      {/* Overview — the numbers an operator opens this page to check. */}
-      <section className="border-border grid gap-5 rounded-lg border p-5 sm:grid-cols-3">
-        <div className="sm:col-span-2">
-          <p className="text-caption text-muted-foreground uppercase">Raised</p>
-          <p data-numeric="" className="font-display text-h2 font-bold tabular-nums">
-            {formatCurrency(campaign.amountRaised)}
-            <span className="text-body text-muted-foreground font-normal">
-              {' of '}
-              {formatCurrency(campaign.fundraisingGoal)}
-            </span>
-          </p>
-          <Progress
-            value={campaign.progress.percent}
-            className="mt-2 max-w-md"
-            label={`${campaign.progress.percent}% of the goal raised`}
-          />
-          <p className="text-caption text-muted-foreground mt-1.5">
-            {campaign.progress.goalReached
-              ? `Goal reached. ${formatCurrency(campaign.progress.surplus)} beyond it.`
-              : `${formatCurrency(campaign.progress.remaining)} still needed.`}
-            {campaign.daysRemaining !== null ? ` · ${campaign.daysRemaining} days left.` : ''}
-          </p>
-        </div>
-
-        <dl className="space-y-3">
-          <div>
-            <dt className="text-caption text-muted-foreground uppercase">Donors</dt>
-            <dd data-numeric="" className="text-h4 font-semibold tabular-nums">
-              {campaign.donorCount}
-            </dd>
+        }
+        description={`/${campaign.slug} · Updated ${formatDate(campaign.updatedAt)}`}
+        status={<StatusPill status={campaign.status} />}
+        actions={
+          <div className="flex items-center gap-2">
+            {isPublic ? (
+              <Button asChild variant="secondary" size="sm" className="gap-1.5">
+                <Link href={`/campaigns/${campaign.slug}`} target="_blank">
+                  View on site
+                  <ExternalLink className="size-3.5" aria-hidden="true" />
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild variant="secondary" size="sm" className="gap-1.5">
+                <Link href={`/admin/preview/campaign/${campaign.slug}`}>
+                  <Eye className="size-3.5" aria-hidden="true" />
+                  Preview draft
+                </Link>
+              </Button>
+            )}
           </div>
-          <div>
-            <dt className="text-caption text-muted-foreground uppercase">Beneficiaries</dt>
-            <dd data-numeric="" className="text-h4 font-semibold tabular-nums">
-              {campaign.beneficiariesReached}
-              {campaign.beneficiaryTarget ? ` / ${campaign.beneficiaryTarget}` : ''}
-            </dd>
+        }
+      />
+
+      {/* Progress & Operational Performance Card */}
+      <Card className="border-border">
+        <CardContent className="p-6">
+          <div className="grid gap-6 sm:grid-cols-3">
+            <div className="sm:col-span-2">
+              <p className="text-caption text-muted-foreground font-semibold uppercase tracking-wider">
+                Total Raised
+              </p>
+              <p
+                data-numeric=""
+                className="font-display text-h1 text-foreground mt-1 font-bold tabular-nums"
+              >
+                {formatCurrency(campaign.amountRaised)}
+                <span className="text-body text-muted-foreground font-normal">
+                  {' of '}
+                  {formatCurrency(campaign.fundraisingGoal)}
+                </span>
+              </p>
+              <Progress
+                value={campaign.progress.percent}
+                className="mt-3 max-w-lg"
+                label={`${campaign.progress.percent}% of the goal raised`}
+              />
+              <p className="text-caption text-muted-foreground mt-2">
+                {campaign.progress.goalReached
+                  ? `Goal achieved. ${formatCurrency(campaign.progress.surplus)} beyond target.`
+                  : `${formatCurrency(campaign.progress.remaining)} still required.`}
+                {campaign.daysRemaining !== null
+                  ? ` · ${campaign.daysRemaining} days remaining.`
+                  : ''}
+              </p>
+            </div>
+
+            <dl className="border-border grid grid-cols-2 gap-4 sm:border-l sm:pl-6">
+              <div>
+                <dt className="text-caption text-muted-foreground font-medium uppercase">Donors</dt>
+                <dd
+                  data-numeric=""
+                  className="font-display text-h2 text-foreground mt-1 font-bold tabular-nums"
+                >
+                  {campaign.donorCount}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-caption text-muted-foreground font-medium uppercase">
+                  Beneficiaries
+                </dt>
+                <dd
+                  data-numeric=""
+                  className="font-display text-h2 text-foreground mt-1 font-bold tabular-nums"
+                >
+                  {campaign.beneficiariesReached}
+                  {campaign.beneficiaryTarget ? (
+                    <span className="text-caption text-muted-foreground font-normal">
+                      {' '}
+                      / {campaign.beneficiaryTarget}
+                    </span>
+                  ) : (
+                    ''
+                  )}
+                </dd>
+              </div>
+            </dl>
           </div>
-        </dl>
+        </CardContent>
+      </Card>
 
-        <p className="text-caption text-muted-foreground sm:col-span-3">
-          Raised, donors and beneficiaries reached are updated by recorded donations, not by hand.
-          They stay at zero until payment processing lands.
-        </p>
-      </section>
-
-      <section className="border-border rounded-lg border p-5">
-        <h2 className="text-h4 font-semibold">Lifecycle</h2>
-        <p className="text-body-sm text-muted-foreground mb-4 mt-1">
-          {campaign.status === 'active'
-            ? 'Open for donations.'
-            : campaign.status === 'paused'
-              ? 'Publicly visible, donations stopped.'
-              : campaign.status === 'completed'
-                ? 'Complete. Still readable as history.'
-                : isPublic
-                  ? 'Visible publicly, not yet taking donations.'
-                  : 'Not visible publicly.'}
-        </p>
-        <StatusActions
-          entityId={campaign.id}
-          slug={campaign.slug}
-          current={campaign.status}
-          allowed={transitions.campaign[campaign.status] ?? []}
-          action={changeCampaignStatus}
-          labels={CAMPAIGN_LABELS}
-          reasonRequired={['paused', 'completed']}
-          confirmRequired={['archived']}
-        />
-      </section>
-
-      <section>
-        <h2 className="text-h4 mb-4 font-semibold">Details</h2>
-        <CampaignForm
-          programs={programs.items}
-          categories={categories.items.filter((c) => c.isActive)}
-          campaign={campaign}
-        />
-      </section>
-
-      <section>
-        <h2 className="text-h4 mb-1 font-semibold">Products</h2>
-        <p className="text-body-sm text-muted-foreground mb-4 max-w-prose">
-          Chosen from the shared catalogue. The price below is this campaign’s own — changing it
-          affects no other campaign, and no donation already taken.
-        </p>
-        <CampaignProductManager
-          campaignId={campaign.id}
-          products={products.items}
-          catalogue={catalogue.items}
-        />
-      </section>
-
-      {can(actor, 'campaign.update') ? (
-        <section>
-          <h2 className="text-h4 mb-1 font-semibold">Cover image</h2>
-          <p className="text-body-sm text-muted-foreground mb-4 max-w-prose">
-            The large picture at the top of the campaign page and on its card. Public images from
-            the media library only.
+      {/* Lifecycle Transitions Card */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <CardTitle className="text-base font-semibold">Lifecycle Status & Permissions</CardTitle>
+          <p className="text-caption text-muted-foreground mt-1">
+            {campaign.status === 'active'
+              ? 'Campaign is live and actively accepting donations through Razorpay.'
+              : campaign.status === 'paused'
+                ? 'Campaign is publicly visible; online checkout is temporarily halted.'
+                : campaign.status === 'completed'
+                  ? 'Campaign has concluded. Historical details and contributions remain readable.'
+                  : campaign.status === 'archived'
+                    ? 'Campaign is archived and removed from public view. It can be returned to draft or deleted.'
+                    : isPublic
+                      ? 'Published publicly; donations have not been opened yet.'
+                      : 'Draft state. Requires associated program before publishing.'}
           </p>
-          <CoverImagePanel
-            kind="campaign"
-            id={campaign.id}
+        </CardHeader>
+        <CardContent className="p-6">
+          <StatusActions
+            entityId={campaign.id}
             slug={campaign.slug}
-            current={campaign.coverImage}
-            options={mediaOptions}
+            current={campaign.status}
+            allowed={transitions.campaign[campaign.status] ?? []}
+            action={changeCampaignStatus}
+            labels={CAMPAIGN_LABELS}
+            reasonRequired={['paused', 'completed']}
+            confirmRequired={['archived']}
+            deleteAction={deleteCampaignAction}
+            canDelete={
+              can(actor, 'campaign.delete') &&
+              (campaign.status === 'archived' || campaign.status === 'draft') &&
+              campaign.amountRaised === 0 &&
+              campaign.donorCount === 0
+            }
           />
-        </section>
-      ) : null}
+        </CardContent>
+      </Card>
 
-      {gallery ? (
-        <section>
-          <h2 className="text-h4 mb-1 font-semibold">Campaign Gallery</h2>
-          <p className="text-body-sm text-muted-foreground mb-4 max-w-prose">
-            The photographs in “About This Campaign”, in this order. Only images marked public
-            appear on the site.
+      {/* Campaign Details Form Card */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <CardTitle className="text-base font-semibold">Campaign Information & Content</CardTitle>
+          <p className="text-caption text-muted-foreground mt-1">
+            Core narrative, location, beneficiary scope, and fund utilization breakdown.
           </p>
-          <GalleryPanel
+        </CardHeader>
+        <CardContent className="p-6">
+          <CampaignForm
+            programs={programs.items.filter(
+              (p) => p.status !== 'archived' || p.id === campaign.programId,
+            )}
+            categories={categories.items.filter((c) => c.isActive)}
+            campaign={campaign}
+            mediaOptions={mediaOptions}
+            initialGallery={gallery}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Product Offerings Card */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <CardTitle className="text-base font-semibold">
+            Catalogue Products & Targeted Giving
+          </CardTitle>
+          <p className="text-caption text-muted-foreground mt-1">
+            Product allocations for itemized donor giving. Modifying pricing here applies
+            specifically to this campaign.
+          </p>
+        </CardHeader>
+        <CardContent className="p-6">
+          <CampaignProductManager
+            campaignId={campaign.id}
+            products={products.items}
+            catalogue={catalogue.items}
+          />
+        </CardContent>
+      </Card>
+
+      {/* FAQs Panel */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <CardTitle className="text-base font-semibold">Frequently Asked Questions</CardTitle>
+          <p className="text-caption text-muted-foreground mt-1">
+            Questions and answers rendered specifically on this campaign detail page.
+          </p>
+        </CardHeader>
+        <CardContent className="p-6">
+          <FaqsPanel campaignId={campaign.id} faqs={faqs.items} />
+        </CardContent>
+      </Card>
+
+      {/* Progress Updates Panel */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <CardTitle className="text-base font-semibold">Progress & Field Impact Updates</CardTitle>
+          <p className="text-caption text-muted-foreground mt-1">
+            Chronological field reports communicating milestones and impact to donors.
+          </p>
+        </CardHeader>
+        <CardContent className="p-6">
+          <CampaignUpdatesPanel
             campaignId={campaign.id}
             slug={campaign.slug}
-            items={gallery}
-            options={mediaOptions}
+            updates={updates}
+            canCreate={can(actor, 'campaign_update.create')}
+            canPublish={can(actor, 'campaign_update.publish')}
           />
-        </section>
-      ) : null}
+        </CardContent>
+      </Card>
 
-      <section>
-        <h2 className="text-h4 mb-4 font-semibold">FAQs</h2>
-        <FaqsPanel campaignId={campaign.id} faqs={faqs.items} />
-      </section>
-
-      <section>
-        <h2 className="text-h4 mb-1 font-semibold">Progress updates</h2>
-        <p className="text-body-sm text-muted-foreground mb-4 max-w-prose">
-          Short, dated reports of what the campaign has done. A figure in an update needs a stated
-          method before it can be published.
-        </p>
-        <CampaignUpdatesPanel
-          campaignId={campaign.id}
-          slug={campaign.slug}
-          updates={updates}
-          canCreate={can(actor, 'campaign_update.create')}
-          canPublish={can(actor, 'campaign_update.publish')}
-        />
-      </section>
-
+      {/* Slug History */}
       {campaign.slugHistory.length > 0 ? (
-        <section>
-          <h2 className="text-h4 mb-2 font-semibold">Previous addresses</h2>
-          <p className="text-body-sm text-muted-foreground mb-3">
-            Each still redirects here permanently, so posters and forwarded links keep working.
-          </p>
-          <ul className="text-body-sm text-muted-foreground space-y-1">
-            {campaign.slugHistory.map((entry) => (
-              <li key={entry.slug}>
-                <code>/campaigns/{entry.slug}</code> — retired {formatDate(entry.changedAt)}
-              </li>
-            ))}
-          </ul>
-        </section>
+        <Card className="border-border">
+          <CardHeader className="border-border border-b pb-4">
+            <CardTitle className="text-base font-semibold">Previous URL Permalinks</CardTitle>
+            <p className="text-caption text-muted-foreground mt-1">
+              Permanent 301 redirects preserved so physical posters, QR codes, and external links
+              remain valid.
+            </p>
+          </CardHeader>
+          <CardContent className="p-6">
+            <ul className="text-body-sm text-muted-foreground space-y-2">
+              {campaign.slugHistory.map((entry) => (
+                <li key={entry.slug} className="flex items-center gap-2">
+                  <code className="text-caption bg-muted text-foreground rounded px-2 py-0.5">
+                    /campaigns/{entry.slug}
+                  </code>
+                  <span>— retired on {formatDate(entry.changedAt)}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );

@@ -40,10 +40,13 @@ const VISIBLE_CARDS = 8;
 export function CampaignShowcase({
   campaigns,
   viewer,
+  excludeCampaignIds,
 }: {
   campaigns: Campaign[];
   /** Signed in, and what was saved — for the cards' save hearts. */
   viewer?: DonorViewer;
+  /** Campaign IDs to de-duplicate against the featured rail above. */
+  excludeCampaignIds?: string[];
 }) {
   const [activeCategory, setActiveCategory] = React.useState<string | null>(null);
 
@@ -54,13 +57,23 @@ export function CampaignShowcase({
   );
 
   // Narrowed in the browser from the list already fetched — instant, no spinner.
-  const matching = React.useMemo(
-    () =>
-      activeCategory
-        ? campaigns.filter((campaign) => campaign.category === activeCategory)
-        : campaigns,
-    [campaigns, activeCategory],
-  );
+  // When browsing all causes, prioritizes fresh campaigns not already showcased
+  // in the featured rail directly above, eliminating duplication.
+  const matching = React.useMemo(() => {
+    const list = activeCategory
+      ? campaigns.filter((campaign) => campaign.category === activeCategory)
+      : campaigns;
+
+    if (!excludeCampaignIds || excludeCampaignIds.length === 0) {
+      return list;
+    }
+
+    const excludedSet = new Set(excludeCampaignIds);
+    const fresh = list.filter((campaign) => !excludedSet.has(campaign.id));
+    const alreadyFeatured = list.filter((campaign) => excludedSet.has(campaign.id));
+
+    return activeCategory ? list : [...fresh, ...alreadyFeatured];
+  }, [campaigns, activeCategory, excludeCampaignIds]);
 
   const visible = matching.slice(0, VISIBLE_CARDS);
 
@@ -71,14 +84,18 @@ export function CampaignShowcase({
       <PageShell>
         <div className="max-w-(--container-wide) mx-auto">
           {/* Section heading matching reference layout: centered eyebrow + dual-tone headline */}
-          <div className="mx-auto mb-6 flex max-w-5xl flex-col items-center text-center sm:mb-8">
-            <p className="text-foreground/80 dark:text-foreground/70 text-sm font-bold tracking-tight sm:text-base">
-              Browse By Cause
-            </p>
+          <div className="mx-auto mb-6 flex max-w-5xl flex-col items-center text-center sm:mb-8 md:mb-10">
+            <div className="mb-2 flex items-center justify-center gap-2">
+              <span className="h-0.5 w-6 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+              <p className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
+                Browse By Cause
+              </p>
+              <span className="h-0.5 w-6 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+            </div>
 
             <h2
               id="campaign-showcase-title"
-              className="font-display mt-1.5 text-2xl font-black leading-[1.2] tracking-tight sm:text-3xl md:text-[2.25rem]"
+              className="font-display mt-1 text-2xl font-black leading-[1.2] tracking-tight sm:text-3xl md:text-[2.25rem]"
             >
               <span className="text-[#36335C] dark:text-indigo-200">Discover Causes That</span>{' '}
               <span className="text-primary dark:text-orange-400">Inspire You.</span>

@@ -60,6 +60,7 @@ interface ApiCampaignSummary {
   progress?: CampaignProgressDto;
   daysRemaining?: number | null;
   donation?: DonationAvailabilityDto;
+  presetAmounts?: number[] | null;
 }
 
 interface ApiCampaignProduct {
@@ -78,6 +79,7 @@ interface ApiCampaignProduct {
   maxPerDonation: number;
   status: 'active' | 'inactive' | 'fulfilled';
   image: string | null;
+  isMostNeeded?: boolean;
 }
 
 export interface CampaignProgressDto {
@@ -146,6 +148,8 @@ interface ApiCampaignDetail extends ApiCampaignSummary {
   program: { id: string; title: string; slug: string } | null;
   description: string | null;
   beneficiaryContext: string | null;
+  supportProvides?: string | null;
+  videoUrl?: string | null;
   impactNotes: { label: string; value: number; unit?: string }[] | null;
   products?: ApiCampaignProduct[];
   /** Normalised from Phase 4 — each was a JSON array on the campaign before. */
@@ -183,6 +187,7 @@ function toProduct(row: ApiCampaignProduct, campaignSlug: string): CampaignProdu
     maxPerDonation: row.maxPerDonation,
     status: row.status,
     image: toMedia(row.image, `product-${campaignSlug}-${row.slug}`, row.name),
+    isMostNeeded: row.isMostNeeded ?? false,
   };
 }
 
@@ -228,6 +233,9 @@ function toCampaign(row: ApiCampaignSummary | ApiCampaignDetail): Campaign {
     endsAt: row.endDate,
     status: row.status,
     isFeatured: row.isFeatured,
+    presetAmounts: row.presetAmounts ?? null,
+    supportProvides: detail.supportProvides ?? null,
+    videoUrl: detail.videoUrl ?? null,
     // From the API on a listing; from the products themselves on a detail.
     hasProducts: row.hasProducts ?? (detail.products?.length ?? 0) > 0,
 

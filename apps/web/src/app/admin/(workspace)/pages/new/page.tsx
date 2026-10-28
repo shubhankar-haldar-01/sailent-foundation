@@ -1,5 +1,6 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
 
 import { PageComposer } from '@/components/admin/page-composer';
 import { currentActor, can } from '@/lib/auth/session';
@@ -13,23 +14,22 @@ export default async function NewPagePage() {
 
   return (
     <div className="space-y-6">
-      <nav aria-label="Breadcrumb" className="text-body-sm text-muted-foreground">
-        <Link href="/admin/pages" className="hover:text-foreground">
-          Pages
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span>New</span>
-      </nav>
+      <PageHeader
+        title="Compose Page"
+        description="Select a route (home, about, etc.) and configure its section layout and ordering. Saved as a draft."
+      />
 
-      <header>
-        <h1 className="font-display text-h1 font-bold tracking-tight">Compose a page</h1>
-        <p className="text-body-sm text-muted-foreground mt-1">
-          Choose the route this composes — <code>home</code>, <code>about</code> — then add the
-          sections it should show. Saved as a draft; nothing changes on the site until you publish.
-        </p>
-      </header>
-
-      <PageComposer />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Section Composition</CardTitle>
+          <CardDescription>
+            Assemble and reorder sections before publishing to the live website.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PageComposer />
+        </CardContent>
+      </Card>
     </div>
   );
 }

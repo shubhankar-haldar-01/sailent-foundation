@@ -2,11 +2,11 @@ import type { Metadata } from 'next';
 
 import { CampaignBrowser } from '@/components/home/campaign-browser';
 import { CampaignShowcase } from '@/components/home/campaign-showcase';
-import { CommunityCta } from '@/components/home/community-cta';
 import { HeroSection } from '@/components/home/hero-section';
 import { ImpactStats } from '@/components/home/impact-stats';
 import { NewsletterSection } from '@/components/home/newsletter-section';
 import { PartnersSection } from '@/components/home/partners-section';
+import { SpotlightSection } from '@/components/home/spotlight-section';
 import { StoriesAndEvents } from '@/components/home/stories-and-events';
 import { Testimonials } from '@/components/home/testimonials';
 import { WhoWeAre } from '@/components/home/who-we-are';
@@ -132,11 +132,15 @@ export default async function HomePage() {
         More Campaigns" — directly before "Who we are". An ADDITION to the
         featured band above, with its own cause selection.
       */}
-      <CampaignShowcase campaigns={campaigns} viewer={viewer} />
+      <CampaignShowcase
+        campaigns={campaigns}
+        viewer={viewer}
+        excludeCampaignIds={featuredCampaigns.slice(0, 4).map((c) => c.id)}
+      />
       <WhoWeAre />
       <StoriesAndEvents stories={stories.slice(0, 3)} events={events.slice(0, 3)} />
+      <SpotlightSection />
       <Testimonials />
-      <CommunityCta />
       <PartnersSection />
       <NewsletterSection />
     </>

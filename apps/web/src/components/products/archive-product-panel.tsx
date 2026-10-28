@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { Button, Input } from '@sailent/ui';
+import { Button, ConfirmationDialog, Input } from '@sailent/ui';
 
 import { FormStatus } from '@/components/admin/form-shell';
 import { setProductStatus, type ActionState } from '@/lib/admin/actions';
@@ -38,8 +38,12 @@ export function ArchiveProductPanel({
   status: 'active' | 'inactive' | 'archived';
   blockingCampaigns: string[];
 }) {
-  const [state, action] = React.useActionState<ActionState, FormData>(setProductStatus, {});
-
+  const [state, action, pending] = React.useActionState<ActionState, FormData>(
+    setProductStatus,
+    {},
+  );
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const formRef = React.useRef<HTMLFormElement>(null);
   if (status === 'archived') {
     return (
       <div className="border-border rounded-lg border p-4">
@@ -81,7 +85,7 @@ export function ArchiveProductPanel({
       ) : (
         <>
           <FormStatus state={state} />
-          <form action={action} className="mt-3 space-y-3">
+          <form ref={formRef} action={action} className="mt-3 space-y-3">
             <input type="hidden" name="id" value={productId} />
             <input type="hidden" name="status" value="archived" />
 
@@ -106,16 +110,34 @@ export function ArchiveProductPanel({
             </div>
 
             <Button
-              type="submit"
+              type="button"
               size="sm"
               variant="secondary"
-              onClick={(event) => {
-                if (!window.confirm(`Archive “${productName}”?`)) event.preventDefault();
+              disabled={pending}
+              onClick={() => {
+                if (formRef.current && !formRef.current.reportValidity()) return;
+                setConfirmOpen(true);
               }}
             >
               Archive
             </Button>
           </form>
+
+          <ConfirmationDialog
+            open={confirmOpen}
+            onOpenChange={setConfirmOpen}
+            title={`Archive “${productName}”?`}
+            description="This product will be retired and hidden from live campaigns. It can be restored later."
+            confirmLabel="Archive product"
+            variant="secondary"
+            icon="warning"
+            loading={pending}
+            onConfirm={() => {
+              formRef.current?.requestSubmit();
+              setConfirmOpen(false);
+            }}
+            error={state.error}
+          />
         </>
       )}
     </div>

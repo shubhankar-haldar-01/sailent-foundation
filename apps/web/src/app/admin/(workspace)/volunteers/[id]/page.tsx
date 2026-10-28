@@ -1,7 +1,26 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import {
+  ArrowLeft,
+  Award,
+  Calendar,
+  CheckSquare,
+  FileText,
+  HeartHandshake,
+  PhoneCall,
+  ShieldAlert,
+  User,
+} from 'lucide-react';
 
-import { Badge, Button, Card, formatDate } from '@sailent/ui';
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  formatDate,
+  PageHeader,
+} from '@sailent/ui';
 
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import {
@@ -29,20 +48,10 @@ import { currentActor, can } from '@/lib/auth/session';
 export const dynamic = 'force-dynamic';
 
 /**
- * One volunteer, in full.
+ * One volunteer profile in full.
  *
- * ══════════════════════════════════════════════════════════════════════════
- * THE MOST SENSITIVE SCREEN IN PHASE 8.
- *
- * It carries a phone number, a home address, a date of birth and an EMERGENCY
- * CONTACT — somebody who never applied to anything and whose number is here
- * because a volunteer might be hurt in the field. `volunteer.read` is marked
- * sensitive in the permission catalogue and the route is `@Sensitive()`, so a
- * fresh re-authentication is required.
- *
- * A 403 `REAUTH_REQUIRED` is therefore an EXPECTED outcome, not an error: it
- * renders the re-auth panel in place of the record.
- * ══════════════════════════════════════════════════════════════════════════
+ * Highly sensitive screen requiring re-authentication as it exposes home addresses,
+ * date of birth, and emergency contacts.
  */
 export default async function AdminVolunteerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -60,9 +69,13 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
       notFound();
     } else if (error instanceof AdminApiError && error.status === 403) {
       return (
-        <p className="border-border text-body text-muted-foreground rounded-lg border border-dashed p-10 text-center">
-          You do not have permission to read volunteer records.
-        </p>
+        <div className="p-8">
+          <Card className="border-border p-8 text-center">
+            <p className="text-body text-muted-foreground">
+              You do not have permission to view sensitive volunteer records.
+            </p>
+          </Card>
+        </div>
       );
     } else {
       throw error;
@@ -72,10 +85,22 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
   if (needsReauth || !volunteer) {
     return (
       <div className="space-y-6">
-        <h1 className="font-display text-h1 font-bold tracking-tight">Volunteer</h1>
+        <PageHeader
+          title="Volunteer Profile"
+          breadcrumb={
+            <Link
+              href="/admin/volunteers"
+              className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+              Back to volunteers
+            </Link>
+          }
+          description="Authentication required to access personal contact records."
+        />
         <ReauthPanel
           returnTo={`/admin/volunteers/${id}`}
-          what="This record contains a home address, a date of birth and an emergency contact."
+          what="This record contains a residential address, date of birth, and emergency contact."
         />
       </div>
     );
@@ -93,168 +118,228 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h1 font-bold tracking-tight">{name}</h1>
-          <p className="text-body-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
-            <VolunteerStatusBadge status={volunteer.status} />
-            {volunteer.volunteerId ? <span>{volunteer.volunteerId}</span> : null}
-            <span>·</span>
-            <span data-numeric="">
-              {volunteer.verifiedHours} verified {volunteer.verifiedHours === 1 ? 'hour' : 'hours'}
-              {volunteer.totalHours !== volunteer.verifiedHours
-                ? ` of ${volunteer.totalHours} recorded`
-                : ''}
-            </span>
-          </p>
-        </div>
-        <Button asChild variant="secondary">
-          <Link href="/admin/volunteers">Back to the list</Link>
-        </Button>
-      </header>
+      <PageHeader
+        title={name}
+        breadcrumb={
+          <Link
+            href="/admin/volunteers"
+            className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Back to volunteers
+          </Link>
+        }
+        status={<VolunteerStatusBadge status={volunteer.status} />}
+        description={`${volunteer.volunteerId ? `${volunteer.volunteerId} · ` : ''}${volunteer.verifiedHours} verified service hours recorded`}
+      />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+        {/* Left Column: Contact, Skills, Assignments, Attendance */}
         <div className="space-y-6">
-          {/* Contact ------------------------------------------------------ */}
-          <Card className="p-5">
-            <h2 className="text-h4 font-semibold">Contact</h2>
-            <dl className="text-body-sm mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
-              <div>
-                <dt className="text-muted-foreground">Email</dt>
-                <dd>{volunteer.email ?? '—'}</dd>
+          {/* Contact Details Card */}
+          <Card className="border-border">
+            <CardHeader className="border-border border-b pb-4">
+              <div className="flex items-center gap-2">
+                <User className="text-primary size-5" aria-hidden="true" />
+                <CardTitle className="text-base font-semibold">
+                  Contact & Personal Details
+                </CardTitle>
               </div>
-              <div>
-                <dt className="text-muted-foreground">Phone</dt>
-                <dd>{volunteer.phone}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Where</dt>
-                <dd>{[volunteer.city, volunteer.state].filter(Boolean).join(', ') || '—'}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Occupation</dt>
-                <dd>{volunteer.occupation ?? '—'}</dd>
-              </div>
-            </dl>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <dl className="text-body-sm grid gap-x-6 gap-y-3 sm:grid-cols-2">
+                <div>
+                  <dt className="text-caption text-muted-foreground font-medium">Email Address</dt>
+                  <dd className="text-foreground mt-0.5 font-medium">{volunteer.email ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-caption text-muted-foreground font-medium">Phone Number</dt>
+                  <dd className="text-foreground mt-0.5 font-mono">{volunteer.phone}</dd>
+                </div>
+                <div>
+                  <dt className="text-caption text-muted-foreground font-medium">Location</dt>
+                  <dd className="text-foreground mt-0.5">
+                    {[volunteer.city, volunteer.state].filter(Boolean).join(', ') || '—'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-caption text-muted-foreground font-medium">Occupation</dt>
+                  <dd className="text-foreground mt-0.5">{volunteer.occupation ?? '—'}</dd>
+                </div>
+              </dl>
 
-            <div className="border-border mt-4 border-t pt-4">
-              <h3 className="text-body-sm font-semibold">In an emergency</h3>
-              <p className="text-body-sm mt-1">
+              {/* Emergency Contact */}
+              <div className="border-border border-t pt-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <PhoneCall className="text-destructive size-4" aria-hidden="true" />
+                  <h3 className="text-body-sm text-foreground font-semibold">Emergency Contact</h3>
+                </div>
                 {volunteer.emergencyContactName ? (
-                  <>
-                    {volunteer.emergencyContactName}
-                    {volunteer.emergencyContactRelation
-                      ? ` (${volunteer.emergencyContactRelation})`
-                      : ''}
-                    {' — '}
-                    {volunteer.emergencyContactPhone}
-                  </>
+                  <p className="text-body-sm text-foreground">
+                    <span className="font-medium">{volunteer.emergencyContactName}</span>
+                    {volunteer.emergencyContactRelation ? (
+                      <span className="text-muted-foreground">
+                        {' '}
+                        ({volunteer.emergencyContactRelation})
+                      </span>
+                    ) : (
+                      ''
+                    )}
+                    <span className="text-muted-foreground"> · </span>
+                    <span className="font-mono font-medium">{volunteer.emergencyContactPhone}</span>
+                  </p>
                 ) : (
-                  <span className="text-muted-foreground">Not recorded</span>
+                  <p className="text-caption text-muted-foreground">
+                    No emergency contact recorded on profile.
+                  </p>
                 )}
-              </p>
-            </div>
+              </div>
+            </CardContent>
           </Card>
 
-          {/* Skills ------------------------------------------------------- */}
-          <Card className="p-5">
-            <h2 className="text-h4 font-semibold">Skills and interests</h2>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {(volunteer.skills ?? []).map((skill) => (
-                <Badge key={skill} variant="neutral">
-                  {skill}
-                </Badge>
-              ))}
-              {(volunteer.interests ?? []).map((interest) => (
-                <Badge key={interest} variant="info">
-                  {interest}
-                </Badge>
-              ))}
-              {!volunteer.skills?.length && !volunteer.interests?.length ? (
-                <span className="text-body-sm text-muted-foreground">None recorded</span>
+          {/* Skills and Background Card */}
+          <Card className="border-border">
+            <CardHeader className="border-border border-b pb-4">
+              <div className="flex items-center gap-2">
+                <HeartHandshake className="text-primary size-5" aria-hidden="true" />
+                <CardTitle className="text-base font-semibold">Skills & Experience</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 p-6">
+              <div>
+                <p className="text-caption text-muted-foreground mb-2 font-medium uppercase">
+                  Key Competencies
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(volunteer.skills ?? []).map((skill) => (
+                    <Badge key={skill} variant="neutral">
+                      {skill}
+                    </Badge>
+                  ))}
+                  {(volunteer.interests ?? []).map((interest) => (
+                    <Badge key={interest} variant="outline">
+                      {interest}
+                    </Badge>
+                  ))}
+                  {!volunteer.skills?.length && !volunteer.interests?.length ? (
+                    <span className="text-body-sm text-muted-foreground">
+                      No competencies specified
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              {volunteer.experience ? (
+                <div className="border-border border-t pt-4">
+                  <p className="text-caption text-muted-foreground mb-1 font-medium uppercase">
+                    Prior Experience
+                  </p>
+                  <p className="text-body-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                    {volunteer.experience}
+                  </p>
+                </div>
               ) : null}
-            </div>
-            {volunteer.experience ? (
-              <p className="text-body-sm text-muted-foreground mt-4 leading-relaxed">
-                {volunteer.experience}
-              </p>
-            ) : null}
+            </CardContent>
           </Card>
 
-          {/* Assignments -------------------------------------------------- */}
-          <Card className="p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-h4 font-semibold">Assignments</h2>
-              {can(actor, 'volunteer.assign') ? (
-                <NewAssignment
-                  volunteerId={volunteer.id}
-                  canAssign={volunteer.status === 'active'}
-                />
-              ) : null}
-            </div>
-
-            {assignments.length === 0 ? (
-              <p className="text-body-sm text-muted-foreground mt-3">
-                No work has been assigned yet.
-              </p>
-            ) : (
-              <ul className="mt-4 space-y-4">
-                {assignments.map((assignment) => (
-                  <li
-                    key={assignment.id}
-                    className="border-border border-t pt-4 first:border-0 first:pt-0"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className="text-body font-medium">{assignment.role}</p>
-                        <p className="text-caption text-muted-foreground">
-                          {formatDate(assignment.startsAt)}
-                          {assignment.location ? ` · ${assignment.location}` : ''}
-                        </p>
+          {/* Field Assignments Card */}
+          <Card className="border-border">
+            <CardHeader className="border-border border-b pb-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="text-primary size-5" aria-hidden="true" />
+                  <CardTitle className="text-base font-semibold">Field Assignments</CardTitle>
+                </div>
+                {can(actor, 'volunteer.assign') ? (
+                  <NewAssignment
+                    volunteerId={volunteer.id}
+                    canAssign={volunteer.status === 'active'}
+                  />
+                ) : null}
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              {assignments.length === 0 ? (
+                <p className="text-body-sm text-muted-foreground">
+                  No work assignments currently dispatched.
+                </p>
+              ) : (
+                <ul className="space-y-4">
+                  {assignments.map((assignment) => (
+                    <li
+                      key={assignment.id}
+                      className="border-border border-t pt-4 first:border-0 first:pt-0"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="text-body-sm text-foreground font-semibold">
+                            {assignment.role}
+                          </p>
+                          <p className="text-caption text-muted-foreground mt-0.5">
+                            {formatDate(assignment.startsAt)}
+                            {assignment.location ? ` · ${assignment.location}` : ''}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={
+                            assignment.status === 'completed'
+                              ? 'success'
+                              : assignment.status === 'cancelled' || assignment.status === 'no_show'
+                                ? 'destructive'
+                                : 'neutral'
+                          }
+                          className="text-xs capitalize"
+                        >
+                          {assignment.status.replace('_', ' ')}
+                        </Badge>
                       </div>
-                      <Badge
-                        variant={
-                          assignment.status === 'completed'
-                            ? 'success'
-                            : assignment.status === 'cancelled' || assignment.status === 'no_show'
-                              ? 'destructive'
-                              : 'neutral'
-                        }
-                      >
-                        {assignment.status.replace('_', ' ')}
-                      </Badge>
-                    </div>
-                    {can(actor, 'volunteer.attendance') ? (
-                      <RecordAttendance volunteerId={volunteer.id} assignment={assignment} />
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            )}
+                      {can(actor, 'volunteer.attendance') ? (
+                        <div className="mt-3">
+                          <RecordAttendance volunteerId={volunteer.id} assignment={assignment} />
+                        </div>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
           </Card>
 
-          {/* Attendance --------------------------------------------------- */}
-          <Card className="p-5">
-            <h2 className="text-h4 font-semibold">Attendance</h2>
-            <p className="text-caption text-muted-foreground mb-3 mt-1">
-              Recorded by staff only. A volunteer can read this and cannot change it — certificates
-              count these hours.
-            </p>
-            {can(actor, 'volunteer.attendance') ? (
-              <VerifyAttendance volunteerId={volunteer.id} attendance={attendance} />
-            ) : (
-              <p className="text-body-sm text-muted-foreground">
-                {attendance.length} record{attendance.length === 1 ? '' : 's'}.
+          {/* Verified Service Attendance Card */}
+          <Card className="border-border">
+            <CardHeader className="border-border border-b pb-4">
+              <div className="flex items-center gap-2">
+                <CheckSquare className="text-primary size-5" aria-hidden="true" />
+                <CardTitle className="text-base font-semibold">
+                  Verified Service Attendance
+                </CardTitle>
+              </div>
+              <p className="text-caption text-muted-foreground mt-1">
+                Hours verified by operational staff. Verified hours feed directly into milestone
+                certificates.
               </p>
-            )}
+            </CardHeader>
+            <CardContent className="p-6">
+              {can(actor, 'volunteer.attendance') ? (
+                <VerifyAttendance volunteerId={volunteer.id} attendance={attendance} />
+              ) : (
+                <p className="text-body-sm text-muted-foreground">
+                  {attendance.length} attendance {attendance.length === 1 ? 'record' : 'records'}{' '}
+                  logged.
+                </p>
+              )}
+            </CardContent>
           </Card>
         </div>
 
-        {/* Sidebar -------------------------------------------------------- */}
-        <div className="space-y-4">
-          <Card className="p-5">
-            <h2 className="text-body-sm font-semibold">Decision</h2>
-            <div className="mt-3">
+        {/* Right Sidebar: Decision Review, Certificates, Notes */}
+        <div className="space-y-6">
+          {/* Review Decision Card */}
+          <Card className="border-border">
+            <CardHeader className="border-border border-b pb-4">
+              <CardTitle className="text-base font-semibold">Onboarding Decision</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
               {can(actor, 'volunteer.approve') ? (
                 <VolunteerReview
                   volunteerId={volunteer.id}
@@ -263,83 +348,102 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
                 />
               ) : (
                 <p className="text-caption text-muted-foreground">
-                  You do not have permission to decide applications.
+                  You do not possess the <code>volunteer.approve</code> permission.
                 </p>
               )}
-            </div>
+            </CardContent>
           </Card>
 
-          <Card className="p-5">
-            <h2 className="text-body-sm font-semibold">Certificates</h2>
-            {certificates.length > 0 ? (
-              <ul className="text-body-sm mt-3 space-y-2">
-                {certificates.map((certificate) => (
-                  <li key={certificate.id}>
-                    <span className="font-medium">{certificate.certificateNumber}</span>
-                    <span className="text-muted-foreground">
-                      {' · '}
-                      {certificate.hoursCredited}h
-                    </span>
-                    {certificate.status === 'revoked' ? (
-                      <Badge variant="destructive" className="ml-2">
-                        withdrawn
-                      </Badge>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <div className="mt-3">
+          {/* Service Certificates Card */}
+          <Card className="border-border">
+            <CardHeader className="border-border border-b pb-4">
+              <div className="flex items-center gap-2">
+                <Award className="text-primary size-5" aria-hidden="true" />
+                <CardTitle className="text-base font-semibold">Service Certificates</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 p-6">
+              {certificates.length > 0 ? (
+                <ul className="text-body-sm space-y-2">
+                  {certificates.map((certificate) => (
+                    <li key={certificate.id} className="flex items-center justify-between">
+                      <span className="text-foreground font-mono text-xs font-semibold">
+                        {certificate.certificateNumber}
+                      </span>
+                      <span className="text-caption text-muted-foreground">
+                        {certificate.hoursCredited}h credited
+                        {certificate.status === 'revoked' ? (
+                          <Badge variant="destructive" className="ml-2 text-[0.625rem]">
+                            Revoked
+                          </Badge>
+                        ) : null}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-caption text-muted-foreground">
+                  No milestone certificates issued yet.
+                </p>
+              )}
+
               {can(actor, 'volunteer.approve') ? (
-                <IssueCertificate
-                  volunteerId={volunteer.id}
-                  verifiedHours={volunteer.verifiedHours}
-                  action={issueVolunteerCertificate}
-                />
+                <div className="border-border border-t pt-4">
+                  <IssueCertificate
+                    volunteerId={volunteer.id}
+                    verifiedHours={volunteer.verifiedHours}
+                    action={issueVolunteerCertificate}
+                  />
+                </div>
               ) : null}
-            </div>
+            </CardContent>
           </Card>
 
-          {/*
-            ADMIN-ONLY, and labelled as such on screen.
-
-            `statusReason` holds the rejection reason and `internalNotes` the
-            reviewer's candid assessment. Neither is ever returned on a
-            volunteer-facing route; the label is here so nobody writes into it
-            believing otherwise.
-          */}
+          {/* Internal Staff Notes */}
           {volunteer.statusReason || volunteer.internalNotes || application?.reviewNotes ? (
-            <Card className="border-warning/30 bg-warning-subtle p-5">
-              <h2 className="text-body-sm font-semibold">Internal notes</h2>
-              <p className="text-caption text-muted-foreground">Never shown to the volunteer.</p>
-              {volunteer.statusReason ? (
-                <p className="text-body-sm mt-3">{volunteer.statusReason}</p>
-              ) : null}
-              {volunteer.internalNotes ? (
-                <p className="text-body-sm mt-2">{volunteer.internalNotes}</p>
-              ) : null}
-              {application?.reviewNotes ? (
-                <p className="text-body-sm mt-2">{application.reviewNotes}</p>
-              ) : null}
+            <Card className="border-warning/40 bg-warning-subtle/30">
+              <CardHeader className="border-warning/30 border-b pb-3">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="text-warning-foreground size-4" aria-hidden="true" />
+                  <CardTitle className="text-warning-foreground text-sm font-semibold">
+                    Internal Staff Notes
+                  </CardTitle>
+                </div>
+                <p className="text-caption text-muted-foreground">
+                  Restricted to staff; never visible to volunteer.
+                </p>
+              </CardHeader>
+              <CardContent className="text-body-sm text-foreground space-y-2 p-4">
+                {volunteer.statusReason ? <p>{volunteer.statusReason}</p> : null}
+                {volunteer.internalNotes ? <p>{volunteer.internalNotes}</p> : null}
+                {application?.reviewNotes ? <p>{application.reviewNotes}</p> : null}
+              </CardContent>
             </Card>
           ) : null}
 
+          {/* Application Record */}
           {application ? (
-            <Card className="p-5">
-              <h2 className="text-body-sm font-semibold">Application</h2>
-              <p className="text-caption text-muted-foreground mt-1">
-                Submitted {formatDate(application.submittedAt)}
-                {application.reviewedAt ? `, reviewed ${formatDate(application.reviewedAt)}` : ''}.
-              </p>
-              <p className="text-caption text-muted-foreground mt-2">
-                {/* The point of keeping it separate from the profile. */}
-                Frozen as submitted — the profile above may have been edited since.
-              </p>
-              {application.coolingPeriodUntil ? (
-                <p className="text-caption text-destructive mt-2">
-                  Cannot re-apply until {formatDate(application.coolingPeriodUntil)}.
+            <Card className="border-border">
+              <CardHeader className="border-border border-b pb-4">
+                <div className="flex items-center gap-2">
+                  <FileText className="text-primary size-5" aria-hidden="true" />
+                  <CardTitle className="text-base font-semibold">Original Application</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="text-caption text-muted-foreground space-y-2 p-6">
+                <p>
+                  Submitted on {formatDate(application.submittedAt)}
+                  {application.reviewedAt
+                    ? ` · Reviewed on ${formatDate(application.reviewedAt)}`
+                    : ''}
                 </p>
-              ) : null}
+                <p>Frozen snapshot preserved as originally submitted by the candidate.</p>
+                {application.coolingPeriodUntil ? (
+                  <p className="text-destructive font-medium">
+                    Cooling period active until {formatDate(application.coolingPeriodUntil)}.
+                  </p>
+                ) : null}
+              </CardContent>
             </Card>
           ) : null}
         </div>
