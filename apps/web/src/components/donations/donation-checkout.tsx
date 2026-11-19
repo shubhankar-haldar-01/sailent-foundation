@@ -13,6 +13,7 @@ import {
   openRazorpayCheckout,
   type CheckoutHandoff,
 } from '@/lib/payments/razorpay-checkout';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 export interface CheckoutSelection {
   campaignSlug: string;
@@ -64,6 +65,8 @@ export function DonationCheckout({
 }) {
   const router = useRouter();
   const [stage, setStage] = React.useState<Stage>({ kind: 'form' });
+  // A failed payment's message is brought into view and focused (`useRevealResult`).
+  const resultRef = useRevealResult(stage.kind === 'error' ? stage : null);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [isAnonymous, setIsAnonymous] = React.useState(false);
   /*
@@ -226,7 +229,7 @@ export function DonationCheckout({
         </p>
 
         {stage.kind === 'error' ? (
-          <Alert variant="destructive" role="alert" className="mt-5">
+          <Alert ref={resultRef} variant="destructive" role="alert" className="mt-5">
             <AlertTriangle className="size-4" aria-hidden="true" />
             <span>{stage.message}</span>
           </Alert>

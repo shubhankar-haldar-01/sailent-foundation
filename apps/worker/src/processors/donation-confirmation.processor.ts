@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq';
 import type { Logger } from 'pino';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
 import {
   donationItems,
@@ -8,30 +8,43 @@ import {
   donors,
   notifications,
   receipts,
+  settings,
   type DatabaseClient,
 } from '@sailent/database';
+import {
+  SAILENT_LOGO_PNG,
+  SAILENT_LOGO_SIZE,
+  ORGANISATION_SETTING_KEYS,
+  organisationFromSettings,
+  receiptLinesFrom,
+  renderReceiptPdf,
+  type ReceiptPdfLine,
+} from '@sailent/documents';
 
-import { sendEmail, type Mailer } from '../lib/email.js';
+import { sendEmail, type EmailAttachment, type Mailer } from '../lib/email.js';
+import { escapeHtml, rupees } from '../lib/email-parts.js';
+import { readOrganisationContact } from '../lib/organisation.js';
 import { renderFromTemplate } from '../lib/templates.js';
 import { alertStaffOfFailedSend } from '../lib/admin-alert.js';
+import { donationEmail } from './donation-confirmation-email.js';
 
 export interface DonationConfirmationJob {
   donationId: string;
   receiptNumber: string;
 }
 
-/** Paise to a readable rupee figure. The one place this conversion happens here. */
-function rupees(paise: number): string {
-  return `₹${(paise / 100).toLocaleString('en-IN')}`;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+const PAID_ON_DATE = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'Asia/Kolkata',
+});
+const PAID_ON_TIME = new Intl.DateTimeFormat('en-IN', {
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+  timeZone: 'Asia/Kolkata',
+});
 
 /**
  * The donor's confirmation.
@@ -45,8 +58,13 @@ function escapeHtml(value: string): string {
  * (decision A7). An email that promises a tax benefit at the moment of giving
  * is making a claim this platform cannot honour, to somebody who may act on it.
  *
- * It states the SNAPSHOTTED prices, read from the donation's own line items
- * rather than the catalogue, so the email agrees with the receipt forever.
+ * It states the SNAPSHOTTED prices, read from the receipt's frozen lines (or
+ * the donation's own, for an older receipt that froze none) rather than the
+ * catalogue, so the email agrees with the receipt forever.
+ *
+ * THE RECEIPT TRAVELS AS A PDF (`lib/receipt-pdf.ts`), the body laid out like
+ * a professional receipt email (`donation-confirmation-email.ts`): a guest
+ * donor has no account, and this email is their only copy.
  *
  * ONLY FOR CAPTURED DONATIONS. The job re-reads the status and refuses to send
  * for anything else, because a race or a bad enqueue must not thank somebody
@@ -70,8 +88,15 @@ export async function processDonationConfirmation(
       donorName: donors.firstName,
       donorLastName: donors.lastName,
       donorEmail: donors.email,
+      donorPhone: donors.phone,
+      donorCity: donors.city,
+      donorState: donors.state,
       campaignTitle: receipts.campaignTitle,
+      programTitle: receipts.programTitle,
       receiptNumber: receipts.receiptNumber,
+      receiptDonorName: receipts.donorName,
+      receiptLines: receipts.lineItems,
+      registrationNumber: receipts.registrationNumber,
       issuedAt: receipts.issuedAt,
       // The payment id the capture recorded on the receipt (decision A6).
       paymentReference: receipts.paymentReference,
@@ -116,31 +141,38 @@ export async function processDonationConfirmation(
     .from(donationItems)
     .where(eq(donationItems.donationId, donationId));
 
-  const name = [donation.donorName, donation.donorLastName].filter(Boolean).join(' ') || 'there';
-  /*
-    The receipt's own date, in India's time zone. The server runs in UTC, so
-    without the zone a gift made after midnight IST was dated the day before.
-  */
-  const receiptDate = donation.issuedAt
-    ? donation.issuedAt.toLocaleDateString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    : null;
+  const fullName = [donation.donorName, donation.donorLastName].filter(Boolean).join(' ');
+  const name = fullName || 'there';
   const campaign = donation.campaignTitle ?? 'our work';
   const statusUrl = `${deps.appUrl}/donation/${donation.reference}`;
 
-  const itemsText = lines
-    .map((line) =>
-      line.itemType === 'custom'
-        ? `  ${line.itemName}: ${rupees(line.totalPrice)}`
-        : `  ${line.itemName} × ${line.quantity} @ ${rupees(line.unitPrice)} = ${rupees(line.totalPrice)}`,
-    )
-    .join('\n');
+  /*
+    The lines the receipt froze at capture; the donation's own lines when an
+    older receipt froze none. Both are snapshots, never today's catalogue.
+  */
+  const receiptLines = receiptLinesFrom(donation.receiptLines);
+  const gift: ReceiptPdfLine[] = receiptLines.length > 0 ? receiptLines : lines;
 
-  const itemsHtml = lines
+  /*
+    The receipt's own date and time, in India's time zone. The server runs in
+    UTC, so without the zone a gift made after midnight IST was dated the day
+    before.
+  */
+  const paidOn = donation.issuedAt
+    ? `${PAID_ON_DATE.format(donation.issuedAt)}, ${PAID_ON_TIME.format(donation.issuedAt)} IST`
+    : null;
+
+  /*
+    THE STORED TEMPLATE KEEPS THE SUBJECT EDITABLE. Its body is shown only once
+    an administrator has written their own (`customised`), as "A note from our
+    team": the shipped wording says what the layout below already says.
+
+    `itemsHtml` is passed as a RAW value, for an edited body that uses it. It
+    is the only one in the platform, it is markup this function built, and
+    every value inside it was escaped on the way in. The registry permits it
+    for this slug and refuses it for every other.
+  */
+  const itemsHtml = gift
     .map(
       (line) =>
         `<tr><td style="padding:6px 12px 6px 0">${escapeHtml(line.itemName)}${
@@ -148,63 +180,6 @@ export async function processDonationConfirmation(
         }</td><td style="padding:6px 0;text-align:right;white-space:nowrap">${rupees(line.totalPrice)}</td></tr>`,
     )
     .join('');
-
-  const text = `Dear ${name},
-
-Thank you. Your donation to ${campaign} has been received.
-
-Receipt number: ${receiptNumber}
-Donation reference: ${donation.reference}${
-    donation.paymentReference ? `\nPayment reference: ${donation.paymentReference}` : ''
-  }${receiptDate ? `\nDate: ${receiptDate}` : ''}
-
-${itemsText}
-
-  Total: ${rupees(donation.amount)}
-
-You can view this donation at any time:
-${statusUrl}
-
-This is your receipt for the payment. It is not a tax-exemption certificate —
-if you are claiming relief under Section 80G, the Income Tax Department issues
-Form 10BE after our annual Form 10BD filing, and it will reach you separately.
-
-With thanks,
-Sailent Foundation`;
-
-  const html = `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;max-width:560px;color:#1f2933">
-  <p>Dear ${escapeHtml(name)},</p>
-  <p>Thank you. Your donation to <strong>${escapeHtml(campaign)}</strong> has been received.</p>
-  <table style="width:100%;border-collapse:collapse;margin:20px 0">
-    <tbody>${itemsHtml}</tbody>
-    <tfoot>
-      <tr><td style="padding:10px 12px 0 0;border-top:1px solid #d9e2ec"><strong>Total</strong></td>
-      <td style="padding:10px 0 0;border-top:1px solid #d9e2ec;text-align:right"><strong>${rupees(donation.amount)}</strong></td></tr>
-    </tfoot>
-  </table>
-  <p style="margin:0"><strong>Receipt number:</strong> ${escapeHtml(receiptNumber)}<br>
-  <strong>Donation reference:</strong> ${escapeHtml(donation.reference)}${
-    donation.paymentReference
-      ? `<br>\n  <strong>Payment reference:</strong> ${escapeHtml(donation.paymentReference)}`
-      : ''
-  }${receiptDate ? `<br>\n  <strong>Date:</strong> ${escapeHtml(receiptDate)}` : ''}</p>
-  <p><a href="${statusUrl}">View this donation</a></p>
-  <p style="font-size:13px;color:#52606d;border-top:1px solid #d9e2ec;padding-top:14px">
-    This is your receipt for the payment. It is <strong>not</strong> a tax-exemption certificate.
-    If you are claiming relief under Section 80G, the Income Tax Department issues Form 10BE after
-    our annual Form 10BD filing, and it will reach you separately.
-  </p>
-  <p style="font-size:13px;color:#52606d">With thanks,<br>Sailent Foundation</p>
-</div>`;
-
-  /*
-    THE STORED TEMPLATE WINS; THE BODY ABOVE IS THE FALLBACK.
-
-    `itemsHtml` is passed as a RAW value — it is the only one in the platform,
-    it is markup this function built, and every value inside it was escaped on
-    the way in. The registry permits it for this slug and refuses it for every
-    other, so an editor cannot reach for it elsewhere.
-  */
   const rendered = await renderFromTemplate(
     db,
     'donation.confirmation',
@@ -220,15 +195,97 @@ Sailent Foundation`;
     logger,
   );
 
+  const contact = await readOrganisationContact(db);
+
+  /*
+    THE RECEIPT AS A PDF, drawn from the receipt row. A PDF that cannot be
+    drawn is left out with a warning: the email still carries every receipt
+    detail, and the confirmation is never held back for it.
+  */
+  let pdf: Buffer | null = null;
+  if (donation.issuedAt) {
+    const organisationRows = await db
+      .select({ key: settings.key, value: settings.value })
+      .from(settings)
+      .where(inArray(settings.key, [...ORGANISATION_SETTING_KEYS]));
+    try {
+      pdf = await renderReceiptPdf({
+        receiptNumber,
+        issuedAt: donation.issuedAt,
+        donor: {
+          name: donation.receiptDonorName ?? (fullName || 'Donor'),
+          // This copy goes privately to the donor; the PDF masks both.
+          email: donation.donorEmail,
+          phone: donation.donorPhone,
+          place: [donation.donorCity, donation.donorState].filter(Boolean).join(', ') || null,
+        },
+        organisation: organisationFromSettings(organisationRows),
+        campaignTitle: donation.campaignTitle,
+        programTitle: donation.programTitle,
+        amount: donation.amount,
+        lines: gift,
+        donationReference: donation.reference,
+        paymentReference: donation.paymentReference,
+        registrationNumber: donation.registrationNumber,
+        verifyUrl: statusUrl,
+      });
+    } catch (error) {
+      logger.warn({ donationId, err: String(error) }, 'Could not build the receipt PDF');
+    }
+  }
+
+  const email = donationEmail({
+    greetingName: donation.donorName || 'there',
+    donorName: donation.receiptDonorName ?? (fullName || 'Donor'),
+    campaignTitle: campaign,
+    programTitle: donation.programTitle,
+    amount: donation.amount,
+    lines: gift,
+    receiptNumber,
+    donationReference: donation.reference,
+    paymentReference: donation.paymentReference,
+    paidOn,
+    statusUrl,
+    pdfAttached: pdf !== null,
+    contact,
+    replyable: deps.mailer.replyTo !== null,
+    customMessage:
+      rendered && rendered.customised ? { html: rendered.html, text: rendered.text } : null,
+  });
+
+  const attachments: EmailAttachment[] = [
+    {
+      filename: 'sailent-foundation.png',
+      content: SAILENT_LOGO_PNG,
+      contentType: 'image/png',
+      contentId: 'sailent-logo',
+    },
+    ...(pdf
+      ? [
+          {
+            filename: `Donation-receipt-${receiptNumber}.pdf`,
+            content: pdf,
+            contentType: 'application/pdf',
+          },
+        ]
+      : []),
+  ];
+
   const result = await sendEmail(
     deps.mailer,
     {
       to: { email: donation.donorEmail, name: name === 'there' ? undefined : name },
       subject: rendered?.subject ?? `Thank you — your donation to ${campaign}`,
-      html: rendered?.html ?? html,
-      text: rendered?.text ?? text,
+      html: email.html,
+      text: email.text,
       tags: ['donation-confirmation', receiptNumber],
-      preheader: `Receipt ${receiptNumber} for ${rupees(donation.amount)}`,
+      preheader: email.preheader,
+      attachments,
+      headerLogo: {
+        contentId: 'sailent-logo',
+        width: 160,
+        height: Math.round((160 * SAILENT_LOGO_SIZE.height) / SAILENT_LOGO_SIZE.width),
+      },
     },
     logger,
   );

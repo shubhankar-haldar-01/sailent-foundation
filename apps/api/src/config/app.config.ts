@@ -39,6 +39,11 @@ export class AppConfig {
     return this.env.API_HOST;
   }
 
+  /** The public site, without a trailing slash: links and QR codes point here. */
+  get appPublicUrl(): string {
+    return this.env.APP_PUBLIC_URL.replace(/\/+$/, '');
+  }
+
   get corsOrigins(): string[] {
     return this.env.CORS_ORIGINS;
   }

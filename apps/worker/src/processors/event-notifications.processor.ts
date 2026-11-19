@@ -7,7 +7,7 @@ import QRCode from 'qrcode';
 import { eventRegistrations, events, notifications, type DatabaseClient } from '@sailent/database';
 import { passNumberFor, passesOf } from '@sailent/validation';
 
-import { SAILENT_LOGO_PNG, SAILENT_LOGO_SIZE } from '../assets/sailent-logo.js';
+import { SAILENT_LOGO_PNG, SAILENT_LOGO_SIZE } from '@sailent/documents';
 import { sendEmail, type EmailAttachment, type Mailer } from '../lib/email.js';
 import { readOrganisationContact } from '../lib/organisation.js';
 import { renderPassPdf } from '../lib/pass-pdf.js';
@@ -185,9 +185,9 @@ export async function processEventRegistrationConfirmed(
 
   /*
     The stored template keeps the SUBJECT editable. Its body is shown only once
-    an administrator has customised it (a version after the seeded one), as "A
-    note from the organisers": the seeded wording says what the layout below
-    already says, and would only repeat it.
+    an administrator has written their own (it differs from the shipped
+    wording; see `isCustomised`), as "A note from the organisers": the shipped
+    wording says what the layout below already says, and would only repeat it.
   */
   const rendered = await renderFromTemplate(
     db,
@@ -296,9 +296,7 @@ export async function processEventRegistrationConfirmed(
     contact,
     replyable: deps.mailer.replyTo !== null,
     customMessage:
-      rendered && rendered.templateVersion > 1
-        ? { html: rendered.html, text: rendered.text }
-        : null,
+      rendered && rendered.customised ? { html: rendered.html, text: rendered.text } : null,
   });
 
   const attachments: EmailAttachment[] = [

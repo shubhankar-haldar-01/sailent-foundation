@@ -69,6 +69,9 @@ importers:
       '@sailent/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@sailent/documents':
+        specifier: workspace:*
+        version: link:../../packages/documents
       '@sailent/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -275,6 +278,9 @@ importers:
       '@sailent/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@sailent/documents':
+        specifier: workspace:*
+        version: link:../../packages/documents
       '@sailent/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -398,6 +404,37 @@ importers:
       tsx:
         specifier: ^4.19.2
         version: 4.23.13
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.51.2)
+
+  packages/documents:
+    dependencies:
+      '@sailent/validation':
+        specifier: workspace:*
+        version: link:../validation
+      pdf-lib:
+        specifier: 1.17.1
+        version: 1.17.1
+      qrcode:
+        specifier: ^1.5.4
+        version: 1.5.4
+    devDependencies:
+      '@sailent/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.20.4
+      '@types/qrcode':
+        specifier: ^1.5.6
+        version: 1.5.6
+      eslint:
+        specifier: ^9.18.0
+        version: 9.39.5(jiti@2.7.0)
       typescript:
         specifier: ^5.7.3
         version: 5.9.3

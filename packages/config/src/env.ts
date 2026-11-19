@@ -232,6 +232,13 @@ export const apiEnvSchema = baseSchema
     INTERNAL_API_SECRET: optional(z.string().min(32)),
 
     /*
+      The public site's address, for the verification QR code on a donation
+      receipt downloaded from the site (2026-11-19). The same value as the
+      worker's APP_PUBLIC_URL; a public https:// address in production, below.
+    */
+    APP_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
+
+    /*
       CLOUDFLARE R2, the object store (decision from Phase 0, §11 of
       architecture.md). S3-compatible, which is why the adapter uses an S3
       client rather than a Cloudflare-specific one.
@@ -325,6 +332,14 @@ export const apiEnvSchema = baseSchema
         code: z.ZodIssueCode.custom,
         path: ['SWAGGER_ENABLED'],
         message: 'SWAGGER_ENABLED must be false in production',
+      });
+    }
+
+    if (!isPublicHttpsUrl(env.APP_PUBLIC_URL)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['APP_PUBLIC_URL'],
+        message: 'APP_PUBLIC_URL must be a public https:// URL in production',
       });
     }
 

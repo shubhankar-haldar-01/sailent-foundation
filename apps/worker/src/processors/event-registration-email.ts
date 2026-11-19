@@ -17,6 +17,19 @@
  * ══════════════════════════════════════════════════════════════════════════
  */
 
+import {
+  C,
+  FONT_MONO,
+  button,
+  contactLinksHtml,
+  detailRow,
+  escapeHtml,
+  heading,
+  noteBox,
+  rupees,
+  statusPill,
+} from '../lib/email-parts.js';
+
 export interface RegistrationEmailPass {
   fullName: string;
   passNumber: string;
@@ -57,55 +70,7 @@ export interface RegistrationEmailData {
   customMessage: { html: string; text: string } | null;
 }
 
-const FONT_MONO = 'ui-monospace,SFMono-Regular,Menlo,Consolas,monospace';
-const C = {
-  navy: '#19013E',
-  ink: '#1f2933',
-  muted: '#52606d',
-  faint: '#6b7280',
-  line: '#e4e7ec',
-  rule: '#eef0f3',
-  orangeFill: '#EB6A1F',
-  orangeText: '#B3450E',
-  orangeSoft: '#FFF7ED',
-  orangeLine: '#FED7AA',
-  green: '#047857',
-  greenSoft: '#ECFDF5',
-} as const;
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function rupees(paise: number): string {
-  return `₹${(paise / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
-}
-
 const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
-
-function heading(text: string): string {
-  return `<h2 style="margin:30px 0 10px;font-size:17px;line-height:1.3;color:${C.navy}">${escapeHtml(text)}</h2>`;
-}
-
-function detailRow(label: string, valueHtml: string): string {
-  return `<tr>
-      <td style="padding:6px 18px 6px 0;color:${C.faint};font-size:14px;vertical-align:top;white-space:nowrap">${escapeHtml(label)}</td>
-      <td style="padding:6px 0;color:${C.ink};font-size:14px;font-weight:600;vertical-align:top">${valueHtml}</td>
-    </tr>`;
-}
-
-function button(href: string, label: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px">
-    <tr><td style="border-radius:8px;background-color:${C.orangeFill}">
-      <a href="${escapeHtml(href)}" style="display:inline-block;padding:12px 22px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:8px">${escapeHtml(label)}</a>
-    </td></tr>
-  </table>`;
-}
 
 export function registrationEmail(data: RegistrationEmailData): {
   html: string;
@@ -209,34 +174,17 @@ export function registrationEmail(data: RegistrationEmailData): {
     : '';
 
   const customHtml = data.customMessage
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:26px;background-color:${C.orangeSoft};border:1px solid ${C.orangeLine};border-radius:12px;border-collapse:separate">
-    <tr><td style="padding:16px 18px;font-size:14px;color:${C.ink}">
-      <div style="margin-bottom:6px;font-weight:700;color:${C.navy}">A note from the organisers</div>
-      ${data.customMessage.html}
-    </td></tr>
-  </table>`
+    ? noteBox('A note from the organisers', data.customMessage.html)
     : '';
 
-  const contactParts = [
-    data.contact.email
-      ? `email <a href="mailto:${escapeHtml(data.contact.email)}" style="color:${C.orangeText}">${escapeHtml(data.contact.email)}</a>`
-      : null,
-    data.contact.phone
-      ? `call <a href="tel:${escapeHtml(data.contact.phone.replace(/[^\d+]/g, ''))}" style="color:${C.orangeText}">${escapeHtml(data.contact.phone)}</a>`
-      : null,
-  ].filter(Boolean);
-  const helpHtml =
-    contactParts.length > 0
-      ? `Questions, or can't make it? Please ${contactParts.join(' or ')} so your seat can go to someone else.`
-      : data.replyable
-        ? "Questions, or can't make it? Just reply to this email so your seat can go to someone else."
-        : `Questions, or can't make it? See the <a href="${escapeHtml(data.eventUrl)}" style="color:${C.orangeText}">event page</a>.`;
+  const contactLinks = contactLinksHtml(data.contact);
+  const helpHtml = contactLinks
+    ? `Questions, or can't make it? Please ${contactLinks} so your seat can go to someone else.`
+    : data.replyable
+      ? "Questions, or can't make it? Just reply to this email so your seat can go to someone else."
+      : `Questions, or can't make it? See the <a href="${escapeHtml(data.eventUrl)}" style="color:${C.orangeText}">event page</a>.`;
 
-  const html = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td align="center" style="padding:6px 0 4px">
-      <span style="display:inline-block;padding:6px 14px;border-radius:999px;background-color:${C.greenSoft};color:${C.green};font-size:12px;font-weight:700;letter-spacing:0.06em">&#10003; BOOKING CONFIRMED</span>
-    </td></tr>
-  </table>
+  const html = `${statusPill('BOOKING CONFIRMED')}
   <h1 style="margin:12px 0 8px;text-align:center;font-size:24px;line-height:1.25;color:${C.navy}">You&#39;re going to ${escapeHtml(data.eventTitle)}!</h1>
   <p style="margin:0 0 24px;text-align:center;font-size:15px;line-height:1.6;color:${C.muted}">${intro}</p>
 
@@ -338,7 +286,7 @@ export function registrationEmail(data: RegistrationEmailData): {
     '',
     'NEED HELP?',
     `  ${
-      contactParts.length > 0
+      contactLinks
         ? `Questions, or can't make it? ${[
             data.contact.email ? `Email ${data.contact.email}` : null,
             data.contact.phone ? `call ${data.contact.phone}` : null,

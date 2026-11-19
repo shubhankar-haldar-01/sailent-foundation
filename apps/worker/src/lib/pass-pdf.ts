@@ -1,15 +1,17 @@
 import QRCode from 'qrcode';
-import {
-  PDFDocument,
-  StandardFonts,
-  rgb,
-  type PDFFont,
-  type PDFImage,
-  type PDFPage,
-  type RGB,
-} from 'pdf-lib';
+import { PDFDocument, StandardFonts, type PDFFont, type PDFImage, type PDFPage } from 'pdf-lib';
 
-import { SAILENT_LOGO_PNG, SAILENT_LOGO_SIZE } from '../assets/sailent-logo.js';
+import {
+  SAILENT_LOGO_PNG,
+  SAILENT_LOGO_SIZE,
+  box,
+  hex,
+  printable,
+  rupeeFigure,
+  rupeeSign,
+  text,
+  tick,
+} from '@sailent/documents';
 
 /**
  * The event entry pass as a PDF: one page per person.
@@ -62,11 +64,6 @@ const PAGE_W = 800;
 const PAGE_H = 588;
 const CARD = { x: 16, y: 16, w: 768, h: 556 };
 
-function hex(value: string): RGB {
-  const n = Number.parseInt(value.replace('#', ''), 16);
-  return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
-}
-
 const C = {
   page: hex('#F8FAFC'),
   white: hex('#FFFFFF'),
@@ -91,120 +88,11 @@ const C = {
 /** Canvas (top-down) y to PDF (bottom-up) y. */
 const Y = (canvasY: number) => PAGE_H - canvasY;
 
-function roundedRect(w: number, h: number, r: number): string {
-  return [
-    `M ${r} 0 H ${w - r} A ${r} ${r} 0 0 1 ${w} ${r}`,
-    `V ${h - r} A ${r} ${r} 0 0 1 ${w - r} ${h}`,
-    `H ${r} A ${r} ${r} 0 0 1 0 ${h - r}`,
-    `V ${r} A ${r} ${r} 0 0 1 ${r} 0 Z`,
-  ].join(' ');
-}
-
-interface Box {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  r: number;
-  fill?: RGB;
-  stroke?: RGB;
-  strokeWidth?: number;
-}
-
-function box(page: PDFPage, b: Box): void {
-  page.drawSvgPath(roundedRect(b.w, b.h, b.r), {
-    x: b.x,
-    y: Y(b.y),
-    ...(b.fill ? { color: b.fill } : {}),
-    ...(b.stroke ? { borderColor: b.stroke, borderWidth: b.strokeWidth ?? 1 } : {}),
-  });
-}
-
-/** Keeps only what the standard fonts can draw (WinAnsi), so drawing never throws. */
-function printable(font: PDFFont): (text: string, fallback?: string) => string {
-  const supported = new Set(font.getCharacterSet());
-  return (text, fallback = '') => {
-    let out = '';
-    for (const ch of text.normalize('NFC').replace(/₹/g, 'Rs.')) {
-      if (supported.has(ch.codePointAt(0)!)) out += ch;
-    }
-    out = out.replace(/\s+/g, ' ').trim();
-    return out || fallback;
-  };
-}
-
-function fit(text: string, font: PDFFont, size: number, maxWidth: number): string {
-  if (font.widthOfTextAtSize(text, size) <= maxWidth) return text;
-  let cut = text;
-  while (cut.length > 1 && font.widthOfTextAtSize(`${cut}…`, size) > maxWidth)
-    cut = cut.slice(0, -1);
-  return `${cut.trimEnd()}…`;
-}
-
 interface Fonts {
   regular: PDFFont;
   bold: PDFFont;
   mono: PDFFont;
   safe: (text: string, fallback?: string) => string;
-}
-
-type Align = 'left' | 'center' | 'right';
-
-function text(
-  page: PDFPage,
-  value: string,
-  at: {
-    x: number;
-    y: number;
-    size: number;
-    font: PDFFont;
-    color: RGB;
-    align?: Align;
-    max?: number;
-  },
-): number {
-  const shown = at.max ? fit(value, at.font, at.size, at.max) : value;
-  const width = at.font.widthOfTextAtSize(shown, at.size);
-  const x = at.align === 'center' ? at.x - width / 2 : at.align === 'right' ? at.x - width : at.x;
-  page.drawText(shown, { x, y: Y(at.y), size: at.size, font: at.font, color: at.color });
-  return width;
-}
-
-/** A check mark, `size` wide, its top-left at (x, y). */
-function tick(page: PDFPage, x: number, y: number, size: number, color: RGB, width = 1.6): void {
-  const s = size / 10;
-  page.drawSvgPath('M 0 4.5 L 3.5 8 L 10 0.5', {
-    x,
-    y: Y(y),
-    scale: s,
-    borderColor: color,
-    borderWidth: width / s,
-  });
-}
-
-/**
- * The ₹ sign, drawn (the standard fonts have no glyph for it), sitting on
- * the baseline at `baselineY` like a capital letter of `size`. Returns its
- * advance width.
- */
-function rupeeSign(page: PDFPage, x: number, baselineY: number, size: number, color: RGB): number {
-  // Lucide's "indian-rupee" outline (24-unit box; the sign spans y 3–21).
-  const s = (size * 0.72) / 18;
-  page.drawSvgPath(
-    'M 6 3 H 18 M 6 8 H 18 M 6 13 L 14.5 21 M 6 13 H 9 M 9 13 C 15.667 13 15.667 3 9 3',
-    {
-      x: x - 6 * s,
-      y: Y(baselineY) + 21 * s,
-      scale: s,
-      borderColor: color,
-      borderWidth: 2.2,
-    },
-  );
-  return 12 * s + size * 0.15;
-}
-
-function rupees(paise: number): string {
-  return (paise / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 }
 
 function formats(input: PassPdfInput) {
@@ -415,7 +303,13 @@ function drawPassPage(
     let x = feeX + 12;
     x += text(page, 'Paid ', { x, y: feeY + 42, size: 12.5, font: bold, color: C.ink });
     x += rupeeSign(page, x, feeY + 42, 12.5, C.ink);
-    text(page, rupees(input.feePerPass), { x, y: feeY + 42, size: 12.5, font: bold, color: C.ink });
+    text(page, rupeeFigure(input.feePerPass), {
+      x,
+      y: feeY + 42,
+      size: 12.5,
+      font: bold,
+      color: C.ink,
+    });
   } else {
     text(page, 'Free Entry Pass', {
       x: feeX + 12,

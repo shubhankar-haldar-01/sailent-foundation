@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Camera, Loader2, Trash2, Upload, User } from 'lucide-react';
 import { Alert } from '@sailent/ui';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 interface ProfilePhotoCardProps {
   initialAvatarUrl?: string | null;
@@ -20,6 +21,7 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
   const [isRemoving, setIsRemoving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
+  const resultRef = useRevealResult(error ?? success);
 
   // Sync with prop when server updates
   React.useEffect(() => {
@@ -115,14 +117,14 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
     <div className="card-standard rounded-2xl p-6">
       {error ? (
         <div className="mb-4">
-          <Alert variant="destructive" role="alert">
+          <Alert ref={resultRef} variant="destructive" role="alert">
             {error}
           </Alert>
         </div>
       ) : null}
       {success ? (
         <div className="mb-4">
-          <Alert variant="success" role="status">
+          <Alert ref={resultRef} variant="success" role="status">
             {success}
           </Alert>
         </div>

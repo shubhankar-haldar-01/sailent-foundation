@@ -17,3 +17,4 @@ export * from './domain/documents.js';
 export * from './domain/notification-templates.js';
 export * from './domain/reports.js';
 export * from './domain/communications.js';
+export * from './domain/amount-in-words.js';

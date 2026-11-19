@@ -50,6 +50,9 @@ spec:
               value: 'false'
             - name: CORS_ORIGINS
               value: ${SITE_URL}
+            # The site, for the verification QR on a downloaded receipt.
+            - name: APP_PUBLIC_URL
+              value: ${SITE_URL}
             - name: DATABASE_POOL_MAX
               value: '10'
             - name: R2_BUCKET_PUBLIC

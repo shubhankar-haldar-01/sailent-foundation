@@ -152,6 +152,17 @@ describe('production payment configuration', () => {
     ).toThrow(/INTERNAL_API_SECRET/);
   });
 
+  it('refuses an APP_PUBLIC_URL that is not a public https address in production', () => {
+    // It is printed as the verification QR on every receipt downloaded from the site.
+    const production = { ...baseEnv, APP_ENV: 'production', FEATURE_MOCK_DATA: 'false' };
+    for (const url of ['http://sailent.example', 'https://localhost:3000']) {
+      expect(() => loadEnv(apiEnvSchema, 'api', { ...production, APP_PUBLIC_URL: url })).toThrow(
+        /APP_PUBLIC_URL/,
+      );
+    }
+    expect(() => loadEnv(apiEnvSchema, 'api', production)).not.toThrow();
+  });
+
   it('requires FIELD_ENCRYPTION_KEY in production, as a real 32-byte key', () => {
     const { FIELD_ENCRYPTION_KEY: _omitted, ...withoutKey } = baseEnv;
     const production = { APP_ENV: 'production', FEATURE_MOCK_DATA: 'false' };

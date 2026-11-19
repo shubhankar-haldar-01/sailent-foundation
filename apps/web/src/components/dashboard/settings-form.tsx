@@ -7,6 +7,7 @@ import { Alert, Button } from '@sailent/ui';
 
 import { updateDonorSettings, type DonorActionState } from '@/lib/donor/actions';
 import type { DonorSettings } from '@/lib/donor/api';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * Notification and visibility preferences.
@@ -69,16 +70,17 @@ function Toggle({
 
 export function SettingsForm({ settings }: { settings: DonorSettings }) {
   const [state, action] = useActionState<DonorActionState, FormData>(updateDonorSettings, {});
+  const resultRef = useRevealResult(state);
 
   return (
     <form action={action} className="space-y-8">
       {state.error ? (
-        <Alert variant="destructive" role="alert">
+        <Alert ref={resultRef} variant="destructive" role="alert">
           {state.error}
         </Alert>
       ) : null}
       {state.ok ? (
-        <Alert variant="success" role="status">
+        <Alert ref={resultRef} variant="success" role="status">
           Your preferences have been saved.
         </Alert>
       ) : null}

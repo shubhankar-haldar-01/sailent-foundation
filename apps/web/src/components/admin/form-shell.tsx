@@ -5,6 +5,7 @@ import * as React from 'react';
 import { Alert, Button, Input, Label, cn } from '@sailent/ui';
 
 import type { ActionState } from '@/lib/admin/actions';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * The admin form primitives.
@@ -156,14 +157,18 @@ export function SubmitButton({
   );
 }
 
-/** Success and failure banners, announced to assistive technology when they appear. */
+/**
+ * Success and failure banners, announced to assistive technology when they
+ * appear, and brought into view with focus after each save (`useRevealResult`).
+ */
 export function FormStatus({ state }: { state: ActionState }) {
+  const ref = useRevealResult(state);
   if (state.error) {
     const errorDetails = state.fieldErrors
       ? Object.values(state.fieldErrors).filter((msg) => msg && msg !== state.error)
       : [];
     return (
-      <Alert variant="destructive" role="alert" className="space-y-1.5">
+      <Alert ref={ref} variant="destructive" role="alert" className="space-y-1.5">
         <p className="font-semibold">{state.error}</p>
         {errorDetails.length > 0 ? (
           <ul className="text-caption list-inside list-disc space-y-0.5">
@@ -177,7 +182,7 @@ export function FormStatus({ state }: { state: ActionState }) {
   }
   if (state.ok) {
     return (
-      <Alert variant="success" role="status">
+      <Alert ref={ref} variant="success" role="status">
         Saved.
       </Alert>
     );

@@ -7,6 +7,7 @@ import { emailSchema } from '@sailent/validation';
 
 import { subscribeToNewsletter } from '@/lib/communications/actions';
 import { Honeypot } from '@/components/forms/honeypot';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * Newsletter sign-up (Phase 13: real, double opt-in).
@@ -34,6 +35,7 @@ export function NewsletterForm({
   const [value, setValue] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState(false);
+  const resultRef = useRevealResult<HTMLParagraphElement>(submitted);
   const [pending, startTransition] = React.useTransition();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -55,6 +57,7 @@ export function NewsletterForm({
   if (submitted) {
     return (
       <p
+        ref={resultRef}
         role="status"
         className={cn('text-body-sm text-success flex items-center gap-2', className)}
       >

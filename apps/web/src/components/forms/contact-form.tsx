@@ -19,6 +19,7 @@ import { CONTACT_MESSAGE_MIN, emailSchema } from '@sailent/validation';
 import { submitContactMessage } from '@/lib/communications/actions';
 
 import { Honeypot } from './honeypot';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * The contact form (Phase 13: real).
@@ -38,6 +39,7 @@ export function ContactForm() {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState(false);
+  const resultRef = useRevealResult<HTMLParagraphElement>(submitted ? 'sent' : formError);
   const [pending, startTransition] = React.useTransition();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -69,7 +71,7 @@ export function ContactForm() {
   if (submitted) {
     return (
       <Card className="border-success/30 bg-success-subtle p-6">
-        <p role="status" className="text-body-sm flex items-start gap-2">
+        <p ref={resultRef} role="status" className="text-body-sm flex items-start gap-2">
           <Check className="text-success mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>
             <span className="font-semibold">Message sent.</span> Thank you — we aim to reply within
@@ -86,7 +88,7 @@ export function ContactForm() {
       <form onSubmit={handleSubmit} noValidate className="relative mt-6 space-y-5">
         <Honeypot />
         {formError ? (
-          <p role="alert" className="text-body-sm text-destructive">
+          <p ref={resultRef} role="alert" className="text-body-sm text-destructive">
             {formError}
           </p>
         ) : null}

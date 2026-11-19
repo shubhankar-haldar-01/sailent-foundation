@@ -7,6 +7,7 @@ import { cn } from '@sailent/ui';
 import { emailSchema } from '@sailent/validation';
 import { subscribeToNewsletter } from '@/lib/communications/actions';
 import { Honeypot } from '@/components/forms/honeypot';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * "Stay Connected" newsletter card matching competitor reference (Image 2).
@@ -15,6 +16,7 @@ export function StayConnectedCard({ className }: { className?: string }) {
   const [value, setValue] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState(false);
+  const resultRef = useRevealResult(submitted);
   const [pending, startTransition] = React.useTransition();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -57,6 +59,7 @@ export function StayConnectedCard({ className }: { className?: string }) {
       {/* Form matching Image 2 */}
       {submitted ? (
         <div
+          ref={resultRef}
           role="status"
           className="text-success mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-medium dark:bg-emerald-950/40"
         >

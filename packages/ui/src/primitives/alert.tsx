@@ -27,6 +27,8 @@ export interface AlertProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
   /** Icon accompanies colour so meaning is never carried by colour alone. */
   showIcon?: boolean;
+  /** React 19 passes it through with the other props; a form uses it to bring its result into view. */
+  ref?: React.Ref<HTMLDivElement>;
 }
 
 export function Alert({

@@ -6,6 +6,7 @@ import { useFormStatus } from 'react-dom';
 import { Alert, Button, Card, Input, Label } from '@sailent/ui';
 
 import { registerForEvent, type DonorActionState } from '@/lib/donor/actions';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * Register for an event.
@@ -50,6 +51,7 @@ export function EventRegistrationForm({
   seatsLeft: number | null;
 }) {
   const [state, action] = useActionState<DonorActionState, FormData>(registerForEvent, {});
+  const resultRef = useRevealResult(state);
   const ids = { name: React.useId(), phone: React.useId(), attendees: React.useId() };
 
   /*
@@ -73,7 +75,7 @@ export function EventRegistrationForm({
         <input type="hidden" name="slug" value={slug} />
 
         {state.error ? (
-          <Alert variant="destructive" role="alert">
+          <Alert ref={resultRef} variant="destructive" role="alert">
             {state.error}
           </Alert>
         ) : null}

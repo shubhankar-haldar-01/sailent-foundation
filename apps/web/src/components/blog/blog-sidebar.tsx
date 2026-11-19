@@ -12,6 +12,7 @@ import { Honeypot } from '@/components/forms/honeypot';
 import { subscribeToNewsletter } from '@/lib/communications/actions';
 import type { BlogPostSummary } from '@/lib/content/blog';
 import { formatArticleDate } from './post-card';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 export interface BlogSidebarProps {
   latestPosts: BlogPostSummary[];
@@ -127,6 +128,7 @@ function BlogNewsletterCard() {
   const [email, setEmail] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState(false);
+  const resultRef = useRevealResult(submitted);
   const [pending, startTransition] = React.useTransition();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -178,6 +180,7 @@ function BlogNewsletterCard() {
 
         {submitted ? (
           <div
+            ref={resultRef}
             role="status"
             className="mt-4 flex items-start gap-2.5 rounded-xl bg-emerald-50 p-3 text-xs font-medium text-emerald-800"
           >

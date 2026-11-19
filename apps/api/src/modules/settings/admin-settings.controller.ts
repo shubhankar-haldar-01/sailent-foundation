@@ -8,7 +8,6 @@ import { CurrentActor } from '../../common/decorators/actor.decorator.js';
 import {
   RequireAudience,
   RequirePermission,
-  Sensitive,
 } from '../../common/decorators/permissions.decorator.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { SettingsService } from './settings.service.js';
@@ -31,10 +30,11 @@ import { requestClientIp } from '../../common/security/internal-request.js';
  * organisation's PAN, which is a statutory identifier and not something to
  * hand out unauthenticated.
  *
- * THE UPDATE IS `@Sensitive()`. `settings.update` is already marked sensitive
- * in the permission catalogue, and these values are the organisation's name on
- * every receipt and the 80G numbers a donor claims tax relief against — a
- * session somebody walked away from must not be able to change them.
+ * THE UPDATE NEEDS NO PASSWORD RE-CONFIRMATION (owner, 2026-11-19). It was
+ * `@Sensitive()`; the owner removed that, accepting that a signed-in session
+ * left open can change the name and the numbers printed on every receipt.
+ * What still guards it: `settings.update`, the staff audience, and an audit
+ * entry for every change (who, what before, what after).
  * ══════════════════════════════════════════════════════════════════════════
  */
 @ApiTags('admin: settings')
@@ -63,16 +63,15 @@ export class AdminSettingsController {
   }
 
   @RequirePermission('settings.update')
-  @Sensitive()
   @Patch('settings')
   @ApiOperation({
     summary: 'Change one or more settings',
     description:
-      'Requires a re-authentication within the last five minutes. Only the four known keys are ' +
-      'accepted; each value is validated against its own shape.',
+      'Needs settings.update; no re-authentication (owner, 2026-11-19). Every change is audited. ' +
+      'Only the known keys are accepted; each value is validated against its own shape.',
   })
   @ApiResponse({ status: 200, description: 'The settings after the change' })
-  @ApiResponse({ status: 403, description: 'Missing settings.update, or REAUTH_REQUIRED' })
+  @ApiResponse({ status: 403, description: 'Missing settings.update' })
   @ApiResponse({ status: 422, description: 'A value failed validation' })
   update(
     @Body(new ZodValidationPipe(updateSettingsSchema)) body: UpdateSettingsInput,

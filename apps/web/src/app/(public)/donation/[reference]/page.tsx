@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 
-import { PageShell, Section } from '@/components/layout/page-shell';
-import { DonationStatus } from '@/components/donations/donation-status';
+import { PageShell } from '@/components/layout/page-shell';
+import { DonationStatus, type ReceiptOrganisation } from '@/components/donations/donation-status';
+import { getOrganisationRecords } from '@/lib/content/organisation';
 import { buildMetadata } from '@/lib/seo/metadata';
 
 export const metadata: Metadata = buildMetadata({
@@ -38,12 +39,32 @@ export default async function DonationStatusPage({
   params: Promise<{ reference: string }>;
 }) {
   const { reference } = await params;
+  /*
+    Only what the organisation has entered: this page speaks as a record, so
+    a demo PAN or 80G number in development would be a false statement.
+  */
+  const organisation = await getOrganisationRecords();
+  const receiptOrganisation: ReceiptOrganisation = {
+    name: organisation.name,
+    email: organisation.email,
+    phoneDisplay: organisation.phoneDisplay,
+    phoneHref: organisation.phoneHref,
+    pan: organisation.registration.pan,
+    section80G: organisation.registration.section80G,
+    section12A: organisation.registration.section12A,
+    registrationNumber: organisation.registration.registrationNumber,
+  };
 
+  /*
+    Not the standard `Section` rhythm (96px above and below from `md`): the
+    paid state is sized to fit a laptop screen under the header without
+    scrolling (owner, 2026-11-19), and that padding alone would push it off.
+  */
   return (
-    <Section>
-      <PageShell className="max-w-2xl">
-        <DonationStatus reference={reference} />
+    <section className="py-6 lg:pb-7 lg:pt-5">
+      <PageShell>
+        <DonationStatus reference={reference} organisation={receiptOrganisation} />
       </PageShell>
-    </Section>
+    </section>
   );
 }

@@ -38,6 +38,7 @@ import {
 
 import { createTeamMember, updateTeamMember, type ActionState } from '@/lib/admin/actions';
 import type { AdminTeamMember } from '@/lib/admin/api';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * Format raw numbers into standard Indian 12-digit Aadhaar grouping: XXXX XXXX XXXX
@@ -114,11 +115,13 @@ export function TeamForm({
   );
 
   const formTopRef = React.useRef<HTMLDivElement>(null);
+  // A save's result is brought into view and focused, as everywhere on the site.
+  const resultRef = useRevealResult(state);
 
-  // Scroll completely to the top of the viewport on successful creation or update,
-  // ensuring the page header and status banner are fully visible.
+  // Arriving from a create (a redirect to this page with the saved flag): show
+  // the page from the top, header and banner together.
   React.useEffect(() => {
-    if (initialSuccess || state.ok) {
+    if (initialSuccess) {
       const scrollToTop = () => {
         if (typeof window !== 'undefined') {
           window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -136,10 +139,8 @@ export function TeamForm({
         cancelAnimationFrame(raf);
         clearTimeout(timer);
       };
-    } else if (state.error) {
-      formTopRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
     }
-  }, [initialSuccess, state.ok, state.error]);
+  }, [initialSuccess]);
 
   // Field values
   const [name, setName] = React.useState<string>(member?.name || '');
@@ -382,7 +383,7 @@ export function TeamForm({
 
           {/* Prominent success status banner */}
           {state.ok ? (
-            <Alert variant="success" className="shadow-xs">
+            <Alert ref={resultRef} variant="success" className="shadow-xs">
               <p className="text-success font-semibold">
                 {member
                   ? 'Team member profile saved successfully!'
@@ -396,7 +397,7 @@ export function TeamForm({
 
           {/* Prominent server error status banner */}
           {state.error ? (
-            <Alert variant="destructive" className="shadow-xs">
+            <Alert ref={resultRef} variant="destructive" className="shadow-xs">
               <p className="text-destructive font-semibold">Could not save changes</p>
               <p className="text-muted-foreground mt-0.5 text-xs">{state.error}</p>
             </Alert>

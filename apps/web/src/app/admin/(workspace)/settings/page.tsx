@@ -1,7 +1,6 @@
 import { Card, CardContent, PageHeader, Alert } from '@sailent/ui';
 import { ShieldAlert } from 'lucide-react';
 
-import { ReauthPanel } from '@/components/admin/reauth-panel';
 import { SettingsForm } from '@/components/admin/settings-form';
 import { AdminApiError, getSettings } from '@/lib/admin/api';
 import { currentActor, can } from '@/lib/auth/session';
@@ -16,9 +15,8 @@ export const dynamic = 'force-dynamic';
  * `settings.read` — `registration_details` holds the PAN, which is a statutory
  * identifier rather than something to show unauthenticated.
  *
- * Saving is `@Sensitive()`, so the API answers `REAUTH_REQUIRED` for a stale
- * session and the form shows that error. Reading is not, so the page itself
- * loads without one.
+ * Saving needs `settings.update` and no password re-confirmation (owner,
+ * 2026-11-19); every change is audited.
  */
 export default async function AdminSettingsPage() {
   const actor = await currentActor();
@@ -44,22 +42,13 @@ export default async function AdminSettingsPage() {
       <div className="space-y-6">
         <PageHeader
           title="Organisation settings"
-          description="The organisation’s statutory details and operational defaults. Changes are recorded in the immutable audit log and require recent 5-minute re-authentication."
+          description="The organisation’s statutory details and operational defaults. Every change is recorded in the audit log."
         />
 
         <SettingsForm settings={settings} />
       </div>
     );
   } catch (error) {
-    if (error instanceof AdminApiError && error.code === 'REAUTH_REQUIRED') {
-      return (
-        <ReauthPanel
-          returnTo="/admin/settings"
-          what="Settings include the statutory identifiers printed on receipts."
-        />
-      );
-    }
-
     return (
       <div className="space-y-4">
         <PageHeader

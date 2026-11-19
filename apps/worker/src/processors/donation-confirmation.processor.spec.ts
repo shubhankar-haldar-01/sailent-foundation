@@ -1,7 +1,8 @@
 import { randomInt, randomUUID } from 'node:crypto';
+import { inflateSync } from 'node:zlib';
 
 import type { Job } from 'bullmq';
-import { inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { loadRootEnvFile } from '@sailent/config/dotenv';
@@ -10,23 +11,65 @@ import {
   donationItems,
   donations,
   donors,
+  notificationTemplates,
   notifications,
   receipts,
   type DatabaseClient,
 } from '@sailent/database';
+import { SAILENT_LOGO_PNG, renderReceiptPdf } from '@sailent/documents';
+
+import { PDFDocument } from 'pdf-lib';
 
 import { createMailer } from '../lib/email.js';
+import { renderFromTemplate, type RenderedTemplate } from '../lib/templates.js';
 import {
   processDonationConfirmation,
   type DonationConfirmationJob,
 } from './donation-confirmation.processor.js';
 
 /*
-  The built-in wording is what these tests read. A stored template, when an
-  administrator has one active, replaces it (`lib/templates.ts`) — that is
-  template content, not this code, so the lookup is taken out here.
+  The stored template is the test's to set: none (the default here), the
+  shipped wording, or an administrator's edit. Its wording is content, not code.
 */
 vi.mock('../lib/templates.js', () => ({ renderFromTemplate: vi.fn(async () => null) }));
+const templateMock = vi.mocked(renderFromTemplate);
+// The real PDF, unless a test makes it fail.
+vi.mock('@sailent/documents', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@sailent/documents')>();
+  return { ...actual, renderReceiptPdf: vi.fn(actual.renderReceiptPdf) };
+});
+const pdfMock = vi.mocked(renderReceiptPdf);
+
+// The send log records the template by id, so it is the real template's.
+let templateId = '';
+
+/** Every string drawn in a PDF, as the hex pdf-lib writes it, upper-case. */
+function drawnText(pdf: Buffer): string {
+  const raw = pdf.toString('latin1');
+  let text = '';
+  for (const match of raw.matchAll(/stream\r?\n/g)) {
+    const start = match.index + match[0].length;
+    try {
+      text += inflateSync(pdf.subarray(start, raw.indexOf('endstream', start))).toString('latin1');
+    } catch {
+      // An image or font stream, not page text.
+    }
+  }
+  return text.toUpperCase();
+}
+const hex = (value: string) =>
+  Buffer.from(value.replace(/•/g, '\x95'), 'latin1').toString('hex').toUpperCase();
+
+/** What `renderFromTemplate` returns for a stored template. */
+const template = (overrides: Partial<RenderedTemplate>): RenderedTemplate => ({
+  subject: 'Thank you — your donation to School kits for Ward 12',
+  html: '<p>Shipped wording.</p>',
+  text: 'Shipped wording.',
+  templateId,
+  templateVersion: 1,
+  customised: false,
+  ...overrides,
+});
 
 /**
  * The donor's confirmation and receipt, against the REAL local database and a
@@ -73,7 +116,16 @@ function job(data: DonationConfirmationJob, attemptsMade = 0): Job<DonationConfi
 }
 
 /** A donor, a donation with two lines, and — once captured — its receipt. */
-async function donation(status: 'successful' | 'pending') {
+async function donation(
+  status: 'successful' | 'pending',
+  receiptLines: {
+    itemName: string;
+    itemType: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }[] = [],
+) {
   const tag = `${RUN}-${created.length + 1}`;
   const { db } = database;
   const [donor] = await db
@@ -122,7 +174,7 @@ async function donation(status: 'successful' | 'pending') {
       donorName: 'Asha Verma',
       campaignTitle: 'School kits for Ward 12',
       amount: 150_000,
-      lineItems: [],
+      lineItems: receiptLines,
       paymentReference: `pay_T${RUN}`,
       // 19:00 UTC on the 17th is 00:30 on the 18th in India.
       issuedAt: new Date('2026-11-17T19:00:00.000Z'),
@@ -133,14 +185,21 @@ async function donation(status: 'successful' | 'pending') {
 
 /** Resend answering each call with the next status; requests are kept. */
 function resend(...statuses: number[]) {
-  const sent: { to: string; subject: string; html: string; text: string; key: string | null }[] =
-    [];
+  const sent: {
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+    key: string | null;
+    attachments: { filename: string; content: string; content_id?: string }[];
+  }[] = [];
   const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
     const body = JSON.parse(String(init.body)) as {
       to: string[];
       subject: string;
       html: string;
       text: string;
+      attachments?: { filename: string; content: string; content_id?: string }[];
     };
     sent.push({
       to: body.to[0]!,
@@ -148,6 +207,7 @@ function resend(...statuses: number[]) {
       html: body.html,
       text: body.text,
       key: new Headers(init.headers).get('idempotency-key'),
+      attachments: body.attachments ?? [],
     });
     const status = statuses.shift() ?? 200;
     const answer =
@@ -169,12 +229,19 @@ async function sendLog(donationId: string) {
     );
 }
 
-beforeAll(() => {
+beforeAll(async () => {
   database = createDatabaseClient({ connectionString, maxConnections: 2 });
+  const [row] = await database.db
+    .select({ id: notificationTemplates.id })
+    .from(notificationTemplates)
+    .where(eq(notificationTemplates.slug, 'donation.confirmation'))
+    .limit(1);
+  templateId = row!.id;
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  templateMock.mockResolvedValue(null);
 });
 
 afterAll(async () => {
@@ -281,5 +348,135 @@ describe('donation.confirmation', () => {
     const [row] = await sendLog(gift.id);
     expect(row).toMatchObject({ status: 'failed' });
     expect(row!.error).toMatch(/^unreachable: internal_server_error \(500\)/);
+  });
+  it('attaches the receipt as a PDF, with the logo inline, in a thank-you laid out as a receipt', async () => {
+    const gift = await donation('successful');
+    const { sent } = resend();
+
+    await processDonationConfirmation(
+      job({ donationId: gift.id, receiptNumber: gift.receiptNumber }),
+      deps(),
+      logger,
+    );
+
+    const email = sent[0]!;
+    expect(email.attachments.map((file) => file.filename)).toEqual([
+      'sailent-foundation.png',
+      `Donation-receipt-${gift.receiptNumber}.pdf`,
+    ]);
+    const logo = email.attachments[0]!;
+    expect(logo.content_id).toBe('sailent-logo');
+    expect(logo.content).toBe(SAILENT_LOGO_PNG.toString('base64'));
+    const pdf = await PDFDocument.load(Buffer.from(email.attachments[1]!.content, 'base64'));
+    expect(pdf.getPageCount()).toBe(1);
+    expect(pdf.getTitle()).toBe(`Donation receipt ${gift.receiptNumber}`);
+
+    // The emailed copy is the donor's own: the payment id, and their email masked.
+    const raw = Buffer.from(email.attachments[1]!.content, 'base64');
+    const text = drawnText(raw);
+    expect(text).toContain(hex(`pay_T${RUN}`));
+    expect(text).toContain(hex('don•••••@worker-test.local'));
+    expect(text).not.toContain(hex(gift.email));
+
+    // The order a donor reads it in.
+    const order = [
+      'DONATION RECEIVED',
+      'Thank you, Asha!',
+      'Amount donated',
+      'Your gift',
+      'Receipt details',
+      'About your receipt',
+      'Need help?',
+    ].map((marker) => email.html.indexOf(marker));
+    expect(order.every((at) => at >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    expect(email.html).toContain('src="cid:sailent-logo"');
+    expect(email.html).toContain('attached to this email as a PDF');
+    expect(email.html).not.toContain('A note from our team');
+  });
+
+  it('shows the lines the receipt froze, not the ones the donation has now', async () => {
+    const gift = await donation('successful', [
+      {
+        itemName: 'Frozen line',
+        itemType: 'custom',
+        quantity: 1,
+        unitPrice: 150_000,
+        totalPrice: 150_000,
+      },
+    ]);
+    const { sent } = resend();
+
+    await processDonationConfirmation(
+      job({ donationId: gift.id, receiptNumber: gift.receiptNumber }),
+      deps(),
+      logger,
+    );
+
+    expect(sent[0]!.html).toContain('Frozen line');
+    // The donation's own second line, which the receipt did not freeze.
+    expect(sent[0]!.html).not.toContain('Where it is needed most');
+  });
+
+  it('shows an administrator’s edited template as a note, and uses its subject', async () => {
+    templateMock.mockResolvedValue(
+      template({
+        subject: 'With thanks from the whole team',
+        html: '<p>Your kits reach Ward 12 next week.</p>',
+        text: 'Your kits reach Ward 12 next week.',
+        templateVersion: 7,
+        customised: true,
+      }),
+    );
+    const gift = await donation('successful');
+    const { sent } = resend();
+
+    await processDonationConfirmation(
+      job({ donationId: gift.id, receiptNumber: gift.receiptNumber }),
+      deps(),
+      logger,
+    );
+
+    expect(sent[0]!.subject).toBe('With thanks from the whole team');
+    expect(sent[0]!.html).toContain('A note from our team');
+    expect(sent[0]!.html).toContain('<p>Your kits reach Ward 12 next week.</p>');
+    expect(sent[0]!.text).toContain('Your kits reach Ward 12 next week.');
+  });
+
+  it('does not repeat the shipped wording as a note, however high its version', async () => {
+    // Reverts and test runs raise the version without anyone writing a word.
+    templateMock.mockResolvedValue(template({ templateVersion: 104, customised: false }));
+    const gift = await donation('successful');
+    const { sent } = resend();
+
+    await processDonationConfirmation(
+      job({ donationId: gift.id, receiptNumber: gift.receiptNumber }),
+      deps(),
+      logger,
+    );
+
+    expect(sent[0]!.html).not.toContain('A note from our team');
+    expect(sent[0]!.html).not.toContain('Shipped wording.');
+  });
+
+  it('still sends every receipt detail when the PDF cannot be made', async () => {
+    pdfMock.mockRejectedValueOnce(new Error('cannot draw'));
+    const gift = await donation('successful');
+    const { sent } = resend();
+
+    const result = await processDonationConfirmation(
+      job({ donationId: gift.id, receiptNumber: gift.receiptNumber }),
+      deps(),
+      logger,
+    );
+
+    expect(result).toEqual({ sent: true });
+    const email = sent[0]!;
+    expect(email.attachments.map((file) => file.filename)).toEqual(['sailent-foundation.png']);
+    expect(email.html).not.toContain('attached to this email as a PDF');
+    for (const detail of [gift.receiptNumber, gift.reference, `pay_T${RUN}`, '₹1,500']) {
+      expect(email.html).toContain(detail);
+    }
+    expect(email.text).toContain('not a tax-exemption certificate');
   });
 });

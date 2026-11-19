@@ -30,6 +30,7 @@ import { CancelRegistrationButton } from './cancel-registration-button';
 import { downloadPassImage } from './download-pass';
 import { EventEntryPass } from './event-entry-pass';
 import type { CardAction } from './events-query';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 interface EventRegistrationFlowProps {
   eventId: string;
@@ -124,6 +125,7 @@ export function EventRegistrationFlow({
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [serverState, setServerState] = React.useState<DonorActionState>({});
+  const resultRef = useRevealResult(serverState);
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [isDownloading, setIsDownloading] = React.useState(false);
   const [downloaded, setDownloaded] = React.useState(false);
@@ -775,7 +777,7 @@ export function EventRegistrationFlow({
 
       {/* Server error banner */}
       {serverState.error ? (
-        <Alert variant="destructive" className="mt-5 rounded-2xl" role="alert">
+        <Alert ref={resultRef} variant="destructive" className="mt-5 rounded-2xl" role="alert">
           <div className="flex flex-col gap-2">
             <span>{serverState.error}</span>
           </div>

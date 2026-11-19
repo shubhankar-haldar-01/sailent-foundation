@@ -429,6 +429,40 @@ The likely cause is WebKit keyboard behaviour; this was **not investigated**.
 
 **The full Playwright suite** (712 tests) last ran on 2026-10-06, before the featured and deadline work: 551 passed, 158 skipped, 3 failed. Two were the WebKit failures above; the third was an axe flake that `settle-animations.ts` has since fixed.
 
+### After a save, the page goes to the message — 2026-11-19 (local, uncommitted)
+
+- **What changed:** every save-result message on the site is scrolled into view and focused after a save (`useRevealResult`; AGENTS.md §11 item 18). Details are in `CHANGELOG.md`.
+- **Tests:** web ✅ 458/458; typecheck and lint ✅. Checked in Chrome on Admin → Settings.
+- **Known issue (pre-existing, not changed):** Prettier reports 8 committed files under `apps/web/src` as unformatted (admin `campaigns/[id]`, `events/[id]`, `events/[id]/check-in`, `preview`, `preview/[entity]`, `programs/[id]`, `team/[id]` pages, and `lib/content/events.ts`). None was touched by this work.
+- **Local data:** the organisation name in settings now reads "Sailent Foundation" again (set by the owner).
+
+### Admin settings without re-authentication — 2026-11-19 (local, uncommitted)
+
+- **What changed:** saving Admin → Settings no longer asks for the password (owner's decision, AGENTS.md §11 item 17; SECURITY.md updated). Still guarded by `settings.update` and audited. Details are in `CHANGELOG.md`.
+- **Tests:** API settings, RBAC and CMS ✅ 91/91; web ✅ 453/453; database ✅ 180/180.
+- **Local:** the roles screen shows "Change settings" as sensitive until the seed is re-run (display only).
+
+### Donation receipt PDF: the owner's design — 2026-11-19 (local, uncommitted)
+
+- **What changed:** the receipt PDF (emailed and downloaded) follows the owner's layout; the owner's choices are in AGENTS.md §11 item 16 and the details in `CHANGELOG.md`. The API now needs `APP_PUBLIC_URL` in production (for the QR); the Cloud Run template sets it.
+- **Tests:** documents ✅ 17/17; worker ✅ 91/91; API donations and config ✅ 82/82; web ✅ 453/453; typecheck and lint 15/15; `pnpm check:deploy` 46/46.
+- **Local data:** the organisation name was the test leftover "Attributed 42cab1d6"; the owner set it back to "Sailent Foundation" (2026-11-19).
+
+### Donation success page: the owner's design — 2026-11-19 (local, uncommitted)
+
+- **What changed:** `/donation/<reference>` once paid is the owner's layout in the brand's colours, with "Download receipt (PDF)" and "Share this campaign". Also new: the `@sailent/documents` package and `GET /donations/:reference/receipt/pdf`. The owner's choices are recorded in AGENTS.md §11 item 15; details are in `CHANGELOG.md`.
+- **Tests:** web ✅ 453/453; API donations ✅ 62/62; worker ✅ 91/91; documents ✅ 5/5; validation ✅ 317/317; typecheck and lint 15/15; `pnpm check:deploy` 46/46. Checked at 390, 768, 1024 and 1440px against the local donation `DON-TX7B7Z8D`.
+- **One screen (owner's follow-up the same day):** from `lg` the paid state fits a laptop screen under the header with no scrolling: checked at 1024×768, 1180×720, 1280×720, 1460×725 and 1920×1080. Web ✅ 453/453 afterwards.
+- **Local data, owner to decide:** the local `organization_name` setting reads "Attributed 42cab1d6", a leftover from an earlier test run (`settings.spec.ts` restores whatever it finds, so it keeps it). The page's "Received by" shows it. Not changed.
+- **Known issue (pre-existing): API suites race each other.** They run in parallel against one database (`TEST_DATABASE_URL` is `sailent_dev`), and fixtures from one suite reach another's counts. On 2026-11-19 four different tests failed this way once each (`public-api` ×2, `media`, `rbac`, and `donations` › reconciliation), and each passed alone. Fix: a separate test database, or running the API files one at a time.
+
+### Donation receipt email and PDF receipt — 2026-11-19 (local, uncommitted)
+
+- **What changed:** the donation thank-you is now a professional receipt email with the receipt attached as a PDF, and an edited template shows as a note only when its body differs from the shipped wording (the event email too). Details are in `CHANGELOG.md`.
+- **Tests:** worker ✅ 113/113; API `notifications.spec.ts` ✅ 32/32; typecheck, lint and Prettier clean.
+- **Local data:** `donation.confirmation` and `volunteer.approved` were restored to the shipped wording through the admin API. They held test leftovers, because the API suite runs against `sailent_dev` (`TEST_DATABASE_URL` names it too); the suite now restores what it edits.
+- **Not done:** a real send through Resend. The email and PDF were checked as rendered files, and the processor against the local database with Resend stubbed.
+
 ### Security audit — 2026-11-19 (local, uncommitted)
 
 A full application security audit. The fixes and their reasons are in `CHANGELOG.md` (2026-11-19, "Security audit: fixes"), and the control status in `SECURITY.md` (rows dated 2026-11-19).
@@ -441,7 +475,7 @@ A full application security audit. The fixes and their reasons are in `CHANGELOG
 1. **Campaign videos are blocked by the site's CSP** (YouTube, Vimeo and direct files; seen in Chrome). Fix: add `https://www.youtube-nocookie.com` and `https://player.vimeo.com` to `frame-src`, and a `media-src` for the media host.
 2. **The campaign video upload cannot work in production**: files written after the build are not served (404 on `next start`), and Cloud Run's disk is per instance and in memory. Move it to the media library's object storage or remove it, then lower `serverActions.bodySizeLimit` from 100 MB (any caller can send that much to any server action).
 3. **Major upgrades:** `drizzle-orm` ≥ 0.45.2 (high; not reachable here), `zod` 4 (high; bounded by the 100 kB body limit), Nest 11 (`@nestjs/core` and `file-type` moderates; neither path is used). CI's audit job keeps failing until these are done.
-4. **One "Super Admin" role or the existing five:** the audit brief described a single role; the existing RBAC model was kept.
+4. ~~One "Super Admin" role or the existing five~~ **Corrected 2026-11-19:** there is nothing to decide. The seed has a single role, `SUPER_ADMIN` (`permissions: '*'`); the other roles were retired in Phase 8 (`RETIRED_ROLE_KEYS`). The audit report's "existing five roles" was wrong.
 5. The open items already listed below and in §9: `@Sensitive()` removed from the attendee list (row 31), the 12A/80G line and the placeholder support line on the website pass (row 35), the runtime database role (`SECURITY.md`, "App database role"), and the production database residue (`SECURITY.md`, HIGH, human-only).
 
 ### Registration email: PDF passes and professional layout — 2026-11-19 (local, uncommitted)

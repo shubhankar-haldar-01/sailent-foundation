@@ -10,6 +10,60 @@ Newest first.
 
 ---
 
+## 2026-11-19 — After a save, the page goes to the message (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **`useRevealResult`** (`apps/web/src/lib/ui/reveal-result.ts`): when a save's result appears, scroll it into view (only if it is not already fully visible; instant for reduced motion) and move focus onto it (`tabindex="-1"`, so it is not a Tab stop). Only after the person has pressed, clicked or submitted on the page, so a message present on load never takes focus | Owner's request: after saving anything, the view should be on the message (AGENTS.md §11 item 18) | A keyboard or screen-reader user is taken to the result as well | — |
+| **Applied site-wide:** `FormStatus` (every admin form that uses it, 23 files); and the forms with their own messages: team member, staff password, donor correction, contact, newsletter (footer, home, blog, confirm/unsubscribe), volunteer application, event registration (form and flow) and cancellation, donor profile (and email change), donor settings, profile photo, stay connected, and a failed payment at checkout. The team form's own scroll-to-top-or-form logic was replaced by it (its scroll to top after a redirect from create stays). `Alert` (`@sailent/ui`) now declares the `ref` React 19 already passes through | One behaviour for every save | Not applied to sign-in forms, per-field errors, live validation notices or inline results next to the button pressed | — |
+
+Tests: web ✅ 458/458 (5 new: no reveal on page load; scroll and focus after acting; focus without scrolling when already in view; instant scroll for reduced motion; `FormStatus` reveals "Saved." and errors on every save, including a repeated result. Taking the hook out of `FormStatus` fails it). Checked in Chrome: saving Admin → Settings from 2,318px down the page brought "Saved." into view, focused. Typecheck and lint ✅.
+
+## 2026-11-19 — Admin settings: no password re-confirmation (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **Saving Admin → Settings no longer asks for the password** (`PATCH /admin/settings` is not `@Sensitive()`; the page's re-auth panel and its description were removed; `settings.update` is no longer flagged sensitive in the permission catalogue) | Owner's request (2026-11-19); AGENTS.md §11 item 17 | Needs `settings.update`, and every change is still audited. Other sensitive actions are unchanged. The catalogue flag is display-only (the roles screen); a database seeded before this shows it until the seed is re-run | — |
+| **Tests follow the new rule** (`test/settings.spec.ts`): a fresh login saves and the change is audited; a staff member holding only `settings.read` is refused 403 and nothing changes. The old "requires a fresh re-authentication" test was replaced, not skipped. Putting `@Sensitive()` back fails the new test | CLAUDE.md §5: refusal paths stay tested | — | — |
+| The page no longer calls the audit log "immutable" | `SECURITY.md` records it as not tamper-proof | — | — |
+
+Tests: API settings, RBAC and CMS ✅ 91/91; web ✅ 453/453; database ✅ 180/180; typecheck and lint 12/12.
+
+## 2026-11-19 — Donation receipt PDF: the owner's design (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **The receipt PDF in the owner's layout** (`packages/documents/src/receipt-pdf.ts`; AGENTS.md §11 item 16): organisation header, registrations strip, amount panel, donor and payment boxes, the gift's table, the tax note beside a computer-generated note, a thank-you band with a verification QR, and a footer on every page. Brand colours (orange band, navy band) instead of the mock's blue-green | Owner's design | Same for the emailed and the downloaded copy, which differ only in what each may carry | — |
+| **What each copy carries (owner's choices):** the emailed copy has the payment id and the donor's email and phone **masked** (`maskEmail`, `maskPhone`, applied inside the PDF whatever the caller passes) and city/state; the downloaded copy has the donor's name only. No donor PAN, signature, 80G validity, "non-corpus", fee lines, UTR or UPI id | §10 and the reference-as-capability rule | The organisation's address, contacts, PAN, 80G and 12A come from Admin → Settings (`organisationFromSettings`), only when entered | — |
+| **"Scan to verify this receipt"**: a QR code of the donation's page, on both copies. The API now reads `APP_PUBLIC_URL` (refused in production unless public https), added to `.env.example`, the API's Cloud Run template and DEPLOYMENT.md | Owner's choice | Production must set `APP_PUBLIC_URL` on the API (the Cloud Run template uses `${SITE_URL}`) | — |
+
+Tests: documents ✅ 17/17 (masking, only-entered registrations, no contacts or payment id on the public copy, no non-record claims, QR only with a URL, pagination, determinism); worker ✅ 91/91 (the emailed copy holds the masked email and the payment id, never the raw email); API donations and config ✅ 82/82 (the download holds no email or phone; `APP_PUBLIC_URL` refused in production when http or localhost); web ✅ 453/453; validation ✅ 317/317; config ✅ 49/49. Typecheck and lint 15/15; `pnpm check:deploy` 46/46. The QR decodes to the donation's page from a 100 dpi render (html5-qrcode, the gate's own decoder); the real local receipt `SFL-2026-003176` downloaded through the site.
+
+## 2026-11-19 — Donation success page: the owner's design (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **The donation success page in the owner's layout** (`components/donations/donation-success.tsx`; AGENTS.md §11 item 15): a receipt card (tick, "Thank you, {name}!", "Payment successful", the amount in figures and in words, date and time in IST, then payment, donation, and donor-and-organisation details) beside a payment summary, the tax note and help. Two columns from `lg`, one below. The waiting, failed and missing states keep their narrow column | Owner's design (2026-11-19) | Brand colours and fonts, not the mock's: orange "Download receipt (PDF)", blue outline "Back to the campaign", soft blue "See other campaigns" | — |
+| **Left out by the owner's choice:** payment id, UTR, UPI id, donor PAN and donor email (the page opens for anyone with its link), fee lines and SSL/PCI claims (not records), and "Email again". The organisation's PAN, 80G, 12A and registration numbers show only when entered in Admin → Settings, never demo values (`getOrganisationRecords`) | AGENTS.md §10 and the reference-as-capability rule | — | — |
+| **"Download receipt (PDF)"**: `GET /donations/:reference/receipt/pdf` (public, 10 per minute, `no-store`) serves the emailed receipt without the payment id; only the current receipt (not a superseded one); the BFF passes `Content-Disposition` through | Owner's choice | Same file each time (deterministic) | — |
+| **"Share this campaign"** shares the campaign's link (share sheet, or copied), never the page's | Owner's choice: the page's link is private to the donor | — | — |
+| **Fits one laptop screen** from `lg`, with no scrolling: tighter page padding, the detail groups side by side, the programme under the campaign, the Razorpay line in the summary card, a narrower summary column (360px) and compact note cards. Content ends at 692px under a 132px header (1180–1920px wide) and at 733px on 1024×768 | Owner's request ("I don't want to scroll") | Phones still stack and scroll | — |
+| **New package `@sailent/documents`**: the receipt PDF, the PDF drawing helpers and the logo, moved out of the worker so the API can draw the same receipt. `rupeesInWords` moved to `@sailent/validation` (the page needs it in the browser, without pdf-lib) | One receipt drawn by one piece of code | Worker and API depend on it; the Dockerfiles need no change (`pnpm check:deploy` 46/46) | — |
+
+Tests: web ✅ 453/453 (8 new); API donations ✅ 62/62 (2 new; leaking the payment id into the PDF fails one), and the full API run 978 passed, 9 skipped with 3 cross-suite races (`public-api`, `media`, `rbac`), each passing alone; worker ✅ 91/91; documents ✅ 5/5; validation ✅ 317/317. Typecheck and lint 15/15, Prettier clean. Checked against the real local donation `DON-TX7B7Z8D` at 390, 768, 1024 and 1440px (no horizontal overflow, no page errors), and the PDF downloaded through the BFF with its filename.
+
+## 2026-11-19 — Donation receipt email and PDF receipt (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **A professional thank-you and receipt email** (`processors/donation-confirmation-email.ts`): the logo (inline), DONATION RECEIVED, "Thank you, {first name}!", the amount in a summary card with a "View your donation" button, the lines of the gift and the total, the receipt details (receipt number, received from, date and time in IST, payment method, payment reference, donation reference), the approved "not a tax-exemption certificate" note, and "Need help?" with the contacts from Admin → Settings | Owner's request: a market-standard email. The old body was plain, and the stored template replaced it entirely | Same subject as before (still from the template). Works at phone width | — |
+| **The receipt as a PDF attachment** (`lib/receipt-pdf.ts`): one A4 page, drawn from the receipt's own frozen snapshot: organisation and contacts, the registration number when one is set, "Received with thanks from", the amount in figures and in words (Indian grouping, `lib/amount-in-words.ts`), the details, each line with quantity and unit price, the total, the same tax note, and the receipt number on every page. A long gift continues onto further pages. Deterministic, so a retried email carries the same file | Owner's choice. A guest donor has no account, and this email is their only copy | `Donation-receipt-<receipt number>.pdf`. If the PDF cannot be made, the email still carries every detail | — |
+| **An administrator's edited template appears as "A note from our team"**, and only when its body differs from the shipped wording (`isCustomised` in `lib/templates.ts`). The event confirmation uses the same rule now, instead of "version above 1" | Owner's choice. Reverts and test runs raise the version without anyone writing a word | The shipped defaults are exported from `@sailent/database` (`NOTIFICATION_TEMPLATE_SEED`) | — |
+| **Shared building blocks**: `lib/email-parts.ts` (email pieces) and `lib/pdf-kit.ts` (PDF drawing), used by both confirmations | Both emails look the same and stay that way | The event pass PDF is byte-identical before and after (checked). Amounts with paise now show two decimals (₹2,510.50) | — |
+| **The API test suite no longer leaves its template edits behind** (`test/notifications.spec.ts`): the templates are put back through the API after the block | The suite runs against the development database: the donation receipt's live body was a test fragment ("Hello {{donorName}}" and a bare table), and `volunteer.approved`'s subject was "Edited 6c013c51" | The two local templates were restored to the shipped wording through the admin API (v107 and v316, noted in their history) | — |
+
+Tests: worker ✅ 113/113 (38 new: 5 for the processor, 7 for the email body, 5 for the PDF, 17 for amounts in words, 4 for `isCustomised`); `notifications.spec.ts` ✅ 32/32, with every template's content hash identical before and after a run. Going back to the version rule fails the "does not repeat the shipped wording" test. Typecheck, lint and Prettier clean. The email was checked at 640 and 390px, and the PDF for one page and for 30 lines (3 pages).
+
 ## 2026-11-19 — Security audit: fixes (uncommitted)
 
 From a full application security audit. Each fix has a regression test that fails when the fix is taken out (checked for every row).

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import {
   campaigns,
@@ -12,9 +12,17 @@ import {
   settings,
 } from '@sailent/database';
 
+import {
+  ORGANISATION_SETTING_KEYS,
+  organisationFromSettings,
+  receiptLinesFrom,
+  renderReceiptPdf,
+} from '@sailent/documents';
+import { registrationDetailsSchema } from '@sailent/validation';
+
+import { AppConfig } from '../../config/app.config.js';
 import { DATABASE } from '../database/database.module.js';
 import { NotFoundException } from '../../common/exceptions.js';
-import { registrationDetailsSchema } from '@sailent/validation';
 
 type Tx = Parameters<Parameters<DatabaseClient['db']['transaction']>[0]>[0];
 
@@ -72,7 +80,10 @@ export function formatReceiptNumber(financialYear: number, sequence: number): st
  */
 @Injectable()
 export class ReceiptsService {
-  constructor(@Inject(DATABASE) private readonly database: DatabaseClient) {}
+  constructor(
+    @Inject(DATABASE) private readonly database: DatabaseClient,
+    private readonly config: AppConfig,
+  ) {}
 
   /**
    * Issue the receipt for a captured donation.
@@ -250,5 +261,65 @@ export class ReceiptsService {
 
     if (!row) throw new NotFoundException('Receipt');
     return row;
+  }
+
+  /**
+   * The receipt as a PDF, for "Download receipt" on the donation's page.
+   *
+   * The same document the email attaches, drawn from the receipt row's frozen
+   * snapshot, with ONE difference: no payment id. This is reached through the
+   * same public link as `getByDonationReference`, which carries no payment
+   * identifier (owner, 2026-11-19). The emailed copy keeps it.
+   *
+   * A corrected receipt replaces the one it supersedes, so only the current
+   * one is served.
+   */
+  async pdfByDonationReference(reference: string): Promise<{ filename: string; pdf: Buffer }> {
+    const [row] = await this.database.db
+      .select({
+        receiptNumber: receipts.receiptNumber,
+        issuedAt: receipts.issuedAt,
+        donorName: receipts.donorName,
+        campaignTitle: receipts.campaignTitle,
+        programTitle: receipts.programTitle,
+        amount: receipts.amount,
+        lineItems: receipts.lineItems,
+        registrationNumber: receipts.registrationNumber,
+        donationReference: donations.reference,
+      })
+      .from(receipts)
+      .innerJoin(donations, eq(donations.id, receipts.donationId))
+      .where(and(eq(donations.reference, reference), isNull(receipts.supersededById)))
+      .limit(1);
+
+    if (!row) throw new NotFoundException('Receipt');
+
+    const organisationRows = await this.database.db
+      .select({ key: settings.key, value: settings.value })
+      .from(settings)
+      .where(inArray(settings.key, [...ORGANISATION_SETTING_KEYS]));
+    const pdf = await renderReceiptPdf({
+      receiptNumber: row.receiptNumber,
+      issuedAt: row.issuedAt,
+      // The donor's name only: no email, phone or place on a copy reached
+      // through a public link (owner, 2026-11-19).
+      donor: { name: row.donorName },
+      organisation: organisationFromSettings(organisationRows),
+      campaignTitle: row.campaignTitle,
+      programTitle: row.programTitle,
+      amount: row.amount,
+      lines: receiptLinesFrom(row.lineItems),
+      donationReference: row.donationReference,
+      paymentReference: null,
+      registrationNumber: row.registrationNumber,
+      verifyUrl: `${this.config.appPublicUrl}/donation/${row.donationReference}`,
+    });
+
+    return {
+      // Receipt numbers are `SFL-2026-000123`; anything else is replaced, so
+      // the header can never be split or quoted out of.
+      filename: `Donation-receipt-${row.receiptNumber.replace(/[^A-Za-z0-9-]/g, '-')}.pdf`,
+      pdf,
+    };
   }
 }

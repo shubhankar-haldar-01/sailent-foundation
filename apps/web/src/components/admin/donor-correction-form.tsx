@@ -18,6 +18,7 @@ import {
 import { correctDonor } from '@/lib/admin/actions';
 import type { ActionState } from '@/lib/admin/actions';
 import { INDIAN_STATES, STATE_CITIES } from '@/lib/india-locations';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * Correct a donor record.
@@ -88,6 +89,7 @@ function formatPanInput(raw: string): string {
 
 export function DonorCorrectionForm({ donor }: { donor: CorrectableDonor }) {
   const [state, action] = useActionState<ActionState, FormData>(correctDonor, {});
+  const resultRef = useRevealResult(state);
 
   const [pan, setPan] = useState<string>(donor.taxIdNumber ?? '');
   const isPanIncomplete = pan.length > 0 && pan.length < 10;
@@ -161,12 +163,12 @@ export function DonorCorrectionForm({ donor }: { donor: CorrectableDonor }) {
       <input type="hidden" name="donorId" value={donor.id} />
 
       {state.error ? (
-        <Alert variant="destructive" role="alert">
+        <Alert ref={resultRef} variant="destructive" role="alert">
           {state.error}
         </Alert>
       ) : null}
       {state.ok ? (
-        <Alert variant="success" role="status">
+        <Alert ref={resultRef} variant="success" role="status">
           The record has been corrected and the change audited.
         </Alert>
       ) : null}

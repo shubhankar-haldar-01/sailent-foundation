@@ -10,6 +10,7 @@ import {
   unsubscribeNewsletter,
   type PublicFormState,
 } from '@/lib/communications/actions';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * The button behind a newsletter email link (Phase 13).
@@ -29,11 +30,12 @@ export function NewsletterTokenForm({
     mode === 'confirm' ? confirmNewsletter : unsubscribeNewsletter,
     {},
   );
+  const resultRef = useRevealResult<HTMLParagraphElement>(state);
 
   if (state.ok) {
     return (
       <Card className="border-success/30 bg-success-subtle p-6">
-        <p role="status" className="text-body-sm flex items-start gap-2">
+        <p ref={resultRef} role="status" className="text-body-sm flex items-start gap-2">
           <Check className="text-success mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>
             {mode === 'confirm'
@@ -52,7 +54,7 @@ export function NewsletterTokenForm({
     <form action={action} className="space-y-4">
       <input type="hidden" name="token" value={token} />
       {state.error ? (
-        <p role="alert" className="text-body-sm text-destructive">
+        <p ref={resultRef} role="alert" className="text-body-sm text-destructive">
           {state.error}
         </p>
       ) : null}

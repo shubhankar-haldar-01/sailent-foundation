@@ -24,6 +24,7 @@ import {
   submitVolunteerApplication,
   type VolunteerApplicationState,
 } from '@/lib/volunteers/actions';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * Volunteer application — UI ONLY.
@@ -84,6 +85,7 @@ export function VolunteerApplicationForm() {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [pending, setPending] = React.useState(false);
   const [state, setState] = React.useState<VolunteerApplicationState>({});
+  const resultRef = useRevealResult(state);
   const headingRef = React.useRef<HTMLHeadingElement>(null);
   /**
    * Answers from the steps that are no longer on screen.
@@ -196,7 +198,9 @@ export function VolunteerApplicationForm() {
     return (
       <Card className="border-success/30 bg-success-subtle p-8 text-center">
         <Check className="text-success mx-auto size-8" aria-hidden="true" />
-        <h2 className="text-h3 mt-4 font-semibold">Thank you — we have your application</h2>
+        <h2 ref={resultRef as React.Ref<HTMLHeadingElement>} className="text-h3 mt-4 font-semibold">
+          Thank you — we have your application
+        </h2>
         <p className="text-body text-muted-foreground mx-auto mt-2 max-w-prose">
           {/*
             No timeframe is promised. "Reviewed within two weeks" is a promise a
@@ -247,7 +251,7 @@ export function VolunteerApplicationForm() {
             their own field; this is for the ones that belong to the whole
             submission. */}
         {state.error ? (
-          <Alert variant="destructive" role="alert">
+          <Alert ref={resultRef} variant="destructive" role="alert">
             {state.error}
           </Alert>
         ) : null}

@@ -10,6 +10,7 @@ import {
   resetPassword,
   type StaffAccountState,
 } from '@/lib/auth/staff-account-actions';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /** The token from `#token=…`. Read in the browser: a fragment never reaches a server. */
 function useFragmentToken(): string | null | undefined {
@@ -33,13 +34,14 @@ export function StaffPasswordForm({ mode }: { mode: 'invite' | 'reset' }) {
     mode === 'invite' ? acceptInvitation : resetPassword,
     {},
   );
+  const resultRef = useRevealResult(state);
 
   if (token === undefined) return null;
 
   if (state.ok) {
     return (
       <div className="space-y-4">
-        <Alert role="status">
+        <Alert ref={resultRef} role="status">
           {mode === 'invite'
             ? 'Your password is set and the account is active.'
             : 'Your password has been changed, and every existing session has been signed out.'}
@@ -65,7 +67,11 @@ export function StaffPasswordForm({ mode }: { mode: 'invite' | 'reset' }) {
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="token" value={token} />
-      {state.error ? <Alert variant="destructive">{state.error}</Alert> : null}
+      {state.error ? (
+        <Alert ref={resultRef} variant="destructive">
+          {state.error}
+        </Alert>
+      ) : null}
 
       <div className="space-y-1.5">
         <Label htmlFor="password">New password</Label>

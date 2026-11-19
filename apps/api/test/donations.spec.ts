@@ -1,4 +1,5 @@
 import { createHmac, randomUUID } from 'node:crypto';
+import { inflateSync } from 'node:zlib';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { sql } from 'drizzle-orm';
@@ -1865,6 +1866,102 @@ describe('Donations (integration)', () => {
       // The line items are the SNAPSHOT, stored on the receipt itself.
       expect(data.lineItems.length).toBe(2);
       expect(data.lineItems.some((line) => line.itemName === 'Additional donation')).toBe(true);
+    });
+
+    /*
+      "Download receipt" on the donation's page. Reached through the same
+      public link as the receipt above, so it follows the same rule: no payment
+      identifier (owner, 2026-11-19). The emailed copy keeps it.
+    */
+    describe('as a PDF', () => {
+      /** Every drawn string in the PDF, as the hex pdf-lib writes it, upper-case. */
+      const drawnText = (pdf: Buffer) => {
+        const raw = pdf.toString('latin1');
+        let text = '';
+        for (const match of raw.matchAll(/stream\r?\n/g)) {
+          const start = match.index + match[0].length;
+          try {
+            text += inflateSync(pdf.subarray(start, raw.indexOf('endstream', start))).toString(
+              'latin1',
+            );
+          } catch {
+            // Not a compressed content stream (an image, say).
+          }
+        }
+        return text.toUpperCase();
+      };
+      const hex = (value: string) => Buffer.from(value, 'latin1').toString('hex').toUpperCase();
+      const binary = (res: NodeJS.ReadableStream, done: (error: null, body: Buffer) => void) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => done(null, Buffer.concat(chunks)));
+      };
+
+      it('downloads the receipt, with its number and without the payment id', async () => {
+        const { body } = await startDonation({
+          campaignSlug: 'school-kits-jharkhand',
+          items: [{ campaignProductId: bookId, quantity: 1 }],
+          customAmount: 10_000,
+          donor: DONOR,
+        });
+        const orderId = body.data!.razorpayOrderId as string;
+        const reference = body.data!.reference as string;
+        const payment = razorpay.__paymentForOrder(orderId);
+        await request(server)
+          .post(`${PREFIX}/donations/${body.data!.donationId as string}/verify-payment`)
+          .send({
+            razorpayOrderId: orderId,
+            razorpayPaymentId: payment.id,
+            razorpaySignature: checkoutSignature(orderId, payment.id),
+          })
+          .expect(200);
+        const { receiptNumber } = (
+          (await request(server).get(`${PREFIX}/donations/${reference}/receipt`)).body as Envelope<{
+            receiptNumber: string;
+          }>
+        ).data!;
+
+        const response = await request(server)
+          .get(`${PREFIX}/donations/${reference}/receipt/pdf`)
+          .buffer(true)
+          .parse(binary);
+
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toBe('application/pdf');
+        expect(response.headers['content-disposition']).toBe(
+          `attachment; filename="Donation-receipt-${receiptNumber}.pdf"`,
+        );
+        expect(response.headers['cache-control']).toBe('no-store');
+        const pdf = response.body as Buffer;
+        expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+
+        const text = drawnText(pdf);
+        expect(text).toContain(hex(receiptNumber));
+        expect(text).toContain(hex(reference));
+        expect(text).not.toContain(hex(payment.id));
+        expect(pdf.toString('latin1')).not.toContain(payment.id);
+        // Nor the donor's email or phone, not even masked.
+        expect(text).not.toContain(hex('@example.test'));
+        expect(text).not.toContain(hex(DONOR.phone.slice(-4)));
+        expect(text).not.toContain(hex('Email'));
+      });
+
+      it('answers 404, in the usual envelope, for a donation with no receipt', async () => {
+        const { body } = await startDonation({
+          campaignSlug: 'school-kits-jharkhand',
+          items: [{ campaignProductId: bookId, quantity: 1 }],
+          donor: DONOR,
+        });
+
+        const unpaid = await request(server).get(
+          `${PREFIX}/donations/${body.data!.reference as string}/receipt/pdf`,
+        );
+        expect(unpaid.status).toBe(404);
+        expect(errorCode(unpaid.body as Envelope)).toBe('NOT_FOUND');
+
+        const unknown = await request(server).get(`${PREFIX}/donations/DON-ZZZZZZZZ/receipt/pdf`);
+        expect(unknown.status).toBe(404);
+      });
     });
 
     /**

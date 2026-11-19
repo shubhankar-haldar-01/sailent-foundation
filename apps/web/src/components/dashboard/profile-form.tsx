@@ -22,6 +22,7 @@ import {
   type EmailChangeState,
 } from '@/lib/donor/actions';
 import type { DonorProfile } from '@/lib/donor/api';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 const INDIAN_STATES = [
   'Andhra Pradesh',
@@ -82,17 +83,18 @@ function SaveButton() {
 
 export function ProfileForm({ profile }: { profile: DonorProfile }) {
   const [state, action] = useActionState<DonorActionState, FormData>(updateDonorProfile, {});
+  const resultRef = useRevealResult(state);
 
   return (
     <div className="space-y-6">
       <form action={action} className="space-y-6">
         {state.error ? (
-          <Alert variant="destructive" role="alert">
+          <Alert ref={resultRef} variant="destructive" role="alert">
             {state.error}
           </Alert>
         ) : null}
         {state.ok ? (
-          <Alert variant="success" role="status">
+          <Alert ref={resultRef} variant="success" role="status">
             Your profile has been saved.
           </Alert>
         ) : null}
@@ -255,6 +257,8 @@ export function ProfileForm({ profile }: { profile: DonorProfile }) {
 function EmailChangeCard({ currentEmail }: { currentEmail: string | null }) {
   const [requested, request] = useActionState<EmailChangeState, FormData>(requestEmailChange, {});
   const [verified, verify] = useActionState<EmailChangeState, FormData>(verifyEmailChange, {});
+  const requestedRef = useRevealResult(requested);
+  const verifiedRef = useRevealResult(verified);
   const pending = verified.pendingEmail ?? requested.pendingEmail;
 
   return (
@@ -265,7 +269,7 @@ function EmailChangeCard({ currentEmail }: { currentEmail: string | null }) {
 
       {verified.ok ? (
         <div className="mt-4">
-          <Alert variant="success" role="status">
+          <Alert ref={verifiedRef} variant="success" role="status">
             Your email address has been changed.
           </Alert>
         </div>
@@ -274,7 +278,7 @@ function EmailChangeCard({ currentEmail }: { currentEmail: string | null }) {
       {!pending || verified.ok ? (
         <form action={request} className="mt-4 space-y-4">
           {requested.error ? (
-            <Alert variant="destructive" role="alert">
+            <Alert ref={requestedRef} variant="destructive" role="alert">
               {requested.error}
             </Alert>
           ) : null}
@@ -311,7 +315,7 @@ function EmailChangeCard({ currentEmail }: { currentEmail: string | null }) {
       ) : (
         <form action={verify} className="mt-4 space-y-4">
           {verified.error ? (
-            <Alert variant="destructive" role="alert">
+            <Alert ref={verifiedRef} variant="destructive" role="alert">
               {verified.error}
             </Alert>
           ) : null}

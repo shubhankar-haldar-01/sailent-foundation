@@ -138,6 +138,9 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
     const outbound = new Headers();
     const contentType = response.headers.get('content-type');
     if (contentType) outbound.set('content-type', contentType);
+    // A file the API sends (the receipt PDF) keeps its download name.
+    const disposition = response.headers.get('content-disposition');
+    if (disposition) outbound.set('content-disposition', disposition);
     outbound.set(REQUEST_ID_HEADER, response.headers.get(REQUEST_ID_HEADER) ?? requestId);
 
     return new NextResponse(body, { status: response.status, headers: outbound });

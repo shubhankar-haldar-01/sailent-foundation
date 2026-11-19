@@ -28,6 +28,7 @@ There are three deployables and one shared database. The packages are consumed a
 - `packages/types`: money, API envelope and auth contracts.
 - `packages/config`: environment schemas, constants, ESLint and tsconfig presets.
 - `packages/ui`: tokens and components.
+- `packages/documents`: the PDF documents (the donation receipt, and the drawing helpers and logo the event pass shares). Server-side only (pdf-lib), used by the worker (email attachments) and the API (the receipt download); the web app never imports it.
 
 **Production topology (Phase 14, prepared, NOT deployed):** three Google Cloud Run services in `asia-south1` — `sailent-web` (public), `sailent-api` (public: the web server and Razorpay's webhook call it) and `sailent-worker` (internal ingress, exactly one instance, CPU always allocated because it consumes queues outside any request). Supabase Postgres (session pooler, TLS verified), Memorystore Redis over a private VPC, Cloudflare R2, Resend, optional Sentry. Each service has its own container image (`apps/*/Dockerfile`) and service template (`infrastructure/cloud-run/`); secrets come from Secret Manager. The full diagram, settings and procedures are in `DEPLOYMENT.md` §8 and §11–§21.
 

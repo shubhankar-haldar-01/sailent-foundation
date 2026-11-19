@@ -220,7 +220,7 @@ The API tests mock the Razorpay client. A live test-mode payment has never been 
 
 Set **`APP_ENV=production`** when building and starting the web: it turns on HSTS (two years, subdomains, no preload). Serve the site over HTTPS only before doing so. `TRUSTED_ORIGINS` (comma-separated) lists any extra origins allowed to POST through the BFF — normally empty, because the site's own origin is always allowed.
 
-**Worker (production):** `APP_PUBLIC_URL` must be the public `https://` address used in email links.
+**Worker and API (production):** `APP_PUBLIC_URL` must be the public `https://` address: the worker uses it for links in emails and the receipt's verification QR, the API for the QR on a receipt downloaded from the site.
 
 **Content-Security-Policy.** Scripts load only from the site and `checkout.razorpay.com`. If a new third-party script or embed is added (analytics, chat, video), its origin must be added to `apps/web/src/lib/security/content-security-policy.ts`, or the browser will block it.
 
@@ -523,6 +523,7 @@ Values in **bold** come from Secret Manager (§16); everything else is a plain e
 | `R2_BUCKET_PUBLIC`, `R2_BUCKET_PRIVATE` | `sailent-public`, `sailent-private` |
 | `R2_PUBLIC_BASE_URL` | the public bucket's custom domain, `https://…` — must equal the web's `MEDIA_PUBLIC_BASE_URL` |
 | `CORS_ORIGINS` | the site's origin |
+| **`APP_PUBLIC_URL`** | the site's public `https://` address (the verification QR on a downloaded receipt); refused in production if not https or if localhost |
 | `SWAGGER_ENABLED`, `FEATURE_MOCK_DATA` | `false` (enforced) |
 | **`SENTRY_DSN`**, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE` | optional; release = image tag |
 

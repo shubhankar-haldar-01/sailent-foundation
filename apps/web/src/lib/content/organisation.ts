@@ -168,23 +168,37 @@ export function toOrganisation(settings: ApiOrganisationSettings, useDemo: boole
  * contact block that cannot load must not take the page down with it. On
  * failure the details are simply absent (and logged).
  */
-export const getOrganisation = cache(async (): Promise<Organisation> => {
+export const getOrganisation = cache(async (): Promise<Organisation> =>
+  toOrganisation(await loadSettings(), fixturesEnabled),
+);
+
+/**
+ * Only what the organisation has entered in Admin → Settings: never a demo
+ * value, even where the rest of the site shows one in development.
+ *
+ * For pages that speak as a record, such as a donation's receipt page, where a
+ * placeholder PAN or 80G number would be a false statement to a donor.
+ */
+export const getOrganisationRecords = cache(async (): Promise<Organisation> =>
+  toOrganisation(await loadSettings(), false),
+);
+
+const loadSettings = cache(async (): Promise<ApiOrganisationSettings> => {
   // Outside the try: during `next build` this must bail the route out of
   // prerendering, not be caught as a failure (Phase 14, see requestTimeOnly).
   await requestTimeOnly();
   try {
-    const settings = await loadContent<ApiOrganisationSettings>({
+    return await loadContent<ApiOrganisationSettings>({
       label: 'organisation settings',
       fromApi: (api) =>
         api.get<ApiOrganisationSettings>('settings/public', publicCache('settings')),
       fallback: () => EMPTY,
     });
-    return toOrganisation(settings, fixturesEnabled);
   } catch (error) {
     console.error(
       `[content] organisation settings unavailable: ${error instanceof Error ? error.message : String(error)}`,
     );
-    return toOrganisation(EMPTY, fixturesEnabled);
+    return EMPTY;
   }
 });
 

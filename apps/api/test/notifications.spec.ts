@@ -451,6 +451,59 @@ describe('Notifications (integration)', () => {
 
   // =========================================================================
   describe('templates', () => {
+    /*
+      These tests edit real templates, and the suite runs against the
+      development database unless TEST_DATABASE_URL names another. Whatever
+      they change is put back afterwards, through the API so the revision
+      history stays whole. Before this, every run left "Edited <stamp>" as a
+      live subject and a test body as the donation receipt's wording.
+    */
+    type TemplateRow = {
+      id: string;
+      subject: string;
+      body_html: string;
+      body_text: string;
+      is_active: boolean;
+    };
+    const readTemplates = async () =>
+      (
+        await db().execute(
+          sql`SELECT id, subject, body_html, body_text, is_active FROM notification_templates`,
+        )
+      ).rows as TemplateRow[];
+    let originals: TemplateRow[] = [];
+
+    beforeAll(async () => {
+      originals = await readTemplates();
+    });
+
+    afterAll(async () => {
+      const now = new Map((await readTemplates()).map((row) => [row.id, row]));
+      for (const before of originals) {
+        const after = now.get(before.id);
+        if (
+          !after ||
+          (after.subject === before.subject &&
+            after.body_html === before.body_html &&
+            after.body_text === before.body_text &&
+            after.is_active === before.is_active)
+        ) {
+          continue;
+        }
+        const response = await request(server)
+          .patch(`${PREFIX}/admin/notification-templates/${before.id}`)
+          .set(auth(staff))
+          .send({
+            subject: before.subject,
+            bodyHtml: before.body_html,
+            bodyText: before.body_text,
+            isActive: before.is_active,
+            note: 'Restored after the test suite',
+          });
+        expect(response.status).toBe(200);
+      }
+    });
+
     async function firstTemplate(): Promise<{ id: string; slug: string }> {
       const response = await request(server)
         .get(`${PREFIX}/admin/notification-templates`)

@@ -1,7 +1,11 @@
 import { eq, and } from 'drizzle-orm';
 import type { Logger } from 'pino';
 
-import { notificationTemplates, type DatabaseClient } from '@sailent/database';
+import {
+  NOTIFICATION_TEMPLATE_SEED,
+  notificationTemplates,
+  type DatabaseClient,
+} from '@sailent/database';
 import { renderNotification } from '@sailent/validation';
 
 /**
@@ -36,6 +40,36 @@ export interface RenderedTemplate {
   text: string;
   templateId: string;
   templateVersion: number;
+  /**
+   * Whether an administrator has written their own body: the stored body
+   * differs from the wording this code ships (`NOTIFICATION_TEMPLATE_SEED`).
+   *
+   * Not the version number. Reverting to the default, or tests saving and
+   * restoring a template, raise the version without anyone writing anything,
+   * and an email laid out in code would then repeat the default wording as if
+   * it were a personal note.
+   */
+  customised: boolean;
+}
+
+/** Same text, ignoring how it is spaced (an editor may reflow it). */
+const normalised = (value: string) => value.replace(/\s+/g, ' ').trim();
+
+const SHIPPED_BODIES = new Map(
+  NOTIFICATION_TEMPLATE_SEED.map((template) => [
+    template.slug,
+    { html: normalised(template.bodyHtml), text: normalised(template.bodyText) },
+  ]),
+);
+
+/**
+ * The stored body differs from the shipped one. A slug with no shipped body
+ * is treated as customised: there is nothing to compare it with.
+ */
+export function isCustomised(slug: string, bodyHtml: string, bodyText: string): boolean {
+  const shipped = SHIPPED_BODIES.get(slug);
+  if (!shipped) return true;
+  return normalised(bodyHtml) !== shipped.html || normalised(bodyText) !== shipped.text;
 }
 
 /** The drizzle handle, as every processor already receives it. */
@@ -86,6 +120,7 @@ export async function renderFromTemplate(
       text: rendered.text,
       templateId: template.id,
       templateVersion: template.version,
+      customised: isCustomised(slug, template.bodyHtml, template.bodyText),
     };
   } catch (error) {
     // A template lookup must never be the reason an email does not arrive.

@@ -237,16 +237,18 @@ test.describe('admin blog', () => {
  * Open the five-minute sensitive-operation window.
  *
  * ══════════════════════════════════════════════════════════════════════════
- * DONE ON `/admin/settings`, WHICH IS NOT AN ACCIDENT.
+ * DONE ON A STAFF USER'S PAGE, WHICH IS NOT AN ACCIDENT.
  *
  * `ReauthPanel` is rendered in place of a page whose LOAD the API refused. The
  * blog pages are not `@Sensitive()` to read — an editor works on a draft over
  * several sittings — so they load normally and the panel never appears there;
  * a refused publish shows an error banner instead, which has no password field.
  *
- * Settings IS sensitive to read, so visiting it presents the panel. That is
- * also how this works for a real administrator: the confirmation is attached
- * to the session for five minutes, not to one button.
+ * Reading a staff account IS sensitive, so opening one presents the panel.
+ * (Settings used to be the page for this; since 2026-11-19 saving settings
+ * needs no re-authentication.) That is also how this works for a real
+ * administrator: the confirmation is attached to the session for five
+ * minutes, not to one button.
  *
  * The E2E staff account is created with `totp_enabled = false`, so the panel's
  * optional TOTP field is left empty and the password alone is enough.

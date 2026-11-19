@@ -8,6 +8,7 @@ import { emailSchema } from '@sailent/validation';
 import { subscribeToNewsletter } from '@/lib/communications/actions';
 import { Honeypot } from '@/components/forms/honeypot';
 import { PageShell } from '@/components/layout/page-shell';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * Newsletter subscription section 100% matching the approved design.
@@ -28,6 +29,7 @@ export function NewsletterSection() {
   const [value, setValue] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState(false);
+  const resultRef = useRevealResult(submitted);
   const [pending, startTransition] = React.useTransition();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -157,6 +159,7 @@ export function NewsletterSection() {
 
                 {submitted ? (
                   <div
+                    ref={resultRef}
                     role="status"
                     className="mt-3 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"
                   >

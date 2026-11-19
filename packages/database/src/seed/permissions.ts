@@ -278,7 +278,8 @@ export const PERMISSIONS: PermissionDefinition[] = [
   { key: 'role.read', description: 'View roles and permissions' },
   { key: 'role.manage', description: 'Create and edit roles', sensitive: true },
   { key: 'settings.read', description: 'View settings' },
-  { key: 'settings.update', description: 'Change settings', sensitive: true },
+  // Not sensitive since 2026-11-19: the owner removed its re-authentication.
+  { key: 'settings.update', description: 'Change settings' },
   { key: 'audit.read', description: 'View the audit log' },
   { key: 'audit.export', description: 'Export the audit log', sensitive: true },
   { key: 'notification.send', description: 'Send notifications', sensitive: true },

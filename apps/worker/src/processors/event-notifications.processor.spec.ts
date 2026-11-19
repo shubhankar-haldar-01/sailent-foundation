@@ -15,7 +15,7 @@ import {
   type DatabaseClient,
 } from '@sailent/database';
 
-import { SAILENT_LOGO_PNG } from '../assets/sailent-logo.js';
+import { SAILENT_LOGO_PNG } from '@sailent/documents';
 import { createMailer } from '../lib/email.js';
 import { renderPassPdf } from '../lib/pass-pdf.js';
 import { renderFromTemplate } from '../lib/templates.js';
@@ -45,6 +45,7 @@ const seeded = () => ({
   text: 'Seeded wording.',
   templateId,
   templateVersion: 1,
+  customised: false,
 });
 
 /**
@@ -265,6 +266,7 @@ describe('event.registration.confirmed', () => {
       html: '<p>Bring a water bottle.</p>',
       text: 'Bring a water bottle.',
       templateVersion: 2,
+      customised: true,
     });
     const freeEvent = await event(false);
     const single = await booking(freeEvent.id, { attendeeCount: 1, attendees: [] });

@@ -1,7 +1,18 @@
-import { Body, Controller, Get, Headers, HttpCode, Param, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  Headers,
+  HttpCode,
+  Param,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
 import { Public } from '../../common/decorators/public.decorator.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
@@ -163,5 +174,38 @@ export class PublicDonationsController {
   @ApiParam({ name: 'reference', example: 'DON-7K2MPQ4X' })
   receipt(@Param(new ZodValidationPipe(donationReferenceParam)) params: { reference: string }) {
     return this.receipts.getByDonationReference(params.reference);
+  }
+
+  /**
+   * The receipt as a PDF, for "Download receipt" on the donation's page.
+   *
+   * The same capability as the receipt above (the reference), so the same
+   * rule: no payment identifier in it. Drawing a PDF costs more than reading
+   * a row, so the limit is tighter.
+   *
+   * Sent as a FILE, not inside the JSON envelope, so it arrives as a download.
+   */
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Get('donations/:reference/receipt/pdf')
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({
+    summary: 'The receipt for a donation, as a PDF',
+    description:
+      'The emailed receipt without the payment id. NOT an 80G tax certificate — that is Form 10BE, issued by the Income Tax Department after the annual Form 10BD filing.',
+  })
+  @ApiParam({ name: 'reference', example: 'DON-7K2MPQ4X' })
+  @ApiResponse({ status: 200, description: 'application/pdf' })
+  @ApiResponse({ status: 404, description: 'No receipt for that reference' })
+  async receiptPdf(
+    @Param(new ZodValidationPipe(donationReferenceParam)) params: { reference: string },
+    @Res() response: Response,
+  ) {
+    const { filename, pdf } = await this.receipts.pdfByDonationReference(params.reference);
+    response
+      .status(200)
+      .setHeader('Content-Type', 'application/pdf')
+      .setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+      .send(pdf);
   }
 }

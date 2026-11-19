@@ -6,6 +6,7 @@ import { useFormStatus } from 'react-dom';
 import { Alert, Button } from '@sailent/ui';
 
 import { cancelEventRegistration, type DonorActionState } from '@/lib/donor/actions';
+import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
  * Give up a place.
@@ -37,13 +38,14 @@ function Confirm() {
 
 export function CancelRegistrationButton({ eventId, slug }: { eventId: string; slug: string }) {
   const [state, action] = useActionState<DonorActionState, FormData>(cancelEventRegistration, {});
+  const resultRef = useRevealResult(state);
   const [confirming, setConfirming] = React.useState(false);
 
   if (!confirming) {
     return (
       <>
         {state.error ? (
-          <Alert variant="destructive" role="alert" className="mb-3">
+          <Alert ref={resultRef} variant="destructive" role="alert" className="mb-3">
             {state.error}
           </Alert>
         ) : null}
@@ -60,7 +62,7 @@ export function CancelRegistrationButton({ eventId, slug }: { eventId: string; s
       <input type="hidden" name="slug" value={slug} />
 
       {state.error ? (
-        <Alert variant="destructive" role="alert">
+        <Alert ref={resultRef} variant="destructive" role="alert">
           {state.error}
         </Alert>
       ) : null}

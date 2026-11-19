@@ -3,13 +3,13 @@ import request from 'supertest';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { PasswordService } from '../src/modules/auth/password.service.js';
 import { DATABASE } from '../src/modules/database/database.module.js';
 import {
   PREFIX,
   TEST_PASSWORD,
   TEST_USERS,
   createTestApp,
-  devTotpCode,
   errorCode,
   type Envelope,
 } from './harness.js';
@@ -39,15 +39,9 @@ describe('Settings (integration)', () => {
 
   const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
 
-  /** The update is `@Sensitive()`; a fresh login is not a re-authentication. */
-  async function reauth(token = staff) {
-    await request(server)
-      .post(`${PREFIX}/auth/reauth`)
-      .set(auth(token))
-      .send({ password: TEST_PASSWORD, totpCode: devTotpCode() });
-  }
-
   let original: Record<string, unknown> = {};
+  /** A staff member who may read settings but not change them, and their role. */
+  const limited = { userId: '', roleId: '', token: '' };
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -58,7 +52,36 @@ describe('Settings (integration)', () => {
       .send({ email: TEST_USERS.superAdmin, password: TEST_PASSWORD });
     staff = (login.body as Envelope<{ accessToken: string }>).data!.accessToken;
 
-    await reauth();
+    const stamp = Date.now().toString(36);
+    const role = (
+      await db().execute(sql`
+        INSERT INTO roles (key, name, is_system, priority)
+        VALUES (${'TEST_SETTINGS_READ_' + stamp}, 'Settings read-only (test)', false, 1)
+        RETURNING id
+      `)
+    ).rows![0]!;
+    limited.roleId = role.id as string;
+    await db().execute(sql`
+      INSERT INTO role_permissions (role_id, permission_id)
+      SELECT ${limited.roleId}::uuid, id FROM permissions WHERE key = 'settings.read'
+    `);
+    const hash = await app.get(PasswordService).hash(TEST_PASSWORD);
+    const user = (
+      await db().execute(sql`
+        INSERT INTO users (email, first_name, status, password_hash)
+        VALUES (${'settings-reader-' + stamp + '@sailent.test'}, 'Reader', 'active', ${hash})
+        RETURNING id, email
+      `)
+    ).rows![0]!;
+    limited.userId = user.id as string;
+    await db().execute(
+      sql`INSERT INTO user_roles (user_id, role_id) VALUES (${limited.userId}::uuid, ${limited.roleId}::uuid)`,
+    );
+    const limitedLogin = await request(server)
+      .post(`${PREFIX}/auth/staff/login`)
+      .send({ email: user.email, password: TEST_PASSWORD });
+    limited.token = (limitedLogin.body as Envelope<{ accessToken: string }>).data!.accessToken;
+
     const current = await request(server).get(`${PREFIX}/admin/settings`).set(auth(staff));
     original = (current.body as Envelope<Record<string, unknown>>).data ?? {};
   }, 60_000);
@@ -70,6 +93,14 @@ describe('Settings (integration)', () => {
       await db().execute(sql`
         UPDATE settings SET value = ${JSON.stringify(value)}::jsonb WHERE key = ${key}
       `);
+    }
+    if (limited.userId) {
+      await db().execute(sql`DELETE FROM sessions WHERE user_id = ${limited.userId}::uuid`);
+      await db().execute(sql`DELETE FROM user_roles WHERE user_id = ${limited.userId}::uuid`);
+      await db().execute(sql`DELETE FROM users WHERE id = ${limited.userId}::uuid`);
+    }
+    if (limited.roleId) {
+      await db().execute(sql`DELETE FROM roles WHERE id = ${limited.roleId}::uuid`);
     }
     await app?.close();
   });
@@ -107,20 +138,45 @@ describe('Settings (integration)', () => {
       expect(response.status).toBe(200);
     });
 
-    it('requires a FRESH re-authentication to write', async () => {
-      // A new session has never re-authenticated, so the sensitive gate closes.
+    it('saves without a password re-confirmation, and audits who changed what', async () => {
+      // Owner, 2026-11-19: a signed-in staff member with settings.update saves
+      // straight away. A fresh login has never re-authenticated.
       const fresh = await request(server)
         .post(`${PREFIX}/auth/staff/login`)
         .send({ email: TEST_USERS.staff, password: TEST_PASSWORD });
       const token = (fresh.body as Envelope<{ accessToken: string }>).data!.accessToken;
+      const name = `Saved Without Re-auth ${Date.now()}`;
 
       const response = await request(server)
         .patch(`${PREFIX}/admin/settings`)
         .set(auth(token))
-        .send({ organization_name: 'Renamed Without Re-auth' });
+        .send({ organization_name: name });
+
+      expect(response.status).toBe(200);
+      const audit = (
+        await db().execute(sql`
+          SELECT new_values FROM audit_logs
+          WHERE action = 'settings.update' AND new_values->>'organization_name' = ${name}
+        `)
+      ).rows!;
+      expect(audit).toHaveLength(1);
+    });
+
+    it('still refuses a staff member without settings.update, and changes nothing', async () => {
+      const before = await request(server).get(`${PREFIX}/admin/settings`).set(auth(staff));
+
+      expect(
+        (await request(server).get(`${PREFIX}/admin/settings`).set(auth(limited.token))).status,
+      ).toBe(200);
+      const response = await request(server)
+        .patch(`${PREFIX}/admin/settings`)
+        .set(auth(limited.token))
+        .send({ organization_name: 'Renamed By A Reader' });
 
       expect(response.status).toBe(403);
-      expect(errorCode(response.body as Envelope)).toBe('REAUTH_REQUIRED');
+      expect(errorCode(response.body as Envelope)).toBe('FORBIDDEN');
+      const after = await request(server).get(`${PREFIX}/admin/settings`).set(auth(staff));
+      expect((after.body as Envelope).data).toEqual((before.body as Envelope).data);
     });
   });
 
@@ -157,7 +213,6 @@ describe('Settings (integration)', () => {
   // =========================================================================
   describe('validation', () => {
     async function patch(body: Record<string, unknown>) {
-      await reauth();
       return request(server).patch(`${PREFIX}/admin/settings`).set(auth(staff)).send(body);
     }
 
@@ -227,7 +282,6 @@ describe('Settings (integration)', () => {
   // =========================================================================
   describe('writing', () => {
     it('saves a change and returns the new state', async () => {
-      await reauth();
       const response = await request(server)
         .patch(`${PREFIX}/admin/settings`)
         .set(auth(staff))
@@ -240,7 +294,6 @@ describe('Settings (integration)', () => {
     });
 
     it('leaves untouched settings ALONE', async () => {
-      await reauth();
       const before = await request(server).get(`${PREFIX}/admin/settings`).set(auth(staff));
       const minimumBefore = (before.body as Envelope<{ donation_minimum_paise: number }>).data!
         .donation_minimum_paise;
@@ -257,7 +310,6 @@ describe('Settings (integration)', () => {
     });
 
     it('records ONE audit entry holding only what changed', async () => {
-      await reauth();
       await request(server)
         .patch(`${PREFIX}/admin/settings`)
         .set(auth(staff))
@@ -290,7 +342,6 @@ describe('Settings (integration)', () => {
         leave neither applied — a name saved beside registration details that
         were refused is the kind of partial state nobody goes looking for.
       */
-      await reauth();
       const before = await request(server).get(`${PREFIX}/admin/settings`).set(auth(staff));
       const nameBefore = (before.body as Envelope<{ organization_name: string }>).data!
         .organization_name;

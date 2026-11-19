@@ -15,6 +15,7 @@
   "dependencies": {
     "@sailent/config": "workspace:*",
     "@sailent/database": "workspace:*",
+    "@sailent/documents": "workspace:*",
     "@sailent/types": "workspace:*",
     "@sailent/validation": "workspace:*",
     "bullmq": "^5.34.6",
