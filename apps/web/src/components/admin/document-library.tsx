@@ -4,7 +4,16 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Download, FileText, Lock, ShieldAlert } from 'lucide-react';
 
-import { Button, Input, cn } from '@sailent/ui';
+import {
+  Button,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  cn,
+} from '@sailent/ui';
 
 import { Field, FormStatus, SubmitButton } from '@/components/admin/form-shell';
 import {
@@ -110,18 +119,18 @@ export function UploadPanel({ campaigns }: { campaigns: { id: string; title: str
       </Field>
 
       <Field label="Type" name="documentType" errors={state.fieldErrors}>
-        <select
-          id="documentType"
-          name="documentType"
-          defaultValue="other"
-          className="border-input bg-surface text-body h-11 w-full rounded-lg border px-3"
-        >
-          {Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+        <Select name="documentType" defaultValue="other">
+          <SelectTrigger id="documentType">
+            <SelectValue placeholder="Select type" />
+          </SelectTrigger>
+          <SelectContent position="popper" side="bottom" align="start">
+            {Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Field>
 
       <Field
@@ -139,19 +148,16 @@ export function UploadPanel({ campaigns }: { campaigns: { id: string; title: str
         errors={state.fieldErrors}
         hint={VISIBILITY_MEANING[visibility]}
       >
-        <select
-          id="visibility"
-          name="visibility"
-          value={visibility}
-          onChange={(event) => setVisibility(event.target.value)}
-          className="border-input bg-surface text-body h-11 w-full rounded-lg border px-3"
-        >
-          {/* Private is first AND the default: the closed state is the one you
-              land on without making a choice. */}
-          <option value="private">Private</option>
-          <option value="admin_only">Admin only</option>
-          <option value="public">Public</option>
-        </select>
+        <Select name="visibility" value={visibility} onValueChange={setVisibility}>
+          <SelectTrigger id="visibility">
+            <SelectValue placeholder="Select visibility" />
+          </SelectTrigger>
+          <SelectContent position="popper" side="bottom" align="start">
+            <SelectItem value="private">Private</SelectItem>
+            <SelectItem value="admin_only">Admin only</SelectItem>
+            <SelectItem value="public">Public</SelectItem>
+          </SelectContent>
+        </Select>
       </Field>
 
       <Field
@@ -160,19 +166,19 @@ export function UploadPanel({ campaigns }: { campaigns: { id: string; title: str
         errors={state.fieldErrors}
         hint="A public document is only shown to visitors on the campaign it is attached to. Nothing else publishes documents."
       >
-        <select
-          id="relatedId"
-          name="relatedId"
-          defaultValue=""
-          className="border-input bg-surface text-body h-11 w-full rounded-lg border px-3"
-        >
-          <option value="">Not attached</option>
-          {campaigns.map((campaign) => (
-            <option key={campaign.id} value={campaign.id}>
-              {campaign.title}
-            </option>
-          ))}
-        </select>
+        <Select name="relatedId" defaultValue="none">
+          <SelectTrigger id="relatedId">
+            <SelectValue placeholder="Not attached" />
+          </SelectTrigger>
+          <SelectContent position="popper" side="bottom" align="start">
+            <SelectItem value="none">Not attached</SelectItem>
+            {campaigns.map((campaign) => (
+              <SelectItem key={campaign.id} value={campaign.id}>
+                {campaign.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Field>
 
       <div className="flex gap-2">
@@ -265,18 +271,18 @@ export function DocumentDetailsForm({ document }: { document: AdminDocument }) {
       </Field>
 
       <Field label="Type" name="documentType" errors={state.fieldErrors}>
-        <select
-          id="documentType"
-          name="documentType"
-          defaultValue={document.documentType}
-          className="border-input bg-surface text-body h-11 w-full rounded-lg border px-3"
-        >
-          {Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+        <Select name="documentType" defaultValue={document.documentType}>
+          <SelectTrigger id="documentType">
+            <SelectValue placeholder="Select type" />
+          </SelectTrigger>
+          <SelectContent position="popper" side="bottom" align="start">
+            {Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Field>
 
       <Field label="Financial year" name="financialYear" errors={state.fieldErrors}>

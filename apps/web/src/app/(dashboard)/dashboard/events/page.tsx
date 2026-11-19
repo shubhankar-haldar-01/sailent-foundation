@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { CalendarDays, MapPin, Video } from 'lucide-react';
+import { CalendarDays, MapPin } from 'lucide-react';
 
 import { Badge, Button, Card, formatDate } from '@sailent/ui';
 
@@ -157,15 +157,9 @@ function EventRow({ entry, cancellable }: { entry: MyEvent; cancellable: boolean
                 <time dateTime={entry.startDate}>{formatDate(entry.startDate)}</time>
               </span>
               <span className="flex items-center gap-1.5">
-                {entry.isOnline ? (
-                  <Video className="size-3.5 shrink-0" aria-hidden="true" />
-                ) : (
-                  <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
-                )}
-                {entry.isOnline
-                  ? 'Online'
-                  : [entry.venueName, entry.city].filter(Boolean).join(', ') ||
-                    'Venue to be confirmed'}
+                <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
+                {[entry.venueName, entry.city].filter(Boolean).join(', ') ||
+                  'Venue to be confirmed'}
               </span>
               {entry.attendeeCount > 1 ? (
                 <span data-numeric="">{entry.attendeeCount} places</span>

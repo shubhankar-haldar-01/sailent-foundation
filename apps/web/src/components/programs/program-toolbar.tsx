@@ -1,51 +1,21 @@
 import { cn } from '@sailent/ui';
 
-import { categoryKey } from '@/lib/categories';
-
 import { ProgramSearch } from './program-search';
-import { ProgramsMenu } from './programs-menu';
-import {
-  programsHref,
-  type ProgramArea,
-  type ProgramsQuery,
-  type ProgramsView,
-} from './programs-query';
+import { type ProgramArea, type ProgramsQuery, type ProgramsView } from './programs-query';
 
 /**
- * The toolbar above the programs grid, as the owner's design (2026-10-14,
- * third version) draws it: the "All categories" menu, the search box and the
- * count of matching programmes — one white panel. (The area chips, "More
- * filters", "Sort by" and "Clear filters" of the earlier versions were
- * removed at the owner's request the same day.)
- *
- * ══════════════════════════════════════════════════════════════════════════
- * THE AREAS ARE THE ONES PROGRAMMES ACTUALLY HAVE (`programAreaOptions`), so
- * a menu entry never leads to an empty grid and a new area appears with its
- * first programme — nothing here is a fixed list.
- * ══════════════════════════════════════════════════════════════════════════
- *
- * Both controls lead to listing URLs and keep each other: picking an area
- * keeps the search, and searching keeps the area. The way back is in the
- * controls themselves — "All categories" in the menu, and an emptied box.
- *
- * On one row from `sm`. On a phone the menu and the count share the first
- * row and the search takes the second.
+ * The toolbar above the programs grid: the search box and the count of
+ * matching programmes.
  */
 export function ProgramToolbar({
-  areas,
   query,
   view,
 }: {
-  areas: ProgramArea[];
+  areas?: ProgramArea[];
   query: ProgramsQuery;
   view: ProgramsView;
 }) {
-  const { activeArea } = view;
   const total = view.matching.length;
-
-  const areaHref = (area: string | null) => programsHref({ category: area, q: query.q });
-  const isCurrent = (area: string) =>
-    activeArea !== null && categoryKey(area) === categoryKey(activeArea);
 
   return (
     <div
@@ -54,31 +24,7 @@ export function ProgramToolbar({
         'shadow-[0_1px_2px_rgb(16_42_67/0.04),0_8px_20px_-12px_rgb(16_42_67/0.14)]',
       )}
     >
-      {/* One area or none is nothing to choose between. */}
-      {areas.length > 1 ? (
-        <ProgramsMenu
-          label={activeArea ?? 'All categories'}
-          items={[
-            {
-              label: 'All categories',
-              href: areaHref(null),
-              current: activeArea === null,
-              accent: 'all',
-            },
-            ...areas.map((area) => ({
-              label: area.name,
-              href: areaHref(area.name),
-              current: isCurrent(area.name),
-              accent: area.accent,
-            })),
-          ]}
-        />
-      ) : null}
-
-      <ProgramSearch
-        query={query}
-        className="min-w-[12rem] flex-1 max-sm:order-last max-sm:basis-full"
-      />
+      <ProgramSearch query={query} className="min-w-[12rem] flex-1" />
 
       {/* What is on screen, in words — announced when a control changes it. */}
       <p

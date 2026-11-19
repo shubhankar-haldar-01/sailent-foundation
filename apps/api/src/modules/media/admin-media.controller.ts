@@ -41,6 +41,7 @@ import {
   type UpdateMediaInput,
 } from './dto/media.dto.js';
 import { requestClientIp } from '../../common/security/internal-request.js';
+import { singleFileUploadLimits } from '../storage/upload-limits.js';
 
 /**
  * The media library — administration.
@@ -114,7 +115,10 @@ export class AdminMediaController {
    */
   @RequirePermission('media.create')
   @Post('media')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 } }))
+  @UseInterceptors(
+    // altText, caption and visibility, with slack (see upload-limits.ts).
+    FileInterceptor('file', { limits: singleFileUploadLimits(MAX_UPLOAD_BYTES, 8) }),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {

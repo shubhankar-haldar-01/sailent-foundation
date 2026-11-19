@@ -12,7 +12,7 @@ import {
 } from '@sailent/database';
 import { CONTACT_SUBJECT_LABELS, organizationContactSchema } from '@sailent/validation';
 
-import { sendEmail, type BrevoConfig } from '../lib/brevo.js';
+import { sendEmail, type Mailer } from '../lib/email.js';
 import { alertStaffOfFailedSend } from '../lib/admin-alert.js';
 
 /**
@@ -55,7 +55,7 @@ export interface StaffTokenJob {
 
 export interface CommunicationsDeps {
   database: DatabaseClient;
-  brevo: BrevoConfig;
+  mailer: Mailer;
   appUrl: string;
   /** Where contact messages go. Defaults to the `organization_contact` setting. */
   organisationEmail?: (db: DatabaseClient['db']) => Promise<string | null>;
@@ -135,7 +135,7 @@ async function record(
 /** Only `unreachable` is worth retrying; the rest are permanent. */
 function throwIfRetryable(result: SendOutcome): void {
   if (!result.sent && result.reason === 'unreachable') {
-    throw new Error(`Brevo unreachable: ${result.detail ?? ''}`);
+    throw new Error(`Email provider unreachable: ${result.detail ?? ''}`);
   }
 }
 
@@ -205,7 +205,7 @@ ${message.message}
 It is also in Admin → Messages, where it can be marked handled.`;
 
   const result = await sendEmail(
-    deps.brevo,
+    deps.mailer,
     {
       to: { email: to },
       subject: `Website message: ${subjectLabel}`,
@@ -217,6 +217,8 @@ It is also in Admin → Messages, where it can be marked handled.`;
   <p><a href="${escapeHtml(link(deps.appUrl, `/admin/messages/${message.id}`))}">Open it in Admin → Messages</a> to mark it handled.</p>`),
       text,
       tags: ['contact-message'],
+      // Staff answer with Reply: it goes to the visitor, not to our own inbox.
+      replyTo: message.email,
     },
     logger,
   );
@@ -276,7 +278,7 @@ The link works for 48 hours. If you did not ask for this, ignore this email and 
 To unsubscribe at any time later, use: ${unsubscribeUrl}`;
 
   const result = await sendEmail(
-    deps.brevo,
+    deps.mailer,
     {
       to: { email: subscriber.email },
       subject: 'Confirm your newsletter subscription',
@@ -352,7 +354,7 @@ async function processStaffToken(
       : 'If you did not ask for this, ignore it — your password has not changed.';
 
   const result = await sendEmail(
-    deps.brevo,
+    deps.mailer,
     {
       to: { email: user.email, name: name === 'there' ? undefined : name },
       subject,

@@ -205,6 +205,52 @@ describe('Rate limiting (integration)', () => {
       );
       expect(otherClient.status).not.toBe(429);
     });
+
+    /*
+      The public event registration routes (2026-11-19). An event that does
+      not exist answers 404 until the limit and 429 after, so nothing is ever
+      sent or created here.
+    */
+    const noSuchEvent = '00000000-0000-4000-8000-00000000e7e1';
+
+    it('limits event registration codes per client, so one client cannot spray addresses', async () => {
+      const client = randomClientIp();
+      const ask = (ip: string) =>
+        asClient(
+          request(server)
+            .post(`${PREFIX}/events/${noSuchEvent}/otp/request`)
+            .send({ email: `spray-${Math.random().toString(36).slice(2)}@example.test` }),
+          ip,
+        );
+
+      const statuses: number[] = [];
+      for (let index = 0; index < 6; index += 1) statuses.push((await ask(client)).status);
+      expect(statuses.slice(0, 5).every((status) => status !== 429)).toBe(true);
+      expect(statuses[5]).toBe(429);
+      expect((await ask(`203.0.113.${Math.floor(Math.random() * 250) + 1}`)).status).not.toBe(429);
+    });
+
+    it('limits code checks, payment orders and guest registrations per client', async () => {
+      for (const route of ['otp/verify', 'order', 'public-register']) {
+        const client = randomClientIp();
+        const statuses: number[] = [];
+        for (let index = 0; index < 11; index += 1) {
+          statuses.push(
+            (
+              await asClient(
+                request(server).post(`${PREFIX}/events/${noSuchEvent}/${route}`).send({}),
+                client,
+              )
+            ).status,
+          );
+        }
+        expect(
+          statuses.slice(0, 10).every((status) => status !== 429),
+          route,
+        ).toBe(true);
+        expect(statuses[10], route).toBe(429);
+      }
+    });
   });
 
   /**

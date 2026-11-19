@@ -10,6 +10,140 @@ Newest first.
 
 ---
 
+## 2026-11-19 — Security audit: fixes (uncommitted)
+
+From a full application security audit. Each fix has a regression test that fails when the fix is taken out (checked for every row).
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **The campaign video upload checks who is calling** (`uploadCampaignVideo` in `apps/web/src/lib/admin/actions.ts`): the caller must hold `campaign.create` or `campaign.update`, **as the API reports it** (`staffHolds()` → `GET auth/me`), before anything is written. Failure messages no longer include file-system paths | **High.** The only admin server action that does its work on the web server instead of through the API had no check at all. A server action is a public endpoint and the staff cookie is unsigned JSON that the middleware only checks for presence. Proven against a production build: a POST with a forged cookie wrote a file to `public/uploads/videos/` (up to 100 MB per call) | Staff with campaign permissions upload as before. The same forged request is now refused and writes nothing (re-proven on a rebuilt production build). Every other server action was checked: all of them go through the API first | — |
+| **Dependencies:** `next` 15.5.25 → **15.5.29** (critical: remote code execution in the image optimiser; a Server Actions DoS); overrides `body-parser@1` 1.20.8 → **1.20.9**, `multer` 2.4.0 → **2.5.0**, `qs` 6.16.0 → **6.16.2** | Critical and high advisories with patch releases | Patch versions only. `pnpm audit --prod`: 0 critical, 2 high (`drizzle-orm`, `zod`: majors, owner decision), 3 moderate. Full suites, typecheck, lint and a production build pass | — |
+| **Rate limits on the public event routes** (`event-registrations.controller.ts`): code requests 5, code checks 10, payment orders 10, guest registrations 10, each per client per 15 minutes | **Medium.** Without them, one client could send codes to any number of addresses and try codes without limit | Normal use is far below the limits | — |
+| **No open redirect after donor sign-in** (`lib/security/return-path.ts`): the return path is resolved as a URL and kept only if it stays on this site | **Medium.** `/\evil.example` passed the old prefix check, and browsers read it as `//evil.example` | Sign-in returns to the same pages as before | — |
+| **Oversized or unreadable request bodies get 413/415, not 500** (`AllExceptionsFilter`) | **Low.** The body parser's refusals were treated as crashes: logged as unhandled and sent to error tracking, so anyone could flood error tracking | A 413 or 415 in the usual error envelope. The 100 kB JSON limit, which bounds the zod advisory, is now covered by a test | — |
+| **Upload forms are capped, not just their files** (`storage/upload-limits.ts`, on the avatar, media and document uploads): a few fields of at most 16 KB each | **Low.** Multer allowed any number of 1 MB text fields, all held in memory, on a route any donor can reach | The longest real field (a 2,000-character document description) fits | — |
+| **The BFF proxy reads request bodies with a 10 MB ceiling** (`lib/api/bounded-body.ts`) | **Low.** `arrayBuffer()` had no limit. Next.js truncates bodies at 10 MB where the middleware runs, but the middleware skips paths ending in a file extension, which the proxy still accepts | Over 10 MB: 413 instead of a silently truncated upload | — |
+
+Found and **not changed** (owner decisions, listed in `DEVELOPMENT_STATUS.md` §2): the site's CSP blocks every campaign video (YouTube, Vimeo and direct files); the 100 MB Server Actions body limit; the campaign video upload cannot work in production (Next.js does not serve files added after the build, and Cloud Run's disk is per instance); the `drizzle-orm`, `zod` and Nest 11 upgrades.
+
+Tests: API ✅ 979 passed, 9 skipped (one cross-suite race in `public-api.spec.ts` passed on re-run); web ✅ 445/445; worker ✅ 75/75; validation ✅ 300/300; config ✅ 49/49; database ✅ 180/180. Typecheck and lint 13/13; production build passes on Next.js 15.5.29.
+
+## 2026-11-19 — Registration email: passes only in the PDF (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **The "Your entry passes" section is removed from the email body**: the booking reference line, each pass with its inline QR code, and the "Show each QR code…" note. The opening says the passes are attached as a PDF, and "Before you go" starts with "Show each person's QR code from the attached PDF at the entrance". The QR images are no longer attached separately | Owner's request: the passes are in the attached PDF | Attachments are now the logo (inline) and the PDF. If the PDF cannot be made, the email falls back to listing the passes with their QR codes, as a guest without an account has no other copy | — |
+
+Tests: worker suite 75/75. Covered: the section is absent when the PDF is attached, it is present only when the PDF fails (forced in a test), and turning the section on again fails 3 tests. One real email was sent through Resend and accepted.
+
+## 2026-11-19 — Registration email: PDF passes and a professional layout (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **The passes as a PDF attachment** (`apps/worker/src/lib/pass-pdf.ts`, `pdf-lib` 1.17.1): one page per person, in the same layout, colours and wording as the website's downloadable pass. The QR code is vector, ₹ is drawn as a shape, and the output is deterministic, so a retried email carries the same file | Owner's request: the original pass as a PDF | `Entry-pass(es)-SF-EVT-….pdf`, about 43 KB for two passes. Standard PDF fonts: characters they lack (e.g. Devanagari) are left out of the drawn text; the email shows them | — |
+| **A professional confirmation email** (`processors/event-registration-email.ts`): the logo (inline), BOOKING CONFIRMED, an event details card with a button, each pass with its QR code (stacked on phones), a payment summary (line item, total, method, reference, date), "Before you go" and "Need help?" | Owner's request: a market-standard email | The stored template still sets the subject. Its body appears, as "A note from the organisers", only once an administrator has edited it (version > 1); the seeded wording would repeat the layout | — |
+| **Only recorded details**: the help section and the PDF footer show the contact email and phone from Admin → Settings, and nothing when none is set | The website pass prints a placeholder support line | — | — |
+
+Left out of the PDF on purpose: "Section 12A & 80G Registered NGO" (AGENTS.md §10: no tax claims until the owner provides them; settings hold none), and the attendee's email or phone (a pass is shown at a gate and printed).
+
+Tests: 4 for the PDF (pages, size, identical bytes when regenerated, unsupported characters, long titles), 6 for the email body (section order, free booking, uneven amount, contacts, escaping, administrator's note), 1 for the layout logo, and 3 for the confirmation against the local database (logo, QR and PDF attachments; payment summary; edited template). Breaking the PDF attachment or the template rule fails them. Checked: the email for the local booking at 640 and 390px; both PDF pages rendered; the gate kiosk read a QR code cut from the PDF; one real email with the PDF sent through Resend and accepted. Worker suite 72/72.
+
+## 2026-11-19 — Registration email: entry passes and payment (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **Every registration confirmation now ends with the booking details** (`event-notifications.processor.ts`): each person's name, pass number and **QR code**, shown in the email and attached as a PNG; and, for a paid booking, **Payment received** with the amount actually paid, the Razorpay payment reference and the date (IST) | The email only said "your place is confirmed": no pass, so a guest without an account had no copy of it, and no payment information | Free bookings get their passes and no payment section. The saved template's wording stays on top; the details are added after it, so an edited template cannot drop them | — |
+| **Attachments in the mail module** (`lib/email.ts`): base64 content with an optional content id for inline images, counted in the retry-safety key | Needed for the QR codes | `qrcode` 1.5.4 added to the worker (the version the website uses; nothing new downloaded) | — |
+
+The pass numbers come from `passesOf`, the same function the gate checks with, and the QR codes encode them exactly. The payment lines are the booking's own `paid_amount` and `payment_id`, never recomputed.
+
+Tests: 3 for attachments (including the request the real SDK sends) and 2 for the email against the local database: a paid group booking (both passes, QR images byte-identical to the pass numbers, ₹ amount, reference, date) and a free booking (pass, no payment). Leaving the details out fails both. Checked: the email built for the local booking at 640 and 390px; the gate kiosk read the QR image taken from the email; one real email sent through Resend and accepted. Worker suite 60/60.
+
+## 2026-11-18 — Gate desk: Auto-Admit result and the Admitted list (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **A pass this desk has just admitted shows "ADMITTED"** on a green card | After a fresh admission the card was turned into the "already admitted" state, so it read ALREADY ADMITTED about the person just let in | "Already admitted" now appears only for someone admitted earlier or at another desk | — |
+| **A pass held in front of the camera is looked up once** (`createRepeatScanGuard`, `lib/admin/camera.ts`), in the kiosk and on the check-in page. Repeat reads are ignored while it stays in view; it counts as new after 4 seconds out of view. A different pass is never held back | The camera reads a pass many times a second. About 1.2 seconds after Auto-Admit it was looked up again, came back "already admitted", and played the alert sound | Typing a pass in is unaffected | — |
+| **The Admitted tab lists everyone admitted to the event**, newest first, with the time in IST (`admittedEntries`, `lib/admin/gate.ts`) | It listed only this desk's check-ins since the page opened, so a reload showed "Admitted (0)" while the header counted people in | It agrees with the header; other desks' admissions appear on reload. The tab's small text uses `text-xs` (it used the undefined `text-2xs`) | — |
+
+Tests: 3 for the list, 3 for the repeat guard, 4 for the kiosk (fresh admission shows ADMITTED; an earlier admission still shows ALREADY ADMITTED; a held pass is looked up once while a different pass still is; the Admitted tab on load). Breaking each fix fails its test. Checked in Chrome with the local data, read-only: the tab showed 2 on load; with Auto-Admit on, a pass held up for 8 seconds made one lookup; no records changed. Web suite 428/428.
+
+## 2026-11-18 — Gate desk: leaving the scanner no longer crashes (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **Every scanner stop goes through one helper** (`createScannerStopper`, `lib/admin/camera.ts`) in the kiosk and the check-in page. A stop already under way is shared, and nothing is thrown | Leaving the gate desk ("Exit Desk") asked html5-qrcode to stop twice: the camera effect's cleanup, then the unmount cleanup. The second request threw synchronously ("Cannot transition to a new state, already under transition"); the `.catch()` never saw it, and the next page showed "Something went wrong" | Exit Desk opens the attendee list normally | — |
+| **A camera that finishes starting after the page was left is switched off** | Leaving while the camera was still starting left it running in the background | — | — |
+
+Tests: 4 for the helper (against a scanner that throws like html5-qrcode), and 2 for the kiosk: leaving while the camera stops must not throw, and must stop once; leaving while it starts must switch it off. Putting back the old cleanup fails the first with the user's exact error; removing the switch-off fails the second. Checked in Chrome: Exit Desk with the camera running and while it was starting, both landing on the attendee list with no error and the camera off. Web suite 418/418.
+
+## 2026-11-18 — Event pass: barcode removed (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **The decorative barcode is removed from the event pass**: from the on-screen pass (`components/events/event-entry-pass.tsx`) and from the downloaded image (`download-pass.ts`). The pass ID stays under the QR code, slightly larger, captioned "Pass ID • Non-Transferable" (it said "Security Scan Code", which would now name nothing) | Owner's request. It was not a real barcode symbology, so nothing could scan it; the QR code is what the gate reads | Layout otherwise unchanged. Checked before and after at 390, 768, 1024 and 1440px and in the downloaded image: no overflow; the pass is about 31–34px shorter below 1024px, and the same height above | — |
+
+## 2026-11-18 — Phone testing over https (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **`pnpm dev:https`** (`scripts/dev-https.mjs`) serves `https://<laptop address>:3443` in front of the dev server, with a certificate for this computer's network addresses signed by a local authority made on first run. It also serves the authority's certificate at `/dev-https-ca.crt` for phones to trust. Files are in `.dev-https/`, now git-ignored | A phone on `http://<laptop>:3000` is not a secure page, so the browser gives it no camera and the gate scanner cannot work there | Development only; `pnpm dev` and `http://localhost:3000` are unchanged. Steps in `DEPLOYMENT.md` §3, "Testing on a phone" | — |
+| **iPhone set-up:** a plain-http setup page (`http://<laptop address>:3080`) with the certificate download and the iPhone steps. The script logs phone visits and certificate refusals. A refused camera on an iPhone now points to Settings → Safari → Camera | iPhone Safari refuses an untrusted certificate, so it could not open the https address to fetch the certificate. Tapping past the warning does not unlock the camera there | The phone must trust the certificate once | — |
+
+Checked: the certificate covers `localhost`, `127.0.0.1` and the current network address, and verifies against the local authority. Pages load over strict https. In phone-sized Chrome with a simulated camera showing a QR pass, signing in worked and the gate read the pass (secure page, no errors), both when the certificate is trusted and when the warning is tapped through.
+
+## 2026-11-18 — Gate scanner camera fixed (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **The camera is allowed on the two scanner pages** (`/admin/gate/:id`, `/admin/events/:id/check-in`): `Permissions-Policy` sends `camera=(self)` there; every other page keeps `camera=()` (`lib/security/permissions-policy.ts`, `next.config.ts`) | The site-wide `camera=()` (Phase 11/12) made every browser refuse the camera on the gate scanners, on every device | The scanner works on a secure page (https, or `localhost` on the computer) | — |
+| **The camera area is on screen while the camera starts** (both scanners) | It was `display:none` until start finished; html5-qrcode measured 0×0, threw ("minimum size of 'config.qrbox' … 50px") and never started reading, so the preview showed but no pass was read | Checked in Chrome with a QR pass as the camera image: read on both pages after, not before | — |
+| **Camera failures say why** (`lib/admin/camera.ts`): not a secure page, permission refused, no camera, camera busy | One generic line for every cause | A phone on `http://<laptop IP>:3000` is told it needs https | — |
+
+Tests: 4 for the messages, 2 for the scanner policy (including that `next.config` sends it only on the scanner routes, after the site-wide header), 2 for the kiosk (the camera area is visible when the camera starts — it fails with the old behaviour — and the refusal message). Web suite 411/411.
+
+## 2026-11-18 — Email through Resend (uncommitted)
+
+Owner's decision: Resend replaces Brevo as the email provider. The sending code, the startup checks and the deploy templates changed; what each email says and when it is sent did not, except where noted.
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **One mail module, `apps/worker/src/lib/email.ts`** (replacing `lib/brevo.ts`), with the official SDK `resend@6.35.0` (pinned). One client per process. It checks the recipient's address before sending, sends HTML and plain text, and never throws: `not_configured`, `rejected` (permanent) or `unreachable` (retried by the queue) | Owner's choice of provider | Every email the worker sends: sign-in, email-change and event registration codes; donation confirmation and receipt; event registration and cancellation; the four volunteer emails; contact-form notice; newsletter confirmation; staff invitation and password reset | — |
+| **A retry cannot send twice.** Each send carries an idempotency key derived from the message itself (Resend keeps keys for 24 hours). A rate-limited send waits once and tries again | A retried job whose answer was lost sent the email again | — | — |
+| **One branded, phone-friendly layout** (`lib/email-layout.ts`) around every email, including administrators' stored templates. Code and receipt emails get an inbox preview line, which never contains the code | The bodies were bare blocks of HTML | Wording and stored templates unchanged | — |
+| **Receipt email:** the date is in India's time zone, shown in the HTML version too, plus the payment reference recorded on the receipt | The server runs in UTC, so a gift after midnight IST was dated the day before; the HTML version had no date | — | — |
+| **Contact-form notices reply to the visitor.** **The send log labels event registration codes as such** (they were recorded as "Sign-in code") | Staff replies went to our own address; wrong label | — | — |
+| **Startup checks (`workerEnvSchema`):** `RESEND_API_KEY` (`re_…`), `RESEND_FROM_EMAIL` (`Name <address>` or an address), `RESEND_REPLY_TO`. Setting only one of the key and the sender is refused everywhere. **Production requires both** and refuses an `@resend.dev` sender. The API's unused `BREVO_*` settings are removed | Fail at deploy, not at the first sign-in | **Production behaviour change:** the worker no longer starts without email (it was optional) | — |
+| **Deploy:** the worker template reads `RESEND_API_KEY` from the secret `sailent-resend-api-key`. The API template no longer receives any email key. `check:deploy` checks both. `DEPLOYMENT.md` §7 has the setup steps | Least privilege: only the worker sends | Human steps: verify the domain, create the key and the secret | — |
+
+Tests: 21 for the mail module and layout (`email.spec.ts`, including the real SDK with `fetch` stubbed); 3 for code emails and 4 for receipt emails, against the local database (no email sent); 8 for the startup checks (`packages/config`); 1 for contact replies; 2 API tests for an expired donor sign-in code, and for an event registration code that is expired or reused; 1 deploy check. The existing tests moved to Resend's response format.
+
+Not done, and left for the owner: an acknowledgement email to people who use the contact form, and a payment-failure email. Both would be new behaviour; see `DEVELOPMENT_STATUS.md`.
+
+## 2026-11-18 — Admin date and time picker: every minute (uncommitted)
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| The minute menu in `components/admin/date-time-picker.tsx` lists 00–59, not 00, 05 … 55 | A time such as 10:59 could not be chosen, and a saved time such as 10:07 showed "00" in the minute menu while the header read 10:07 | Event start, end and registration-close times can be set to any minute. Tests: 3 new in `date-time-picker.test.tsx` (each fails against the old list); checked in a browser at 390px | — |
+
+## 2026-11-18 — Event passes and gate check-in: defects fixed (uncommitted)
+
+The event pass and gate scanner feature (itself uncommitted) was tested against the real API and local database. These defects were found and fixed:
+
+| Change | Reason | Impact | Migration |
+|---|---|---|---|
+| **Group bookings admitted per person.** Each pass in `event_registrations.attendees` carries its own `checkedInAt`. `POST /admin/events/:id/check-in` admits one pass; `passNumber` is required when a booking has more than one. The booking becomes `attended` at its first arrival. The attendance sheet stamps every pass (`attended`) or clears them (`no_show`) | Check-in marked the whole booking, so passes 2–4 of a group were turned away as "already checked in" | Kiosk and check-in page list each person with their own Admit / Check In; admission counts are per person | — |
+| **Only a pass number can be valid by itself.** `verify-pass` looks up a pass number, registration id or a link carrying one **exactly**; anything else is a staff search by name, email or phone, answered `matchedBy: 'search'`, with LIKE wildcards escaped. Several matches return `multiple_matches` and a list to choose from. Auto-Admit acts only on `matchedBy: 'pass'`, and never on a booking the operator picked from that list | A QR code carrying `%%`, or a name shared by two people, came back **valid** for an arbitrary attendee, and Auto-Admit checked them in | Typed names still work for staff, but always need a person to confirm | — |
+| **One admission per pass under concurrency.** Check-in locks the registration row (`SELECT … FOR UPDATE`) for the whole decision; only a fresh admission is audited, and the audit row no longer copies the attendee's name | Six simultaneous scans of one pass gave two admissions and two audit rows | — | — |
+| **A cancelled event refuses entry**: `event_cancelled` from verify, 409 from check-in | Passes for a cancelled event still verified and checked in | — | — |
+| **One payment, one booking.** Registration refuses a Razorpay payment id that already paid for another booking (409); a unique index covers the race | The same payment details, sent again under another email, issued another set of passes | — | `0037` |
+| **Kiosk guest list loads.** `/admin/gate/[id]` fetches every page at the API's 100-per-page limit | It asked for `limit: 200`, the API refused it (maximum 100), the error was swallowed and the list was always empty | Cancelled bookings are shown as cancelled, without a Check In button | — |
+| Shared pass rules in `@sailent/validation`: `passNumberFor`, `passesOf`, `isPassAdmitted`, `parsePassCode`, `passQueryFromScan`. "Already admitted" times are given in IST | Four hand-written copies of the pass-number format; server-locale times | — | — |
+| **`AGENTS.md` §10 updated (owner decisions):** registration is open without an account (email confirmed by one-time code); a booking holds up to four passes; gate check-in is allowed before the event starts, while the attendance sheet stays closed until the start. §11 item 14's signed-out wording now matches | §10 still said one seat and a donor session, which the code no longer does | Documentation only; no code change | — |
+
+Tests: 7 new API integration tests (`events.spec.ts` "gate passes" and the payment-reuse test), 8 validation unit tests, 4 kiosk component tests (`gate-kiosk-view.test.tsx`). Mutation-checked: removing the row lock, the wildcard escaping, the `matchedBy` guard on Auto-Admit or the guard on a picked booking each fails its test. Checked in a browser against the dev servers at 1440 and 390px (manual entry; the camera cannot run headless). The new per-person rows use defined text sizes; the gate files' other `text-2xs` uses are left as they were (see `DEVELOPMENT_STATUS.md`).
+
 ## 2026-10-21 — Pre-push review, last pass (not pushed)
 
 | Change | Reason | Impact | Migration |

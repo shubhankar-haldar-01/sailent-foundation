@@ -62,8 +62,11 @@ export class NotFoundException extends AppException {
 }
 
 export class ConflictException extends AppException {
-  constructor(message = 'That conflicts with the current state of the record.') {
-    super(API_ERROR_CODE.CONFLICT, message, HttpStatus.CONFLICT);
+  constructor(
+    message = 'That conflicts with the current state of the record.',
+    details?: ApiErrorDetail[],
+  ) {
+    super(API_ERROR_CODE.CONFLICT, message, HttpStatus.CONFLICT, details);
   }
 }
 

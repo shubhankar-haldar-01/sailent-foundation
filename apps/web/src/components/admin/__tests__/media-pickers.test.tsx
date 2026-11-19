@@ -36,7 +36,6 @@ vi.mock('next/navigation', () => ({
 }));
 
 const { MediaPicker } = await import('../media-picker');
-const { StoryForm } = await import('../story-form');
 
 const base = {
   storageKey: 'x',
@@ -89,10 +88,6 @@ describe.each([
     'the shared MediaPicker (blog)',
     (options: AdminMedia[]) =>
       render(<MediaPicker options={options} selectedId={null} onSelect={() => {}} />),
-  ],
-  [
-    'the Success Stories cover picker',
-    (options: AdminMedia[]) => render(<StoryForm mediaOptions={options} />),
   ],
 ])('%s', (_label, renderPicker) => {
   it('never renders an image with an empty source', () => {

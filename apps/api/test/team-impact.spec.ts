@@ -276,6 +276,81 @@ describe('Team and impact (integration)', () => {
       expect(response.status).toBe(422);
     }, 60_000);
 
+    it('permanently deletes a team member from the database', async () => {
+      const member = await makeTeamMember();
+
+      await request(server)
+        .delete(`${PREFIX}/admin/team/${member.id}`)
+        .set(auth(staffToken))
+        .expect(200);
+
+      const check = await db().execute(sql`
+        SELECT id FROM team_members WHERE id = ${member.id}::uuid
+      `);
+      expect(check.rows?.length ?? 0).toBe(0);
+
+      await request(server)
+        .get(`${PREFIX}/admin/team/${member.id}`)
+        .set(auth(staffToken))
+        .expect(404);
+    }, 60_000);
+
+    it('refuses to create a team member with a duplicate Aadhaar number', async () => {
+      const aadhar = '9999 8888 7777';
+      await makeTeamMember({ aadharNumber: aadhar });
+
+      // Duplicate with formatted spaces or without spaces should collide
+      const response = await request(server)
+        .post(`${PREFIX}/admin/team`)
+        .set(auth(staffToken))
+        .send({
+          name: 'Duplicate Aadhaar Tester',
+          designation: 'Advisor',
+          aadharNumber: '999988887777',
+        });
+
+      expect(response.status).toBe(409);
+      expect((response.body as { error: { message: string } }).error.message).toMatch(/Adhar/i);
+    }, 60_000);
+
+    it('refuses to create a team member with a duplicate contact number', async () => {
+      const phone = '9899998888';
+      await makeTeamMember({ contactNumber: `+91 ${phone}` });
+
+      const response = await request(server)
+        .post(`${PREFIX}/admin/team`)
+        .set(auth(staffToken))
+        .send({
+          name: 'Duplicate Phone Tester',
+          designation: 'Advisor',
+          contactNumber: phone,
+        });
+
+      expect(response.status).toBe(409);
+      expect((response.body as { error: { message: string } }).error.message).toMatch(
+        /contact number/i,
+      );
+    }, 60_000);
+
+    it('refuses to create a team member with a duplicate public email', async () => {
+      const email = `unique-${randomUUID().slice(0, 8)}@sailent.test`;
+      await makeTeamMember({ emailPublic: email });
+
+      const response = await request(server)
+        .post(`${PREFIX}/admin/team`)
+        .set(auth(staffToken))
+        .send({
+          name: 'Duplicate Email Tester',
+          designation: 'Advisor',
+          emailPublic: email.toUpperCase(),
+        });
+
+      expect(response.status).toBe(409);
+      expect((response.body as { error: { message: string } }).error.message).toMatch(
+        /email address/i,
+      );
+    }, 60_000);
+
     /*
       ══════════════════════════════════════════════════════════════════════
       "REFUSES A STAFF MEMBER WHO DOES NOT HOLD team.manage" WAS REMOVED IN PHASE 8.

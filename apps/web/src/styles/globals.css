@@ -37,15 +37,43 @@
 
 /* Print styles: clean output without web navigation chrome */
 @media print {
+  /* Zero margins at page level suppress default browser running header (date/title) and footer (URL/pages) */
   @page {
-    margin: 1.5cm;
+    margin: 0;
     size: auto;
   }
 
   body {
     background: #ffffff !important;
     color: #102a43 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Universal print hygiene: hide headers, footers, navs, and hidden elements */
+  header,
+  footer,
+  nav,
+  aside,
+  .skip-link,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Suppress outer card surfaces so only the inner standalone pass renders a border */
+  .card-standard,
+  .card-elevated,
+  .card-flat,
+  .card-interactive,
+  .card-featured,
+  .pass-outer-card,
+  [data-pass-container] {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 }

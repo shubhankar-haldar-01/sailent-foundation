@@ -90,7 +90,6 @@ describe('Database (integration)', () => {
         'audit_logs',
         'settings',
         // Phase 4: the taxonomy and the content that moved out of JSON columns.
-        'categories',
         'slug_history',
         'faqs',
         'media',
@@ -270,9 +269,10 @@ describe('Database (integration)', () => {
         WHERE table_schema = 'public'
           AND (column_name LIKE '%amount%' OR column_name LIKE '%price%'
                OR column_name LIKE '%_paise' OR column_name = 'goal_amount')
-          -- allow_custom_amount is a flag, not a sum. Matching on the name
-          -- alone would make this test assert that a boolean is a bigint.
+          -- allow_custom_amount is a flag; preset_amounts is a jsonb array.
+          -- Matching on the name alone would make this test assert that they are bigints.
           AND data_type <> 'boolean'
+          AND data_type <> 'jsonb'
       `);
 
       expect(rows.length).toBeGreaterThan(0);

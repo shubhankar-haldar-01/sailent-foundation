@@ -19,6 +19,7 @@ import {
   formatDate,
 } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import {
@@ -47,7 +48,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminStoriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string; sort?: string }>;
 }) {
   const params = await searchParams;
   const actor = await currentActor();
@@ -56,7 +57,13 @@ export default async function AdminStoriesPage({
   let failure: string | null = null;
 
   try {
-    data = await listStories({ status: params.status, q: params.q, page: params.page });
+    data = await listStories({
+      status: params.status,
+      q: params.q,
+      page: params.page,
+      limit: 10,
+      sort: params.sort ?? '-createdAt',
+    });
   } catch (error) {
     if (error instanceof AdminApiError && error.code === 'REAUTH_REQUIRED') {
       return (
@@ -69,7 +76,7 @@ export default async function AdminStoriesPage({
     failure = error instanceof AdminApiError ? error.message : 'Could not load stories just now.';
   }
 
-  const statuses = ['all', 'draft', 'published', 'archived'] as const;
+  const statuses = ['all', 'draft', 'published'] as const;
   const active = params.status ?? 'all';
 
   return (
@@ -194,28 +201,18 @@ export default async function AdminStoriesPage({
               </Table>
             </div>
           ) : null}
-
-          {data && data.pagination.totalPages > 1 ? (
-            <div className="border-border mt-4 flex items-center justify-between border-t pt-4">
-              <p className="text-body-sm text-muted-foreground">
-                Page {data.pagination.page} of {data.pagination.totalPages}
-              </p>
-              <div className="flex gap-2">
-                {data.pagination.page > 1 ? (
-                  <Button asChild variant="secondary" size="sm">
-                    <Link href={pageHref(params, data.pagination.page - 1)}>Previous</Link>
-                  </Button>
-                ) : null}
-                {data.pagination.page < data.pagination.totalPages ? (
-                  <Button asChild variant="secondary" size="sm">
-                    <Link href={pageHref(params, data.pagination.page + 1)}>Next</Link>
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
         </CardContent>
       </Card>
+
+      {data ? (
+        <AdminPagination
+          page={data.pagination.page}
+          totalPages={data.pagination.totalPages}
+          totalItems={data.pagination.total}
+          ariaLabel="Stories pagination"
+          makeHref={(p) => pageHref(params, p)}
+        />
+      ) : null}
     </div>
   );
 }

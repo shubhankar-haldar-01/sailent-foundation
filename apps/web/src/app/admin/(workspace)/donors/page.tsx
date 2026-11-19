@@ -1,16 +1,9 @@
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, FileCheck, FileWarning, Search, Users } from 'lucide-react';
+import { FileCheck, FileWarning, Search, Users } from 'lucide-react';
 
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  formatCurrency,
-  formatDate,
-  PageHeader,
-} from '@sailent/ui';
+import { Badge, Button, Card, CardContent, formatCurrency, PageHeader } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { adminFetch, type Paginated } from '@/lib/admin/api';
 
 export const dynamic = 'force-dynamic';
@@ -40,7 +33,7 @@ interface AdminDonor {
 export default async function AdminDonorsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; hasDonated?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; hasDonated?: string; page?: string; sort?: string }>;
 }) {
   const params = await searchParams;
 
@@ -49,7 +42,8 @@ export default async function AdminDonorsPage({
       q: params.q,
       hasDonated: params.hasDonated ?? 'all',
       page: params.page,
-      sort: '-totalDonated',
+      limit: 10,
+      sort: params.sort ?? '-createdAt',
     },
   });
 
@@ -155,10 +149,7 @@ export default async function AdminDonorsPage({
                     Lifetime Given
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
-                    Gifts
-                  </th>
-                  <th scope="col" className="px-5 py-3.5">
-                    Last Gift
+                    Donations
                   </th>
                   <th scope="col" className="px-5 py-3.5">
                     PAN / Tax ID
@@ -214,9 +205,6 @@ export default async function AdminDonorsPage({
                       >
                         {donor.donationCount}
                       </td>
-                      <td className="text-muted-foreground px-5 py-3.5 text-xs">
-                        {donor.lastDonatedAt ? formatDate(donor.lastDonatedAt) : 'Never'}
-                      </td>
                       <td className="px-5 py-3.5">
                         {donor.hasTaxId ? (
                           <Badge variant="success" className="gap-1 text-[11px] font-normal">
@@ -242,60 +230,21 @@ export default async function AdminDonorsPage({
         </Card>
       )}
 
-      {data.pagination.totalPages > 1 ? (
-        <Pagination
-          page={data.pagination.page}
-          totalPages={data.pagination.totalPages}
-          hasNext={data.pagination.hasNext}
-          query={params}
-        />
-      ) : null}
+      <AdminPagination
+        page={data.pagination.page}
+        totalPages={data.pagination.totalPages}
+        totalItems={data.pagination.total}
+        ariaLabel="Donors pagination"
+        makeHref={(p) => {
+          const search = new URLSearchParams();
+          if (params.q) search.set('q', params.q);
+          if (params.hasDonated && params.hasDonated !== 'all') {
+            search.set('hasDonated', params.hasDonated);
+          }
+          search.set('page', String(p));
+          return `/admin/donors?${search.toString()}`;
+        }}
+      />
     </div>
-  );
-}
-
-function Pagination({
-  page,
-  totalPages,
-  hasNext,
-  query,
-}: {
-  page: number;
-  totalPages: number;
-  hasNext: boolean;
-  query: { q?: string; hasDonated?: string };
-}) {
-  const href = (target: number) => {
-    const search = new URLSearchParams();
-    if (query.q) search.set('q', query.q);
-    if (query.hasDonated && query.hasDonated !== 'all') search.set('hasDonated', query.hasDonated);
-    search.set('page', String(target));
-    return `/admin/donors?${search.toString()}`;
-  };
-
-  return (
-    <nav aria-label="Donors pagination" className="flex items-center justify-between pt-2">
-      <p className="text-muted-foreground text-xs">
-        Page {page} of {totalPages}
-      </p>
-      <div className="flex gap-2">
-        {page > 1 ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page - 1)} className="gap-1">
-              <ChevronLeft className="size-4" aria-hidden="true" />
-              Previous
-            </Link>
-          </Button>
-        ) : null}
-        {hasNext ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page + 1)} className="gap-1">
-              Next
-              <ChevronRight className="size-4" aria-hidden="true" />
-            </Link>
-          </Button>
-        ) : null}
-      </div>
-    </nav>
   );
 }

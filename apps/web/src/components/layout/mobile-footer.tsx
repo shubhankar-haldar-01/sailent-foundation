@@ -72,9 +72,9 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
           <Image
             src="/images/sailent-logo.png"
             alt="Sailent Foundation"
-            width={2048}
-            height={746}
-            className="h-11 w-auto object-contain sm:h-12"
+            width={1743}
+            height={453}
+            className="h-[39.6px] w-auto object-contain sm:h-[43.2px]"
           />
         </Link>
 

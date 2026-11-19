@@ -1,4 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { panSchema } from '@sailent/validation';
 import { z } from 'zod';
 
 import { paginationQuerySchema } from '../../../common/dto/pagination.dto.js';
@@ -82,6 +83,16 @@ export const updateDonorSchema = z
         path: ['taxIdType'],
         message: 'A tax id needs its type, or it cannot go on a Form 10BD export.',
       });
+    }
+    if (value.taxIdType === 'pan' && value.taxIdNumber) {
+      const result = panSchema.safeParse(value.taxIdNumber);
+      if (!result.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['taxIdNumber'],
+          message: result.error.issues[0]?.message ?? 'Enter a valid PAN, for example ABCDE1234F',
+        });
+      }
     }
   });
 

@@ -51,6 +51,8 @@ export const donors = pgTable(
     /** SENSITIVE. Required for the annual Form 10BD statement (decision A7). */
     taxIdType: taxIdTypeEnum('tax_id_type'),
     taxIdNumber: text('tax_id_number'),
+    /** Deterministic hash for enforcing PAN / Tax ID uniqueness. */
+    taxIdHash: varchar('tax_id_hash', { length: 64 }),
 
     addressLine1: varchar('address_line1', { length: 255 }),
     addressLine2: varchar('address_line2', { length: 255 }),
@@ -126,6 +128,9 @@ export const donors = pgTable(
     /** Contact detail now, not identity. Staff still search by it. */
     index('donors_phone_idx').on(table.phone),
     uniqueIndex('donors_code_unique').on(table.donorCode),
+    uniqueIndex('donors_tax_id_hash_unique')
+      .on(table.taxIdHash)
+      .where(sql`tax_id_hash IS NOT NULL`),
     index('donors_user_idx').on(table.userId),
     index('donors_last_donated_idx').on(table.lastDonatedAt),
     index('donors_created_idx').on(table.createdAt),

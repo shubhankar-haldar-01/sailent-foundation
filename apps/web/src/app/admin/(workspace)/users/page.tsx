@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { Button, Card, CardContent, PageHeader, formatDate } from '@sailent/ui';
 import { Shield, Key, Search } from 'lucide-react';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
+import { IssueIdentityCardDialog } from '@/components/admin/identity-card-dialog';
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import { InviteUserForm } from '@/components/admin/user-admin';
@@ -29,7 +31,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string; sort?: string }>;
 }) {
   const params = await searchParams;
   const actor = await currentActor();
@@ -38,7 +40,13 @@ export default async function AdminUsersPage({
   let failure: string | null = null;
 
   try {
-    data = await listUsers({ status: params.status, q: params.q, page: params.page });
+    data = await listUsers({
+      status: params.status,
+      q: params.q,
+      page: params.page,
+      limit: 10,
+      sort: params.sort ?? '-createdAt',
+    });
   } catch (error) {
     if (error instanceof AdminApiError && error.code === 'REAUTH_REQUIRED') {
       return (
@@ -146,6 +154,9 @@ export default async function AdminUsersPage({
                   <th scope="col" className="px-5 py-3.5">
                     Added
                   </th>
+                  <th scope="col" className="px-5 py-3.5 text-right">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-border divide-y">
@@ -178,6 +189,23 @@ export default async function AdminUsersPage({
                     <td className="text-muted-foreground px-5 py-3.5 text-xs">
                       {formatDate(user.createdAt)}
                     </td>
+                    <td className="whitespace-nowrap px-5 py-3.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <IssueIdentityCardDialog
+                          initialData={{
+                            id: user.id,
+                            name: `${user.firstName} ${user.lastName ?? ''}`.trim(),
+                            designation: user.roles[0]?.name ?? 'Staff Member',
+                            email: user.email,
+                            phone: user.phone,
+                            companyName: 'SAILENT FOUNDATION',
+                          }}
+                        />
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href={`/admin/users/${user.id}`}>Manage</Link>
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -186,51 +214,21 @@ export default async function AdminUsersPage({
         </Card>
       ) : null}
 
-      {data && data.pagination.total > data.items.length ? (
-        <Pagination
+      {data ? (
+        <AdminPagination
           page={data.pagination.page}
-          pages={data.pagination.totalPages}
-          params={params}
+          totalPages={data.pagination.totalPages}
+          totalItems={data.pagination.total}
+          ariaLabel="Staff accounts pagination"
+          makeHref={(target) => {
+            const search = new URLSearchParams();
+            if (params.status && params.status !== 'all') search.set('status', params.status);
+            if (params.q) search.set('q', params.q);
+            search.set('page', String(target));
+            return `/admin/users?${search.toString()}`;
+          }}
         />
       ) : null}
     </div>
-  );
-}
-
-function Pagination({
-  page,
-  pages,
-  params,
-}: {
-  page: number;
-  pages: number;
-  params: { status?: string; q?: string };
-}) {
-  const href = (target: number) => {
-    const search = new URLSearchParams();
-    if (params.status && params.status !== 'all') search.set('status', params.status);
-    if (params.q) search.set('q', params.q);
-    search.set('page', String(target));
-    return `/admin/users?${search.toString()}`;
-  };
-
-  return (
-    <nav aria-label="Pages" className="flex items-center justify-between pt-2">
-      <p className="text-muted-foreground text-xs">
-        Page {page} of {pages}
-      </p>
-      <div className="flex gap-2">
-        {page > 1 ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page - 1)}>Previous</Link>
-          </Button>
-        ) : null}
-        {page < pages ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page + 1)}>Next</Link>
-          </Button>
-        ) : null}
-      </div>
-    </nav>
   );
 }

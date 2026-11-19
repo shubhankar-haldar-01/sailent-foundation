@@ -6,6 +6,7 @@ import IORedis from 'ioredis';
 import { createErrorReporter, describeError, loadEnv, workerEnvSchema } from '@sailent/config';
 import { loadRootEnvFile } from '@sailent/config/dotenv';
 
+import { createMailer, describeMailer } from './lib/email.js';
 import { createHealthHandler } from './lib/health.js';
 import { createLogger } from './lib/logger.js';
 import { DEFAULT_JOB_OPTIONS, QUEUE_NAMES } from './queues/index.js';
@@ -66,7 +67,7 @@ import {
  * Runs as a separate process from the API deliberately (docs/architecture.md §2):
  * receipt rendering is CPU-heavy, email depends on a third party that will
  * occasionally be slow, and reconciliation scans thousands of rows. If any of
- * those shared a process with the donation endpoint, a Brevo outage or a large
+ * those shared a process with the donation endpoint, an email outage or a large
  * PDF would degrade the one path that must never degrade.
  */
 
@@ -137,11 +138,27 @@ void announceConnection(database, {
   error: (message) => logger.error(message),
 });
 
-const brevo = {
-  apiKey: env.BREVO_API_KEY,
-  senderEmail: env.BREVO_SENDER_EMAIL,
-  senderName: env.BREVO_SENDER_NAME,
-};
+/*
+  Email (Resend). ONE client for the process, built here and handed to every
+  email job (`lib/email.ts`). Without a key and a sender the worker still runs
+  — notification rows are written and marked `not_configured` — but it says so
+  now, because otherwise "I never got the code" is the first anyone hears of it.
+  Production refuses to start without both (`workerEnvSchema`).
+*/
+const mailer = createMailer({
+  apiKey: env.RESEND_API_KEY,
+  from: env.RESEND_FROM_EMAIL,
+  replyTo: env.RESEND_REPLY_TO,
+  siteUrl: env.APP_PUBLIC_URL,
+});
+if (mailer.configured) {
+  logger.info(describeMailer(mailer), 'Email: sending through Resend');
+} else {
+  logger.warn(
+    describeMailer(mailer),
+    'Email is NOT configured: set RESEND_API_KEY and RESEND_FROM_EMAIL. Notifications are recorded but nothing is sent',
+  );
+}
 
 const exampleQueue = new Queue<ExampleJobData, ExampleJobResult>(QUEUE_NAMES.EXAMPLE, {
   connection,
@@ -178,7 +195,7 @@ exampleWorker.on('failed', (job, error) => {
  * The EMAIL queue.
  *
  * One worker for every transactional email, dispatched by job name. Concurrency is
- * deliberately lower than the general setting — Brevo rate-limits, and a burst
+ * deliberately lower than the general setting — Resend rate-limits, and a burst
  * of parallel sends after a busy hour achieves nothing but 429s and retries.
  *
  * Every job here is SAFE TO REPEAT. The capture enqueues with the receipt
@@ -212,31 +229,31 @@ const emailWorker = new Worker<
       case 'donation.confirmation':
         return processDonationConfirmation(
           job as Job<DonationConfirmationJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
         );
       case 'donor.login_code':
         return processDonorLoginCode(
           job as Job<DonorLoginCodeJob>,
-          { brevo, appUrl: env.APP_PUBLIC_URL, database },
+          { mailer, appUrl: env.APP_PUBLIC_URL, database },
           logger,
         );
       case 'event.registration.confirmed':
         return processEventRegistrationConfirmed(
           job as Job<EventRegistrationConfirmedJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
         );
       case 'event.cancelled':
         return processEventCancelled(
           job as Job<EventCancelledJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
         );
       case 'volunteer.application.received':
         return processVolunteerApplication(
           job as Job<VolunteerApplicationJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
         );
       /*
@@ -247,52 +264,52 @@ const emailWorker = new Worker<
       case 'volunteer.approved':
         return processVolunteerDecision(
           job as Job<VolunteerDecisionJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
           'approved',
         );
       case 'volunteer.rejected':
         return processVolunteerDecision(
           job as Job<VolunteerDecisionJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
           'rejected',
         );
       case 'volunteer.assigned':
         return processVolunteerAssigned(
           job as Job<VolunteerAssignedJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
         );
       case 'volunteer.certificate.issued':
         return processVolunteerCertificate(
           job as Job<VolunteerCertificateJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
         );
       // Phase 13: contact messages, newsletter confirmation, staff accounts.
       case 'contact.received':
         return processContactReceived(
           job as Job<ContactReceivedJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
         );
       case 'newsletter.confirm':
         return processNewsletterConfirm(
           job as Job<NewsletterConfirmJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
         );
       case 'staff.invite':
         return processStaffInvite(
           job as Job<StaffTokenJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
         );
       case 'staff.password_reset':
         return processStaffPasswordReset(
           job as Job<StaffTokenJob>,
-          { database, brevo, appUrl: env.APP_PUBLIC_URL },
+          { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
         );
       default:

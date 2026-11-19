@@ -218,3 +218,126 @@ export function holdsSeat(status: AttendeeStatus): boolean {
  * withdrew, and the two are not the same fact.
  */
 export const ATTENDANCE_OUTCOMES: AttendeeStatus[] = ['attended', 'no_show'];
+
+// ---------------------------------------------------------------------------
+// Entry passes
+// ---------------------------------------------------------------------------
+
+/**
+ * One person's entry pass, as stored in `event_registrations.attendees`.
+ *
+ * A booking holds up to four passes, one per person, and each is admitted at
+ * the gate on its own. `checkedInAt` is that person's admission — the booking's
+ * `status` only says that SOMEONE on it has arrived, which is not enough to
+ * tell a second scan of pass 1 from a first scan of pass 2.
+ */
+export interface EventPass {
+  fullName: string;
+  passNumber?: string;
+  /** ISO timestamp of this person's admission. Absent or null until then. */
+  checkedInAt?: string | null;
+}
+
+export interface ResolvedEventPass {
+  fullName: string;
+  passNumber: string;
+  checkedInAt: string | null;
+}
+
+export const PASS_NUMBER_PREFIX = 'SF-EVT-';
+
+/**
+ * The booking's pass number: the prefix and the first eight hex digits of the
+ * registration id. A group's passes add `-1`…`-4` to it.
+ *
+ * Derived, not stored on the row, so it is the same everywhere it is printed —
+ * the confirmation, the dashboard, the downloaded pass and the gate.
+ */
+export function passNumberFor(registrationId: string): string {
+  return `${PASS_NUMBER_PREFIX}${registrationId.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+}
+
+/**
+ * Every pass on a booking.
+ *
+ * A row with no `attendees` (written before passes were stored per person)
+ * still admits its one person, under the booking's own number.
+ */
+export function passesOf(registration: {
+  id: string;
+  fullName: string;
+  attendees?: EventPass[] | null;
+}): ResolvedEventPass[] {
+  const base = passNumberFor(registration.id);
+  const list = Array.isArray(registration.attendees) ? registration.attendees : [];
+  if (list.length === 0) {
+    return [{ fullName: registration.fullName, passNumber: base, checkedInAt: null }];
+  }
+  return list.map((pass, index) => ({
+    fullName: pass.fullName,
+    passNumber: pass.passNumber || (list.length === 1 ? base : `${base}-${index + 1}`),
+    checkedInAt: pass.checkedInAt ?? null,
+  }));
+}
+
+/**
+ * Has this person been admitted?
+ *
+ * Their own `checkedInAt` decides it. The one exception is a booking marked
+ * `attended` with no pass stamped at all — attendance recorded before passes
+ * carried their own timestamp — which is read as everyone on it having come,
+ * because that is what the mark said when it was made.
+ */
+export function isPassAdmitted(
+  registration: { status: string; attendees?: EventPass[] | null },
+  pass: EventPass,
+): boolean {
+  if (pass.checkedInAt) return true;
+  if (registration.status !== 'attended') return false;
+  const list = Array.isArray(registration.attendees) ? registration.attendees : [];
+  return !list.some((entry) => entry.checkedInAt);
+}
+
+export interface ParsedPassCode {
+  /** The eight hex digits, lower-case — the start of the registration id. */
+  baseHex: string;
+  /** Which person on a group booking (1-based), or null for the booking's own number. */
+  index: number | null;
+}
+
+const PASS_CODE = /^(?:SF-EVT-)?([0-9a-f]{8})(?:-(\d{1,2}))?$/i;
+
+/**
+ * Read a pass number, as printed or scanned: `SF-EVT-E355F430`, `SF-EVT-E355F430-2`,
+ * or the bare `e355f430`. Anything else is not a pass number and returns null —
+ * which is what keeps a name, or a QR code carrying `%%`, from being looked up
+ * as if it were one.
+ */
+export function parsePassCode(text: string): ParsedPassCode | null {
+  const match = PASS_CODE.exec(text.trim());
+  if (!match?.[1]) return null;
+  const index = match[2] ? Number(match[2]) : null;
+  if (index === 0) return null;
+  return { baseHex: match[1].toLowerCase(), index };
+}
+
+/**
+ * What a scanned QR code is asking for.
+ *
+ * A link carrying the pass in `code`, `pass`, `ref` or `passNumber` yields
+ * that value; anything else is returned trimmed and unchanged.
+ */
+export function passQueryFromScan(raw: string): string {
+  const text = raw.trim();
+  if (!/^https?:\/\//i.test(text)) return text;
+  try {
+    const url = new URL(text);
+    for (const key of ['code', 'pass', 'ref', 'passNumber']) {
+      const value = url.searchParams.get(key)?.trim();
+      if (value) return value;
+    }
+  } catch {
+    // Not a parseable link: treat it as the text it is.
+  }
+  return text;
+}

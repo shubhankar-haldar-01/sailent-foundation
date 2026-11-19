@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, ExternalLink, Plus, Search, FolderKanban } from 'lucide-react';
+import { ExternalLink, Plus, Search, FolderKanban } from 'lucide-react';
 
 import { Button, Card, CardContent, formatDate, PageHeader } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { StatusPill } from '@/components/admin/status-pill';
 import { adminFetch, type AdminProgram, type Paginated } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
@@ -13,7 +14,6 @@ const STATUSES = [
   { value: 'all', label: 'All' },
   { value: 'published', label: 'Published' },
   { value: 'draft', label: 'Draft' },
-  { value: 'archived', label: 'Archived' },
 ] as const;
 
 /**
@@ -24,7 +24,7 @@ const STATUSES = [
 export default async function AdminProgramsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string; sort?: string }>;
 }) {
   const params = await searchParams;
   const actor = await currentActor();
@@ -34,8 +34,8 @@ export default async function AdminProgramsPage({
       status: params.status ?? 'all',
       q: params.q,
       page: params.page,
-      limit: 25,
-      sort: 'displayOrder',
+      limit: 10,
+      sort: params.sort ?? '-createdAt',
     },
   });
 
@@ -136,9 +136,6 @@ export default async function AdminProgramsPage({
                   <th scope="col" className="px-5 py-3.5">
                     Program
                   </th>
-                  <th scope="col" className="px-5 py-3.5">
-                    Thematic Category
-                  </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
                     Campaigns
                   </th>
@@ -165,9 +162,6 @@ export default async function AdminProgramsPage({
                       </Link>
                       <p className="text-muted-foreground mt-0.5 text-xs">/{program.slug}</p>
                     </td>
-                    <td className="text-muted-foreground px-5 py-3.5 text-xs">
-                      {program.category ?? '—'}
-                    </td>
                     <td
                       data-numeric=""
                       className="text-foreground px-5 py-3.5 text-right text-xs font-semibold tabular-nums"
@@ -181,11 +175,8 @@ export default async function AdminProgramsPage({
                       {formatDate(program.updatedAt)}
                     </td>
                     <td className="whitespace-nowrap px-5 py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button asChild variant="ghost" size="sm">
-                          <Link href={`/admin/programs/${program.id}/edit`}>Edit</Link>
-                        </Button>
-                        {program.status === 'published' ? (
+                      {program.status === 'published' ? (
+                        <div className="flex items-center justify-end">
                           <Button
                             asChild
                             variant="ghost"
@@ -200,8 +191,8 @@ export default async function AdminProgramsPage({
                               <ExternalLink className="size-3.5" aria-hidden="true" />
                             </Link>
                           </Button>
-                        ) : null}
-                      </div>
+                        </div>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -211,60 +202,19 @@ export default async function AdminProgramsPage({
         </Card>
       )}
 
-      {data.pagination.totalPages > 1 ? (
-        <Pagination
-          page={data.pagination.page}
-          totalPages={data.pagination.totalPages}
-          hasNext={data.pagination.hasNext}
-          query={params}
-        />
-      ) : null}
+      <AdminPagination
+        page={data.pagination.page}
+        totalPages={data.pagination.totalPages}
+        totalItems={data.pagination.total}
+        ariaLabel="Programs pagination"
+        makeHref={(p) => {
+          const search = new URLSearchParams();
+          if (params.status && params.status !== 'all') search.set('status', params.status);
+          if (params.q) search.set('q', params.q);
+          search.set('page', String(p));
+          return `/admin/programs?${search.toString()}`;
+        }}
+      />
     </div>
-  );
-}
-
-function Pagination({
-  page,
-  totalPages,
-  hasNext,
-  query,
-}: {
-  page: number;
-  totalPages: number;
-  hasNext: boolean;
-  query: { status?: string; q?: string };
-}) {
-  const href = (target: number) => {
-    const search = new URLSearchParams();
-    if (query.status && query.status !== 'all') search.set('status', query.status);
-    if (query.q) search.set('q', query.q);
-    search.set('page', String(target));
-    return `/admin/programs?${search.toString()}`;
-  };
-
-  return (
-    <nav aria-label="Programs pagination" className="flex items-center justify-between pt-2">
-      <p className="text-muted-foreground text-xs">
-        Page {page} of {totalPages}
-      </p>
-      <div className="flex gap-2">
-        {page > 1 ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page - 1)} className="gap-1">
-              <ChevronLeft className="size-4" aria-hidden="true" />
-              Previous
-            </Link>
-          </Button>
-        ) : null}
-        {hasNext ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page + 1)} className="gap-1">
-              Next
-              <ChevronRight className="size-4" aria-hidden="true" />
-            </Link>
-          </Button>
-        ) : null}
-      </div>
-    </nav>
   );
 }

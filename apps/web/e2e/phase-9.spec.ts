@@ -49,25 +49,6 @@ test.describe('the public pages', () => {
     await expect(page.getByRole('heading', { level: 2, name: 'Our Team' })).toBeVisible();
   });
 
-  test('an impact record shows its figure and how it was counted', async ({ page }) => {
-    await page.goto('/impact');
-
-    const record = page.locator('a[href^="/impact/"]').first();
-    await expect(record).toBeVisible();
-    const href = await record.getAttribute('href');
-
-    await page.goto(href!);
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-
-    /*
-      Decision A14, as a test. A published figure has to carry the method
-      alongside it — a page that shows the number and withholds the evidence is
-      the arrangement the decision exists to prevent.
-    */
-    await expect(page.getByRole('heading', { name: 'How this was counted' })).toBeVisible();
-    await expectNoAxeViolations(page);
-  });
-
   test('a full event says so instead of offering a form', async ({ page }) => {
     await page.goto(`/events/${FULL_EVENT}`);
 

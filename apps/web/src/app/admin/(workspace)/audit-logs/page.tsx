@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Button, Card, CardContent, PageHeader, Badge } from '@sailent/ui';
 import { Filter, History } from 'lucide-react';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { listAuditEntries, type AdminAuditEntry } from '@/lib/admin/api';
 
 export const dynamic = 'force-dynamic';
@@ -142,13 +143,20 @@ export default async function AdminAuditLogsPage({
         </Card>
       )}
 
-      {data.pagination.totalPages > 1 ? (
-        <Pagination
-          page={data.pagination.page}
-          pages={data.pagination.totalPages}
-          params={params}
-        />
-      ) : null}
+      <AdminPagination
+        page={data.pagination.page}
+        totalPages={data.pagination.totalPages}
+        totalItems={data.pagination.total}
+        ariaLabel="Audit logs pagination"
+        makeHref={(target) => {
+          const search = new URLSearchParams();
+          for (const [key, value] of Object.entries(params)) {
+            if (value && key !== 'page') search.set(key, value);
+          }
+          search.set('page', String(target));
+          return `/admin/audit-logs?${search.toString()}`;
+        }}
+      />
     </div>
   );
 }
@@ -207,44 +215,5 @@ function AuditRow({ entry }: { entry: AdminAuditEntry }) {
         ) : null}
       </td>
     </tr>
-  );
-}
-
-function Pagination({
-  page,
-  pages,
-  params,
-}: {
-  page: number;
-  pages: number;
-  params: { entityType?: string; entityId?: string; action?: string };
-}) {
-  const href = (target: number) => {
-    const search = new URLSearchParams();
-    for (const [key, value] of Object.entries(params)) {
-      if (value && key !== 'page') search.set(key, value);
-    }
-    search.set('page', String(target));
-    return `/admin/audit-logs?${search.toString()}`;
-  };
-
-  return (
-    <nav aria-label="Pages" className="flex items-center justify-between pt-2">
-      <p className="text-muted-foreground text-xs">
-        Page {page} of {pages}
-      </p>
-      <div className="flex gap-2">
-        {page > 1 ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page - 1)}>Previous</Link>
-          </Button>
-        ) : null}
-        {page < pages ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page + 1)}>Next</Link>
-          </Button>
-        ) : null}
-      </div>
-    </nav>
   );
 }

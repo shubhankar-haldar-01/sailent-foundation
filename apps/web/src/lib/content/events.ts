@@ -28,6 +28,9 @@ interface ApiEventSummary {
   registrationStatus: 'open' | 'closed' | 'full' | 'cancelled' | 'completed';
   registrationDeadline?: string | null;
   organizer?: string | null;
+  isPaid?: boolean;
+  feeAmount?: number | null;
+  functions?: string[] | null;
 }
 
 interface ApiEventDetail extends ApiEventSummary {
@@ -88,6 +91,9 @@ function toEvent(row: ApiEventSummary | ApiEventDetail): SailentEvent {
     lifecycle: row.registrationStatus,
     registrationDeadline: row.registrationDeadline ?? null,
     organizer: row.organizer ?? null,
+    isPaid: row.isPaid ?? false,
+    feeAmount: row.feeAmount ?? null,
+    functions: row.functions ?? (detail.functions ?? null),
     cover: toMedia(row.coverImage, `event-${row.slug}`, row.title),
 
     description: paragraphs(detail.description ?? null),

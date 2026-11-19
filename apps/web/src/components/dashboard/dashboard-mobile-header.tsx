@@ -63,8 +63,8 @@ export function DashboardMobileHeader({
             <Image
               src="/images/sailent-logo.png"
               alt="Sailent Foundation"
-              width={2048}
-              height={746}
+              width={1743}
+              height={453}
               priority
               className="h-8 w-auto object-contain sm:h-9"
             />

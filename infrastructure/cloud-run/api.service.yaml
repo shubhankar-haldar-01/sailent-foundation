@@ -58,10 +58,6 @@ spec:
               value: ${R2_BUCKET_PRIVATE}
             - name: R2_PUBLIC_BASE_URL
               value: ${MEDIA_PUBLIC_BASE_URL}
-            - name: BREVO_SENDER_EMAIL
-              value: ${BREVO_SENDER_EMAIL}
-            - name: BREVO_SENDER_NAME
-              value: Sailent Foundation
             - name: SENTRY_ENVIRONMENT
               value: production
             - name: SENTRY_RELEASE
@@ -125,11 +121,6 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: sailent-r2-secret-access-key
-                  key: latest
-            - name: BREVO_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: sailent-brevo-api-key
                   key: latest
             - name: SENTRY_DSN
               valueFrom:

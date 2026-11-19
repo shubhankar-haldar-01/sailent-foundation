@@ -1,12 +1,23 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useMemo, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
-import { Alert, Button, Card, Input, Label } from '@sailent/ui';
+import {
+  Alert,
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@sailent/ui';
 
 import { correctDonor } from '@/lib/admin/actions';
 import type { ActionState } from '@/lib/admin/actions';
+import { INDIAN_STATES, STATE_CITIES } from '@/lib/india-locations';
 
 /**
  * Correct a donor record.
@@ -42,150 +53,296 @@ interface CorrectableDonor {
   id: string;
 }
 
-const TAX_ID_TYPES = [
-  { value: 'pan', label: 'PAN' },
-  { value: 'aadhaar', label: 'Aadhaar' },
-  { value: 'passport', label: 'Passport' },
-  { value: 'driving_licence', label: 'Driving licence' },
-  { value: 'voter_id', label: 'Voter ID' },
-  { value: 'foreign_tin', label: 'Foreign TIN' },
-] as const;
-
-function Submit() {
+function Submit({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="md" disabled={pending}>
+    <Button type="submit" size="md" disabled={pending || disabled}>
       {pending ? 'Saving…' : 'Save correction'}
     </Button>
   );
 }
 
+/**
+ * Enforce PAN format:
+ * - Positions 0-4 (first 5 chars): Letters only [A-Z]
+ * - Positions 5-8 (next 4 chars): Numbers only [0-9]
+ * - Position 9 (last 1 char): Letter only [A-Z]
+ * Max length: 10 chars.
+ */
+function formatPanInput(raw: string): string {
+  const upper = raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  let result = '';
+  for (const char of upper) {
+    if (result.length >= 10) break;
+    const pos = result.length;
+    if (pos < 5) {
+      if (/[A-Z]/.test(char)) result += char;
+    } else if (pos < 9) {
+      if (/[0-9]/.test(char)) result += char;
+    } else if (pos === 9) {
+      if (/[A-Z]/.test(char)) result += char;
+    }
+  }
+  return result;
+}
+
 export function DonorCorrectionForm({ donor }: { donor: CorrectableDonor }) {
   const [state, action] = useActionState<ActionState, FormData>(correctDonor, {});
 
+  const [pan, setPan] = useState<string>(donor.taxIdNumber ?? '');
+  const isPanIncomplete = pan.length > 0 && pan.length < 10;
+  const isPanValid = pan.length === 10 && /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan);
+
+  const handlePanKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow control/nav keys (backspace, delete, tab, arrows, copy/paste shortcuts, etc.)
+    if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+
+    const input = e.currentTarget;
+    const start = input.selectionStart ?? pan.length;
+    const end = input.selectionEnd ?? pan.length;
+
+    // Character position being inserted/typed
+    const pos = start;
+    if (pos < 5) {
+      if (!/^[a-zA-Z]$/.test(e.key)) {
+        e.preventDefault();
+      }
+    } else if (pos < 9) {
+      if (!/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+      }
+    } else if (pos === 9) {
+      if (!/^[a-zA-Z]$/.test(e.key)) {
+        e.preventDefault();
+      }
+    } else if (pos >= 10 && start === end) {
+      e.preventDefault();
+    }
+  };
+
+  const [selectedState, setSelectedState] = useState<string>(donor.state ?? '');
+  const [selectedCity, setSelectedCity] = useState<string>(donor.city ?? '');
+  const [isCustomCity, setIsCustomCity] = useState<boolean>(() => {
+    if (!donor.city) return false;
+    if (!donor.state) return true;
+    const cities = STATE_CITIES[donor.state] ?? [];
+    return !cities.includes(donor.city);
+  });
+
+  const availableCities = useMemo(() => {
+    if (!selectedState) return [];
+    const list = STATE_CITIES[selectedState] ?? [];
+    if (donor.city && donor.state === selectedState && !list.includes(donor.city)) {
+      return [donor.city, ...list];
+    }
+    return list;
+  }, [selectedState, donor.city, donor.state]);
+
+  const handleStateChange = (newState: string) => {
+    setSelectedState(newState);
+    setIsCustomCity(false);
+    const citiesInNewState = STATE_CITIES[newState] ?? [];
+    if (!citiesInNewState.includes(selectedCity)) {
+      setSelectedCity('');
+    }
+  };
+
+  const handleCitySelectChange = (val: string) => {
+    if (val === '__custom__') {
+      setIsCustomCity(true);
+      setSelectedCity('');
+    } else {
+      setSelectedCity(val);
+    }
+  };
+
   return (
-    <section aria-labelledby="correct-heading">
-      <h2 id="correct-heading" className="text-h3 font-semibold">
-        Correct this record
-      </h2>
-      <p className="text-body-sm text-muted-foreground mt-1">
-        For transcription errors — a misspelled name, a bounced email, a mistyped PAN. Every change
-        is audited with the reason you give. This needs a recent re-authentication.
-      </p>
+    <form action={action} className="space-y-4">
+      <input type="hidden" name="donorId" value={donor.id} />
 
-      <Card className="mt-3 p-5">
-        <form action={action} className="space-y-4">
-          <input type="hidden" name="donorId" value={donor.id} />
+      {state.error ? (
+        <Alert variant="destructive" role="alert">
+          {state.error}
+        </Alert>
+      ) : null}
+      {state.ok ? (
+        <Alert variant="success" role="status">
+          The record has been corrected and the change audited.
+        </Alert>
+      ) : null}
 
-          {state.error ? (
-            <Alert variant="destructive" role="alert">
-              {state.error}
-            </Alert>
-          ) : null}
-          {state.ok ? (
-            <Alert variant="success" role="status">
-              The record has been corrected and the change audited.
-            </Alert>
-          ) : null}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="firstName">First name</Label>
+          <Input id="firstName" name="firstName" defaultValue={donor.firstName ?? ''} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="lastName">Last name</Label>
+          <Input id="lastName" name="lastName" defaultValue={donor.lastName ?? ''} />
+        </div>
+      </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="firstName">First name</Label>
-              <Input id="firstName" name="firstName" defaultValue={donor.firstName ?? ''} />
-            </div>
-            <div>
-              <Label htmlFor="lastName">Last name</Label>
-              <Input id="lastName" name="lastName" defaultValue={donor.lastName ?? ''} />
-            </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" name="email" type="email" defaultValue={donor.email ?? ''} />
+        {state.fieldErrors?.email ? (
+          <p className="text-destructive text-caption">{state.fieldErrors.email}</p>
+        ) : null}
+      </div>
+
+      <input type="hidden" name="taxIdType" value="pan" />
+
+      <div className="flex flex-col gap-1.5">
+        <div className="flex h-5 items-center justify-between">
+          <Label htmlFor="taxIdNumber">PAN (Permanent Account Number)</Label>
+          <span className="text-caption text-muted-foreground font-mono text-xs">
+            {pan.length}/10
+          </span>
+        </div>
+        <Input
+          id="taxIdNumber"
+          name="taxIdNumber"
+          value={pan}
+          onChange={(e) => setPan(formatPanInput(e.target.value))}
+          onKeyDown={handlePanKeyDown}
+          placeholder="e.g. ABCDE1234F"
+          maxLength={10}
+          autoComplete="off"
+          spellCheck={false}
+          pattern="[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}"
+          title="PAN must be 5 letters followed by 4 numbers and 1 letter (e.g. ABCDE1234F)"
+          hasError={isPanIncomplete || Boolean(state.fieldErrors?.taxIdNumber)}
+          className="font-mono uppercase tracking-wider"
+        />
+        {state.fieldErrors?.taxIdNumber ? (
+          <p className="text-destructive text-caption">{state.fieldErrors.taxIdNumber}</p>
+        ) : isPanIncomplete ? (
+          <p className="text-caption text-amber-600 dark:text-amber-400">
+            {pan.length < 5
+              ? `First 5 characters must be letters (${5 - pan.length} more needed)`
+              : pan.length < 9
+                ? `Next 4 characters must be numbers (${9 - pan.length} more needed)`
+                : 'Last character must be a letter'}
+          </p>
+        ) : isPanValid ? (
+          <p className="text-caption font-medium text-emerald-600 dark:text-emerald-400">
+            ✓ Valid PAN format (5 letters, 4 numbers, 1 letter)
+          </p>
+        ) : (
+          <p className="text-caption text-muted-foreground">
+            10-digit alphanumeric permanent account number (5 letters, 4 numbers, 1 letter).
+            Required for Form 10BD/10BE filing.
+          </p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="addressLine1">Address</Label>
+        <Input id="addressLine1" name="addressLine1" defaultValue={donor.addressLine1 ?? ''} />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex h-5 items-center justify-between">
+            <Label htmlFor="state">State</Label>
           </div>
-
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" defaultValue={donor.email ?? ''} />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-[12rem_1fr]">
-            <div>
-              <Label htmlFor="taxIdType">Tax id type</Label>
-              <select
-                id="taxIdType"
-                name="taxIdType"
-                defaultValue={donor.taxIdType ?? 'pan'}
-                className="border-input bg-surface text-body-sm h-10 w-full rounded-md border px-3"
+          <Select name="state" value={selectedState || undefined} onValueChange={handleStateChange}>
+            <SelectTrigger id="state">
+              <SelectValue placeholder="Select state" />
+            </SelectTrigger>
+            <SelectContent position="popper" side="bottom" align="start" className="max-h-72">
+              {donor.state &&
+              !INDIAN_STATES.includes(donor.state as (typeof INDIAN_STATES)[number]) ? (
+                <SelectItem value={donor.state}>{donor.state}</SelectItem>
+              ) : null}
+              {INDIAN_STATES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex h-5 items-center justify-between">
+            <Label htmlFor="city">City</Label>
+            {selectedState ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCustomCity((prev) => !prev);
+                  if (!isCustomCity) {
+                    setSelectedCity('');
+                  }
+                }}
+                className="text-primary text-xs hover:underline"
               >
-                {TAX_ID_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="taxIdNumber">Tax id number</Label>
-              <Input
-                id="taxIdNumber"
-                name="taxIdNumber"
-                defaultValue={donor.taxIdNumber ?? ''}
-                autoComplete="off"
-                spellCheck={false}
-                className="uppercase"
-              />
-            </div>
+                {isCustomCity ? 'Choose from list' : 'Enter manually'}
+              </button>
+            ) : null}
           </div>
-
-          <div>
-            <Label htmlFor="addressLine1">Address</Label>
-            <Input id="addressLine1" name="addressLine1" defaultValue={donor.addressLine1 ?? ''} />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <Label htmlFor="city">City</Label>
-              <Input id="city" name="city" defaultValue={donor.city ?? ''} />
-            </div>
-            <div>
-              <Label htmlFor="state">State</Label>
-              <Input id="state" name="state" defaultValue={donor.state ?? ''} />
-            </div>
-            <div>
-              <Label htmlFor="postalCode">PIN code</Label>
-              <Input id="postalCode" name="postalCode" defaultValue={donor.postalCode ?? ''} />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="internalNotes">Internal notes</Label>
-            <textarea
-              id="internalNotes"
-              name="internalNotes"
-              rows={3}
-              defaultValue={donor.internalNotes ?? ''}
-              className="border-input bg-surface text-body-sm w-full rounded-md border px-3 py-2"
-            />
-            <p className="text-caption text-muted-foreground mt-1">
-              Staff only. Never returned to the donor by any donor-facing route.
-            </p>
-          </div>
-
-          <div className="border-border border-t pt-4">
-            <Label htmlFor="reason">
-              Reason <span className="text-destructive">*</span>
-            </Label>
+          {isCustomCity ? (
             <Input
-              id="reason"
-              name="reason"
-              required
-              minLength={5}
-              placeholder="Donor called to correct a typo in their surname"
-              aria-describedby="reason-help"
+              id="city"
+              name="city"
+              value={selectedCity}
+              onChange={(e) => setSelectedCity(e.target.value)}
+              placeholder="Enter city or town name"
             />
-            <p id="reason-help" className="text-caption text-muted-foreground mt-1">
-              Goes into the audit log with the before and after values.
-            </p>
+          ) : (
+            <Select
+              name="city"
+              value={selectedCity || undefined}
+              disabled={!selectedState}
+              onValueChange={handleCitySelectChange}
+            >
+              <SelectTrigger id="city">
+                <SelectValue placeholder={selectedState ? 'Select city' : 'Select state first'} />
+              </SelectTrigger>
+              <SelectContent position="popper" side="bottom" align="start" className="max-h-72">
+                {availableCities.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+                <SelectItem value="__custom__">+ Other (Enter manually)</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex h-5 items-center justify-between">
+            <Label htmlFor="postalCode">PIN code</Label>
           </div>
+          <Input
+            id="postalCode"
+            name="postalCode"
+            defaultValue={donor.postalCode ?? ''}
+            placeholder="e.g. 110016"
+            maxLength={6}
+          />
+        </div>
+      </div>
 
-          <Submit />
-        </form>
-      </Card>
-    </section>
+      <div className="border-border border-t pt-4">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="reason">
+            Reason <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="reason"
+            name="reason"
+            required
+            minLength={5}
+            placeholder="Donor called to correct a typo in their surname"
+            aria-describedby="reason-help"
+          />
+          <p id="reason-help" className="text-caption text-muted-foreground">
+            Goes into the audit log with the before and after values.
+          </p>
+        </div>
+      </div>
+
+      <Submit disabled={isPanIncomplete} />
+    </form>
   );
 }

@@ -8,7 +8,7 @@
  * Planned (docs/architecture.md §4) — NOT implemented:
  *   webhooks      Phase 5  Process a Razorpay event through the payment state machine
  *   receipts      Phase 5  Render a receipt PDF and store it in R2
- *   email         Phase 4  Send via Brevo
+ *   email         Phase 4  Send via Resend (Brevo until 2026-11-18)
  *   notifications Phase 7  In-app notifications
  *   exports       Phase 7  CSV and Form 10BD generation
  *   certificates  Phase 6  Volunteer certificate PDFs

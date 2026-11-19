@@ -17,6 +17,7 @@ interface ApiTeamMember {
   bio: string | null;
   socialLinks: { label: string; url: string }[] | null;
   displayOrder: number;
+  createdAt?: string;
 }
 
 /** The detail endpoint adds the two fields the directory listing leaves out. */
@@ -36,6 +37,7 @@ function toMember(row: ApiTeamMember): TeamMember {
     bio: row.bio ?? '',
     photo: toMedia(row.photoUrl, `team-${row.slug}`, `Portrait of ${row.name}`),
     socialLinks: row.socialLinks ?? undefined,
+    createdAt: row.createdAt,
   } as TeamMember;
 }
 
@@ -97,9 +99,7 @@ export interface TeamMemberDetail extends TeamMember {
 
 export async function getTeamByDepartment(department: string): Promise<TeamMember[]> {
   const team = await getTeam();
-  return team
-    .filter((member) => member.department === department)
-    .sort((a, b) => a.displayOrder - b.displayOrder);
+  return team.filter((member) => member.department === department);
 }
 
 /**
@@ -123,14 +123,12 @@ export async function getTeamGrouped(): Promise<{ department: string; members: T
   return teamDepartments
     .map((department) => ({
       department,
-      members: team
-        .filter((member) => {
-          if (department === 'Programmes') {
-            return member.department === 'Programmes' || member.department === 'Programs';
-          }
-          return member.department === department;
-        })
-        .sort((a, b) => a.displayOrder - b.displayOrder),
+      members: team.filter((member) => {
+        if (department === 'Programmes') {
+          return member.department === 'Programmes' || member.department === 'Programs';
+        }
+        return member.department === department;
+      }),
     }))
     .filter((group) => group.members.length > 0);
 }

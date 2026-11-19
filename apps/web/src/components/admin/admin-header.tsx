@@ -11,7 +11,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Search,
-  Shield,
   Sliders,
 } from 'lucide-react';
 import {
@@ -214,13 +213,6 @@ export function AdminHeader({
                   <Link href="/admin/settings" className="flex items-center gap-2 text-xs">
                     <Sliders className="text-muted-foreground size-3.5" aria-hidden="true" />
                     <span>Organization Settings</span>
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
-                  <Link href="/admin/roles" className="flex items-center gap-2 text-xs">
-                    <Shield className="text-muted-foreground size-3.5" aria-hidden="true" />
-                    <span>Roles & Permissions</span>
                   </Link>
                 </DropdownMenuItem>
 

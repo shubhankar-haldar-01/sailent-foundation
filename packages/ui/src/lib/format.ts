@@ -73,3 +73,13 @@ export function daysRemaining(endsAt: string | Date | null | undefined): number 
   if (diff <= 0) return 0;
   return Math.ceil(diff / 86_400_000);
 }
+
+/**
+ * Format bytes into human-readable notation (e.g. 512 B, 24 KB, 1.4 MB).
+ */
+export function formatBytes(bytes: number): string {
+  if (!bytes || bytes <= 0) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}

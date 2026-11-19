@@ -3,7 +3,6 @@ import { MailCheck } from 'lucide-react';
 
 import {
   Badge,
-  Button,
   Card,
   CardContent,
   CardDescription,
@@ -18,6 +17,7 @@ import {
   TableRow,
 } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { AdminApiError, listNewsletterSubscribers, type NewsletterStatus } from '@/lib/admin/api';
 
 export const dynamic = 'force-dynamic';
@@ -48,7 +48,7 @@ export default async function AdminNewsletterPage({
 
   let data;
   try {
-    data = await listNewsletterSubscribers({ status: active, page: params.page });
+    data = await listNewsletterSubscribers({ status: active, page: params.page, limit: 10 });
   } catch (error) {
     return (
       <Card className="border-destructive/30 bg-destructive/5">
@@ -143,36 +143,16 @@ export default async function AdminNewsletterPage({
               </Table>
             </div>
           )}
-
-          {data.pagination.totalPages > 1 ? (
-            <div className="border-border mt-4 flex items-center justify-between border-t pt-4">
-              <p className="text-body-sm text-muted-foreground">
-                Page {data.pagination.page} of {data.pagination.totalPages}
-              </p>
-              <div className="flex gap-2">
-                {data.pagination.page > 1 ? (
-                  <Button asChild variant="secondary" size="sm">
-                    <Link
-                      href={`/admin/newsletter?status=${active}&page=${data.pagination.page - 1}`}
-                    >
-                      Previous
-                    </Link>
-                  </Button>
-                ) : null}
-                {data.pagination.hasNext ? (
-                  <Button asChild variant="secondary" size="sm">
-                    <Link
-                      href={`/admin/newsletter?status=${active}&page=${data.pagination.page + 1}`}
-                    >
-                      Next
-                    </Link>
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
         </CardContent>
       </Card>
+
+      <AdminPagination
+        page={data.pagination.page}
+        totalPages={data.pagination.totalPages}
+        totalItems={data.pagination.total}
+        ariaLabel="Newsletter subscribers pagination"
+        makeHref={(p) => `/admin/newsletter?status=${active}&page=${p}`}
+      />
     </div>
   );
 }

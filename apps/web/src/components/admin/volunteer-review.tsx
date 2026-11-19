@@ -44,7 +44,7 @@ export function VolunteerReview({
     inactive: 'Make inactive',
     suspended: 'Suspend',
     rejected: 'Reject',
-    archived: 'Archive',
+    archived: 'Delete',
   };
 
   // A reason is required for these, and merely useful for the rest.
@@ -70,7 +70,11 @@ export function VolunteerReview({
             <Button
               key={value}
               size="sm"
-              variant={value === 'rejected' || value === 'suspended' ? 'destructive' : 'secondary'}
+              variant={
+                value === 'rejected' || value === 'suspended' || value === 'archived'
+                  ? 'destructive'
+                  : 'secondary'
+              }
               onClick={() => setTarget(value)}
             >
               {LABELS[value]}

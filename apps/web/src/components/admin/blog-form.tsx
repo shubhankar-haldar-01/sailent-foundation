@@ -13,7 +13,7 @@ import {
   updateBlogPost,
   type ActionState,
 } from '@/lib/admin/actions';
-import type { AdminBlogPost, AdminCategory, AdminMedia } from '@/lib/admin/api';
+import type { AdminBlogPost, AdminMedia } from '@/lib/admin/api';
 
 /**
  * The blog editor.
@@ -40,11 +40,9 @@ import type { AdminBlogPost, AdminCategory, AdminMedia } from '@/lib/admin/api';
 export function BlogForm({
   post,
   mediaOptions = [],
-  categories = [],
 }: {
   post?: AdminBlogPost;
   mediaOptions?: AdminMedia[];
-  categories?: AdminCategory[];
 }) {
   const action = post ? updateBlogPost : createBlogPost;
   const [state, formAction, pending] = React.useActionState<ActionState, FormData>(action, {});
@@ -214,22 +212,6 @@ export function BlogForm({
         </div>
 
         <div className="space-y-6">
-          <Field label="Category" name="categoryId" errors={state.fieldErrors}>
-            <select
-              id="categoryId"
-              name="categoryId"
-              defaultValue={post?.categoryId ?? ''}
-              className="border-border bg-background text-body-sm w-full rounded-md border px-3 py-2"
-            >
-              <option value="">No category</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-
           <Field
             label="Tags"
             name="tags"
@@ -370,7 +352,7 @@ export function BlogStatusControls({ post }: { post: AdminBlogPost }) {
 
           {post.status !== 'archived' ? (
             <Button type="button" variant="destructive" onClick={() => setTarget('archived')}>
-              Archive
+              Delete
             </Button>
           ) : (
             <Button type="button" variant="secondary" onClick={() => setTarget('draft')}>
@@ -386,7 +368,7 @@ export function BlogStatusControls({ post }: { post: AdminBlogPost }) {
         ) : null}
 
         <p className="text-caption text-muted-foreground">
-          Publishing and archiving ask you to confirm your password.
+          Publishing and deleting ask you to confirm your password.
         </p>
       </div>
     );
@@ -404,7 +386,7 @@ export function BlogStatusControls({ post }: { post: AdminBlogPost }) {
         {target === 'published'
           ? 'Publish this post?'
           : target === 'archived'
-            ? 'Archive this post?'
+            ? 'Delete this post?'
             : 'Take this post off the site?'}
       </h3>
       <p className="text-body-sm text-muted-foreground">
@@ -423,7 +405,9 @@ export function BlogStatusControls({ post }: { post: AdminBlogPost }) {
       </Field>
 
       <div className="flex gap-2">
-        <SubmitButton pending={pending}>Confirm</SubmitButton>
+        <SubmitButton pending={pending} variant={target === 'archived' ? 'destructive' : undefined}>
+          Confirm
+        </SubmitButton>
         <Button type="button" variant="ghost" onClick={() => setTarget(null)}>
           Cancel
         </Button>

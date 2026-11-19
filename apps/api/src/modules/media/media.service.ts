@@ -87,7 +87,7 @@ export class MediaService {
 
     const where = filters.length > 0 ? and(...filters) : undefined;
     const sortable = { createdAt: media.createdAt, sizeBytes: media.sizeBytes };
-    const { column } = resolveSort(query.sort, sortable, 'createdAt');
+    const { column } = resolveSort(query.sort ?? '-createdAt', sortable, 'createdAt');
 
     const [items, [count]] = await Promise.all([
       this.db

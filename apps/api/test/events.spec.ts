@@ -5,6 +5,7 @@ import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { DATABASE } from '../src/modules/database/database.module.js';
+import { PasswordService } from '../src/modules/auth/password.service.js';
 import {
   TEST_PASSWORD,
   TEST_USERS,
@@ -156,7 +157,35 @@ describe('Events (integration)', () => {
   }
 
   beforeAll(async () => {
-    app = await createTestApp();
+    const fakeRazorpay = {
+      isConfigured: true,
+      publicKeyId: 'rzp_test_events',
+      async createOrder(input: { amount: number; currency: string; receipt: string }) {
+        return {
+          id: `order_EVT_${Date.now()}`,
+          amount: input.amount,
+          currency: input.currency,
+          status: 'created',
+          receipt: input.receipt,
+        };
+      },
+      verifyCheckoutSignature() {
+        return true;
+      },
+      async fetchPayment(paymentId: string) {
+        return {
+          id: paymentId,
+          order_id: 'order_EVT_1',
+          amount: 50000,
+          currency: 'INR',
+          status: 'captured',
+          method: 'upi',
+          international: false,
+        };
+      },
+    };
+
+    app = await createTestApp({ razorpay: fakeRazorpay as never });
     server = app.getHttpServer();
 
     const staff = await request(server)
@@ -273,46 +302,55 @@ describe('Events (integration)', () => {
       expect(row.rows![0]!.registration_status).toBe('full');
     }, 60_000);
 
-    it('enforces one person and one seat per registration, refusing multiple seats', async () => {
-      const event = await makeOpenEvent({ capacity: 2 });
+    it('allows booking up to 4 passes per registration, and refuses more than 4', async () => {
+      const event = await makeOpenEvent({ capacity: 4 });
       const first = await makeDonor('group1');
       const second = await makeDonor('group2');
-      const third = await makeDonor('group3');
 
-      // Attempting to register for multiple seats is refused at the API boundary (ValidationException)
-      const multi = await request(server)
+      // Attempting to register for more than 4 seats is refused at the API boundary (ValidationException)
+      const overMax = await request(server)
         .post(`${PREFIX}/events/${event.id}/register`)
         .set(auth(first.token))
-        .send({ attendeeCount: 2 });
+        .send({ attendeeCount: 5 });
 
-      expect(multi.status).toBe(422);
+      expect(overMax.status).toBe(422);
 
-      // Registering for exactly 1 seat succeeds
-      await request(server)
+      // Registering for 2 seats succeeds with attendee details
+      const reg = await request(server)
         .post(`${PREFIX}/events/${event.id}/register`)
         .set(auth(first.token))
-        .send({ attendeeCount: 1 })
+        .send({
+          attendeeCount: 2,
+          functionName: 'Singing',
+          attendees: [{ fullName: 'Shivam Roy' }, { fullName: 'Rahul Kumar' }],
+        })
         .expect(201);
 
-      expect(await seatsHeld(event.id)).toBe(1);
+      expect(reg.body.data.attendeeCount).toBe(2);
+      expect(reg.body.data.functionName).toBe('Singing');
+      expect(reg.body.data.attendees).toHaveLength(2);
+      expect(reg.body.data.attendees[0].fullName).toBe('Shivam Roy');
+      expect(reg.body.data.attendees[1].fullName).toBe('Rahul Kumar');
+      expect(await seatsHeld(event.id)).toBe(2);
 
-      // Second donor registers for 1 seat (defaulting when attendeeCount is omitted)
+      // Second donor registers for 2 seats (reaches capacity 4)
       await request(server)
         .post(`${PREFIX}/events/${event.id}/register`)
         .set(auth(second.token))
-        .send({})
+        .send({ attendeeCount: 2 })
         .expect(201);
 
-      expect(await seatsHeld(event.id)).toBe(2);
+      expect(await seatsHeld(event.id)).toBe(4);
 
-      // Event is now full at capacity 2; third registration is refused
+      // Event is now full at capacity 4; further registration is refused
+      const third = await makeDonor('group3');
       const fullResponse = await request(server)
         .post(`${PREFIX}/events/${event.id}/register`)
         .set(auth(third.token))
-        .send({});
+        .send({ attendeeCount: 1 });
 
       expect(fullResponse.status).toBe(409);
-      expect(await seatsHeld(event.id)).toBe(2);
+      expect(await seatsHeld(event.id)).toBe(4);
     }, 60_000);
 
     it('lets a freed seat be taken, and reopens an event that was full', async () => {
@@ -535,6 +573,97 @@ describe('Events (integration)', () => {
       */
       expect(response.status).toBe(401);
     }, 60_000);
+
+    it('refuses an expired registration code, and a code that was already used', async () => {
+      const event = await makeOpenEvent();
+      const guestEmail = `guest-code-${STAMP}@example.test`;
+      const hash = (code: string) => createHash('sha256').update(code).digest('hex');
+      const verify = (code: string) =>
+        request(server)
+          .post(`${PREFIX}/events/${event.id}/otp/verify`)
+          .send({ email: guestEmail, code });
+
+      // The right code, a minute too late.
+      await db().execute(sql`
+        INSERT INTO otp_codes (identifier, purpose, code_hash, expires_at)
+        VALUES (${guestEmail}, 'event_registration', ${hash('111111')},
+                now() - interval '1 minute')
+      `);
+      expect((await verify('111111')).status).toBe(401);
+
+      // A good code verifies once; the same code again is refused.
+      await db().execute(sql`
+        INSERT INTO otp_codes (identifier, purpose, code_hash, expires_at)
+        VALUES (${guestEmail}, 'event_registration', ${hash('222222')},
+                now() + interval '10 minutes')
+      `);
+      expect((await verify('222222')).status).toBe(200);
+      expect((await verify('222222')).status).toBe(401);
+    });
+
+    it('allows public registration without a token and issues an authentic pass code after OTP verification', async () => {
+      const event = await makeOpenEvent();
+      const guestEmail = `guest-${STAMP}@example.test`;
+
+      // 1. Without OTP verification, registration is refused with 422
+      const unverified = await request(server)
+        .post(`${PREFIX}/events/${event.id}/public-register`)
+        .send({
+          fullName: 'Aarav Patel',
+          email: guestEmail,
+          phone: '9876543210',
+          attendeeCount: 1,
+        });
+      expect(unverified.status).toBe(422);
+
+      // 2. Insert and verify OTP
+      const otpCode = '123456';
+      await db().execute(sql`
+        INSERT INTO otp_codes (identifier, purpose, code_hash, expires_at)
+        VALUES (${guestEmail.toLowerCase()}, 'event_registration',
+                ${createHash('sha256').update(otpCode).digest('hex')},
+                now() + interval '10 minutes')
+      `);
+
+      const verifyRes = await request(server).post(`${PREFIX}/events/${event.id}/otp/verify`).send({
+        email: guestEmail,
+        code: otpCode,
+      });
+      expect(verifyRes.status).toBe(200);
+
+      // 3. Now registration succeeds
+      const response = await request(server)
+        .post(`${PREFIX}/events/${event.id}/public-register`)
+        .send({
+          fullName: 'Aarav Patel',
+          email: guestEmail,
+          phone: '9876543210',
+          attendeeCount: 1,
+        });
+
+      expect(response.status).toBe(201);
+      const body = response.body as Envelope<{
+        id: string;
+        passNumber: string;
+        fullName: string;
+        email: string;
+        phone: string;
+        status: string;
+      }>;
+      expect(body.success).toBe(true);
+      expect(body.data.passNumber).toMatch(/^SF-EVT-[0-9A-F]{8}$/);
+      expect(body.data.fullName).toBe('Aarav Patel');
+      expect(body.data.email).toBe(guestEmail);
+
+      // Attempting to register again with the same email returns 409 Conflict
+      const dup = await request(server).post(`${PREFIX}/events/${event.id}/public-register`).send({
+        fullName: 'Aarav Patel',
+        email: guestEmail,
+        phone: '9876543210',
+        attendeeCount: 1,
+      });
+      expect(dup.status).toBe(409);
+    }, 60_000);
   });
 
   // =========================================================================
@@ -749,11 +878,65 @@ describe('Events (integration)', () => {
 
       expect(response.status).toBe(422);
     }, 60_000);
+
+    it('verifies a pass and admits attendee at gate via check-in', async () => {
+      const event = await makeOpenEvent();
+      const donor = await makeDonor('gatepass');
+      const regRes = await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(donor.token))
+        .send({
+          functionName: 'Cultural Night',
+          attendeeCount: 1,
+          attendees: [{ fullName: 'Gate Guest' }],
+        })
+        .expect(201);
+
+      const passCode = regRes.body.data.passNumber;
+      const regId = regRes.body.data.id || regRes.body.data.registrationId;
+      expect(passCode).toMatch(/^SF-EVT-[0-9A-F]{8}$/);
+
+      // 1. Verify Pass via gate scanner
+      const verifyRes = await request(server)
+        .post(`${PREFIX}/admin/events/${event.id}/verify-pass`)
+        .set(auth(volunteersToken))
+        .send({ code: passCode })
+        .expect(200);
+
+      expect(verifyRes.body.data.valid).toBe(true);
+      expect(verifyRes.body.data.status).toBe('valid');
+      expect(verifyRes.body.data.registration.id).toBe(regId);
+
+      // 2. Perform 1-click Gate Check-In
+      const checkInRes = await request(server)
+        .post(`${PREFIX}/admin/events/${event.id}/check-in`)
+        .set(auth(volunteersToken))
+        .send({
+          registrationId: regId,
+          passNumber: passCode,
+        })
+        .expect(200);
+
+      expect(checkInRes.body.data.success).toBe(true);
+      expect(checkInRes.body.data.alreadyAttended).toBe(false);
+      expect(checkInRes.body.data.registration.status).toBe('attended');
+      expect(checkInRes.body.data.registration.attendedAt).toBeDefined();
+
+      // 3. Verifying the pass again now reports already attended
+      const reVerifyRes = await request(server)
+        .post(`${PREFIX}/admin/events/${event.id}/verify-pass`)
+        .set(auth(volunteersToken))
+        .send({ code: passCode })
+        .expect(200);
+
+      expect(reVerifyRes.body.data.valid).toBe(false);
+      expect(reVerifyRes.body.data.status).toBe('already_attended');
+    }, 60_000);
   });
 
   // =========================================================================
-  describe('the attendee list is sensitive', () => {
-    it('refuses without a recent re-authentication, then allows it', async () => {
+  describe('the attendee list', () => {
+    it('allows a staff member with permission to view attendee details directly', async () => {
       const event = await makeOpenEvent();
       const donor = await makeDonor('roster');
       await request(server)
@@ -762,28 +945,9 @@ describe('Events (integration)', () => {
         .send({})
         .expect(201);
 
-      // A fresh login is not a re-authentication. The window is opened
-      // deliberately, by re-entering a password.
-      const staleUser = await request(server)
-        .post(`${PREFIX}/auth/staff/login`)
-        .send({ email: TEST_USERS.staff, password: TEST_PASSWORD, totpCode: devTotpCode() });
-      const staleToken = (staleUser.body as Envelope<{ accessToken: string }>).data!.accessToken;
-
-      const refused = await request(server)
-        .get(`${PREFIX}/admin/events/${event.id}/registrations`)
-        .set(auth(staleToken));
-      expect(refused.status).toBe(403);
-      expect(errorCode(refused.body as Envelope)).toBe('REAUTH_REQUIRED');
-
-      await request(server)
-        .post(`${PREFIX}/auth/reauth`)
-        .set(auth(staleToken))
-        .send({ password: TEST_PASSWORD, totpCode: devTotpCode() })
-        .expect(200);
-
       const allowed = await request(server)
         .get(`${PREFIX}/admin/events/${event.id}/registrations`)
-        .set(auth(staleToken))
+        .set(auth(staffToken))
         .expect(200);
 
       const items = (allowed.body as Envelope<{ items: { email: string }[] }>).data!.items;
@@ -792,10 +956,28 @@ describe('Events (integration)', () => {
 
     it('refuses a staff member who does not hold the permission', async () => {
       const event = await makeOpenEvent();
-      const response = await request(server)
-        .get(`${PREFIX}/admin/events/${event.id}/registrations`)
-        .set(auth(contentToken));
-      expect(response.status).toBe(403);
+      const email = `no-role-${randomUUID()}@sailent.test`;
+      const hash = await app.get(PasswordService).hash(TEST_PASSWORD);
+      await db().execute(sql`
+        INSERT INTO users (email, password_hash, first_name, last_name, status, email_verified_at)
+        VALUES (${email}, ${hash}, 'No', 'Role', 'active', now())
+      `);
+      try {
+        const loginRes = await request(server)
+          .post(`${PREFIX}/auth/staff/login`)
+          .send({ email, password: TEST_PASSWORD });
+        const token = (loginRes.body as Envelope<{ accessToken: string }>).data!.accessToken;
+
+        const response = await request(server)
+          .get(`${PREFIX}/admin/events/${event.id}/registrations`)
+          .set(auth(token));
+        expect(response.status).toBe(403);
+      } finally {
+        await db().execute(sql`
+          DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE email = ${email})
+        `);
+        await db().execute(sql`DELETE FROM users WHERE email = ${email}`);
+      }
     }, 60_000);
   });
 
@@ -864,7 +1046,7 @@ describe('Events (integration)', () => {
       expect(created.status).toBe(422);
     }, 60_000);
 
-    it('refuses to archive an event people are registered for', async () => {
+    it('archives an event even when people are registered, auto-cancelling the lifecycle', async () => {
       const event = await makeOpenEvent();
       const donor = await makeDonor('stranded');
       await request(server)
@@ -873,26 +1055,14 @@ describe('Events (integration)', () => {
         .send({})
         .expect(201);
 
-      const refused = await request(server)
-        .patch(`${PREFIX}/admin/events/${event.id}/status`)
-        .set(auth(staffToken))
-        .send({ status: 'archived' });
-
-      // Archiving is a 404 to the public. Doing it here would take the page away
-      // from everyone holding a place without telling any of them.
-      expect(refused.status).toBe(409);
-
-      await request(server)
-        .patch(`${PREFIX}/admin/events/${event.id}/lifecycle`)
-        .set(auth(staffToken))
-        .send({ lifecycle: 'cancelled', reason: 'Called off' })
-        .expect(200);
-
-      await request(server)
+      const archived = await request(server)
         .patch(`${PREFIX}/admin/events/${event.id}/status`)
         .set(auth(staffToken))
         .send({ status: 'archived' })
         .expect(200);
+
+      expect(archived.body.data.status).toBe('archived');
+      expect(archived.body.data.registrationStatus).toBe('cancelled');
     }, 60_000);
 
     it('requires a reason to cancel, because the reason is quoted to registrants', async () => {
@@ -1021,5 +1191,376 @@ describe('Events (integration)', () => {
       expect(result.now).toBe(1);
       expect(result.drifted).toBe(true);
     }, 60_000);
+  });
+
+  // =========================================================================
+  describe('paid events and registration fees', () => {
+    it('creates a paid event with fee amount and enforces payment gateway order and verification', async () => {
+      // 1. Create a paid event with fixed registration fee of ₹500 (50000 paise)
+      const event = await makeOpenEvent({
+        isPaid: true,
+        feeAmount: 50000,
+      });
+
+      const donor = await makeDonor('paid-donor');
+
+      // 2. Direct registration without Razorpay payment fields fails with 422
+      const noPay = await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(donor.token))
+        .send({ attendeeCount: 1 });
+
+      expect(noPay.status).toBe(422);
+      expect((noPay.body as { error?: { message?: string } }).error?.message).toMatch(
+        /requires payment/i,
+      );
+
+      // 3. Order creation endpoint generates Razorpay order info
+      const orderRes = await request(server)
+        .post(`${PREFIX}/events/${event.id}/order`)
+        .set(auth(donor.token))
+        .send({});
+
+      expect(orderRes.status).toBe(200);
+      const orderBody = (
+        orderRes.body as Envelope<{
+          orderId: string;
+          amount: number;
+          currency: string;
+          keyId: string;
+        }>
+      ).data!;
+      expect(orderBody.amount).toBe(50000);
+      expect(orderBody.currency).toBe('INR');
+      expect(orderBody.orderId).toBeTruthy();
+      expect(orderBody.keyId).toBe('rzp_test_events');
+
+      // 4. Registering with Razorpay payment details succeeds and records payment
+      const paidReg = await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(donor.token))
+        .send({
+          attendeeCount: 1,
+          razorpayOrderId: orderBody.orderId,
+          razorpayPaymentId: 'pay_EVT_123',
+          razorpaySignature: 'sig_EVT_123',
+        });
+
+      expect(paidReg.status).toBe(201);
+      const regBody = (
+        paidReg.body as Envelope<{
+          id: string;
+          isPaid: boolean;
+          paidAmount: number;
+          status: string;
+        }>
+      ).data!;
+      expect(regBody.isPaid).toBe(true);
+      expect(regBody.paidAmount).toBe(50000);
+
+      // 5. Registration details for donor include payment status
+      const mine = await request(server)
+        .get(`${PREFIX}/events/${event.id}/registration`)
+        .set(auth(donor.token));
+
+      expect(mine.status).toBe(200);
+      const mineBody = (
+        mine.body as Envelope<{
+          isPaid: boolean;
+          paidAmount: number;
+          paymentId: string;
+        }>
+      ).data!;
+      expect(mineBody.isPaid).toBe(true);
+      expect(mineBody.paidAmount).toBe(50000);
+      expect(mineBody.paymentId).toBe('pay_EVT_123');
+    }, 60_000);
+
+    it('refuses to issue a second booking for a payment that already paid for one', async () => {
+      // Two events with the same fee, so the amount check alone cannot tell
+      // the payments apart — only the record of what was spent can.
+      const first = await makeOpenEvent({ isPaid: true, feeAmount: 50000 });
+      const second = await makeOpenEvent({ isPaid: true, feeAmount: 50000 });
+      const payment = (id: string) => ({
+        razorpayOrderId: `order_${id}`,
+        razorpayPaymentId: `pay_${id}`,
+        razorpaySignature: 'sig_reuse',
+      });
+
+      const payer = await makeDonor('reuse-payer');
+      const other = await makeDonor('reuse-other');
+
+      await request(server)
+        .post(`${PREFIX}/events/${first.id}/register`)
+        .set(auth(payer.token))
+        .send(payment(`reuse_${STAMP}`))
+        .expect(201);
+
+      // Same event, another person, the same payment.
+      const sameEvent = await request(server)
+        .post(`${PREFIX}/events/${first.id}/register`)
+        .set(auth(other.token))
+        .send(payment(`reuse_${STAMP}`));
+      expect(sameEvent.status).toBe(409);
+      expect(errorCode(sameEvent.body as Envelope)).toBe('CONFLICT');
+
+      // Another event, the same payment.
+      const otherEvent = await request(server)
+        .post(`${PREFIX}/events/${second.id}/register`)
+        .set(auth(other.token))
+        .send(payment(`reuse_${STAMP}`));
+      expect(otherEvent.status).toBe(409);
+
+      // Two events at once with one payment: no shared lock, so this is the
+      // unique index's refusal, and it must still be a 409, not a 500.
+      const racerA = await makeDonor('reuse-race-a');
+      const racerB = await makeDonor('reuse-race-b');
+      const racing = await Promise.all([
+        request(server)
+          .post(`${PREFIX}/events/${first.id}/register`)
+          .set(auth(racerA.token))
+          .send(payment(`race_${STAMP}`)),
+        request(server)
+          .post(`${PREFIX}/events/${second.id}/register`)
+          .set(auth(racerB.token))
+          .send(payment(`race_${STAMP}`)),
+      ]);
+      expect(racing.map((response) => response.status).sort()).toEqual([201, 409]);
+    }, 60_000);
+  });
+
+  // =========================================================================
+  describe('gate passes', () => {
+    const verify = (eventId: string, code: string) =>
+      request(server)
+        .post(`${PREFIX}/admin/events/${eventId}/verify-pass`)
+        .set(auth(volunteersToken))
+        .send({ code });
+
+    const checkIn = (eventId: string, registrationId: string, passNumber?: string) =>
+      request(server)
+        .post(`${PREFIX}/admin/events/${eventId}/check-in`)
+        .set(auth(volunteersToken))
+        .send({ registrationId, passNumber });
+
+    interface Pass {
+      fullName: string;
+      passNumber: string;
+    }
+
+    it('admits each person on a group booking by their own pass, once', async () => {
+      const event = await makeOpenEvent();
+      const donor = await makeDonor('gate-group');
+      const booked = await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(donor.token))
+        .send({
+          attendeeCount: 3,
+          attendees: [
+            { fullName: 'Asha One' },
+            { fullName: 'Bina Two' },
+            { fullName: 'Chitra Three' },
+          ],
+        })
+        .expect(201);
+
+      const registrationId = booked.body.data.id as string;
+      const passes = booked.body.data.attendees as Pass[];
+      expect(passes.map((pass) => pass.passNumber)).toEqual([
+        `${booked.body.data.passNumber}-1`,
+        `${booked.body.data.passNumber}-2`,
+        `${booked.body.data.passNumber}-3`,
+      ]);
+
+      const second = await verify(event.id, passes[1]!.passNumber).expect(200);
+      expect(second.body.data.status).toBe('valid');
+      expect(second.body.data.matchedBy).toBe('pass');
+      expect(second.body.data.registration.matchedAttendee.fullName).toBe('Bina Two');
+
+      const firstIn = await checkIn(event.id, registrationId, passes[0]!.passNumber).expect(200);
+      expect(firstIn.body.data.alreadyAttended).toBe(false);
+      expect(firstIn.body.data.admittedCount).toBe(1);
+      expect(firstIn.body.data.totalPasses).toBe(3);
+      expect(firstIn.body.data.registration.status).toBe('attended');
+
+      // Pass 1 again is refused; pass 2 is still good.
+      expect((await verify(event.id, passes[0]!.passNumber)).body.data.status).toBe(
+        'already_attended',
+      );
+      expect((await verify(event.id, passes[1]!.passNumber)).body.data.status).toBe('valid');
+
+      const secondIn = await checkIn(event.id, registrationId, passes[1]!.passNumber).expect(200);
+      expect(secondIn.body.data.alreadyAttended).toBe(false);
+      expect(secondIn.body.data.admittedCount).toBe(2);
+
+      const again = await checkIn(event.id, registrationId, passes[1]!.passNumber).expect(200);
+      expect(again.body.data.alreadyAttended).toBe(true);
+      expect(again.body.data.admittedCount).toBe(2);
+
+      // A group must say which person; a pass that is not on it is refused.
+      expect((await checkIn(event.id, registrationId)).status).toBe(422);
+      expect((await checkIn(event.id, registrationId, 'SF-EVT-00000000')).status).toBe(422);
+
+      // The booking's own number names the booking: valid while anyone is outside.
+      const booking = await verify(event.id, booked.body.data.passNumber as string);
+      expect(booking.body.data.status).toBe('valid');
+      expect(booking.body.data.registration.matchedAttendee).toBeNull();
+      expect(
+        (booking.body.data.registration.allAttendees as { admitted: boolean }[]).map(
+          (pass) => pass.admitted,
+        ),
+      ).toEqual([true, true, false]);
+
+      await checkIn(event.id, registrationId, passes[2]!.passNumber).expect(200);
+      const everyone = await verify(event.id, booked.body.data.passNumber as string);
+      expect(everyone.body.data.status).toBe('already_attended');
+
+      // A fourth pass does not exist on a booking of three.
+      const fourth = await verify(event.id, `${booked.body.data.passNumber}-4`);
+      expect(fourth.body.data.status).toBe('not_found');
+    }, 60_000);
+
+    it('treats wildcards as text, so they match nobody', async () => {
+      const event = await makeOpenEvent();
+      const donor = await makeDonor('gate-wild');
+      await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(donor.token))
+        .send({})
+        .expect(201);
+
+      for (const code of ['%%', '__', '\\\\', '%']) {
+        const response = await verify(event.id, code).expect(200);
+        expect(response.body.data.valid).toBe(false);
+        expect(response.body.data.status).toBe('not_found');
+      }
+    }, 60_000);
+
+    it('answers a name as a search, and lists the people instead of picking one', async () => {
+      const event = await makeOpenEvent();
+      const raman = await makeDonor('gate-kavya-r');
+      const nair = await makeDonor('gate-kavya-n');
+      await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(raman.token))
+        .send({ fullName: 'Kavya Raman' })
+        .expect(201);
+      await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(nair.token))
+        .send({ fullName: 'Kavya Nair' })
+        .expect(201);
+
+      const both = await verify(event.id, 'kavya').expect(200);
+      expect(both.body.data.valid).toBe(false);
+      expect(both.body.data.status).toBe('multiple_matches');
+      expect(
+        (both.body.data.candidates as { fullName: string }[]).map((c) => c.fullName).sort(),
+      ).toEqual(['Kavya Nair', 'Kavya Raman']);
+
+      const one = await verify(event.id, 'Kavya Nair').expect(200);
+      expect(one.body.data.status).toBe('valid');
+      // A search result is never `pass`: the kiosk's Auto-Admit acts only on that.
+      expect(one.body.data.matchedBy).toBe('search');
+
+      const byEmail = await verify(event.id, raman.email.toUpperCase()).expect(200);
+      expect(byEmail.body.data.matchedBy).toBe('search');
+      expect(byEmail.body.data.registration.fullName).toBe('Kavya Raman');
+
+      // A name is never looked for on other events.
+      const elsewhere = await makeOpenEvent();
+      const nobody = await verify(elsewhere.id, 'Kavya Nair').expect(200);
+      expect(nobody.body.data.status).toBe('not_found');
+    }, 60_000);
+
+    it('admits a pass once when several gates scan it at the same moment', async () => {
+      const event = await makeOpenEvent();
+      const donor = await makeDonor('gate-race');
+      const booked = await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(donor.token))
+        .send({})
+        .expect(201);
+      const registrationId = booked.body.data.id as string;
+
+      const responses = await Promise.all(
+        Array.from({ length: 6 }, () =>
+          checkIn(event.id, registrationId, booked.body.data.passNumber as string),
+        ),
+      );
+
+      expect(responses.every((response) => response.status === 200)).toBe(true);
+      expect(responses.filter((response) => !response.body.data.alreadyAttended)).toHaveLength(1);
+
+      const audited = await db().execute(sql`
+        SELECT count(*)::int AS n FROM audit_logs
+         WHERE action = 'event.attendance'
+           AND new_values->>'registrationId' = ${registrationId}
+      `);
+      expect(Number(audited.rows![0]!.n)).toBe(1);
+    }, 60_000);
+
+    it('refuses every pass once the organisers cancel the event', async () => {
+      const event = await makeOpenEvent();
+      const donor = await makeDonor('gate-evcancel');
+      const booked = await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(donor.token))
+        .send({})
+        .expect(201);
+
+      await request(server)
+        .patch(`${PREFIX}/admin/events/${event.id}/lifecycle`)
+        .set(auth(staffToken))
+        .send({ lifecycle: 'cancelled', reason: 'The venue is unavailable.' })
+        .expect(200);
+
+      const verified = await verify(event.id, booked.body.data.passNumber as string).expect(200);
+      expect(verified.body.data.valid).toBe(false);
+      expect(verified.body.data.status).toBe('event_cancelled');
+
+      const admitted = await checkIn(event.id, booked.body.data.id as string);
+      expect(admitted.status).toBe(409);
+    }, 60_000);
+
+    it('keeps the gate in step with the attendance sheet', async () => {
+      const { event, registrationId } = await makePastEventWithAttendeeForGate();
+
+      await request(server)
+        .post(`${PREFIX}/admin/events/${event.id}/attendance`)
+        .set(auth(volunteersToken))
+        .send({ entries: [{ registrationId, status: 'attended' }] })
+        .expect(200);
+      expect((await verify(event.id, registrationId)).body.data.status).toBe('already_attended');
+
+      // Corrected to a no-show: the gate lets them in again.
+      await request(server)
+        .post(`${PREFIX}/admin/events/${event.id}/attendance`)
+        .set(auth(volunteersToken))
+        .send({ entries: [{ registrationId, status: 'no_show' }] })
+        .expect(200);
+      expect((await verify(event.id, registrationId)).body.data.status).toBe('valid');
+    }, 60_000);
+
+    async function makePastEventWithAttendeeForGate() {
+      const event = await makeOpenEvent();
+      const donor = await makeDonor(`gate-sheet${randomUUID().slice(0, 4)}`);
+      const booked = await request(server)
+        .post(`${PREFIX}/events/${event.id}/register`)
+        .set(auth(donor.token))
+        .send({})
+        .expect(201);
+
+      // Attendance can only be recorded once an event has started.
+      await db().execute(sql`
+        UPDATE events
+           SET start_date = now() - interval '2 hours',
+               end_date   = now() + interval '2 hours',
+               registration_deadline = NULL
+         WHERE id = ${event.id}::uuid
+      `);
+
+      return { event, registrationId: booked.body.data.id as string };
+    }
   });
 });

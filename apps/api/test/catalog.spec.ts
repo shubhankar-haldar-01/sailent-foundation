@@ -28,7 +28,6 @@ describe('Catalog (integration)', () => {
   let superAdmin: string;
   let contentManager: string;
   let campaignManager: string;
-  let educationCategoryId: string;
 
   const created = { programs: [] as string[], campaigns: [] as string[] };
 
@@ -60,13 +59,6 @@ describe('Catalog (integration)', () => {
     superAdmin = await login(TEST_USERS.superAdmin);
     contentManager = await login(TEST_USERS.staff);
     campaignManager = await login(TEST_USERS.staff);
-
-    const categories = await request(server)
-      .get(`${PREFIX}/admin/categories`)
-      .set(auth(superAdmin));
-    educationCategoryId = (
-      categories.body as Envelope<{ items: { id: string; key: string }[] }>
-    ).data!.items.find((item) => item.key === 'EDUCATION')!.id;
   }, 60_000);
 
   afterAll(async () => {
@@ -115,131 +107,10 @@ describe('Catalog (integration)', () => {
     await database.db.execute(
       sql`DELETE FROM slug_history WHERE slug LIKE 'spec-%' OR slug LIKE 'renamed-spec-%'`,
     );
-    await database.db.execute(sql`DELETE FROM categories WHERE slug LIKE 'spec-%'`);
     await app?.close();
   });
 
   // =========================================================================
-
-  describe('categories', () => {
-    it('serves the seeded catalogue', async () => {
-      const response = await request(server)
-        .get(`${PREFIX}/admin/categories`)
-        .set(auth(superAdmin));
-
-      const items = (response.body as Envelope<{ items: { key: string }[] }>).data!.items;
-      expect(items.length).toBeGreaterThanOrEqual(12);
-      expect(items.map((item) => item.key)).toContain('DISASTER_RELIEF');
-    });
-
-    it('counts only PUBLIC records, and omits empty categories publicly', async () => {
-      // A filter chip that leads to an empty page is worse than no chip.
-      const response = await request(server).get(`${PREFIX}/categories?kind=campaign`);
-      const items = (response.body as Envelope<{ items: { campaignCount: number }[] }>).data!.items;
-
-      expect(items.length).toBeGreaterThan(0);
-      expect(items.every((item) => item.campaignCount > 0)).toBe(true);
-    });
-
-    it('creates a new category, generates machine key, and emits audit log', async () => {
-      const response = await request(server)
-        .post(`${PREFIX}/admin/categories`)
-        .set(auth(superAdmin))
-        .send({
-          name: 'Youth Skill Building',
-          slug: 'spec-cat-youth-skills',
-          description: 'Vocational training and digital literacy for youth.',
-          icon: 'briefcase',
-          kind: 'both',
-          displayOrder: 25,
-        });
-
-      expect(response.status).toBe(201);
-      const cat = (
-        response.body as Envelope<{
-          id: string;
-          key: string;
-          name: string;
-          slug: string;
-          isActive: boolean;
-        }>
-      ).data!;
-      expect(cat.name).toBe('Youth Skill Building');
-      expect(cat.slug).toBe('spec-cat-youth-skills');
-      expect(cat.key).toBe('SPEC_CAT_YOUTH_SKILLS');
-      expect(cat.isActive).toBe(true);
-
-      // Verify audit log
-      const auditLog = await request(server)
-        .get(`${PREFIX}/admin/audit-logs?entityType=category&entityId=${cat.id}`)
-        .set(auth(superAdmin));
-      const auditItems =
-        (auditLog.body as Envelope<{ items: { action: string }[] }>).data?.items ?? [];
-      expect(auditItems.some((log) => log.action === 'category.create')).toBe(true);
-    });
-
-    it('refuses duplicate slug on creation', async () => {
-      const response = await request(server)
-        .post(`${PREFIX}/admin/categories`)
-        .set(auth(superAdmin))
-        .send({
-          name: 'Another Education',
-          slug: 'education', // already seeded
-        });
-
-      expect(response.status).toBe(409);
-    });
-
-    it('retrieves category by id and updates its details', async () => {
-      // Create first
-      const createRes = await request(server)
-        .post(`${PREFIX}/admin/categories`)
-        .set(auth(superAdmin))
-        .send({
-          name: 'Elderly Care',
-          slug: 'spec-cat-elderly-care',
-          icon: 'heart',
-          kind: 'program',
-        });
-      expect(createRes.status).toBe(201);
-      const created = (createRes.body as Envelope<{ id: string }>).data!;
-
-      // Get by id
-      const getRes = await request(server)
-        .get(`${PREFIX}/admin/categories/${created.id}`)
-        .set(auth(superAdmin));
-      expect(getRes.status).toBe(200);
-      expect((getRes.body as Envelope<{ name: string }>).data!.name).toBe('Elderly Care');
-
-      // Update name and deactivate
-      const updateRes = await request(server)
-        .patch(`${PREFIX}/admin/categories/${created.id}`)
-        .set(auth(superAdmin))
-        .send({
-          name: 'Senior Support',
-          isActive: false,
-        });
-      expect(updateRes.status).toBe(200);
-      const updated = (updateRes.body as Envelope<{ name: string; isActive: boolean }>).data!;
-      expect(updated.name).toBe('Senior Support');
-      expect(updated.isActive).toBe(false);
-
-      // Deactivated category is excluded from public list by default
-      const publicRes = await request(server).get(`${PREFIX}/categories`);
-      const publicItems = (publicRes.body as Envelope<{ items: { id: string }[] }>).data!.items;
-      expect(publicItems.some((item) => item.id === created.id)).toBe(false);
-
-      // But included in admin list
-      const adminRes = await request(server)
-        .get(`${PREFIX}/admin/categories`)
-        .set(auth(superAdmin));
-      const adminItems = (adminRes.body as Envelope<{ items: { id: string; isActive: boolean }[] }>)
-        .data!.items;
-      const found = adminItems.find((item) => item.id === created.id);
-      expect(found).toBeDefined();
-      expect(found!.isActive).toBe(false);
-    });
-  });
 
   describe('programme lifecycle', () => {
     let programId: string;
@@ -252,7 +123,6 @@ describe('Catalog (integration)', () => {
           title: 'Spec Programme',
           slug: 'spec-programme',
           shortDescription: 'Created by the integration suite.',
-          categoryId: educationCategoryId,
           // Neither may be set from a request body.
           status: 'published',
           publishedAt: '2020-01-01T00:00:00Z',
@@ -262,8 +132,7 @@ describe('Catalog (integration)', () => {
       const body = (response.body as Envelope<{ id: string; status: string; category: string }>)
         .data!;
       expect(body.status).toBe('draft');
-      // The denormalised name is written from the category, not the payload.
-      expect(body.category).toBe('Education');
+      expect(body.category).toBe('Spec Programme');
 
       programId = body.id;
       created.programs.push(programId);
@@ -341,6 +210,24 @@ describe('Catalog (integration)', () => {
 
       expect(response.status).toBe(409);
     });
+
+    it('refuses to create a programme with a duplicate title', async () => {
+      const response = await request(server)
+        .post(`${PREFIX}/admin/programs`)
+        .set(auth(superAdmin))
+        .send({
+          title: 'Spec Programme',
+          slug: 'another-unique-slug',
+          shortDescription: 'Another description',
+        });
+
+      expect(response.status).toBe(422);
+      const details = (response.body as Envelope).error?.details as {
+        field: string;
+        message: string;
+      }[];
+      expect(details.some((d) => d.field === 'title')).toBe(true);
+    });
   });
 
   describe('campaign lifecycle', () => {
@@ -374,7 +261,6 @@ describe('Catalog (integration)', () => {
           slug: 'spec-campaign',
           shortDescription: 'Created by the integration suite.',
           programId,
-          categoryId: educationCategoryId,
           fundraisingGoal: 10_000_000,
         });
 
@@ -1055,6 +941,22 @@ describe('Catalog (integration)', () => {
     });
 
     it('withholds unpublished FAQs from the public endpoint', async () => {
+      const checkAdmin = await request(server)
+        .get(`${PREFIX}/admin/campaigns/${campaignId}/faqs`)
+        .set(auth(superAdmin));
+      const existing = (checkAdmin.body as Envelope<{ items: { isPublished: boolean }[] }>).data!
+        .items;
+      if (!existing.some((faq) => !faq.isPublished)) {
+        await request(server)
+          .post(`${PREFIX}/admin/campaigns/${campaignId}/faqs`)
+          .set(auth(superAdmin))
+          .send({
+            question: 'Unpublished Spec Question',
+            answer: 'Unpublished Answer',
+            isPublished: false,
+          });
+      }
+
       const adminList = await request(server)
         .get(`${PREFIX}/admin/campaigns/${campaignId}/faqs`)
         .set(auth(superAdmin));
@@ -1132,7 +1034,6 @@ describe('Catalog (integration)', () => {
     it.each([
       ['GET', '/admin/programs'],
       ['GET', '/admin/campaigns'],
-      ['GET', '/admin/categories'],
     ])('refuses %s %s without a token', async (method, path) => {
       const response = await request(server)[method.toLowerCase() as 'get'](`${PREFIX}${path}`);
       expect(response.status).toBe(401);

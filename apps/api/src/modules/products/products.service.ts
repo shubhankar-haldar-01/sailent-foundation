@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 
 import {
   campaignProducts,
@@ -96,8 +96,8 @@ export class ProductsService {
     // but `status=all` is there for the person auditing the catalogue.
     if (query.status && query.status !== 'all') {
       filters.push(eq(products.status, query.status));
-    } else if (!query.status) {
-      filters.push(inArray(products.status, ['active', 'inactive']));
+    } else {
+      filters.push(ne(products.status, 'archived'));
     }
 
     if (query.q) {
@@ -134,7 +134,7 @@ export class ProductsService {
     }
 
     const where = and(...filters);
-    const { column, direction } = resolveSort(query.sort, SORTABLE, 'name');
+    const { column, direction } = resolveSort(query.sort ?? '-createdAt', SORTABLE, 'createdAt');
 
     const [rows, [count]] = await Promise.all([
       this.database.db

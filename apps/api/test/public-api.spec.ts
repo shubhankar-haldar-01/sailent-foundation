@@ -62,6 +62,52 @@ describe('Public API (integration)', () => {
     });
   });
 
+  describe('request body size', () => {
+    // A JSON body is parsed in full before any validation runs, and zod 3 goes
+    // on validating every element of an over-long array even after `.max()`
+    // has failed (GHSA-mrhx-c7xc-m3w5). The parser's ceiling is what bounds
+    // that work, so raising it is a security decision, not a refactor.
+    const jsonOfSize = (bytes: number) => `{"filler":"${'x'.repeat(bytes - 13)}"}`;
+    const postJson = (body: string) =>
+      request(server).post(`${PREFIX}/programs`).set('Content-Type', 'application/json').send(body);
+
+    it('refuses a JSON body over 100 kB before any route or validator sees it', async () => {
+      const body = jsonOfSize(100 * 1024 + 1);
+      expect(Buffer.byteLength(body)).toBe(100 * 1024 + 1);
+
+      const response = await postJson(body);
+
+      // A refusal, in the envelope, and not a 500: a 500 is logged as a crash
+      // and reported to error tracking, which anyone could then flood.
+      expect(response.status).toBe(413);
+      expect(errorCode(response.body as Envelope)).toBe('VALIDATION_FAILED');
+    });
+
+    it('parses an ordinary body below the ceiling', async () => {
+      const response = await postJson(jsonOfSize(90 * 1024));
+
+      expect(response.status).not.toBe(413);
+      expect(response.status).toBeLessThan(500);
+    });
+
+    it('answers a body in a charset it cannot read with 415, not a server error', async () => {
+      const response = await request(server)
+        .post(`${PREFIX}/programs`)
+        .set('Content-Type', 'application/json; charset=latin1')
+        .send('{"a":1}');
+
+      expect(response.status).toBe(415);
+      expect(errorCode(response.body as Envelope)).toBe('VALIDATION_FAILED');
+    });
+
+    it('answers broken JSON with 400, not a server error', async () => {
+      const response = await postJson('{"broken": ');
+
+      expect(response.status).toBe(400);
+      expect(errorCode(response.body as Envelope)).toBe('VALIDATION_FAILED');
+    });
+  });
+
   describe('pagination', () => {
     it('returns the documented pagination block', async () => {
       const response = await get('/campaigns?page=1&limit=2');

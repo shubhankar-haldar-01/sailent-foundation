@@ -1,13 +1,36 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { API_PREFIX } from '@sailent/config';
 
 import { DonorApiError, donorFetch } from './api';
-import { readDonorSession, writeDonorSession } from '@/lib/auth/donor-session';
+import { getDonorAccessToken, readDonorSession, writeDonorSession } from '@/lib/auth/donor-session';
+import { actionForwardingHeaders } from '@/lib/api/forwarding';
+
+export interface EventRegistrationPass {
+  id: string;
+  passNumber: string;
+  eventId: string;
+  eventTitle?: string;
+  eventSlug?: string;
+  startDate?: string;
+  venueName?: string | null;
+  city?: string | null;
+  fullName: string;
+  email: string;
+  phone: string;
+  attendeeCount: number;
+  functionName?: string | null;
+  attendees?: { fullName: string; passNumber?: string }[] | null;
+  status: string;
+  registeredAt: string;
+}
 
 export interface DonorActionState {
   error?: string;
   ok?: boolean;
+  fieldErrors?: Record<string, string>;
+  pass?: EventRegistrationPass;
 }
 
 function toState(error: unknown): DonorActionState {
@@ -215,6 +238,8 @@ export async function unsaveCampaign(
  * be trusted when two people submit at once — a check in this action would
  * race exactly the way a naive one in the service would.
  */
+const API_BASE = process.env.API_URL ?? 'http://localhost:4000';
+
 export async function registerForEvent(
   _previous: DonorActionState,
   form: FormData,
@@ -223,24 +248,82 @@ export async function registerForEvent(
   const slug = String(form.get('slug') ?? '');
 
   if (form.has('consent') && !checkbox(form, 'consent')) {
-    return { ok: false, error: 'You must agree to the Terms and Conditions and Privacy Policy.' };
+    return { ok: false, error: 'You must agree to the Terms of Use and Privacy Policy.' };
   }
 
-  try {
-    await donorFetch(`events/${eventId}/register`, {
-      method: 'POST',
-      body: {
-        fullName: text(form, 'fullName'),
-        phone: text(form, 'phone'),
-        attendeeCount: 1,
-        notes: text(form, 'notes') ?? text(form, 'message'),
-      },
-    });
-  } catch (error) {
-    if (error instanceof DonorApiError && error.status === 401) {
-      return { ok: false, error: 'Please sign in to register for this event.' };
+  const fullName = text(form, 'fullName');
+  const email = text(form, 'email');
+  const phone = text(form, 'phone');
+  const notes = text(form, 'notes') ?? text(form, 'message');
+
+  const rawAttendeeCount = form.get('attendeeCount');
+  const attendeeCount = rawAttendeeCount ? Math.min(4, Math.max(1, Number(rawAttendeeCount))) : 1;
+  const functionName = text(form, 'functionName');
+  let attendees: { fullName: string }[] | undefined;
+  const rawAttendees = text(form, 'attendees');
+  if (rawAttendees) {
+    try {
+      attendees = JSON.parse(rawAttendees);
+    } catch {
+      attendees = undefined;
     }
-    return toState(error);
+  }
+
+  const token = await getDonorAccessToken();
+
+  let response: Response;
+  const targetEndpoint = token
+    ? `${API_BASE}/${API_PREFIX}/events/${eventId}/register`
+    : `${API_BASE}/${API_PREFIX}/events/${eventId}/public-register`;
+
+  try {
+    response = await fetch(targetEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(await actionForwardingHeaders()),
+      },
+      body: JSON.stringify({
+        fullName,
+        email,
+        phone,
+        attendeeCount,
+        ...(functionName ? { functionName } : {}),
+        ...(attendees && attendees.length > 0 ? { attendees } : {}),
+        notes,
+        ...(text(form, 'razorpayOrderId')
+          ? { razorpayOrderId: text(form, 'razorpayOrderId') }
+          : {}),
+        ...(text(form, 'razorpayPaymentId')
+          ? { razorpayPaymentId: text(form, 'razorpayPaymentId') }
+          : {}),
+        ...(text(form, 'razorpaySignature')
+          ? { razorpaySignature: text(form, 'razorpaySignature') }
+          : {}),
+      }),
+      cache: 'no-store',
+    });
+  } catch {
+    return { ok: false, error: 'Could not reach the server. Please try again shortly.' };
+  }
+
+  const payload = (await response.json().catch(() => ({}))) as {
+    success?: boolean;
+    data?: EventRegistrationPass;
+    error?: { message?: string; details?: { field?: string; message?: string }[] };
+  };
+
+  if (!response.ok || !payload.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const detail of payload.error?.details ?? []) {
+      if (detail.field && detail.message) fieldErrors[detail.field] = detail.message;
+    }
+    return {
+      ok: false,
+      error: payload.error?.message ?? 'We could not complete your registration.',
+      fieldErrors,
+    };
   }
 
   if (slug) {
@@ -250,7 +333,7 @@ export async function registerForEvent(
   revalidatePath('/events');
   revalidatePath('/dashboard/events');
   revalidatePath('/dashboard');
-  return { ok: true };
+  return { ok: true, pass: payload.data };
 }
 
 /**
@@ -281,4 +364,143 @@ export async function cancelEventRegistration(
   revalidatePath('/dashboard/events');
   revalidatePath('/dashboard');
   return { ok: true };
+}
+
+export interface OtpActionState {
+  ok?: boolean;
+  sent?: boolean;
+  verified?: boolean;
+  error?: string;
+}
+
+export async function requestEventRegistrationOtp(
+  eventId: string,
+  email: string,
+  name?: string,
+): Promise<OtpActionState> {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    return { ok: false, error: 'Please enter a valid email address.' };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/${API_PREFIX}/events/${eventId}/otp/request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await actionForwardingHeaders()),
+      },
+      body: JSON.stringify({ email: cleanEmail, name }),
+      cache: 'no-store',
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as {
+      success?: boolean;
+      error?: { message?: string };
+    };
+
+    if (!response.ok || !payload.success) {
+      return {
+        ok: false,
+        error: payload.error?.message ?? 'Could not send verification code. Try again.',
+      };
+    }
+
+    return { ok: true, sent: true };
+  } catch {
+    return { ok: false, error: 'Could not reach the server. Please try again shortly.' };
+  }
+}
+
+export async function verifyEventRegistrationOtp(
+  eventId: string,
+  email: string,
+  code: string,
+): Promise<OtpActionState> {
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanCode = code.trim();
+
+  if (!/^\d{6}$/.test(cleanCode)) {
+    return { ok: false, error: 'Enter the 6-digit verification code.' };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/${API_PREFIX}/events/${eventId}/otp/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await actionForwardingHeaders()),
+      },
+      body: JSON.stringify({ email: cleanEmail, code: cleanCode }),
+      cache: 'no-store',
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as {
+      success?: boolean;
+      error?: { message?: string };
+    };
+
+    if (!response.ok || !payload.success) {
+      return {
+        ok: false,
+        error: payload.error?.message ?? 'Invalid or expired code. Please try again.',
+      };
+    }
+
+    return { ok: true, verified: true };
+  } catch {
+    return { ok: false, error: 'Could not reach the server. Please try again shortly.' };
+  }
+}
+
+export interface EventRegistrationOrder {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  eventTitle: string;
+}
+
+export async function createEventRegistrationOrder(
+  eventId: string,
+  details: {
+    email?: string;
+    fullName?: string;
+    phone?: string;
+    attendeeCount?: number;
+    functionName?: string;
+    attendees?: { fullName: string }[];
+  },
+): Promise<{ ok: true; order: EventRegistrationOrder } | { ok: false; error: string }> {
+  const token = await getDonorAccessToken();
+
+  try {
+    const response = await fetch(`${API_BASE}/${API_PREFIX}/events/${eventId}/order`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(await actionForwardingHeaders()),
+      },
+      body: JSON.stringify(details),
+      cache: 'no-store',
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as {
+      success?: boolean;
+      data?: EventRegistrationOrder;
+      error?: { message?: string };
+    };
+
+    if (!response.ok || !payload.success || !payload.data) {
+      return {
+        ok: false,
+        error: payload.error?.message ?? 'Could not create registration payment order.',
+      };
+    }
+
+    return { ok: true, order: payload.data };
+  } catch {
+    return { ok: false, error: 'Could not connect to payment gateway. Please try again.' };
+  }
 }

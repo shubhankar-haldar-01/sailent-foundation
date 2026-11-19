@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Plus, Search, Sparkles, Flag, Info } from 'lucide-react';
+import { Plus, Search, Sparkles, Flag, Info } from 'lucide-react';
 
 import {
   Badge,
@@ -12,6 +12,7 @@ import {
   Progress,
 } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { StatusPill } from '@/components/admin/status-pill';
 import { adminFetch, type AdminCampaign, type Paginated } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
@@ -25,7 +26,6 @@ const STATUSES = [
   { value: 'draft', label: 'Draft' },
   { value: 'paused', label: 'Paused' },
   { value: 'completed', label: 'Completed' },
-  { value: 'archived', label: 'Archived' },
 ] as const;
 
 /**
@@ -36,7 +36,13 @@ const STATUSES = [
 export default async function AdminCampaignsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; programId?: string; page?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    q?: string;
+    programId?: string;
+    page?: string;
+    sort?: string;
+  }>;
 }) {
   const params = await searchParams;
   const actor = await currentActor();
@@ -47,8 +53,8 @@ export default async function AdminCampaignsPage({
       q: params.q,
       programId: params.programId,
       page: params.page,
-      limit: 25,
-      sort: '-updatedAt',
+      limit: 10,
+      sort: params.sort ?? '-createdAt',
     },
   });
 
@@ -261,61 +267,20 @@ export default async function AdminCampaignsPage({
         </Card>
       )}
 
-      {data.pagination.totalPages > 1 ? (
-        <Pagination
-          page={data.pagination.page}
-          totalPages={data.pagination.totalPages}
-          hasNext={data.pagination.hasNext}
-          query={params}
-        />
-      ) : null}
+      <AdminPagination
+        page={data.pagination.page}
+        totalPages={data.pagination.totalPages}
+        totalItems={data.pagination.total}
+        ariaLabel="Campaigns pagination"
+        makeHref={(p) => {
+          const search = new URLSearchParams();
+          if (params.status && params.status !== 'all') search.set('status', params.status);
+          if (params.q) search.set('q', params.q);
+          if (params.programId) search.set('programId', params.programId);
+          search.set('page', String(p));
+          return `/admin/campaigns?${search.toString()}`;
+        }}
+      />
     </div>
-  );
-}
-
-function Pagination({
-  page,
-  totalPages,
-  hasNext,
-  query,
-}: {
-  page: number;
-  totalPages: number;
-  hasNext: boolean;
-  query: { status?: string; q?: string; programId?: string };
-}) {
-  const href = (target: number) => {
-    const search = new URLSearchParams();
-    if (query.status && query.status !== 'all') search.set('status', query.status);
-    if (query.q) search.set('q', query.q);
-    if (query.programId) search.set('programId', query.programId);
-    search.set('page', String(target));
-    return `/admin/campaigns?${search.toString()}`;
-  };
-
-  return (
-    <nav aria-label="Campaigns pagination" className="flex items-center justify-between pt-2">
-      <p className="text-muted-foreground text-xs">
-        Page {page} of {totalPages}
-      </p>
-      <div className="flex gap-2">
-        {page > 1 ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page - 1)} className="gap-1">
-              <ChevronLeft className="size-4" aria-hidden="true" />
-              Previous
-            </Link>
-          </Button>
-        ) : null}
-        {hasNext ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page + 1)} className="gap-1">
-              Next
-              <ChevronRight className="size-4" aria-hidden="true" />
-            </Link>
-          </Button>
-        ) : null}
-      </div>
-    </nav>
   );
 }

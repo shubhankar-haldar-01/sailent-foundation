@@ -7,7 +7,11 @@ import {
   contentSecurityPolicy,
 } from './src/lib/security/content-security-policy';
 import { mediaRemotePatterns } from './src/lib/security/media-remote-patterns';
-import { PERMISSIONS_POLICY } from './src/lib/security/permissions-policy';
+import {
+  PERMISSIONS_POLICY,
+  SCANNER_PERMISSIONS_POLICY,
+  SCANNER_ROUTES,
+} from './src/lib/security/permissions-policy';
 
 /*
   Read when the server builds and starts. A production deployment sets
@@ -80,6 +84,15 @@ const config: NextConfig = {
             : []),
         ],
       },
+      /*
+        The gate scanners need the camera (this site's own, nothing framed).
+        Listed AFTER the site-wide rule: for the same header on the same path,
+        Next.js sends the later value.
+      */
+      ...SCANNER_ROUTES.map((source) => ({
+        source,
+        headers: [{ key: 'Permissions-Policy', value: SCANNER_PERMISSIONS_POLICY }],
+      })),
     ];
   },
 

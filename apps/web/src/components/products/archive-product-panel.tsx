@@ -47,7 +47,7 @@ export function ArchiveProductPanel({
   if (status === 'archived') {
     return (
       <div className="border-border rounded-lg border p-4">
-        <h3 className="text-body-sm font-semibold">Archived</h3>
+        <h3 className="text-body-sm font-semibold">Deleted</h3>
         <p className="text-body-sm text-muted-foreground mt-1">
           This product is retired. Nothing was deleted — donations that cite it still resolve, and
           campaigns that offered it keep their record. Restoring brings it back as inactive, so it
@@ -67,7 +67,7 @@ export function ArchiveProductPanel({
 
   return (
     <div className="border-border rounded-lg border p-4">
-      <h3 className="text-body-sm font-semibold">Archive this product</h3>
+      <h3 className="text-body-sm font-semibold">Delete this product</h3>
       <p className="text-body-sm text-muted-foreground mt-1">
         Retires it everywhere. It disappears from the pickers and can no longer be added to a
         campaign. Nothing is deleted: every donation that names it keeps resolving, and every
@@ -91,7 +91,7 @@ export function ArchiveProductPanel({
 
             <div className="space-y-1.5">
               <label htmlFor="archive-reason" className="text-body-sm font-medium">
-                Why is this being archived?
+                Why is this being deleted?
                 <span className="text-destructive ml-0.5" aria-hidden="true">
                   *
                 </span>
@@ -112,25 +112,25 @@ export function ArchiveProductPanel({
             <Button
               type="button"
               size="sm"
-              variant="secondary"
+              variant="destructive"
               disabled={pending}
               onClick={() => {
                 if (formRef.current && !formRef.current.reportValidity()) return;
                 setConfirmOpen(true);
               }}
             >
-              Archive
+              Delete
             </Button>
           </form>
 
           <ConfirmationDialog
             open={confirmOpen}
             onOpenChange={setConfirmOpen}
-            title={`Archive “${productName}”?`}
-            description="This product will be retired and hidden from live campaigns. It can be restored later."
-            confirmLabel="Archive product"
-            variant="secondary"
-            icon="warning"
+            title={`Delete “${productName}”?`}
+            description="This product will be deleted and hidden from live campaigns. It can be restored later."
+            confirmLabel="Delete product"
+            variant="destructive"
+            icon="danger"
             loading={pending}
             onConfirm={() => {
               formRef.current?.requestSubmit();

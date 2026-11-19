@@ -11,7 +11,7 @@ import {
   type DatabaseClient,
 } from '@sailent/database';
 
-import { sendEmail, type BrevoConfig } from '../lib/brevo.js';
+import { sendEmail, type Mailer } from '../lib/email.js';
 import { renderFromTemplate } from '../lib/templates.js';
 import { alertStaffOfFailedSend } from '../lib/admin-alert.js';
 
@@ -55,7 +55,7 @@ function escapeHtml(value: string): string {
  */
 export async function processDonationConfirmation(
   job: Job<DonationConfirmationJob>,
-  deps: { database: DatabaseClient; brevo: BrevoConfig; appUrl: string },
+  deps: { database: DatabaseClient; mailer: Mailer; appUrl: string },
   logger: Logger,
 ): Promise<{ sent: boolean; reason?: string }> {
   const { donationId, receiptNumber } = job.data;
@@ -73,6 +73,8 @@ export async function processDonationConfirmation(
       campaignTitle: receipts.campaignTitle,
       receiptNumber: receipts.receiptNumber,
       issuedAt: receipts.issuedAt,
+      // The payment id the capture recorded on the receipt (decision A6).
+      paymentReference: receipts.paymentReference,
     })
     .from(donations)
     .leftJoin(donors, eq(donors.id, donations.donorId))
@@ -115,6 +117,18 @@ export async function processDonationConfirmation(
     .where(eq(donationItems.donationId, donationId));
 
   const name = [donation.donorName, donation.donorLastName].filter(Boolean).join(' ') || 'there';
+  /*
+    The receipt's own date, in India's time zone. The server runs in UTC, so
+    without the zone a gift made after midnight IST was dated the day before.
+  */
+  const receiptDate = donation.issuedAt
+    ? donation.issuedAt.toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : null;
   const campaign = donation.campaignTitle ?? 'our work';
   const statusUrl = `${deps.appUrl}/donation/${donation.reference}`;
 
@@ -140,8 +154,9 @@ export async function processDonationConfirmation(
 Thank you. Your donation to ${campaign} has been received.
 
 Receipt number: ${receiptNumber}
-Donation reference: ${donation.reference}
-Date: ${donation.issuedAt?.toLocaleDateString('en-IN') ?? ''}
+Donation reference: ${donation.reference}${
+    donation.paymentReference ? `\nPayment reference: ${donation.paymentReference}` : ''
+  }${receiptDate ? `\nDate: ${receiptDate}` : ''}
 
 ${itemsText}
 
@@ -168,7 +183,11 @@ Sailent Foundation`;
     </tfoot>
   </table>
   <p style="margin:0"><strong>Receipt number:</strong> ${escapeHtml(receiptNumber)}<br>
-  <strong>Donation reference:</strong> ${escapeHtml(donation.reference)}</p>
+  <strong>Donation reference:</strong> ${escapeHtml(donation.reference)}${
+    donation.paymentReference
+      ? `<br>\n  <strong>Payment reference:</strong> ${escapeHtml(donation.paymentReference)}`
+      : ''
+  }${receiptDate ? `<br>\n  <strong>Date:</strong> ${escapeHtml(receiptDate)}` : ''}</p>
   <p><a href="${statusUrl}">View this donation</a></p>
   <p style="font-size:13px;color:#52606d;border-top:1px solid #d9e2ec;padding-top:14px">
     This is your receipt for the payment. It is <strong>not</strong> a tax-exemption certificate.
@@ -202,13 +221,14 @@ Sailent Foundation`;
   );
 
   const result = await sendEmail(
-    deps.brevo,
+    deps.mailer,
     {
       to: { email: donation.donorEmail, name: name === 'there' ? undefined : name },
       subject: rendered?.subject ?? `Thank you — your donation to ${campaign}`,
       html: rendered?.html ?? html,
       text: rendered?.text ?? text,
       tags: ['donation-confirmation', receiptNumber],
+      preheader: `Receipt ${receiptNumber} for ${rupees(donation.amount)}`,
     },
     logger,
   );
@@ -253,7 +273,7 @@ Sailent Foundation`;
     // more times against the same answer and delay the dead-letter a human
     // needs to see. Only `unreachable` is worth another attempt.
     if (result.reason === 'unreachable') {
-      throw new Error(`Brevo unreachable: ${result.detail ?? ''}`);
+      throw new Error(`Email provider unreachable: ${result.detail ?? ''}`);
     }
     logger.warn({ donationId, reason: result.reason }, 'Donation confirmation was not sent');
     return { sent: false, reason: result.reason };

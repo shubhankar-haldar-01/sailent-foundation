@@ -10,6 +10,7 @@ import { DonorSignInForm } from '@/components/dashboard/sign-in-form';
 import { currentDonor } from '@/lib/auth/donor-session';
 import { headingExtraBold } from '@/lib/fonts';
 import { buildMetadata } from '@/lib/seo/metadata';
+import { sameSitePath } from '@/lib/security/return-path';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Sign in',
@@ -39,8 +40,7 @@ export default async function SignInPage({
     controlled, and "sign in and then be taken somewhere" is the shape of a
     phishing link. Only a path beginning with a single `/` survives.
   */
-  const requested = (await searchParams).next;
-  const next = requested?.startsWith('/') && !requested.startsWith('//') ? requested : undefined;
+  const next = sameSitePath((await searchParams).next) ?? undefined;
 
   // Already signed in: send them where they were going rather than showing a
   // form that would immediately bounce.

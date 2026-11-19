@@ -14,16 +14,10 @@ import {
 } from '@sailent/ui';
 
 import { StatusPill } from '@/components/admin/status-pill';
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import { BlogForm, BlogStatusControls } from '@/components/admin/blog-form';
-import {
-  AdminApiError,
-  adminFetch,
-  getBlogPost,
-  listMedia,
-  type AdminBlogPost,
-  type AdminCategory,
-} from '@/lib/admin/api';
+import { AdminApiError, getBlogPost, listMedia, type AdminBlogPost } from '@/lib/admin/api';
 import { currentActor, can } from '@/lib/auth/session';
 
 export const dynamic = 'force-dynamic';
@@ -58,14 +52,11 @@ export default async function AdminBlogPostPage({ params }: { params: Promise<{ 
     ? await listMedia({ visibility: 'public', limit: 12 }).catch(() => null)
     : null;
 
-  const categories = await adminFetch<{ items: AdminCategory[] }>('admin/categories')
-    .then((result) => result.items)
-    .catch(() => []);
-
   return (
     <div className="space-y-6">
       <PageHeader
         title={post.title}
+        breadcrumb={<AdminBackButton href="/admin/blog">Back to blog</AdminBackButton>}
         description={`Author: ${post.authorName ?? 'None recorded'} · Last updated ${formatDate(
           post.updatedAt,
         )}`}
@@ -100,7 +91,7 @@ export default async function AdminBlogPostPage({ params }: { params: Promise<{ 
           <CardDescription>Edit title, category, media, excerpt, and body content.</CardDescription>
         </CardHeader>
         <CardContent>
-          <BlogForm post={post} mediaOptions={media?.items ?? []} categories={categories} />
+          <BlogForm post={post} mediaOptions={media?.items ?? []} />
         </CardContent>
       </Card>
     </div>

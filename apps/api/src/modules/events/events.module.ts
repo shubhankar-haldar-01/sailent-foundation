@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { CatalogModule } from '../catalog/catalog.module.js';
+import { DonationsModule } from '../donations/donations.module.js';
 import { AdminEventsController } from './admin-events.controller.js';
 import { EventRegistrationsController } from './event-registrations.controller.js';
 import { EventRegistrationsService } from './event-registrations.service.js';
@@ -20,7 +21,7 @@ import { EventsService } from './events.service.js';
  * here would give the dashboard two places to look.
  */
 @Module({
-  imports: [CatalogModule],
+  imports: [CatalogModule, DonationsModule],
   controllers: [AdminEventsController, EventRegistrationsController],
   providers: [EventsService, EventRegistrationsService],
   exports: [EventsService, EventRegistrationsService],

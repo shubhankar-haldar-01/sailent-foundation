@@ -3,7 +3,17 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp } from 'lucide-react';
-import { Button, Input, Label, Textarea } from '@sailent/ui';
+import {
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+} from '@sailent/ui';
 
 import { FormStatus, SubmitButton } from '@/components/admin/form-shell';
 import { MediaPicker } from '@/components/admin/media-picker';
@@ -236,15 +246,17 @@ export function GalleryPanel({
         />
         <div className="space-y-1.5">
           <Label htmlFor="gallery-visibility">Who can see it</Label>
-          <select
-            id="gallery-visibility"
-            name="visibility"
-            defaultValue="public"
-            className="border-input bg-surface text-body h-11 w-full max-w-xs rounded-lg border px-3"
-          >
-            <option value="public">Everyone — shown on the campaign page</option>
-            <option value="private">Staff only</option>
-          </select>
+          <div className="max-w-xs">
+            <Select name="visibility" defaultValue="public">
+              <SelectTrigger id="gallery-visibility">
+                <SelectValue placeholder="Select visibility" />
+              </SelectTrigger>
+              <SelectContent position="popper" side="bottom" align="start">
+                <SelectItem value="public">Everyone — shown on the campaign page</SelectItem>
+                <SelectItem value="private">Staff only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <SubmitButton pending={addPending}>Add to gallery</SubmitButton>
       </form>
@@ -290,7 +302,7 @@ export function CampaignUpdatesPanel({
       <input type="hidden" name="status" value={status} />
       <Button
         type="submit"
-        variant={status === 'archived' ? 'ghost' : 'secondary'}
+        variant={status === 'archived' ? 'destructive' : 'secondary'}
         size="sm"
         disabled={statusPending}
       >
@@ -328,9 +340,7 @@ export function CampaignUpdatesPanel({
                   {update.status === 'published'
                     ? statusButton(update, 'draft', 'Unpublish')
                     : null}
-                  {update.status !== 'archived'
-                    ? statusButton(update, 'archived', 'Archive')
-                    : null}
+                  {update.status !== 'archived' ? statusButton(update, 'archived', 'Delete') : null}
                 </div>
               ) : null}
             </li>

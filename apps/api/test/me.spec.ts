@@ -6,6 +6,7 @@ import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { AppConfig } from '../src/config/app.config.js';
+import { StorageService } from '../src/modules/storage/storage.service.js';
 import { DATABASE } from '../src/modules/database/database.module.js';
 import { AdminDonorsService } from '../src/modules/donors/admin-donors.service.js';
 import {
@@ -399,6 +400,17 @@ describe('Donor account (integration)', () => {
       expect(JSON.stringify(response.body)).toContain('taxIdType');
     });
 
+    it('refuses to allow two donors to register the same PAN / Tax ID number', async () => {
+      // Alice already set 'abcde1234f' above. Bob attempting to set the same PAN should fail with 409 Conflict.
+      const response = await request(server)
+        .patch(`${PREFIX}/me`)
+        .set(auth(bob.token))
+        .send({ taxIdType: 'pan', taxIdNumber: 'ABCDE1234F' });
+
+      expect(response.status).toBe(409);
+      expect((response.body as { error: { message: string } }).error.message).toMatch(/PAN/i);
+    });
+
     /**
      * The important half. Every one of these is server-controlled, and the
      * schema is `.strict()` so an attempt is REJECTED rather than ignored —
@@ -767,6 +779,26 @@ describe('Donor account (integration)', () => {
       expect(response.status).toBe(422);
     });
 
+    it('refuses to assign a duplicate PAN to another donor', async () => {
+      await reauth(financeToken);
+      // Ensure Alice has a PAN
+      await request(server)
+        .patch(`${PREFIX}/admin/donors/${alice.donorId}`)
+        .set(auth(financeToken))
+        .send({ taxIdType: 'pan', taxIdNumber: 'ABCDE1234F', reason: 'Set Alice PAN' })
+        .expect(200);
+
+      // Trying to assign the same PAN to Bob should fail with 409 Conflict
+      await reauth(financeToken);
+      const response = await request(server)
+        .patch(`${PREFIX}/admin/donors/${bob.donorId}`)
+        .set(auth(financeToken))
+        .send({ taxIdType: 'pan', taxIdNumber: 'ABCDE1234F', reason: 'Attempt duplicate PAN' });
+
+      expect(response.status).toBe(409);
+      expect((response.body as { error: { message: string } }).error.message).toMatch(/PAN/i);
+    });
+
     it.each([
       ['totalDonated', { totalDonated: 1_00_00_000 }],
       ['donationCount', { donationCount: 99 }],
@@ -979,6 +1011,31 @@ describe('Donor account (integration)', () => {
       expect(await storedAvatar(alice.donorId)).toBeNull();
     });
 
+    /*
+      The file was capped but the form around it was not: multer's defaults
+      take any number of text fields, up to 1 MB each, all in memory before
+      the handler runs. Any donor can reach this route.
+    */
+    it('refuses a form padded with fields, without storing anything', async () => {
+      let padded = request(server).post(`${PREFIX}/me/avatar`).set(auth(alice.token));
+      for (let index = 0; index < 50; index++) padded = padded.field(`pad${index}`, 'x');
+      const response = await padded.attach('file', TINY_PNG, 'a.png');
+
+      expect(response.status).toBe(400);
+      expect(await storedAvatar(alice.donorId)).toBeNull();
+    });
+
+    it('refuses a field larger than any real form value, without storing anything', async () => {
+      const response = await request(server)
+        .post(`${PREFIX}/me/avatar`)
+        .set(auth(alice.token))
+        .field('note', 'x'.repeat(64 * 1024))
+        .attach('file', TINY_PNG, 'a.png');
+
+      expect(response.status).toBe(400);
+      expect(await storedAvatar(alice.donorId)).toBeNull();
+    });
+
     it('refuses a file over 5 MB as too large, without storing anything', async () => {
       const response = await request(server)
         .post(`${PREFIX}/me/avatar`)
@@ -990,32 +1047,52 @@ describe('Donor account (integration)', () => {
     });
 
     it('keeps an inline photo small when there is no object store', async () => {
-      // Valid, and larger than the inline cap once stripped (about 270 KB).
-      const response = await request(server)
-        .post(`${PREFIX}/me/avatar`)
-        .set(auth(alice.token))
-        .attach('file', noisyPng(300, 300), 'large.png');
+      const storageMock = vi
+        .spyOn(app.get(StorageService), 'isConfigured', 'get')
+        .mockReturnValue(false);
+      try {
+        // Valid, and larger than the inline cap once stripped (about 270 KB).
+        const response = await request(server)
+          .post(`${PREFIX}/me/avatar`)
+          .set(auth(alice.token))
+          .attach('file', noisyPng(300, 300), 'large.png');
 
-      expect(response.status).toBe(422);
-      expect(JSON.stringify(response.body)).toMatch(/at most 256 KB/);
-      expect(await storedAvatar(alice.donorId)).toBeNull();
+        expect(response.status).toBe(422);
+        expect(JSON.stringify(response.body)).toMatch(/at most 256 KB/);
+        expect(await storedAvatar(alice.donorId)).toBeNull();
+      } finally {
+        storageMock.mockRestore();
+      }
     });
 
     it('stores a small photo inline when there is no object store, and serves it', async () => {
-      const response = await request(server)
-        .post(`${PREFIX}/me/avatar`)
-        .set(auth(alice.token))
-        .attach('file', TINY_PNG, 'small.png')
-        .expect(200);
+      const storageMock = vi
+        .spyOn(app.get(StorageService), 'isConfigured', 'get')
+        .mockReturnValue(false);
+      try {
+        const response = await request(server)
+          .post(`${PREFIX}/me/avatar`)
+          .set(auth(alice.token))
+          .attach('file', TINY_PNG, 'small.png')
+          .expect(200);
 
-      const url = (response.body as Envelope<{ avatarUrl: string }>).data!.avatarUrl;
-      expect(url).toMatch(/^data:image\/png;base64,/);
-      const profile = await request(server).get(`${PREFIX}/me`).set(auth(alice.token)).expect(200);
-      expect((profile.body as Envelope<{ avatarUrl: string }>).data!.avatarUrl).toBe(url);
+        const url = (response.body as Envelope<{ avatarUrl: string }>).data!.avatarUrl;
+        expect(url).toMatch(/^data:image\/png;base64,/);
+        const profile = await request(server)
+          .get(`${PREFIX}/me`)
+          .set(auth(alice.token))
+          .expect(200);
+        expect((profile.body as Envelope<{ avatarUrl: string }>).data!.avatarUrl).toBe(url);
+      } finally {
+        storageMock.mockRestore();
+      }
     });
 
     it('refuses to store a photo inline in production, and changes nothing', async () => {
       const before = await storedAvatar(alice.donorId);
+      const storageMock = vi
+        .spyOn(app.get(StorageService), 'isConfigured', 'get')
+        .mockReturnValue(false);
       const production = vi.spyOn(app.get(AppConfig), 'isProduction', 'get').mockReturnValue(true);
       try {
         const response = await request(server)
@@ -1025,6 +1102,7 @@ describe('Donor account (integration)', () => {
         expect(response.status).toBe(503);
       } finally {
         production.mockRestore();
+        storageMock.mockRestore();
       }
       expect(await storedAvatar(alice.donorId)).toBe(before);
     });

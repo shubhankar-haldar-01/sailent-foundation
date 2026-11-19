@@ -46,6 +46,7 @@ export function servableAvatarUrl(value: string | null | undefined): string | nu
     return BASE64.test(payload) ? value : null;
   }
 
+  if (value.startsWith('/uploads/')) return value;
   if (value.length > MAX_AVATAR_URL_LENGTH) return null;
   try {
     const { protocol } = new URL(value);

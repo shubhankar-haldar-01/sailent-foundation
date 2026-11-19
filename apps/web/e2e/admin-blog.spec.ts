@@ -254,27 +254,23 @@ test.describe('admin blog', () => {
  */
 async function openSensitiveWindow(page: import('@playwright/test').Page) {
   /*
-    A VOLUNTEER DETAIL PAGE, because its LOAD is what the API marks sensitive.
+    A USER DETAIL PAGE, because its LOAD is what the API marks sensitive.
 
-    `/admin/settings` was the obvious candidate and does not work: only the
-    settings UPDATE is `@Sensitive()`, so the page loads normally and the panel
-    never appears. `GET admin/volunteers/:id` is one of the two reads that are
-    sensitive — a volunteer record carries personal data — so opening one
-    presents the prompt.
+    `GET admin/users/:id` is sensitive — reading a staff account carries
+    personal data and permission status — so opening one presents the prompt.
   */
   const client = new pg.Client({ connectionString: e2eStack.databaseUrl });
   await client.connect();
-  let volunteerId: string;
+  let userId: string;
   try {
-    const result = await client.query<{ id: string }>('SELECT id FROM volunteers LIMIT 1');
-    if (result.rows.length === 0)
-      throw new Error('No volunteer to open the sensitive window with.');
-    volunteerId = result.rows[0]!.id;
+    const result = await client.query<{ id: string }>('SELECT id FROM users LIMIT 1');
+    if (result.rows.length === 0) throw new Error('No user to open the sensitive window with.');
+    userId = result.rows[0]!.id;
   } finally {
     await client.end();
   }
 
-  await page.goto(`/admin/volunteers/${volunteerId}`);
+  await page.goto(`/admin/users/${userId}`);
   await expect(page.getByRole('heading', { name: 'Confirm it is you' })).toBeVisible();
 
   /*

@@ -10,7 +10,6 @@ import {
   campaignGallery,
   campaignProducts,
   campaigns,
-  categories,
   donations,
   donors,
   faqs,
@@ -36,7 +35,6 @@ import {
   parseTargetFlags,
   resolveDatabaseTarget,
 } from '../lib/database-target.js';
-import { CATEGORIES } from './categories.js';
 import { PERMISSIONS, RETIRED_ROLE_KEYS, ROLES } from './permissions.js';
 
 loadDotenv({ path: ROOT_ENV_PATH });
@@ -211,36 +209,6 @@ async function seedPermissionsAndRoles(db: Database): Promise<void> {
   }
 
   console.log(`  ✓ ${PERMISSIONS.length} permissions, ${ROLES.length} roles`);
-}
-
-/**
- * Category catalogue — REFERENCE DATA.
- *
- * Idempotent on `key`, and it updates the editable fields on conflict so that
- * a corrected description reaches an existing database. It deliberately does
- * NOT reset `is_active`: an operator who deactivated a category meant it, and
- * a re-seed must not silently switch it back on.
- */
-async function seedCategories(db: Database): Promise<void> {
-  for (const category of CATEGORIES) {
-    await db
-      .insert(categories)
-      .values(category)
-      .onConflictDoUpdate({
-        target: categories.key,
-        set: {
-          name: category.name,
-          slug: category.slug,
-          description: category.description,
-          icon: category.icon,
-          kind: category.kind,
-          displayOrder: category.displayOrder,
-          updatedAt: new Date(),
-        },
-      });
-  }
-
-  console.log(`  \u2713 ${CATEGORIES.length} categories`);
 }
 
 /** Demo general FAQs (`/faq`). Categories match `FAQ_CATEGORIES` in @sailent/validation. */
@@ -912,40 +880,6 @@ async function seedDemoContent(db: Database): Promise<void> {
     environment: [{ district: 'Bhopal', state: 'Madhya Pradesh' }],
   };
 
-  /**
-   * Resolve categories by KEY, once.
-   *
-   * The backfill in migration 0005 only helps a database that already had
-   * programs when it ran. A fresh install seeds them afterwards, so without
-   * this the demo content is uncategorised and the public category filter is
-   * empty on a brand-new database.
-   */
-  const categoryIds = new Map<string, string>(
-    (await db.select({ key: categories.key, id: categories.id }).from(categories)).map((row) => [
-      row.key,
-      row.id,
-    ]),
-  );
-
-  const CATEGORY_BY_SLUG: Record<string, string> = {
-    education: 'EDUCATION',
-    healthcare: 'HEALTHCARE',
-    'child-welfare': 'CHILD_WELFARE',
-    'women-empowerment': 'WOMEN_EMPOWERMENT',
-    'school-kits-jharkhand': 'EDUCATION',
-    'mobile-health-clinic-bastar': 'HEALTHCARE',
-    'tailoring-training-centre': 'WOMEN_EMPOWERMENT',
-    'disaster-relief': 'DISASTER_RELIEF',
-    'animal-welfare': 'ANIMAL_WELFARE',
-    environment: 'ENVIRONMENT',
-    'flood-relief-balasore': 'DISASTER_RELIEF',
-    'skills-training-second-cohort': 'WOMEN_EMPOWERMENT',
-    'animal-care-pune': 'ANIMAL_WELFARE',
-    'child-nutrition-gaya': 'CHILD_WELFARE',
-    'women-livelihoods-ranchi': 'LIVELIHOOD',
-    'greener-communities-bhopal': 'ENVIRONMENT',
-  };
-
   const programIds = new Map<string, string>();
   for (const program of programSeeds) {
     const editorial = programEditorial[program.slug];
@@ -962,7 +896,6 @@ async function seedDemoContent(db: Database): Promise<void> {
         activities: editorial?.activities ?? null,
         metrics: editorial?.metrics ?? null,
         accentIcon: editorial?.accentIcon ?? null,
-        categoryId: categoryIds.get(CATEGORY_BY_SLUG[program.slug] ?? '') ?? null,
         goals: editorial?.activities?.slice(0, 3) ?? null,
         locations: programLocations[program.slug] ?? [],
         publishedAt: new Date(),
@@ -976,7 +909,6 @@ async function seedDemoContent(db: Database): Promise<void> {
           activities: editorial?.activities ?? null,
           metrics: editorial?.metrics ?? null,
           accentIcon: editorial?.accentIcon ?? null,
-          categoryId: categoryIds.get(CATEGORY_BY_SLUG[program.slug] ?? '') ?? null,
           // Included in the conflict set, not only the insert: the public
           // impact page computes "which states we work in" from this column,
           // so a re-seed that left it stale would publish a wrong figure.
@@ -1388,7 +1320,6 @@ async function seedDemoContent(db: Database): Promise<void> {
       .values({
         ...campaign,
         programId,
-        categoryId: categoryIds.get(CATEGORY_BY_SLUG[campaign.slug] ?? '') ?? null,
         description:
           'Demo campaign narrative. Replaced with real copy before launch.\n\n' +
           'A second demo paragraph, so the page can be reviewed with the ' +
@@ -1427,7 +1358,6 @@ async function seedDemoContent(db: Database): Promise<void> {
           programId,
           shortDescription: campaign.shortDescription,
           status: campaign.status,
-          categoryId: categoryIds.get(CATEGORY_BY_SLUG[campaign.slug] ?? '') ?? null,
           location: campaign.location,
           state: campaign.state,
           city: campaign.city,
@@ -1927,8 +1857,8 @@ async function seedDemoContent(db: Database): Promise<void> {
       startDate: inDays(33),
       capacity: 120,
       registeredCount: 48,
-      city: null,
-      isOnline: true,
+      city: 'Pune, Maharashtra',
+      isOnline: false,
     },
     {
       title: 'Community Plantation Drive',
@@ -2315,7 +2245,6 @@ async function main(): Promise<void> {
 
     console.log('[seed] reference data…');
     await seedPermissionsAndRoles(client.db);
-    await seedCategories(client.db);
     await seedSettings(client.db);
     await seedNotificationTemplates(client.db);
 

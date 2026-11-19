@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, CreditCard, FileCheck2, HeartHandshake, User } from 'lucide-react';
+import { CreditCard, FileCheck2, HeartHandshake, User } from 'lucide-react';
 
 import {
   Badge,
@@ -12,6 +12,8 @@ import {
   formatDate,
   PageHeader,
 } from '@sailent/ui';
+
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 
 import { DonationStatusBadge } from '@/components/admin/donations-table';
 import { AdminApiError, adminFetch } from '@/lib/admin/api';
@@ -81,15 +83,7 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
     <div className="space-y-6">
       <PageHeader
         title={donation.reference}
-        breadcrumb={
-          <Link
-            href="/admin/donations"
-            className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
-          >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            Back to donations
-          </Link>
-        }
+        breadcrumb={<AdminBackButton href="/admin/donations">Back to donations</AdminBackButton>}
         status={<DonationStatusBadge status={donation.status} />}
         description={`Recorded on ${formatDate(donation.createdAt)} · Type: ${donation.donationType}`}
       />
@@ -116,17 +110,12 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="capitalize">
-                {donation.donationType} gift
-              </Badge>
               {donation.anonymous ? <Badge variant="neutral">Anonymous to public</Badge> : null}
               {donation.receiptNumber ? (
                 <Badge variant="success" className="font-mono text-xs">
                   Receipt #{donation.receiptNumber}
                 </Badge>
-              ) : (
-                <Badge variant="neutral">No receipt</Badge>
-              )}
+              ) : null}
             </div>
           </div>
         </CardContent>
@@ -161,7 +150,7 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
                       </span>
                       <span className="text-caption text-muted-foreground">
                         {item.itemType === 'custom'
-                          ? 'Additional custom gift'
+                          ? 'Custom donation amount'
                           : `${item.quantity} × ${formatCurrency(item.unitPrice)}`}
                       </span>
                     </div>
@@ -239,24 +228,18 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
             </CardContent>
           </Card>
 
-          {/* Payment Card */}
-          <Card className="border-border">
-            <CardHeader className="border-border border-b pb-4">
-              <div className="flex items-center gap-2">
-                <CreditCard className="text-primary size-5" aria-hidden="true" />
-                <CardTitle className="text-base font-semibold">
-                  Payment Gateway Transaction
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              {donation.payment === null ? (
-                <div className="p-5">
-                  <p className="border-border text-caption text-muted-foreground rounded-lg border border-dashed p-4 text-center">
-                    Payment details require the <code>payment.read</code> permission.
-                  </p>
+          {/* Payment Card (shown when user has payment.read permission) */}
+          {donation.payment ? (
+            <Card className="border-border">
+              <CardHeader className="border-border border-b pb-4">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="text-primary size-5" aria-hidden="true" />
+                  <CardTitle className="text-base font-semibold">
+                    Payment Gateway Transaction
+                  </CardTitle>
                 </div>
-              ) : (
+              </CardHeader>
+              <CardContent className="p-0">
                 <dl className="divide-border divide-y">
                   <Row label="Status" value={donation.payment.status} />
                   <Row label="Gateway order" value={donation.payment.providerOrderId} mono />
@@ -285,21 +268,32 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
                     <Row label="Failure reason" value={donation.payment.failureReason} />
                   ) : null}
                 </dl>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : null}
 
           {/* Receipt Card */}
           <Card className="border-border">
             <CardHeader className="border-border border-b pb-4">
-              <div className="flex items-center gap-2">
-                <FileCheck2 className="text-primary size-5" aria-hidden="true" />
-                <CardTitle className="text-base font-semibold">Payment Receipt</CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileCheck2 className="text-primary size-5" aria-hidden="true" />
+                  <CardTitle className="text-base font-semibold">Payment Receipt</CardTitle>
+                </div>
+                {donation.receiptNumber ? (
+                  <Badge variant="success" className="font-mono text-xs">
+                    Issued
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs">
+                    Not issued
+                  </Badge>
+                )}
               </div>
             </CardHeader>
-            <CardContent className="p-5">
+            <CardContent className={donation.receiptNumber ? 'p-0' : 'p-5'}>
               {donation.receiptNumber ? (
-                <dl className="border-border divide-border divide-y rounded-lg border">
+                <dl className="divide-border divide-y">
                   <Row label="Receipt Number" value={donation.receiptNumber} mono />
                   <Row
                     label="Issued Date"
@@ -307,15 +301,11 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
                   />
                 </dl>
               ) : (
-                <p className="text-body-sm text-muted-foreground">
-                  No receipt generated. Receipts are numbered and issued from the gapless book upon
-                  payment capture.
+                <p className="text-caption text-muted-foreground">
+                  No receipt has been issued for this donation. Receipts are numbered and issued
+                  from the gapless book upon payment capture.
                 </p>
               )}
-              <p className="text-caption text-muted-foreground mt-3">
-                A receipt acknowledges receipt of funds. Statutory tax deduction certificates (Form
-                10BE) are issued annually by the Income Tax Department following Form 10BD filing.
-              </p>
             </CardContent>
           </Card>
         </div>

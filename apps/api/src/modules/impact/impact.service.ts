@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, ilike, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 
 import { campaigns, events, impactUpdates, programs, type DatabaseClient } from '@sailent/database';
 import { canTransitionProgram, type ProgramStatus } from '@sailent/validation';
@@ -67,6 +67,8 @@ export class ImpactService {
 
     if (query.status && query.status !== 'all') {
       filters.push(eq(impactUpdates.status, query.status));
+    } else {
+      filters.push(ne(impactUpdates.status, 'archived'));
     }
     if (query.programId) filters.push(eq(impactUpdates.programId, query.programId));
     if (query.campaignId) filters.push(eq(impactUpdates.campaignId, query.campaignId));
@@ -84,7 +86,7 @@ export class ImpactService {
     }
 
     const where = filters.length > 0 ? and(...filters) : undefined;
-    const { column, direction } = resolveSort(query.sort, SORTABLE, 'impactDate');
+    const { column, direction } = resolveSort(query.sort ?? '-createdAt', SORTABLE, 'createdAt');
 
     const [items, [count]] = await Promise.all([
       this.database.db

@@ -25,6 +25,11 @@ import {
   formatCurrency,
   Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@sailent/ui';
 
 import { Field, FormStatus, SubmitButton, TextArea } from '@/components/admin/form-shell';
@@ -38,7 +43,7 @@ import {
   type ActionState,
   type DirectUploadResult,
 } from '@/lib/admin/actions';
-import type { AdminCategory, AdminGalleryItem, AdminMedia, AdminProgram } from '@/lib/admin/api';
+import type { AdminGalleryItem, AdminMedia, AdminProgram } from '@/lib/admin/api';
 import {
   StagedFaqsManager,
   StagedProductsManager,
@@ -934,14 +939,12 @@ function CampaignCoverPicker({
 
 export function CampaignForm({
   programs,
-  categories,
   campaign,
   mediaOptions = [],
   initialGallery = [],
   catalogue = [],
 }: {
   programs: AdminProgram[];
-  categories: AdminCategory[];
   campaign?: {
     id: string;
     title: string;
@@ -1053,74 +1056,25 @@ export function CampaignForm({
             *
           </span>
         </Label>
-        <select
-          id="programId"
-          name="programId"
-          defaultValue={campaign?.programId ?? ''}
-          required
-          aria-invalid={state.fieldErrors?.programId ? true : undefined}
-          aria-describedby={
-            ['programId-hint', state.fieldErrors?.programId ? 'programId-error' : null]
-              .filter(Boolean)
-              .join(' ') || undefined
-          }
-          className="border-input bg-surface text-body-sm h-10 w-full rounded-md border px-3"
-        >
-          <option value="" disabled>
-            Select a program...
-          </option>
-          {programs.map((program) => (
-            <option key={program.id} value={program.id}>
-              {program.title}
-              {program.status === 'draft' ? ' (Draft)' : ''}
-            </option>
-          ))}
-        </select>
+        <Select name="programId" defaultValue={campaign?.programId || undefined} required>
+          <SelectTrigger id="programId" hasError={Boolean(state.fieldErrors?.programId)}>
+            <SelectValue placeholder="Select a program..." />
+          </SelectTrigger>
+          <SelectContent position="popper" side="bottom" align="start">
+            {programs.map((program) => (
+              <SelectItem key={program.id} value={program.id}>
+                {program.title}
+                {program.status === 'draft' ? ' (Draft)' : ''}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <p id="programId-hint" className="text-caption text-muted-foreground">
           Every campaign funds a specific piece of a program.
         </p>
         {state.fieldErrors?.programId ? (
           <p id="programId-error" className="text-caption text-destructive">
             {state.fieldErrors.programId}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="categoryId">
-          Category
-          <span className="text-destructive ml-0.5" aria-hidden="true">
-            *
-          </span>
-        </Label>
-        <select
-          id="categoryId"
-          name="categoryId"
-          defaultValue={campaign?.categoryId ?? ''}
-          required
-          aria-invalid={state.fieldErrors?.categoryId ? true : undefined}
-          aria-describedby={
-            ['categoryId-hint', state.fieldErrors?.categoryId ? 'categoryId-error' : null]
-              .filter(Boolean)
-              .join(' ') || undefined
-          }
-          className="border-input bg-surface text-body-sm h-10 w-full rounded-md border px-3"
-        >
-          <option value="" disabled>
-            Select a category...
-          </option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-        <p id="categoryId-hint" className="text-caption text-muted-foreground">
-          Categorizes the campaign for cause filtering and thematic badge display.
-        </p>
-        {state.fieldErrors?.categoryId ? (
-          <p id="categoryId-error" className="text-caption text-destructive">
-            {state.fieldErrors.categoryId}
           </p>
         ) : null}
       </div>

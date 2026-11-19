@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "apps/web/src/components/admin/gate-kiosk-view.tsx"
+        ],
+        "createdAt": "2026-11-18T10:50:10.022Z",
+        "reason": "agent judgement: the flagged elements are the QR camera viewfinder's corner brackets (pre-existing, not a card); a rounded two-sided border is the bracket shape itself"
+      }
+    ]
+  }
+}

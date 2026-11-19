@@ -8,6 +8,7 @@ import { adminNav } from '../admin-sidebar';
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   usePathname: () => '/admin',
+  useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 

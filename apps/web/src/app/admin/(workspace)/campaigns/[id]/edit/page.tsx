@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ExternalLink, Eye } from 'lucide-react';
+import { Activity, ExternalLink, Eye } from 'lucide-react';
 
 import {
   Button,
@@ -13,6 +13,8 @@ import {
   formatDate,
   PageHeader,
 } from '@sailent/ui';
+
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 
 import { CampaignForm } from '@/components/admin/campaign-form';
 import { FaqsPanel, type FaqRow } from '@/components/admin/campaign-children';
@@ -30,7 +32,6 @@ import {
   type AdminCampaign,
   type AdminGalleryItem,
   type AdminMedia,
-  type AdminCategory,
   type AdminProgram,
   type Paginated,
 } from '@/lib/admin/api';
@@ -52,7 +53,7 @@ const CAMPAIGN_LABELS = {
   active: { endpoint: 'activate', label: 'Open for donations' },
   paused: { endpoint: 'pause', label: 'Pause donations' },
   completed: { endpoint: 'complete', label: 'Mark complete' },
-  archived: { endpoint: 'archive', label: 'Archive' },
+  archived: { endpoint: 'archive', label: 'Delete' },
   draft: { endpoint: 'status', label: 'Back to draft' },
 };
 
@@ -62,19 +63,17 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
   let campaign: CampaignDetail;
   let transitions: { campaign: Record<string, string[]> };
   let programs: Paginated<AdminProgram>;
-  let categories: { items: AdminCategory[] };
   let products: { items: CampaignProductRow[] };
   let faqs: { items: FaqRow[] };
   let catalogue: Paginated<CatalogueProduct>;
 
   try {
-    [campaign, transitions, programs, categories, products, faqs, catalogue] = await Promise.all([
+    [campaign, transitions, programs, products, faqs, catalogue] = await Promise.all([
       adminFetch<CampaignDetail>(`admin/campaigns/${id}`),
       adminFetch<{ campaign: Record<string, string[]> }>('admin/campaigns/transitions'),
       adminFetch<Paginated<AdminProgram>>('admin/programs', {
         query: { status: 'all', limit: 100, sort: 'title' },
       }),
-      adminFetch<{ items: AdminCategory[] }>('admin/categories', { query: { kind: 'campaign' } }),
       adminFetch<{ items: CampaignProductRow[] }>(`admin/campaigns/${id}/products`),
       adminFetch<{ items: FaqRow[] }>(`admin/campaigns/${id}/faqs`),
       adminFetch<Paginated<CatalogueProduct>>('admin/products', {
@@ -102,15 +101,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
     <div className="space-y-6">
       <PageHeader
         title={campaign.title}
-        breadcrumb={
-          <Link
-            href="/admin/campaigns"
-            className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
-          >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            Back to campaigns
-          </Link>
-        }
+        breadcrumb={<AdminBackButton href="/admin/campaigns">Back to campaigns</AdminBackButton>}
         description={`/${campaign.slug} · Updated ${formatDate(campaign.updatedAt)}`}
         status={<StatusPill status={campaign.status} />}
         actions={
@@ -202,24 +193,36 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
       </Card>
 
       {/* Lifecycle Transitions Card */}
-      <Card className="border-border">
-        <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Lifecycle Status & Permissions</CardTitle>
-          <p className="text-caption text-muted-foreground mt-1">
-            {campaign.status === 'active'
-              ? 'Campaign is live and actively accepting donations through Razorpay.'
-              : campaign.status === 'paused'
-                ? 'Campaign is publicly visible; online checkout is temporarily halted.'
-                : campaign.status === 'completed'
-                  ? 'Campaign has concluded. Historical details and contributions remain readable.'
-                  : campaign.status === 'archived'
-                    ? 'Campaign is archived and removed from public view. It can be returned to draft or deleted.'
-                    : isPublic
-                      ? 'Published publicly; donations have not been opened yet.'
-                      : 'Draft state. Requires associated program before publishing.'}
-          </p>
+      <Card className="border-border shadow-xs overflow-hidden">
+        <CardHeader className="border-border bg-muted/20 border-b pb-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="border-border/80 bg-background text-foreground shadow-xs flex size-9 shrink-0 items-center justify-center rounded-lg border">
+                <Activity className="text-primary size-4" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-semibold">
+                  Lifecycle Status & Permissions
+                </CardTitle>
+                <p className="text-caption text-muted-foreground mt-1">
+                  {campaign.status === 'active'
+                    ? 'Campaign is live and actively accepting donations through Razorpay.'
+                    : campaign.status === 'paused'
+                      ? 'Campaign is publicly visible; online checkout is temporarily halted.'
+                      : campaign.status === 'completed'
+                        ? 'Campaign has concluded. Historical details and contributions remain readable.'
+                        : campaign.status === 'archived'
+                          ? 'Campaign is deleted and removed from public view.'
+                          : isPublic
+                            ? 'Published publicly; donations have not been opened yet.'
+                            : 'Draft state. Requires associated program before publishing.'}
+                </p>
+              </div>
+            </div>
+            <StatusPill status={campaign.status} />
+          </div>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-5 sm:p-6">
           <StatusActions
             entityId={campaign.id}
             slug={campaign.slug}
@@ -253,7 +256,6 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
             programs={programs.items.filter(
               (p) => p.status !== 'archived' || p.id === campaign.programId,
             )}
-            categories={categories.items.filter((c) => c.isActive)}
             campaign={campaign}
             mediaOptions={mediaOptions}
             initialGallery={gallery}

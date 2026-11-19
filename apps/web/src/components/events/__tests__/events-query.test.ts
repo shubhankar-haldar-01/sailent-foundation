@@ -137,13 +137,10 @@ describe('dates are read in India Standard Time', () => {
 });
 
 describe('locationLabel', () => {
-  it('says Online, the city, the venue, or that the venue is not set — in that order', () => {
-    expect(locationLabel({ isOnline: true, city: 'Pune', venueName: 'Hall' })).toBe('Online');
-    expect(locationLabel({ isOnline: false, city: 'Pune', venueName: 'Hall' })).toBe('Pune');
-    expect(locationLabel({ isOnline: false, city: null, venueName: 'Hall' })).toBe('Hall');
-    expect(locationLabel({ isOnline: false, city: null, venueName: null })).toBe(
-      'Venue to be confirmed',
-    );
+  it('says the city, the venue, or that the venue is not set — in that order', () => {
+    expect(locationLabel({ city: 'Pune', venueName: 'Hall' })).toBe('Pune');
+    expect(locationLabel({ city: null, venueName: 'Hall' })).toBe('Hall');
+    expect(locationLabel({ city: null, venueName: null })).toBe('Venue to be confirmed');
   });
 });
 
@@ -161,9 +158,8 @@ describe('matchesSearch', () => {
     expect(matchesSearch(camp, 'health nashik')).toBe(false);
   });
 
-  it('finds an event by its programme, and an online event by "online"', () => {
+  it('finds an event by its programme', () => {
     expect(matchesSearch(camp, 'healthcare', 'Healthcare')).toBe(true);
-    expect(matchesSearch(event({ isOnline: true }), 'online')).toBe(true);
   });
 });
 

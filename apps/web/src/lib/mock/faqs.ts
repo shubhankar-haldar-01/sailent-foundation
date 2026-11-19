@@ -152,7 +152,7 @@ export const faqs: FaqEntry[] = [
     category: 'transparency',
     question: 'How do you decide what counts as impact?',
     answer:
-      'Every public figure traces either to a database aggregate or to a dated record with a stated method. The impact page explains how each number is derived, including what we deliberately do not count.',
+      'Every public figure traces either to a database aggregate or to a dated record with a stated method. Our reports and program updates explain how each number is derived, including what we deliberately do not count.',
   },
   {
     id: 'g1',

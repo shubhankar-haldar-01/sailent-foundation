@@ -75,8 +75,7 @@ export const primaryNav: NavEntry[] = [
   { label: 'Programs', href: '/programs' },
   { label: 'Campaigns', href: '/campaigns' },
   /*
-    No "Impact" item: taken out of the bar, and out of the footer, at the
-    client's request. The /impact page itself still exists.
+    No "Impact" item: removed from navigation and routes at the client's request.
   */
   { label: 'Stories', href: '/stories' },
   {

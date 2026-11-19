@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
 
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 import { ActivePill, TemplateEditor } from '@/components/admin/notification-panels';
 import { AdminApiError, getNotificationTemplate } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
@@ -25,6 +26,11 @@ export default async function AdminTemplatePage({ params }: { params: Promise<{ 
     <div className="space-y-6">
       <PageHeader
         title={template.name}
+        breadcrumb={
+          <AdminBackButton href="/admin/notification-templates">
+            Back to email templates
+          </AdminBackButton>
+        }
         description={`Identifier: ${template.slug} · Active revision version ${template.version}`}
         status={<ActivePill isActive={template.isActive} />}
       />

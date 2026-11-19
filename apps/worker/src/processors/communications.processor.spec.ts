@@ -24,10 +24,12 @@ import {
   readOrganisationEmail,
   type CommunicationsDeps,
 } from './communications.processor.js';
+import { createMailer } from '../lib/email.js';
 
 /**
  * Phase 13 email processors, against the REAL local database (the same one the
- * API integration tests use) and a FAKE email provider (`fetch` is stubbed).
+ * API integration tests use) and a FAKE Resend: the real SDK runs, and the
+ * `fetch` it calls is stubbed with Resend's answers. No email leaves the machine.
  *
  * The rows each test creates are tagged with this run's id and removed after.
  */
@@ -60,7 +62,10 @@ const logger = {
 function deps(overrides: Partial<CommunicationsDeps> = {}): CommunicationsDeps {
   return {
     database,
-    brevo: { apiKey: 'test-key', senderEmail: 'noreply@worker-test.local', senderName: 'Test' },
+    mailer: createMailer({
+      apiKey: 're_test_worker_key',
+      from: 'Sailent Foundation <noreply@worker-test.local>',
+    }),
     appUrl: 'https://sailent.example/',
     organisationEmail: async () => ORG,
     ...overrides,
@@ -71,24 +76,37 @@ function job<T>(data: T, attemptsMade = 0): Job<T> {
   return { id: `job-${RUN}`, data, attemptsMade } as Job<T>;
 }
 
-/** Stub Brevo: each call answers with the next status, and the request bodies are kept. */
-function brevo(...statuses: number[]) {
-  const sent: { to: string; subject: string; html: string; text: string }[] = [];
+/**
+ * Stub Resend: each call answers with the next status, in Resend's own shape
+ * (`{ id }`, or `{ statusCode, name, message }`), and the requests are kept.
+ */
+function resend(...statuses: number[]) {
+  const sent: { to: string; subject: string; html: string; text: string; replyTo?: string }[] = [];
   const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
     const body = JSON.parse(String(init.body)) as {
-      to: { email: string }[];
+      to: string[];
       subject: string;
-      htmlContent: string;
-      textContent: string;
+      html: string;
+      text: string;
+      reply_to?: string;
     };
     sent.push({
-      to: body.to[0]!.email,
+      to: body.to[0]!,
       subject: body.subject,
-      html: body.htmlContent,
-      text: body.textContent,
+      html: body.html,
+      text: body.text,
+      replyTo: body.reply_to,
     });
-    const status = statuses.shift() ?? 201;
-    return new Response(JSON.stringify(status < 300 ? { messageId: `m-${RUN}` } : {}), { status });
+    const status = statuses.shift() ?? 200;
+    const answer =
+      status < 300
+        ? { id: `m-${RUN}` }
+        : {
+            statusCode: status,
+            name: status >= 500 ? 'internal_server_error' : 'validation_error',
+            message: 'stubbed failure',
+          };
+    return new Response(JSON.stringify(answer), { status });
   });
   vi.stubGlobal('fetch', fetchMock);
   return { sent, fetchMock };
@@ -149,7 +167,7 @@ afterAll(async () => {
 describe('contact.received', () => {
   it('emails the message to the organisation and records the send by id only', async () => {
     const id = await contact();
-    const { sent } = brevo(201);
+    const { sent } = resend(200);
 
     const result = await processContactReceived(job({ contactMessageId: id }), deps(), logger);
 
@@ -162,12 +180,21 @@ describe('contact.received', () => {
     expect(row!.data).toEqual({ contactMessageId: id });
   });
 
-  it('does not email the same message twice, whatever re-enqueues it', async () => {
+  it('sends staff replies to the visitor who wrote in', async () => {
     const id = await contact();
-    brevo(201);
+    const { sent } = resend(200);
+
     await processContactReceived(job({ contactMessageId: id }), deps(), logger);
 
-    const second = brevo(201);
+    expect(sent[0]!.replyTo).toBe(`asha-${RUN}@worker-test.local`);
+  });
+
+  it('does not email the same message twice, whatever re-enqueues it', async () => {
+    const id = await contact();
+    resend(200);
+    await processContactReceived(job({ contactMessageId: id }), deps(), logger);
+
+    const second = resend(200);
     const result = await processContactReceived(job({ contactMessageId: id }), deps(), logger);
 
     expect(result).toEqual({ sent: false, reason: 'already_sent' });
@@ -176,12 +203,12 @@ describe('contact.received', () => {
 
   it('throws on an unreachable provider so BullMQ retries, then sends on the retry', async () => {
     const id = await contact();
-    brevo(503);
+    resend(503);
     await expect(
       processContactReceived(job({ contactMessageId: id }), deps(), logger),
     ).rejects.toThrow(/unreachable/);
 
-    brevo(201);
+    resend(200);
     const retry = await processContactReceived(job({ contactMessageId: id }, 1), deps(), logger);
     expect(retry).toEqual({ sent: true });
 
@@ -191,7 +218,7 @@ describe('contact.received', () => {
 
   it('records a permanent rejection as failed without throwing (no retry storm)', async () => {
     const id = await contact();
-    brevo(400);
+    resend(400);
 
     const result = await processContactReceived(job({ contactMessageId: id }), deps(), logger);
 
@@ -203,7 +230,7 @@ describe('contact.received', () => {
 
   it('keeps the message and records why when no organisation email is set', async () => {
     const id = await contact();
-    const { fetchMock } = brevo(201);
+    const { fetchMock } = resend(200);
 
     const result = await processContactReceived(
       job({ contactMessageId: id }),
@@ -224,7 +251,7 @@ describe('contact.received', () => {
 
   it('escapes the message in the HTML email', async () => {
     const id = await contact('<script>alert("x")</script> please call me back');
-    const { sent } = brevo(201);
+    const { sent } = resend(200);
 
     await processContactReceived(job({ contactMessageId: id }), deps(), logger);
 
@@ -259,7 +286,7 @@ describe('newsletter.confirm', () => {
 
   it('sends the confirmation and unsubscribe links, and logs neither token nor address', async () => {
     const reader = await subscriber('pending');
-    const { sent } = brevo(201);
+    const { sent } = resend(200);
     logs.length = 0;
     const confirmToken = 'C'.repeat(43);
     const unsubscribeToken = 'U'.repeat(43);
@@ -285,7 +312,7 @@ describe('newsletter.confirm', () => {
 
   it('sends nothing to an address that is already subscribed', async () => {
     const reader = await subscriber('subscribed');
-    const { fetchMock } = brevo(201);
+    const { fetchMock } = resend(200);
 
     const result = await processNewsletterConfirm(
       job({
@@ -319,7 +346,7 @@ describe('staff.invite and staff.password_reset', () => {
 
   it('emails an invitation link with the token after #, and records no token', async () => {
     const invitee = await staff('invited');
-    const { sent } = brevo(201);
+    const { sent } = resend(200);
     const token = 'T'.repeat(43);
 
     const result = await processStaffInvite(job({ userId: invitee.id, token }), deps(), logger);
@@ -333,7 +360,7 @@ describe('staff.invite and staff.password_reset', () => {
 
   it('sends no invitation to an account that is already active', async () => {
     const member = await staff('active');
-    const { fetchMock } = brevo(201);
+    const { fetchMock } = resend(200);
     const result = await processStaffInvite(
       job({ userId: member.id, token: 'T'.repeat(43) }),
       deps(),
@@ -346,7 +373,7 @@ describe('staff.invite and staff.password_reset', () => {
   it('emails a reset link to an active account, and nothing to a suspended one', async () => {
     const member = await staff('active');
     const suspended = await staff('suspended');
-    const { sent, fetchMock } = brevo(201);
+    const { sent, fetchMock } = resend(200);
     const token = 'R'.repeat(43);
 
     await processStaffPasswordReset(job({ userId: member.id, token }), deps(), logger);

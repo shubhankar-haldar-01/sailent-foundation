@@ -57,18 +57,9 @@ test.describe('staff administration', () => {
     await expect(page.locator('select[name*="role" i]')).toHaveCount(0);
   });
 
-  test('shows the single role and its permissions, read-only', async ({ page }) => {
+  test('redirects /admin/roles to /admin/users', async ({ page }) => {
     await page.goto('/admin/roles');
-    await expect(page.getByRole('heading', { level: 2, name: 'SUPER_ADMIN' })).toBeVisible();
-
-    const content = await page.content();
-    for (const role of RETIRED_ROLES) {
-      expect(content, role).not.toContain(role);
-    }
-
-    // Read-only: nothing on this screen may write.
-    await expect(page.locator('form')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: /save|create|delete|edit/i })).toHaveCount(0);
+    await expect(page).toHaveURL(/\/admin\/users/);
   });
 
   test('renders the audit log, and offers no way to change it', async ({ page }) => {

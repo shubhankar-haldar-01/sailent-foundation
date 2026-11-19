@@ -52,6 +52,7 @@ import {
 } from './dto/me.dto.js';
 import { ValidationException } from '../../common/exceptions.js';
 import { requestClientIp } from '../../common/security/internal-request.js';
+import { singleFileUploadLimits } from '../storage/upload-limits.js';
 
 /**
  * The donor's own account.
@@ -130,7 +131,10 @@ export class MeController {
 
   @Post('avatar')
   @HttpCode(200)
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024, files: 1 } }))
+  @UseInterceptors(
+    // Only the file is sent; two fields of slack, never hundreds (see upload-limits.ts).
+    FileInterceptor('file', { limits: singleFileUploadLimits(5 * 1024 * 1024, 2) }),
+  )
   @ApiOperation({ summary: 'Upload a donor profile picture (JPEG, PNG or WebP, max 5 MB)' })
   uploadAvatar(
     @UploadedFile() file: { buffer: Buffer; mimetype?: string } | undefined,

@@ -159,12 +159,12 @@ Donor completes payment in Razorpay Checkout            │
                      ▼
         Async jobs (outside the transaction, each retryable)
           → render receipt PDF → R2
-          → send receipt email (Brevo)
+          → send receipt email (Resend)
           → notify admins if amount ≥ threshold
           → analytics: donation_success (no PII)
 ```
 
-**Why the counters move inside the transaction and the emails do not:** the counters must be atomic with the state change or they drift. The emails must be outside, or a Brevo outage would roll back a completed donation.
+**Why the counters move inside the transaction and the emails do not:** the counters must be atomic with the state change or they drift. The emails must be outside, or an email-provider outage would roll back a completed donation.
 
 ### 3.3 The status page
 

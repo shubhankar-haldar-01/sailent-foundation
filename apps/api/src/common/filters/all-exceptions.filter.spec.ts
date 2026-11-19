@@ -132,4 +132,64 @@ describe('AllExceptionsFilter', () => {
       expect(reportError).not.toHaveBeenCalled();
     });
   });
+
+  /*
+    The body parser throws `http-errors` objects, not HttpExceptions. They used
+    to fall through to the 500 branch, so an oversized body from anyone was
+    logged as a crash and sent to error tracking.
+  */
+  describe('the body parser’s refusals', () => {
+    beforeEach(() => reportError.mockReset());
+
+    /** The shape `body-parser` throws (`http-errors`), built by hand. */
+    const parserError = (message: string, type: string, status: number) =>
+      Object.assign(new Error(message), { type, status, statusCode: status, expose: status < 500 });
+
+    it('answers an oversized body with 413, not a 500, and does not report it', () => {
+      const filter = new AllExceptionsFilter(true);
+      const { host, status, json } = createHost();
+
+      filter.catch(parserError('request entity too large', 'entity.too.large', 413), host);
+
+      expect(status).toHaveBeenCalledWith(HttpStatus.PAYLOAD_TOO_LARGE);
+      const body = json.mock.calls[0]?.[0] as { error: { code: string; message: string } };
+      expect(body.error.code).toBe('VALIDATION_FAILED');
+      expect(body.error.message).toBe('That request is too large.');
+      expect(reportError).not.toHaveBeenCalled();
+    });
+
+    it('answers a charset it cannot read with 415, in words that do not name the parser', () => {
+      const filter = new AllExceptionsFilter(true);
+      const { host, status, json } = createHost();
+
+      filter.catch(parserError('unsupported charset "LATIN1"', 'charset.unsupported', 415), host);
+
+      expect(status).toHaveBeenCalledWith(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+      const body = json.mock.calls[0]?.[0] as { error: { code: string; message: string } };
+      expect(body.error.code).toBe('VALIDATION_FAILED');
+      expect(body.error.message).toBe('That format is not supported.');
+      expect(reportError).not.toHaveBeenCalled();
+    });
+
+    it('still treats an error that merely carries a 4xx status as a 500', () => {
+      // An SDK's error from an upstream call is our failure, not the client's.
+      const filter = new AllExceptionsFilter(true);
+      const { host, status } = createHost();
+
+      filter.catch(Object.assign(new Error('upstream said 400'), { status: 400 }), host);
+
+      expect(status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(reportError).toHaveBeenCalledTimes(1);
+    });
+
+    it('still treats the parser’s own server-side failure as a 500', () => {
+      const filter = new AllExceptionsFilter(true);
+      const { host, status } = createHost();
+
+      filter.catch(parserError('stream is not readable', 'stream.not.readable', 500), host);
+
+      expect(status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(reportError).toHaveBeenCalledTimes(1);
+    });
+  });
 });

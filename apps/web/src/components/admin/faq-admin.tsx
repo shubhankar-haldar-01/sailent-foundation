@@ -2,7 +2,17 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Label, Textarea } from '@sailent/ui';
+import {
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+} from '@sailent/ui';
 import { FAQ_CATEGORIES } from '@sailent/validation';
 
 import { FormStatus, SubmitButton } from '@/components/admin/form-shell';
@@ -68,18 +78,18 @@ function FaqFields({
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label htmlFor={`${prefix}-category`}>Section on /faq</Label>
-          <select
-            id={`${prefix}-category`}
-            name="category"
-            defaultValue={faq?.category ?? 'general'}
-            className="border-input bg-surface text-body h-11 w-full rounded-lg border px-3"
-          >
-            {FAQ_CATEGORIES.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.label}
-              </option>
-            ))}
-          </select>
+          <Select name="category" defaultValue={faq?.category ?? 'general'}>
+            <SelectTrigger id={`${prefix}-category`}>
+              <SelectValue placeholder="Select section" />
+            </SelectTrigger>
+            <SelectContent position="popper" side="bottom" align="start">
+              {FAQ_CATEGORIES.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor={`${prefix}-order`}>Order</Label>

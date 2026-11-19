@@ -105,6 +105,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
       };
     }
 
+    if (isRequestBodyError(exception)) {
+      return {
+        status: exception.status,
+        code: API_ERROR_CODE.VALIDATION_FAILED,
+        message: requestBodyMessage(exception),
+      };
+    }
+
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
       const payload = exception.getResponse();
@@ -131,6 +139,47 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message: exception instanceof Error ? exception.message : 'Unexpected error',
     };
   }
+}
+
+/**
+ * The body parser's refusals: a body that is too large, or in a charset or
+ * encoding it does not read. (Broken JSON never gets here: Nest turns the
+ * parser's SyntaxError into a 400 itself.)
+ *
+ * They are `http-errors` objects, not `HttpException`s, and Nest routes them
+ * through this filter. Without this branch every one became a 500, logged as a
+ * crash and sent to error tracking, so anyone could flood error tracking with
+ * one oversized request after another and bury the real incidents. It also
+ * told a client that sent a bad body that the server had failed.
+ *
+ * Recognised narrowly: an `Error` carrying the parser's `type`, marked safe to
+ * expose, with a 4xx status. A library error that merely has a `status` field
+ * (an SDK's error from an upstream call, say) is still a 500.
+ */
+interface RequestBodyError extends Error {
+  type: string;
+  expose: true;
+  status: number;
+}
+
+function isRequestBodyError(exception: unknown): exception is RequestBodyError {
+  if (!(exception instanceof Error)) return false;
+  const candidate = exception as Partial<RequestBodyError>;
+  return (
+    typeof candidate.type === 'string' &&
+    candidate.expose === true &&
+    typeof candidate.status === 'number' &&
+    candidate.status >= 400 &&
+    candidate.status < 500
+  );
+}
+
+/** The parser's own wording ("request entity too large") is not for a person. */
+function requestBodyMessage(exception: RequestBodyError): string {
+  if (exception.status === HttpStatus.PAYLOAD_TOO_LARGE) return 'That request is too large.';
+  if (exception.status === HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+    return 'That format is not supported.';
+  return 'The request could not be read.';
 }
 
 /**

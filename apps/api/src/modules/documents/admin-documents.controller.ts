@@ -45,6 +45,7 @@ import {
   documentListQuerySchema,
   updateDocumentSchema,
 } from './dto/documents.dto.js';
+import { singleFileUploadLimits } from '../storage/upload-limits.js';
 
 /**
  * Reports & documents — administration.
@@ -112,7 +113,8 @@ export class AdminDocumentsController {
   @RequirePermission('document.manage')
   @Post('documents')
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: MAX_DOCUMENT_UPLOAD_BYTES, files: 1 } }),
+    // Seven metadata fields, with slack (see upload-limits.ts).
+    FileInterceptor('file', { limits: singleFileUploadLimits(MAX_DOCUMENT_UPLOAD_BYTES, 12) }),
   )
   @ApiConsumes('multipart/form-data')
   @ApiBody({

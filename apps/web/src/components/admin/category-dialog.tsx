@@ -30,6 +30,11 @@ import {
   DialogTitle,
   Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Switch,
   cn,
 } from '@sailent/ui';
@@ -256,21 +261,22 @@ export function CategoryDialog({ category, open, onOpenChange, onSuccess }: Cate
 
             <div className="space-y-1.5">
               <Label htmlFor="category-kind">Scope / Applicable To</Label>
-              <select
-                id="category-kind"
+              <Select
                 name="kind"
                 value={kind}
-                onChange={(e) =>
-                  setKind(e.target.value as 'program' | 'campaign' | 'both' | 'blog')
-                }
-                className="border-input bg-background focus-visible:ring-ring shadow-xs flex h-9 w-full rounded-md border px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-2"
+                onValueChange={(val) => setKind(val as 'program' | 'campaign' | 'both' | 'blog')}
               >
-                {CATEGORY_KINDS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="category-kind">
+                  <SelectValue placeholder="Select scope" />
+                </SelectTrigger>
+                <SelectContent position="popper" side="bottom" align="start">
+                  {CATEGORY_KINDS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">

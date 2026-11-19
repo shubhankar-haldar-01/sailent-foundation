@@ -11,10 +11,10 @@ import { cn } from '@sailent/ui';
 export function BrandGlyph({ className }: { className?: string }) {
   return (
     <Image
-      src="/images/sailent-logo.png"
+      src="/images/sailent-icon.png"
       alt="Sailent Foundation"
-      width={2048}
-      height={746}
+      width={500}
+      height={500}
       className={cn('size-full object-contain', className)}
     />
   );
@@ -37,10 +37,10 @@ export function BrandLockup({
       <Image
         src="/images/sailent-logo.png"
         alt="Sailent Foundation"
-        width={2048}
-        height={746}
+        width={1743}
+        height={453}
         priority={priority}
-        className="h-10 w-auto object-contain sm:h-11 md:h-12"
+        className="h-9 w-auto object-contain sm:h-[39.6px] md:h-[43.2px]"
       />
     </span>
   );

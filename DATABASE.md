@@ -145,7 +145,7 @@ Verified on 2026-10-06 (updated for Phase 13 and Phase 14 on 2026-10-07, and for
   - CHECKs `documents_url_only_when_public` and `documents_public_has_published_at`
   - polymorphic `related_type`/`related_id`, no FK
 - **impact_updates**: CHECK `impact_updates_has_parent` (campaign, programme or event)
-- **events**: capacity and count CHECKs. **event_registrations**: unique (`event_id`, `email`); `donor_id` has **no FK**
+- **events**: capacity and count CHECKs. **event_registrations**: unique (`event_id`, `email`); unique `payment_id` where not null (`0037`); `donor_id` has **no FK**. Each `attendees` entry is one person's pass (`fullName`, `passNumber`, `checkedInAt`); the gate admits per pass, and the booking's `status` becomes `attended` at its first arrival
 - **faqs**: polymorphic `context_type`/`context_id`; CHECK `faqs_context_consistent`. `context_type = 'general'` rows are the public `/faq` page (Phase 13, `category` = one of `FAQ_CATEGORIES`); campaign rows appear on their campaign
 - **campaign_gallery**: `display_order` is the public order; since Phase 13 items are added from the media library by `mediaId` (a public item needs a public image) and the whole order is set with `PUT …/gallery/order`
 - **campaigns.cover_image** / **programs.cover_image** (text): since Phase 13 the API accepts only the URL of a PUBLIC media-library image (or null)
@@ -216,7 +216,7 @@ donations 1 ── 1 receipts
 
 ## 5. Migration history
 
-The journal (`meta/_journal.json`) lists 25 entries. Dates come from the journal's `when` field; for `0017`–`0022` those values were hand-assigned.
+The journal (`meta/_journal.json`) lists 38 entries (`0000`–`0037`, as of 2026-11-18). Dates come from the journal's `when` field; for `0017`–`0022` those values were hand-assigned.
 
 | # | Date (IST) | Change | Risk |
 |---|---|---|---|
@@ -246,6 +246,8 @@ The journal (`meta/_journal.json`) lists 25 entries. Dates come from the journal
 | 0023 | 2026-10-07* | Phase 13: `contact_messages`, `newsletter_subscribers` (RLS on); `organization_contact` and `organization_social` settings rows (empty); six permissions granted to `SUPER_ADMIN` — all `ON CONFLICT DO NOTHING` / `IF NOT EXISTS` | Additive only; no BEGIN/COMMIT. Journal `when` = 1790102369677 (see below) |
 | 0024 | 2026-10-08* | `donors.avatar_url` (text, nullable): the donor's profile photo | Additive only. `when` = 1790102370000. Applied to `sailent_dev` (by another session) and `sailent_e2e` locally; **not applied to production** |
 | 0025 | 2026-10-16* | `success_stories.pull_quote` (text, nullable): the subject's own words for the public story page | Additive only. `when` = 1790102371000. Applied to `sailent_dev` and `sailent_e2e` locally; **not applied to production** |
+| 0026–0036 | — | **Not yet described here.** `0031`–`0036` are uncommitted as of 2026-11-18; among them `0035` (paid events: `events.is_paid`, `fee_amount`; `event_registrations.is_paid`, `payment_id`, `order_id`, `paid_amount`) and `0036` (`events.functions`; `event_registrations.function_name`, `attendees` jsonb, at most four passes per booking) | See the files in `packages/database/drizzle/` |
+| 0037 | 2026-11-18* | Unique partial index `event_registrations_payment_id_unique` on `payment_id` (where not null): one Razorpay payment pays for one event booking | `DO $$` guard aborts, naming the problem, if any `payment_id` is already shared. `when` = 1790102383000. Applied to `sailent_dev` locally on 2026-11-18; uncommitted; **not applied to production** |
 
 \* Hand-assigned timestamps.
 

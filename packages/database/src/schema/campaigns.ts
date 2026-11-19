@@ -17,7 +17,6 @@ import { currency, money, primaryId, softDelete, timestamps } from './_shared.js
 import { campaignProductStatusEnum, campaignStatusEnum } from './enums.js';
 import { products } from './products.js';
 import { programs } from './programs.js';
-import { categories } from './taxonomy.js';
 
 /**
  * Campaigns.
@@ -60,9 +59,7 @@ export const campaigns = pgTable(
      *   Updates  → `impact_updates` WHERE campaign_id = …
      */
 
-    /** Denormalised cache of `categories.name` — see the note on programs. */
     category: varchar('category', { length: 80 }),
-    categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
     location: varchar('location', { length: 160 }),
     state: varchar('state', { length: 120 }),
     city: varchar('city', { length: 120 }),

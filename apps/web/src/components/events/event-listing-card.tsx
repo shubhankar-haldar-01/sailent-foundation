@@ -79,6 +79,16 @@ export function EventListingCard({
             {badge.year}
           </span>
         </p>
+
+        {event.isPaid && event.feeAmount ? (
+          <span className="bg-surface/95 backdrop-blur-xs absolute right-2.5 top-2.5 inline-flex items-center rounded-full px-2.5 py-1 text-[0.6875rem] font-bold text-emerald-800 shadow-md ring-1 ring-emerald-600/20">
+            ₹{Math.round(event.feeAmount / 100)}
+          </span>
+        ) : (
+          <span className="bg-surface/95 backdrop-blur-xs absolute right-2.5 top-2.5 inline-flex items-center rounded-full px-2.5 py-1 text-[0.6875rem] font-bold text-slate-700 shadow-md ring-1 ring-slate-900/10">
+            Free
+          </span>
+        )}
       </div>
 
       <div className="sm:px-4.5 sm:pb-4.5 flex flex-1 flex-col px-4 pb-4 pt-3.5 sm:pt-3.5">

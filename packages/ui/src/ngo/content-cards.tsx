@@ -157,7 +157,7 @@ export function EventCard({
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
           <span className="text-caption text-muted-foreground flex items-center gap-1">
             <MapPin className="size-3" aria-hidden="true" />
-            {event.isOnline ? 'Online' : (event.venueName ?? event.city ?? 'Venue to be announced')}
+            {event.venueName ?? event.city ?? 'Venue to be announced'}
           </span>
           {isFull ? (
             <Badge variant="warning">Waitlist only</Badge>

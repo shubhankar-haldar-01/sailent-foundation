@@ -39,7 +39,6 @@ import {
 
 import { DATABASE } from '../database/database.module.js';
 import { CampaignContentService } from '../catalog/campaign-content.service.js';
-import { CategoriesService } from '../catalog/categories.service.js';
 import { NotFoundException } from '../../common/exceptions.js';
 import {
   offsetFor,
@@ -73,7 +72,6 @@ export class ContentService {
      * place for the visibility filter to be forgotten.
      */
     private readonly content: CampaignContentService,
-    private readonly categories: CategoriesService,
   ) {}
 
   private get db() {
@@ -281,11 +279,9 @@ export class ContentService {
     }
 
     if (query.category) filters.push(eq(campaigns.category, query.category));
-    // Filter by the category's stable slug as well as its display name, so a
-    // renamed category does not break every link that filtered by it.
     if (query.categorySlug) {
       filters.push(
-        sql`${campaigns.categoryId} = (SELECT id FROM categories WHERE slug = ${query.categorySlug})`,
+        sql`${campaigns.programId} = (SELECT id FROM programs WHERE slug = ${query.categorySlug})`,
       );
     }
     if (query.state) filters.push(eq(campaigns.state, query.state));
@@ -746,6 +742,9 @@ export class ContentService {
             (`registrationAvailability`) the registration itself is checked by.
           */
           registrationDeadline: events.registrationDeadline,
+          isPaid: events.isPaid,
+          feeAmount: events.feeAmount,
+          functions: events.functions,
           // Same reasoning as the story listing: the slug is what a link needs.
           programSlug: programs.slug,
           campaignSlug: campaigns.slug,
@@ -922,13 +921,9 @@ export class ContentService {
    * A filter chip leading to an empty page is worse than no chip, so the
    * counts are of PUBLIC records and empty categories are dropped.
    */
-  async listPublicCategories(kind: 'program' | 'campaign') {
-    const { items } = await this.categories.list({ kind, activeOnly: true });
-
+  async listPublicCategories(_kind: 'program' | 'campaign') {
     return {
-      items: items
-        .map(({ id: _id, isActive: _isActive, ...rest }) => rest)
-        .filter((item) => (kind === 'program' ? item.programCount : item.campaignCount) > 0),
+      items: [],
     };
   }
 
@@ -945,6 +940,7 @@ export class ContentService {
         bio: teamMembers.bio,
         socialLinks: teamMembers.socialLinks,
         displayOrder: teamMembers.displayOrder,
+        createdAt: teamMembers.createdAt,
       })
       .from(teamMembers)
       .where(
@@ -954,7 +950,7 @@ export class ContentService {
           isNull(teamMembers.deletedAt),
         ),
       )
-      .orderBy(asc(teamMembers.displayOrder));
+      .orderBy(desc(teamMembers.createdAt), asc(teamMembers.displayOrder), desc(teamMembers.id));
   }
 
   /**

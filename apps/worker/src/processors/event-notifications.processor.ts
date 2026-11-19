@@ -2,9 +2,16 @@ import type { Job } from 'bullmq';
 import type { Logger } from 'pino';
 import { and, eq, inArray } from 'drizzle-orm';
 
-import { eventRegistrations, events, notifications, type DatabaseClient } from '@sailent/database';
+import QRCode from 'qrcode';
 
-import { sendEmail, type BrevoConfig } from '../lib/brevo.js';
+import { eventRegistrations, events, notifications, type DatabaseClient } from '@sailent/database';
+import { passNumberFor, passesOf } from '@sailent/validation';
+
+import { SAILENT_LOGO_PNG, SAILENT_LOGO_SIZE } from '../assets/sailent-logo.js';
+import { sendEmail, type EmailAttachment, type Mailer } from '../lib/email.js';
+import { readOrganisationContact } from '../lib/organisation.js';
+import { renderPassPdf } from '../lib/pass-pdf.js';
+import { registrationEmail } from './event-registration-email.js';
 import { renderFromTemplate } from '../lib/templates.js';
 import { alertStaffOfFailedSend } from '../lib/admin-alert.js';
 
@@ -33,6 +40,52 @@ function escapeHtml(value: string): string {
  * one. The server runs in UTC, and an email that tells somebody to turn up at
  * 04:00 for a 09:30 camp is worse than no email.
  */
+/** "18 November 2026 at 10:55 pm", India time: when a booking was made and paid. */
+const BOOKED_AT = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+  timeZone: 'Asia/Kolkata',
+});
+
+/** "Friday, 20 November 2026" in the event's zone. */
+function eventDate(start: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone,
+  }).format(start);
+}
+
+/** "10:00 am – 8:00 pm" in the event's zone. */
+function eventTime(start: Date, end: Date | null, timeZone: string): string {
+  const time = new Intl.DateTimeFormat('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone,
+  });
+  return end ? `${time.format(start)} – ${time.format(end)}` : time.format(start);
+}
+
+/**
+ * A pass's QR code as a PNG. It holds the pass number exactly as the gate
+ * scanner reads it — the same value the pass on the website encodes.
+ */
+export async function passQrPng(passNumber: string): Promise<Buffer> {
+  return QRCode.toBuffer(passNumber, {
+    type: 'png',
+    width: 264,
+    margin: 4,
+    errorCorrectionLevel: 'M',
+  });
+}
+
 function formatWhen(start: Date, end: Date | null, timezone: string): string {
   const zone = timezone || 'Asia/Kolkata';
   const date = new Intl.DateTimeFormat('en-IN', {
@@ -63,13 +116,11 @@ function formatWhen(start: Date, end: Date | null, timezone: string): string {
 }
 
 function formatWhere(event: {
-  isOnline: boolean;
   venueName: string | null;
   address: string | null;
   city: string | null;
   state: string | null;
 }): string {
-  if (event.isOnline) return 'Online';
   return (
     [event.venueName, event.address, event.city, event.state].filter(Boolean).join(', ') ||
     'To be confirmed'
@@ -95,7 +146,7 @@ function formatWhere(event: {
  */
 export async function processEventRegistrationConfirmed(
   job: Job<EventRegistrationConfirmedJob>,
-  deps: { database: DatabaseClient; brevo: BrevoConfig; appUrl: string },
+  deps: { database: DatabaseClient; mailer: Mailer; appUrl: string },
   logger: Logger,
 ): Promise<{ sent: boolean; reason?: string }> {
   const { registrationId } = job.data;
@@ -130,42 +181,14 @@ export async function processEventRegistrationConfirmed(
   const where = formatWhere(row.event);
   const eventUrl = `${deps.appUrl.replace(/\/$/, '')}/events/${row.event.slug}`;
   const name = row.registration.fullName?.trim() || 'there';
-  const seats = row.registration.attendeeCount;
+  const zone = row.event.timezone || 'Asia/Kolkata';
 
-  const joiningLine = row.event.isOnline && row.event.meetingUrl ? row.event.meetingUrl : null;
-
-  const text = `Hello ${name},
-
-You are registered for ${row.event.title}.
-
-When:  ${when}
-Where: ${where}
-${seats > 1 ? `Places: ${seats}\n` : ''}${joiningLine ? `Joining link: ${joiningLine}\n` : ''}
-${
-  row.event.organizer ? `Organised by ${row.event.organizer}.\n\n` : ''
-}If you can no longer come, please cancel your place so somebody else can take it: ${eventUrl}
-
-With thanks,
-Sailent Foundation`;
-
-  const html = `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;max-width:560px;color:#1f2933">
-  <p>Hello ${escapeHtml(name)},</p>
-  <p>You are registered for <strong>${escapeHtml(row.event.title)}</strong>.</p>
-  <table style="border-collapse:collapse;margin:18px 0">
-    <tbody>
-      <tr><td style="padding:4px 16px 4px 0;color:#52606d">When</td><td style="padding:4px 0"><strong>${escapeHtml(when)}</strong></td></tr>
-      <tr><td style="padding:4px 16px 4px 0;color:#52606d">Where</td><td style="padding:4px 0">${escapeHtml(where)}</td></tr>
-      ${seats > 1 ? `<tr><td style="padding:4px 16px 4px 0;color:#52606d">Places</td><td style="padding:4px 0">${seats}</td></tr>` : ''}
-      ${joiningLine ? `<tr><td style="padding:4px 16px 4px 0;color:#52606d">Joining link</td><td style="padding:4px 0"><a href="${escapeHtml(joiningLine)}">${escapeHtml(joiningLine)}</a></td></tr>` : ''}
-    </tbody>
-  </table>
-  ${row.event.organizer ? `<p style="color:#52606d">Organised by ${escapeHtml(row.event.organizer)}.</p>` : ''}
-  <p style="font-size:13px;color:#52606d;border-top:1px solid #d9e2ec;padding-top:14px">
-    If you can no longer come, please <a href="${eventUrl}">cancel your place</a> so somebody else can take it.
-  </p>
-  <p style="font-size:13px;color:#52606d">With thanks,<br>Sailent Foundation</p>
-</div>`;
-
+  /*
+    The stored template keeps the SUBJECT editable. Its body is shown only once
+    an administrator has customised it (a version after the seeded one), as "A
+    note from the organisers": the seeded wording says what the layout below
+    already says, and would only repeat it.
+  */
   const rendered = await renderFromTemplate(
     db,
     'event.registration.confirmed',
@@ -178,14 +201,152 @@ Sailent Foundation`;
     logger,
   );
 
+  /*
+    ══════════════════════════════════════════════════════════════════════════
+    THE PASSES, THE PDF AND THE PAYMENT, IN EVERY CONFIRMATION.
+
+    A guest who registered without an account has no other copy of their
+    pass, so the email carries everything needed at the gate: each person's
+    QR code inline, and the passes as a PDF (one page per person, the same
+    design as the website's download).
+
+    The passes are `passesOf`, the same numbers the gate scanner checks. The
+    payment is the registration's own record — the amount actually paid and
+    Razorpay's payment id — never recomputed from today's fee. The
+    registration is written only once the payment is verified, so its time is
+    the payment's.
+
+    A QR image or the PDF that cannot be drawn is left out with a warning;
+    it never stops the confirmation.
+    ══════════════════════════════════════════════════════════════════════════
+  */
+  const passes = passesOf({
+    id: row.registration.id,
+    fullName: row.registration.fullName,
+    attendees: row.registration.attendees,
+  });
+  const paidAmount = row.registration.paidAmount ?? 0;
+  const bookingReference = passNumberFor(row.registration.id);
+  const venueLine =
+    [row.event.address, row.event.city, row.event.state].filter(Boolean).join(', ') || null;
+  const contact = await readOrganisationContact(db);
+
+  let pdf: Buffer | null = null;
+  try {
+    pdf = await renderPassPdf({
+      eventTitle: row.event.title,
+      startDate: row.event.startDate,
+      endDate: row.event.endDate,
+      timezone: zone,
+      venueName: row.event.venueName,
+      venueLine,
+      functionName: row.registration.functionName,
+      passes,
+      feePerPass: paidAmount > 0 ? Math.round(paidAmount / passes.length) : null,
+      issuedAt: row.registration.registeredAt,
+      supportLine: [contact.email, contact.phone].filter(Boolean).join(' | ') || null,
+    });
+  } catch (error) {
+    logger.warn({ registrationId, err: String(error) }, 'Could not build the pass PDF');
+  }
+
+  /*
+    The PDF carries the passes and their QR codes, so the body does not repeat
+    them. Only without it are the QR codes drawn for the email itself — the
+    one copy a guest without an account would otherwise lack.
+  */
+  const images: (Buffer | null)[] = pdf
+    ? passes.map(() => null)
+    : await Promise.all(
+        passes.map((pass) =>
+          passQrPng(pass.passNumber).catch((error: unknown) => {
+            logger.warn({ registrationId, err: String(error) }, 'Could not draw a pass QR code');
+            return null;
+          }),
+        ),
+      );
+
+  const email = registrationEmail({
+    name,
+    eventTitle: row.event.title,
+    date: eventDate(row.event.startDate, zone),
+    time: eventTime(row.event.startDate, row.event.endDate, zone),
+    venueName: row.event.venueName,
+    venueLine,
+    functionName: row.registration.functionName,
+    joiningUrl: row.event.meetingUrl ?? null,
+    eventUrl,
+    bookingReference,
+    bookedOn: BOOKED_AT.format(row.registration.registeredAt),
+    passes: passes.map((pass, index) => ({
+      fullName: pass.fullName,
+      passNumber: pass.passNumber,
+      qrContentId: images[index] ? `pass-${index + 1}` : null,
+    })),
+    pdfAttached: pdf !== null,
+    payment:
+      paidAmount > 0
+        ? {
+            total: paidAmount,
+            perPass: paidAmount % passes.length === 0 ? paidAmount / passes.length : null,
+            reference: row.registration.paymentId ?? null,
+            paidOn: BOOKED_AT.format(row.registration.registeredAt),
+          }
+        : null,
+    contact,
+    replyable: deps.mailer.replyTo !== null,
+    customMessage:
+      rendered && rendered.templateVersion > 1
+        ? { html: rendered.html, text: rendered.text }
+        : null,
+  });
+
+  const attachments: EmailAttachment[] = [
+    {
+      filename: 'sailent-foundation.png',
+      content: SAILENT_LOGO_PNG,
+      contentType: 'image/png',
+      contentId: 'sailent-logo',
+    },
+    ...passes.flatMap((pass, index) => {
+      const image = images[index];
+      return image
+        ? [
+            {
+              filename: `${pass.passNumber}.png`,
+              content: image,
+              contentType: 'image/png',
+              contentId: `pass-${index + 1}`,
+            },
+          ]
+        : [];
+    }),
+    ...(pdf
+      ? [
+          {
+            filename: `${passes.length > 1 ? 'Entry-passes' : 'Entry-pass'}-${bookingReference}.pdf`,
+            content: pdf,
+            contentType: 'application/pdf',
+          },
+        ]
+      : []),
+  ];
+
   const result = await sendEmail(
-    deps.brevo,
+    deps.mailer,
     {
       to: { email: row.registration.email, name: name === 'there' ? undefined : name },
-      subject: rendered?.subject ?? `You’re registered — ${row.event.title}`,
-      html: rendered?.html ?? html,
-      text: rendered?.text ?? text,
+      subject: rendered?.subject ?? `Booking confirmed — ${row.event.title}`,
+      html: email.html,
+      text: email.text,
+      preheader: email.preheader,
       tags: ['event-registration', row.event.slug],
+      attachments,
+      headerLogo: {
+        contentId: 'sailent-logo',
+        width: 160,
+        height: Math.round((160 * SAILENT_LOGO_SIZE.height) / SAILENT_LOGO_SIZE.width),
+      },
     },
     logger,
   );
@@ -225,7 +386,7 @@ Sailent Foundation`;
     // Only `unreachable` is worth another attempt; the others are permanent and
     // retrying them four more times just delays the dead-letter a human needs.
     if (result.reason === 'unreachable') {
-      throw new Error(`Brevo unreachable: ${result.detail ?? ''}`);
+      throw new Error(`Email provider unreachable: ${result.detail ?? ''}`);
     }
     logger.warn({ registrationId, reason: result.reason }, 'Registration confirmation not sent');
     return { sent: false, reason: result.reason };
@@ -257,7 +418,7 @@ Sailent Foundation`;
  */
 export async function processEventCancelled(
   job: Job<EventCancelledJob>,
-  deps: { database: DatabaseClient; brevo: BrevoConfig; appUrl: string },
+  deps: { database: DatabaseClient; mailer: Mailer; appUrl: string },
   logger: Logger,
 ): Promise<{ sent: number; failed: number; reason?: string }> {
   const { eventId, reason } = job.data;
@@ -333,7 +494,7 @@ Sailent Foundation`;
     );
 
     const result = await sendEmail(
-      deps.brevo,
+      deps.mailer,
       {
         to: { email: recipient.email, name: name === 'there' ? undefined : name },
         subject: rendered?.subject ?? `Cancelled — ${event.title}`,
@@ -389,7 +550,7 @@ Sailent Foundation`;
      * already had — mildly annoying. A missing one means somebody travels to an
      * event that is not happening. Given the choice, send twice.
      */
-    throw new Error(`Brevo unreachable for ${failed} of ${recipients.length} recipients`);
+    throw new Error(`Email provider unreachable for ${failed} of ${recipients.length} recipients`);
   }
 
   return { sent, failed };

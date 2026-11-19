@@ -7,6 +7,7 @@ import { API_PREFIX } from '@sailent/config';
 import { actionForwardingHeaders } from '@/lib/api/forwarding';
 
 import { clearDonorSession, readDonorSession, writeDonorSession } from './donor-session';
+import { sameSitePath } from '@/lib/security/return-path';
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:4000';
 
@@ -93,10 +94,9 @@ export async function requestSignInCode(
  * exactly the shape of a credential-phishing link.
  * ══════════════════════════════════════════════════════════════════════════
  */
+/** A same-site path to go to after signing in (lib/security/return-path.ts). */
 function safeReturnPath(value: FormDataEntryValue | null): string {
-  const path = String(value ?? '').trim();
-  if (!path.startsWith('/') || path.startsWith('//')) return '/dashboard';
-  return path;
+  return sameSitePath(value) ?? '/dashboard';
 }
 
 /** Exchange the code for a session. */

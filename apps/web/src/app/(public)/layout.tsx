@@ -11,11 +11,11 @@ export default async function PublicLayout({ children }: { children: React.React
   // The footer reads the same settings; the mobile menu's social row needs them too.
   const organisation = await getOrganisation();
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col print:block print:min-h-0">
       {/* First in the tab order, per the accessibility foundation. */}
       <a
         href="#main-content"
-        className="skip-link bg-primary text-primary-foreground rounded-md px-4 py-2"
+        className="skip-link bg-primary text-primary-foreground rounded-md px-4 py-2 print:hidden"
       >
         Skip to content
       </a>
@@ -25,7 +25,7 @@ export default async function PublicLayout({ children }: { children: React.React
         signedIn={Boolean(await currentDonor())}
         socialLinks={organisation.social}
       />
-      <main id="main-content" className="flex-1">
+      <main id="main-content" className="flex-1 print:m-0 print:block print:p-0">
         {children}
       </main>
       <SiteFooter />

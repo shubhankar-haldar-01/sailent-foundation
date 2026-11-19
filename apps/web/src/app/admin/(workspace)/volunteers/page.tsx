@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Search, UserCheck } from 'lucide-react';
+import { Search, UserCheck } from 'lucide-react';
 
 import { Badge, Button, Card, CardContent, formatDate, PageHeader } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { adminFetch, type AdminVolunteer, type Paginated } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
 
@@ -36,7 +37,7 @@ const TONE: Record<string, 'warning' | 'info' | 'success' | 'destructive' | 'neu
 export default async function AdminVolunteersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string; sort?: string }>;
 }) {
   const params = await searchParams;
   const actor = await currentActor();
@@ -46,8 +47,8 @@ export default async function AdminVolunteersPage({
       status: params.status ?? 'pending',
       q: params.q,
       page: params.page,
-      limit: 25,
-      sort: '-createdAt',
+      limit: 10,
+      sort: params.sort ?? '-createdAt',
     },
   });
 
@@ -234,63 +235,19 @@ export default async function AdminVolunteersPage({
         </Card>
       )}
 
-      {data.pagination.totalPages > 1 ? (
-        <Pagination
-          page={data.pagination.page}
-          totalPages={data.pagination.totalPages}
-          hasNext={data.pagination.hasNext}
-          query={params}
-          activeStatus={active}
-        />
-      ) : null}
+      <AdminPagination
+        page={data.pagination.page}
+        totalPages={data.pagination.totalPages}
+        totalItems={data.pagination.total}
+        ariaLabel="Volunteers pagination"
+        makeHref={(p) => {
+          const search = new URLSearchParams();
+          if (active && active !== 'pending') search.set('status', active);
+          if (params.q) search.set('q', params.q);
+          search.set('page', String(p));
+          return `/admin/volunteers?${search.toString()}`;
+        }}
+      />
     </div>
-  );
-}
-
-function Pagination({
-  page,
-  totalPages,
-  hasNext,
-  query,
-  activeStatus,
-}: {
-  page: number;
-  totalPages: number;
-  hasNext: boolean;
-  query: { q?: string };
-  activeStatus: string;
-}) {
-  const href = (target: number) => {
-    const search = new URLSearchParams();
-    if (activeStatus && activeStatus !== 'pending') search.set('status', activeStatus);
-    if (query.q) search.set('q', query.q);
-    search.set('page', String(target));
-    return `/admin/volunteers?${search.toString()}`;
-  };
-
-  return (
-    <nav aria-label="Volunteers pagination" className="flex items-center justify-between pt-2">
-      <p className="text-muted-foreground text-xs">
-        Page {page} of {totalPages}
-      </p>
-      <div className="flex gap-2">
-        {page > 1 ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page - 1)} className="gap-1">
-              <ChevronLeft className="size-4" aria-hidden="true" />
-              Previous
-            </Link>
-          </Button>
-        ) : null}
-        {hasNext ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page + 1)} className="gap-1">
-              Next
-              <ChevronRight className="size-4" aria-hidden="true" />
-            </Link>
-          </Button>
-        ) : null}
-      </div>
-    </nav>
   );
 }

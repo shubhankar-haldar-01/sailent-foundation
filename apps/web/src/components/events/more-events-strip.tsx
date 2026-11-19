@@ -110,9 +110,7 @@ export function MoreEventsStrip({ events, programsBySlug = {} }: MoreEventsStrip
                     <div className="flex items-center gap-1.5">
                       <MapPin className="size-3.5 shrink-0 text-slate-400" aria-hidden="true" />
                       <span className="truncate">
-                        {item.isOnline
-                          ? 'Online'
-                          : item.venueName || item.city || 'Venue to be confirmed'}
+                        {item.venueName || item.city || 'Venue to be confirmed'}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">

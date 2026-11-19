@@ -3,6 +3,7 @@ import { Mail, Clock, CheckCircle } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
 
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 import { CONTACT_SUBJECT_LABELS, type ContactSubject } from '@sailent/validation';
 import { ContactMessageActions } from '@/components/admin/contact-message-actions';
 import { StatusPill } from '@/components/admin/status-pill';
@@ -37,6 +38,7 @@ export default async function AdminMessagePage({ params }: { params: Promise<{ i
     <div className="max-w-4xl space-y-6">
       <PageHeader
         title={subjectLabel}
+        breadcrumb={<AdminBackButton href="/admin/messages">Back to messages</AdminBackButton>}
         description={`Inquiry from ${message.name} · Submitted ${new Date(
           message.createdAt,
         ).toLocaleString('en-IN')}`}
@@ -84,9 +86,7 @@ export default async function AdminMessagePage({ params }: { params: Promise<{ i
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Inquiry Status Controls</CardTitle>
-            <CardDescription>
-              Mark message as handled or archive the inquiry record.
-            </CardDescription>
+            <CardDescription>Mark message as handled or delete the inquiry record.</CardDescription>
           </CardHeader>
           <CardContent>
             <ContactMessageActions id={message.id} status={message.status} />

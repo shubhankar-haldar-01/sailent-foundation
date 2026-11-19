@@ -13,6 +13,7 @@ import {
 } from '@sailent/ui';
 
 import { StatusPill } from '@/components/admin/status-pill';
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import { StoryForm, StoryStatusControls } from '@/components/admin/story-form';
 import { AdminApiError, getStory, type AdminStory, listMedia } from '@/lib/admin/api';
@@ -49,13 +50,14 @@ export default async function AdminStoryPage({ params }: { params: Promise<{ id:
   }
 
   const media = can(actor, 'media.read')
-    ? await listMedia({ visibility: 'public', limit: 10 }).catch(() => null)
+    ? await listMedia({ visibility: 'public', limit: 100 }).catch(() => null)
     : null;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={story.title}
+        breadcrumb={<AdminBackButton href="/admin/stories">Back to stories</AdminBackButton>}
         description={`Slug: /stories/${story.slug}`}
         status={<StatusPill status={story.status} />}
         actions={

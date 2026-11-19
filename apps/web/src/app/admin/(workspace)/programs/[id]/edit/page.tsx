@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ExternalLink, Eye } from 'lucide-react';
+import { ExternalLink, Eye, Layers } from 'lucide-react';
 
 import {
   Button,
@@ -12,19 +12,14 @@ import {
   PageHeader,
 } from '@sailent/ui';
 
+import { AdminBackButton } from '@/components/admin/admin-back-button';
+
 import { ProgramForm } from '@/components/admin/program-form';
 import { StatusActions } from '@/components/admin/status-actions';
 import { StatusPill } from '@/components/admin/status-pill';
 import { changeProgramStatus } from '@/lib/admin/actions';
-import { CoverImagePanel } from '@/components/admin/campaign-media';
 import { can, currentActor } from '@/lib/auth/session';
-import {
-  AdminApiError,
-  adminFetch,
-  listMedia,
-  type AdminCategory,
-  type AdminMedia,
-} from '@/lib/admin/api';
+import { AdminApiError, adminFetch, listMedia, type AdminMedia } from '@/lib/admin/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,7 +46,7 @@ interface ProgramDetail {
 const PROGRAM_LABELS = {
   published: { endpoint: 'publish', label: 'Publish' },
   draft: { endpoint: 'unpublish', label: 'Take back to draft' },
-  archived: { endpoint: 'archive', label: 'Archive' },
+  archived: { endpoint: 'archive', label: 'Delete' },
 };
 
 export default async function EditProgramPage({ params }: { params: Promise<{ id: string }> }) {
@@ -59,13 +54,11 @@ export default async function EditProgramPage({ params }: { params: Promise<{ id
 
   let program: ProgramDetail;
   let transitions: { program: Record<string, string[]> };
-  let categories: { items: AdminCategory[] };
 
   try {
-    [program, transitions, categories] = await Promise.all([
+    [program, transitions] = await Promise.all([
       adminFetch<ProgramDetail>(`admin/programs/${id}`),
       adminFetch<{ program: Record<string, string[]> }>('admin/campaigns/transitions'),
-      adminFetch<{ items: AdminCategory[] }>('admin/categories', { query: { kind: 'program' } }),
     ]);
   } catch (error) {
     if (error instanceof AdminApiError && error.status === 404) notFound();
@@ -81,15 +74,7 @@ export default async function EditProgramPage({ params }: { params: Promise<{ id
     <div className="space-y-6">
       <PageHeader
         title={program.title}
-        breadcrumb={
-          <Link
-            href="/admin/programs"
-            className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
-          >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            Back to programs
-          </Link>
-        }
+        breadcrumb={<AdminBackButton href="/admin/programs">Back to programs</AdminBackButton>}
         description={`/${program.slug} · Updated ${formatDate(program.updatedAt)}`}
         status={<StatusPill status={program.status} />}
         actions={
@@ -114,16 +99,26 @@ export default async function EditProgramPage({ params }: { params: Promise<{ id
       />
 
       {/* Lifecycle Transitions Card */}
-      <Card className="border-border">
-        <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Publication Lifecycle</CardTitle>
-          <p className="text-caption text-muted-foreground mt-1">
-            {program.status === 'published'
-              ? 'This program is currently visible on the public website.'
-              : 'Draft status. Visible to administrators only.'}
-          </p>
+      <Card className="border-border shadow-xs overflow-hidden">
+        <CardHeader className="border-border bg-muted/20 border-b pb-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="border-border/80 bg-background text-foreground shadow-xs flex size-9 shrink-0 items-center justify-center rounded-lg border">
+                <Layers className="text-info size-4" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-semibold">Publication Lifecycle</CardTitle>
+                <p className="text-caption text-muted-foreground mt-1">
+                  {program.status === 'published'
+                    ? 'This program is currently visible on the public website.'
+                    : 'Draft status. Visible to administrators only.'}
+                </p>
+              </div>
+            </div>
+            <StatusPill status={program.status} />
+          </div>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-5 sm:p-6">
           <StatusActions
             entityId={program.id}
             current={program.status}
@@ -140,35 +135,13 @@ export default async function EditProgramPage({ params }: { params: Promise<{ id
         <CardHeader className="border-border border-b pb-4">
           <CardTitle className="text-base font-semibold">Program Information & Focus</CardTitle>
           <p className="text-caption text-muted-foreground mt-1">
-            Core description, problem context, strategic approach, and target communities.
+            Core description, problem context, strategic approach, and cover photograph.
           </p>
         </CardHeader>
         <CardContent className="p-6">
-          <ProgramForm categories={categories.items.filter((c) => c.isActive)} program={program} />
+          <ProgramForm program={program} mediaOptions={mediaOptions} />
         </CardContent>
       </Card>
-
-      {/* Cover Image Panel */}
-      {can(actor, 'program.update') ? (
-        <Card className="border-border">
-          <CardHeader className="border-border border-b pb-4">
-            <CardTitle className="text-base font-semibold">Hero Cover Image</CardTitle>
-            <p className="text-caption text-muted-foreground mt-1">
-              Banner image displayed on the program page and promotional program cards. Public media
-              library assets only.
-            </p>
-          </CardHeader>
-          <CardContent className="p-6">
-            <CoverImagePanel
-              kind="program"
-              id={program.id}
-              slug={program.slug}
-              current={program.coverImage}
-              options={mediaOptions}
-            />
-          </CardContent>
-        </Card>
-      ) : null}
 
       {/* Attached Campaigns Card */}
       {program.campaigns.length > 0 ? (

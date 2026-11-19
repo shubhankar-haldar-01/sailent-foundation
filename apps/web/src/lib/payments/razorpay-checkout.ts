@@ -24,10 +24,11 @@ export interface CheckoutHandoff {
   razorpayOrderId: string;
   amount: number;
   currency: string;
-  donationId: string;
-  reference: string;
+  donationId?: string;
+  reference?: string;
   donor: { name: string; email: string; phone: string };
-  campaign: { slug: string; title: string };
+  campaign?: { slug?: string; title?: string };
+  description?: string;
 }
 
 export interface CheckoutResult {
@@ -128,14 +129,14 @@ export function openRazorpayCheckout(handoff: CheckoutHandoff): Promise<Checkout
       amount: handoff.amount,
       currency: handoff.currency,
       name: 'Sailent Foundation',
-      description: handoff.campaign.title,
+      description: handoff.description ?? handoff.campaign?.title ?? 'Event Registration Fee',
       prefill: {
         name: handoff.donor.name,
         email: handoff.donor.email,
         contact: handoff.donor.phone,
       },
-      notes: { reference: handoff.reference },
-      theme: { color: '#BA4503' },
+      notes: { reference: handoff.reference ?? handoff.razorpayOrderId },
+      theme: { color: '#EB6A1F' },
       handler: (response: Record<string, string>) => {
         settle({
           kind: 'paid',

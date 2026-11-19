@@ -211,10 +211,7 @@ export function timeRange(startsAt: string, endsAt: string | null): string {
 }
 
 /** Where it is, as briefly as the card can say it. */
-export function locationLabel(
-  event: Pick<SailentEvent, 'isOnline' | 'city' | 'venueName'>,
-): string {
-  if (event.isOnline) return 'Online';
+export function locationLabel(event: Pick<SailentEvent, 'city' | 'venueName'>): string {
   return event.city ?? event.venueName ?? 'Venue to be confirmed';
 }
 
@@ -233,7 +230,7 @@ function normalise(text: string): string {
  * health camp in Pune and not every event in Pune.
  */
 export function matchesSearch(
-  event: Pick<SailentEvent, 'title' | 'summary' | 'city' | 'venueName' | 'isOnline'>,
+  event: Pick<SailentEvent, 'title' | 'summary' | 'city' | 'venueName'>,
   q: string,
   programName?: string | null,
 ): boolean {
@@ -241,14 +238,7 @@ export function matchesSearch(
   if (terms.length === 0) return true;
 
   const haystack = normalise(
-    [
-      event.title,
-      event.summary,
-      event.city,
-      event.venueName,
-      event.isOnline ? 'online' : null,
-      programName,
-    ]
+    [event.title, event.summary, event.city, event.venueName, programName]
       .filter(Boolean)
       .join(' '),
   );

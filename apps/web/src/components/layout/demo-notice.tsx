@@ -18,7 +18,7 @@ export function DemoNotice() {
   if (!isDemoContent) return null;
 
   return (
-    <div className="border-warning/25 bg-warning-subtle border-b">
+    <div className="border-warning/25 bg-warning-subtle border-b print:hidden">
       <div className="container-page flex items-start gap-2.5 py-2">
         <Info className="text-warning-foreground mt-0.5 size-4 shrink-0" aria-hidden="true" />
         <p className="text-caption text-warning-foreground leading-relaxed">

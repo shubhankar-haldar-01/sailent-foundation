@@ -1,18 +1,22 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Plus, Search, Users } from 'lucide-react';
 
-import { Button, Card, CardContent, formatDate, PageHeader } from '@sailent/ui';
+import { Alert, Button, Card, CardContent, formatDate, PageHeader } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
+import { DeleteTeamMemberButton } from '@/components/admin/delete-team-member';
+import { IssueIdentityCardDialog } from '@/components/admin/identity-card-dialog';
 import { StatusPill } from '@/components/admin/status-pill';
-import { adminFetch, type AdminTeamMember, type Paginated } from '@/lib/admin/api';
+import { AdminApiError, adminFetch, type AdminTeamMember, type Paginated } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
 
 export const dynamic = 'force-dynamic';
 
 const STATUSES = [
   { value: 'all', label: 'All' },
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
+  { value: 'published', label: 'Published' },
+  { value: 'draft', label: 'Draft' },
 ] as const;
 
 /**
@@ -24,19 +28,36 @@ const STATUSES = [
 export default async function AdminTeamPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string; sort?: string }>;
 }) {
   const params = await searchParams;
   const actor = await currentActor();
 
-  const data = await adminFetch<Paginated<AdminTeamMember>>('admin/team', {
-    query: {
-      status: params.status ?? 'all',
-      q: params.q,
-      limit: 50,
-      sort: 'displayOrder',
-    },
-  });
+  let data: Paginated<AdminTeamMember> = {
+    items: [],
+    pagination: { page: 1, limit: 10, total: 0, totalPages: 0, hasNext: false },
+  };
+  let failure: string | null = null;
+
+  try {
+    data = await adminFetch<Paginated<AdminTeamMember>>('admin/team', {
+      query: {
+        status: params.status ?? 'all',
+        q: params.q,
+        page: params.page,
+        limit: 10,
+        sort: params.sort ?? '-createdAt',
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof AdminApiError &&
+      (error.status === 401 || error.code === 'UNAUTHENTICATED')
+    ) {
+      redirect('/admin/login?next=%2Fadmin%2Fteam');
+    }
+    failure = error instanceof AdminApiError ? error.message : 'Could not load team directory.';
+  }
 
   const active = params.status ?? 'all';
 
@@ -57,6 +78,12 @@ export default async function AdminTeamPage({
           ) : null
         }
       />
+
+      {failure ? (
+        <Alert variant="destructive" title="Unable to load team members">
+          {failure}
+        </Alert>
+      ) : null}
 
       {/* Filter and Search Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -125,9 +152,7 @@ export default async function AdminTeamPage({
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <caption className="sr-only">
-                Team directory members ordered by public display rank.
-              </caption>
+              <caption className="sr-only">Team directory members.</caption>
               <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
                 <tr>
                   <th scope="col" className="px-5 py-3.5">
@@ -138,9 +163,6 @@ export default async function AdminTeamPage({
                   </th>
                   <th scope="col" className="px-5 py-3.5">
                     Role Type
-                  </th>
-                  <th scope="col" className="px-5 py-3.5 text-right">
-                    Display Order
                   </th>
                   <th scope="col" className="px-5 py-3.5">
                     Status
@@ -158,7 +180,7 @@ export default async function AdminTeamPage({
                   <tr key={member.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-5 py-3.5">
                       <Link
-                        href={`/admin/team/${member.id}/edit`}
+                        href={`/admin/team/${member.id}/edit${params.page && Number(params.page) > 1 ? `?page=${params.page}` : ''}`}
                         className="text-foreground hover:text-primary font-medium transition-colors"
                       >
                         {member.name}
@@ -171,12 +193,6 @@ export default async function AdminTeamPage({
                     <td className="text-muted-foreground px-5 py-3.5 text-xs capitalize">
                       {member.memberType}
                     </td>
-                    <td
-                      data-numeric=""
-                      className="text-foreground px-5 py-3.5 text-right font-mono text-xs tabular-nums"
-                    >
-                      {member.displayOrder}
-                    </td>
                     <td className="px-5 py-3.5">
                       <StatusPill status={member.status} />
                     </td>
@@ -184,9 +200,28 @@ export default async function AdminTeamPage({
                       {formatDate(member.updatedAt)}
                     </td>
                     <td className="whitespace-nowrap px-5 py-3.5 text-right">
-                      <Button asChild variant="ghost" size="sm">
-                        <Link href={`/admin/team/${member.id}/edit`}>Edit</Link>
-                      </Button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <IssueIdentityCardDialog
+                          initialData={{
+                            id: member.id,
+                            name: member.name,
+                            designation: member.designation,
+                            department: member.department,
+                            email: member.emailPublic || member.linkedAccountEmail,
+                            photoUrl: member.photoUrl,
+                            companyName: 'SAILENT FOUNDATION',
+                          }}
+                        />
+                        {can(actor, 'team.manage') ? (
+                          <DeleteTeamMemberButton
+                            id={member.id}
+                            name={member.name}
+                            slug={member.slug}
+                            variant="ghost"
+                            label="Delete"
+                          />
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -195,6 +230,20 @@ export default async function AdminTeamPage({
           </div>
         </Card>
       )}
+
+      <AdminPagination
+        page={data.pagination.page}
+        totalPages={data.pagination.totalPages}
+        totalItems={data.pagination.total}
+        ariaLabel="Team members pagination"
+        makeHref={(p) => {
+          const search = new URLSearchParams();
+          if (active && active !== 'all') search.set('status', active);
+          if (params.q) search.set('q', params.q);
+          search.set('page', String(p));
+          return `/admin/team?${search.toString()}`;
+        }}
+      />
     </div>
   );
 }

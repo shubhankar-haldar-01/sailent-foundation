@@ -10,10 +10,10 @@ import type { ContactStatus } from '@/lib/admin/api';
 const NEXT: Record<ContactStatus, { status: ContactStatus; label: string }[]> = {
   new: [
     { status: 'handled', label: 'Mark handled' },
-    { status: 'archived', label: 'Archive' },
+    { status: 'archived', label: 'Delete' },
   ],
   handled: [
-    { status: 'archived', label: 'Archive' },
+    { status: 'archived', label: 'Delete' },
     { status: 'new', label: 'Mark as new again' },
   ],
   archived: [{ status: 'new', label: 'Mark as new again' }],
@@ -38,7 +38,12 @@ export function ContactMessageActions({ id, status }: { id: string; status: Cont
           <form key={next.status} action={action}>
             <input type="hidden" name="id" value={id} />
             <input type="hidden" name="status" value={next.status} />
-            <SubmitButton pending={pending}>{next.label}</SubmitButton>
+            <SubmitButton
+              pending={pending}
+              variant={next.status === 'archived' ? 'destructive' : undefined}
+            >
+              {next.label}
+            </SubmitButton>
           </form>
         ))}
       </div>

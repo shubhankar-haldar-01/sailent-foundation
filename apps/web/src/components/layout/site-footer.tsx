@@ -71,9 +71,9 @@ export async function SiteFooter() {
               <Image
                 src="/images/sailent-logo.png"
                 alt="Sailent Foundation"
-                width={2048}
-                height={746}
-                className="h-12 w-auto object-contain md:h-14"
+                width={1743}
+                height={453}
+                className="h-[43.2px] w-auto object-contain md:h-[50.4px]"
               />
             </Link>
 

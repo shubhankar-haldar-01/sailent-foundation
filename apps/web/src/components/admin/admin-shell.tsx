@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button, cn } from '@sailent/ui';
 
@@ -10,6 +11,28 @@ import type { AdminUser } from '@/lib/admin/api';
 import type { StaffActor } from '@/lib/auth/session';
 import { AdminHeader } from './admin-header';
 import { AdminSidebarContent } from './admin-sidebar';
+
+function AdminUrlTracker() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  React.useEffect(() => {
+    if (!pathname || typeof window === 'undefined' || !window.sessionStorage) return;
+
+    const path = window.location.pathname;
+    if (/^\/admin\/[a-z0-9-]+$/i.test(path)) {
+      const search = window.location.search || '';
+      const fullUrl = search ? `${path}${search}` : path;
+      try {
+        window.sessionStorage.setItem(`admin_list_url:${path}`, fullUrl);
+      } catch {
+        // Ignore storage restrictions
+      }
+    }
+  }, [pathname, searchParams]);
+
+  return null;
+}
 
 export function AdminShell({
   children,
@@ -67,6 +90,9 @@ export function AdminShell({
 
   return (
     <div data-surface="admin" className="bg-background text-foreground min-h-dvh">
+      <React.Suspense fallback={null}>
+        <AdminUrlTracker />
+      </React.Suspense>
       <a
         href="#admin-content"
         className="skip-link bg-primary text-primary-foreground rounded-md px-4 py-2 font-medium"
@@ -84,32 +110,42 @@ export function AdminShell({
         >
           <div className="sticky top-0 flex h-dvh flex-col">
             {/* Sidebar Brand Header */}
-            <div className="border-border flex h-14 shrink-0 items-center border-b px-3">
+            <div
+              className={cn(
+                'border-border flex h-14 shrink-0 items-center border-b transition-all',
+                isMounted && isCollapsed ? 'justify-center px-2' : 'px-3.5',
+              )}
+            >
               <Link
                 href="/admin"
                 className={cn(
-                  'flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-90',
+                  'flex items-center rounded-lg transition-opacity hover:opacity-90',
                   'focus-visible:outline-ring focus-visible:outline-2',
-                  isMounted && isCollapsed ? 'w-full justify-center' : '',
+                  isMounted && isCollapsed ? 'justify-center' : 'min-w-0 gap-3',
                 )}
+                title="Sailent Admin — Operations Hub"
               >
-                <Image
-                  src="/images/sailent-logo.png"
-                  alt="Sailent Foundation"
-                  width={2048}
-                  height={746}
-                  priority
-                  className={cn(
-                    'object-contain',
-                    isMounted && isCollapsed ? 'size-8' : 'h-8 w-auto max-w-[150px]',
-                  )}
-                />
+                <div className="flex size-9 shrink-0 items-center justify-center">
+                  <Image
+                    src="/images/sailent-icon.png"
+                    alt="Sailent Foundation"
+                    width={500}
+                    height={500}
+                    priority
+                    className="size-8.5 object-contain"
+                  />
+                </div>
                 {(!isMounted || !isCollapsed) && (
-                  <div className="flex min-w-0 flex-col">
-                    <span className="text-foreground truncate text-sm font-bold tracking-tight">
-                      Sailent Admin
-                    </span>
-                    <span className="text-muted-foreground text-[0.625rem] font-medium uppercase tracking-wider">
+                  <div className="flex min-w-0 flex-col leading-tight">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-foreground truncate text-sm font-bold tracking-tight">
+                        Sailent
+                      </span>
+                      <span className="border-primary/25 bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wider">
+                        Admin
+                      </span>
+                    </div>
+                    <span className="text-muted-foreground mt-0.5 truncate text-[0.625rem] font-medium uppercase tracking-wider">
                       Operations Hub
                     </span>
                   </div>
@@ -164,20 +200,28 @@ export function AdminShell({
                 <Link
                   href="/admin"
                   onClick={() => setIsSidebarOpen(false)}
-                  className="flex items-center gap-2.5"
+                  className="focus-visible:outline-ring flex min-w-0 items-center gap-3 rounded-lg transition-opacity hover:opacity-90 focus-visible:outline-2"
+                  title="Sailent Admin — Operations Hub"
                 >
-                  <Image
-                    src="/images/sailent-logo.png"
-                    alt="Sailent Foundation"
-                    width={2048}
-                    height={746}
-                    className="h-8 w-auto max-w-[150px] object-contain"
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-foreground text-sm font-bold tracking-tight">
-                      Sailent Admin
-                    </span>
-                    <span className="text-muted-foreground text-[0.625rem] font-medium uppercase">
+                  <div className="flex size-9 shrink-0 items-center justify-center">
+                    <Image
+                      src="/images/sailent-icon.png"
+                      alt="Sailent Foundation"
+                      width={500}
+                      height={500}
+                      className="size-8.5 object-contain"
+                    />
+                  </div>
+                  <div className="flex min-w-0 flex-col leading-tight">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-foreground truncate text-sm font-bold tracking-tight">
+                        Sailent
+                      </span>
+                      <span className="border-primary/25 bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wider">
+                        Admin
+                      </span>
+                    </div>
+                    <span className="text-muted-foreground mt-0.5 truncate text-[0.625rem] font-medium uppercase tracking-wider">
                       Operations Hub
                     </span>
                   </div>

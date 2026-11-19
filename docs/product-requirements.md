@@ -214,7 +214,7 @@ The media library, `campaign_gallery` and the per-entity gallery columns remain.
 
 ### 4.21 NOTIFICATIONS
 
-Transactional email via Brevo (receipts, confirmations, volunteer status, event reminders), in-app admin notifications, templates with versioning, and a send log.
+Transactional email via Resend (Brevo until 2026-11-18; receipts, confirmations, volunteer status, event reminders), in-app admin notifications, templates with versioning, and a send log.
 
 **Done when:** every transactional email has a template, a log entry and a delivery status, and a failed send is retried and visible to admins.
 

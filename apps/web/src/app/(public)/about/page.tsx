@@ -299,10 +299,10 @@ export default async function AboutPage() {
 
             <div className="mt-8">
               <Link
-                href="/impact"
+                href="/programs"
                 className="inline-flex items-center gap-2 rounded-full border-2 border-[#0070BA] px-6 py-2.5 text-sm font-semibold text-[#0070BA] transition-colors duration-200 hover:bg-[#0070BA]/5 sm:px-7 sm:py-3 sm:text-base dark:border-sky-400 dark:text-sky-400 dark:hover:bg-sky-400/10"
               >
-                Our Journey
+                Explore Our Programs
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>

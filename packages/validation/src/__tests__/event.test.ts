@@ -7,6 +7,11 @@ import {
   canTransitionEventLifecycle,
   canTransitionEventPublish,
   holdsSeat,
+  isPassAdmitted,
+  parsePassCode,
+  passNumberFor,
+  passQueryFromScan,
+  passesOf,
   registrationAvailability,
   registrationClosesAt,
   type EventLifecycle,
@@ -161,5 +166,71 @@ describe('seat accounting', () => {
     // Marking somebody `cancelled` from the attendance screen would replace
     // "this person came" with "this person withdrew".
     expect(ATTENDANCE_OUTCOMES).toEqual(['attended', 'no_show']);
+  });
+});
+
+describe('entry passes', () => {
+  const ID = 'e355f430-1b2c-4d5e-8f90-123456789abc';
+
+  it('derives the pass number from the registration id', () => {
+    expect(passNumberFor(ID)).toBe('SF-EVT-E355F430');
+  });
+
+  it('reads printed, lower-case, prefix-less and per-person pass numbers', () => {
+    expect(parsePassCode('SF-EVT-E355F430')).toEqual({ baseHex: 'e355f430', index: null });
+    expect(parsePassCode(' sf-evt-e355f430-2 ')).toEqual({ baseHex: 'e355f430', index: 2 });
+    expect(parsePassCode('E355F430')).toEqual({ baseHex: 'e355f430', index: null });
+  });
+
+  it('refuses anything that is not a pass number', () => {
+    // A name, a wildcard, a phone number, a pass "number zero", a truncated code.
+    for (const text of ['Priya', '%%', '_', '\\', '9876543210', 'SF-EVT-E355F430-0', 'E355F4']) {
+      expect(parsePassCode(text)).toBeNull();
+    }
+  });
+
+  it('takes the pass out of a scanned link, and leaves other text alone', () => {
+    expect(passQueryFromScan('https://example.org/pass?code=SF-EVT-E355F430-1')).toBe(
+      'SF-EVT-E355F430-1',
+    );
+    expect(passQueryFromScan('https://example.org/about')).toBe('https://example.org/about');
+    expect(passQueryFromScan('  SF-EVT-E355F430 ')).toBe('SF-EVT-E355F430');
+  });
+
+  it('gives a booking without stored passes its one pass under the booking number', () => {
+    expect(passesOf({ id: ID, fullName: 'Asha', attendees: [] })).toEqual([
+      { fullName: 'Asha', passNumber: 'SF-EVT-E355F430', checkedInAt: null },
+    ]);
+  });
+
+  it('numbers a group pass that lost its number by its position', () => {
+    const passes = passesOf({
+      id: ID,
+      fullName: 'Asha',
+      attendees: [{ fullName: 'Asha' }, { fullName: 'Bina' }],
+    });
+    expect(passes.map((pass) => pass.passNumber)).toEqual([
+      'SF-EVT-E355F430-1',
+      'SF-EVT-E355F430-2',
+    ]);
+  });
+
+  it('admits each person on a group booking separately', () => {
+    const registration = {
+      status: 'attended',
+      attendees: [
+        { fullName: 'Asha', checkedInAt: '2026-09-28T04:30:00.000Z' },
+        { fullName: 'Bina', checkedInAt: null },
+      ],
+    };
+    expect(isPassAdmitted(registration, registration.attendees[0]!)).toBe(true);
+    expect(isPassAdmitted(registration, registration.attendees[1]!)).toBe(false);
+  });
+
+  it('reads attendance marked before passes were stamped as everyone having come', () => {
+    const legacy = { status: 'attended', attendees: [{ fullName: 'Asha' }, { fullName: 'Bina' }] };
+    expect(isPassAdmitted(legacy, legacy.attendees[1]!)).toBe(true);
+    const pending = { status: 'registered', attendees: [{ fullName: 'Asha' }] };
+    expect(isPassAdmitted(pending, pending.attendees[0]!)).toBe(false);
   });
 });

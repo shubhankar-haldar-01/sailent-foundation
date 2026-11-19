@@ -10,7 +10,7 @@ import {
   type DatabaseClient,
 } from '@sailent/database';
 
-import { sendEmail, type BrevoConfig } from '../lib/brevo.js';
+import { sendEmail, type Mailer } from '../lib/email.js';
 import { renderFromTemplate, type RenderedTemplate } from '../lib/templates.js';
 import { alertStaffOfFailedSend } from '../lib/admin-alert.js';
 
@@ -113,7 +113,7 @@ async function record(
 /** Only `unreachable` is worth retrying; the rest are permanent. */
 function throwIfRetryable(result: Awaited<ReturnType<typeof sendEmail>>): void {
   if (!result.sent && result.reason === 'unreachable') {
-    throw new Error(`Brevo unreachable: ${result.detail ?? ''}`);
+    throw new Error(`Email provider unreachable: ${result.detail ?? ''}`);
   }
 }
 
@@ -132,7 +132,7 @@ const SHELL = (body: string) =>
  */
 export async function processVolunteerApplication(
   job: Job<VolunteerApplicationJob>,
-  deps: { database: DatabaseClient; brevo: BrevoConfig; appUrl: string },
+  deps: { database: DatabaseClient; mailer: Mailer; appUrl: string },
   logger: Logger,
 ): Promise<{ sent: boolean; reason?: string }> {
   const { db } = deps.database;
@@ -165,7 +165,7 @@ Sailent Foundation`;
   );
 
   const result = await sendEmail(
-    deps.brevo,
+    deps.mailer,
     {
       to: { email: volunteer.email, name: name === 'there' ? undefined : name },
       subject: rendered?.subject ?? 'We have your volunteer application',
@@ -215,7 +215,7 @@ Sailent Foundation`;
  */
 export async function processVolunteerDecision(
   job: Job<VolunteerDecisionJob>,
-  deps: { database: DatabaseClient; brevo: BrevoConfig; appUrl: string },
+  deps: { database: DatabaseClient; mailer: Mailer; appUrl: string },
   logger: Logger,
   outcome: 'approved' | 'rejected',
 ): Promise<{ sent: boolean; reason?: string }> {
@@ -302,7 +302,7 @@ Sailent Foundation`,
   );
 
   const result = await sendEmail(
-    deps.brevo,
+    deps.mailer,
     {
       to: { email: volunteer.email, name: name === 'there' ? undefined : name },
       subject: rendered?.subject ?? subject,
@@ -333,7 +333,7 @@ Sailent Foundation`,
 /** A volunteer has been given work. */
 export async function processVolunteerAssigned(
   job: Job<VolunteerAssignedJob>,
-  deps: { database: DatabaseClient; brevo: BrevoConfig; appUrl: string },
+  deps: { database: DatabaseClient; mailer: Mailer; appUrl: string },
   logger: Logger,
 ): Promise<{ sent: boolean; reason?: string }> {
   const { db } = deps.database;
@@ -373,7 +373,7 @@ export async function processVolunteerAssigned(
     logger,
   );
   const result = await sendEmail(
-    deps.brevo,
+    deps.mailer,
     {
       to: { email: row.volunteer.email, name: name === 'there' ? undefined : name },
       subject: rendered?.subject ?? `You have been assigned — ${row.assignment.role}`,
@@ -433,7 +433,7 @@ Sailent Foundation`,
  */
 export async function processVolunteerCertificate(
   job: Job<VolunteerCertificateJob>,
-  deps: { database: DatabaseClient; brevo: BrevoConfig; appUrl: string },
+  deps: { database: DatabaseClient; mailer: Mailer; appUrl: string },
   logger: Logger,
 ): Promise<{ sent: boolean; reason?: string }> {
   const { db } = deps.database;
@@ -471,7 +471,7 @@ export async function processVolunteerCertificate(
     logger,
   );
   const result = await sendEmail(
-    deps.brevo,
+    deps.mailer,
     {
       to: { email: row.volunteer.email, name: name === 'there' ? undefined : name },
       subject: rendered?.subject ?? 'Your certificate of service',

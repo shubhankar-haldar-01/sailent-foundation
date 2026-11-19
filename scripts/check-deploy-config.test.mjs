@@ -161,7 +161,7 @@ const SECRET_VARIABLES = new Set([
   'R2_ACCOUNT_ID',
   'R2_ACCESS_KEY_ID',
   'R2_SECRET_ACCESS_KEY',
-  'BREVO_API_KEY',
+  'RESEND_API_KEY',
   'SENTRY_DSN',
 ]);
 
@@ -212,6 +212,14 @@ describe('Cloud Run service templates', () => {
     const env = Object.fromEntries(envEntries(yaml).map((e) => [e.name, e]));
     assert.ok(env.API_INTERNAL_URL, 'the worker needs API_INTERNAL_URL');
     assert.ok(env.INTERNAL_API_SECRET?.secretRef, 'and INTERNAL_API_SECRET from Secret Manager');
+    // Email: production refuses to start without both (workerEnvSchema).
+    assert.ok(env.RESEND_API_KEY?.secretRef, 'the worker needs RESEND_API_KEY from Secret Manager');
+    assert.ok(env.RESEND_FROM_EMAIL, 'and RESEND_FROM_EMAIL');
+  });
+
+  it('api: holds no email key (only the worker sends email)', () => {
+    const names = envEntries(read('infrastructure/cloud-run/api.service.yaml')).map((e) => e.name);
+    assert.ok(!names.includes('RESEND_API_KEY'), 'the API must not receive RESEND_API_KEY');
   });
 
   it('Cloud Build builds and pushes, and never deploys', () => {

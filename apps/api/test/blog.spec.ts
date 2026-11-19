@@ -39,7 +39,6 @@ describe('Blog (integration)', () => {
   let app: INestApplication;
   let server: Parameters<typeof request>[0];
   let staff: string;
-  let categoryId: string;
 
   const created: string[] = [];
 
@@ -99,9 +98,6 @@ describe('Blog (integration)', () => {
       .post(`${PREFIX}/auth/staff/login`)
       .send({ email: TEST_USERS.superAdmin, password: TEST_PASSWORD });
     staff = (login.body as Envelope<{ accessToken: string }>).data!.accessToken;
-
-    const category = await db().execute(sql`SELECT id FROM categories LIMIT 1`);
-    categoryId = category.rows![0]!.id as string;
   }, 60_000);
 
   afterAll(async () => {
@@ -237,11 +233,6 @@ describe('Blog (integration)', () => {
 
       await db().execute(sql`DELETE FROM media WHERE id = ${mediaId}::uuid`);
     });
-
-    it('rejects a category that does not exist', async () => {
-      const response = await draft({ categoryId: randomUUID() });
-      expect(response.status).toBe(422);
-    });
   });
 
   // =========================================================================
@@ -368,17 +359,6 @@ describe('Blog (integration)', () => {
       expect(items[0]!.title).toContain(marker);
     });
 
-    it('filters by category', async () => {
-      await draft({ categoryId });
-      const response = await request(server)
-        .get(`${PREFIX}/admin/blog?categoryId=${categoryId}&limit=50`)
-        .set(auth(staff));
-
-      const { items } = (response.body as Envelope<{ items: { categoryId: string }[] }>).data!;
-      expect(items.length).toBeGreaterThan(0);
-      expect(items.every((item) => item.categoryId === categoryId)).toBe(true);
-    });
-
     it('paginates', async () => {
       const response = await request(server)
         .get(`${PREFIX}/admin/blog?limit=1&page=1`)
@@ -458,8 +438,8 @@ describe('Blog (integration)', () => {
     });
 
     it('offers related posts, all of them published', async () => {
-      await published({ categoryId });
-      const anchor = await published({ categoryId });
+      await published();
+      const anchor = await published();
 
       const response = await request(server).get(`${PREFIX}/blog/${anchor.slug}`).expect(200);
       const { related } = (response.body as Envelope<{ related: { slug: string }[] }>).data!;

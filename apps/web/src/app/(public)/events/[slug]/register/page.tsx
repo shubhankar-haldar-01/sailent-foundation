@@ -86,9 +86,9 @@ export default async function EventRegisterPage({ params }: { params: Promise<{ 
     : null;
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#F8FAFC]">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#F8FAFC] print:m-0 print:min-h-0 print:overflow-visible print:bg-white print:p-0">
       {/* Ambient decorative soft cyan/sky glow in background matching reference */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[36rem] overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[36rem] overflow-hidden print:hidden">
         <div className="absolute -left-24 -top-24 size-[34rem] rounded-full bg-sky-100/50 blur-3xl" />
         <div className="absolute -right-24 top-8 size-[30rem] rounded-full bg-sky-50/60 blur-3xl" />
       </div>
@@ -96,7 +96,7 @@ export default async function EventRegisterPage({ params }: { params: Promise<{ 
       <h1 className="sr-only">Register for {event.title}</h1>
 
       {/* 1. Breadcrumb bar matching final design */}
-      <div className="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 print:hidden">
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-slate-500">
           <Link href="/" className="hover:text-primary transition-colors">
             Home
@@ -117,10 +117,10 @@ export default async function EventRegisterPage({ params }: { params: Promise<{ 
       </div>
 
       {/* 2. Main Two-Column Layout */}
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 print:m-0 print:w-full print:max-w-none print:p-0">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10 print:m-0 print:block print:w-full print:p-0">
           {/* Left Column (Width ~ 7 cols): Event Registration Form */}
-          <div className="lg:col-span-7 xl:col-span-7">
+          <div className="lg:col-span-7 xl:col-span-7 print:m-0 print:block print:w-full print:max-w-none print:p-0">
             <EventRegistrationFlow
               eventId={event.id || ''}
               slug={event.slug}
@@ -129,19 +129,22 @@ export default async function EventRegisterPage({ params }: { params: Promise<{ 
               endsAt={event.endsAt}
               venueName={event.venueName}
               city={event.city}
-              isOnline={event.isOnline}
-              meetingUrl={myReg?.meetingUrl}
+              isPaid={event.isPaid}
+              feeAmount={event.feeAmount}
               isRegistered={isRegistered}
               isSignedIn={Boolean(donor)}
               availability={action.kind}
               registrationDeadline={event.registrationDeadline ?? null}
               signInHref={`/sign-in?next=/events/${event.slug}/register`}
               initialProfile={initialProfile}
+              supportEmail={supportEmail}
+              supportPhone={supportPhone}
+              functions={event.functions}
             />
           </div>
 
           {/* Right Column (Width ~ 5 cols): Event Summary Card */}
-          <div className="lg:sticky lg:top-24 lg:col-span-5 xl:col-span-5">
+          <div className="lg:sticky lg:top-24 lg:col-span-5 xl:col-span-5 print:hidden">
             <EventSummaryCard
               event={event}
               categoryName={categoryName}

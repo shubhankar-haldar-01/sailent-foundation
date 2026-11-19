@@ -92,7 +92,7 @@ export class AdminDonationsService {
     }
 
     const where = filters.length > 0 ? and(...filters) : undefined;
-    const { column, direction } = resolveSort(query.sort, SORTABLE, 'createdAt');
+    const { column, direction } = resolveSort(query.sort ?? '-createdAt', SORTABLE, 'createdAt');
 
     const [rows, [count]] = await Promise.all([
       this.database.db

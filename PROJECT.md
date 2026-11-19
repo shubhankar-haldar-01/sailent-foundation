@@ -186,7 +186,7 @@ POST /donations
 
 ## 11. Notifications (CURRENT / PARTIAL)
 
-**Email** goes through the worker (BullMQ queue `email`) to Brevo. Messages sent:
+**Email** goes through the worker (BullMQ queue `email`) to Resend. Messages sent:
 - donation confirmation
 - donor login code
 - event registered or cancelled
@@ -221,7 +221,7 @@ POST /donations
 | Redis (Memorystore in production) | Throttling, queues, idempotency | Local Redis today. Production: Memorystore over a private VPC, `noeviction` (`DEPLOYMENT.md` §14) |
 | Cloudflare R2 | Media and documents (public and private buckets) | Implemented in the API; a live round-trip test exists |
 | Razorpay | Payments | Implemented; no keys configured locally |
-| Brevo | Email | Implemented in the worker; optional |
+| Resend | Email | Implemented in the worker (replaced Brevo, 2026-11-18); required in production |
 | Google Cloud Run (web, api, worker) | Hosting | Owner decision (earlier documents said Vercel and Render/Railway). **Prepared in Phase 14 — images, service templates, runbooks (`DEPLOYMENT.md` §8, §11–§21) — and NOT deployed.** Provisioning and deploying are human steps. |
 | Sentry | Error tracking | Server side, scrubbed, off unless `SENTRY_DSN` is set (Phase 14) |
 | Cloud Logging / Monitoring | Logs, uptime, alerts | JSON logs with `severity` (Phase 14); alerts to be created by a human (`DEPLOYMENT.md` §17) |

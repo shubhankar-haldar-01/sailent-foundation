@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, desc, eq, ilike, isNull, or, sql, type SQL } from 'drizzle-orm';
 
-import { teamMembers, users, type DatabaseClient } from '@sailent/database';
+import { slugHistory, teamMembers, users, type DatabaseClient } from '@sailent/database';
 import { canTransitionProgram, type ProgramStatus } from '@sailent/validation';
 import type { AuthenticatedActor } from '@sailent/types';
 
@@ -83,7 +83,7 @@ export class TeamService {
     }
 
     const where = and(...filters);
-    const { column, direction } = resolveSort(query.sort, SORTABLE, 'displayOrder');
+    const { column, direction } = resolveSort(query.sort ?? '-createdAt', SORTABLE, 'createdAt');
 
     const [items, [count]] = await Promise.all([
       this.database.db
@@ -95,6 +95,9 @@ export class TeamService {
           designation: teamMembers.designation,
           department: teamMembers.department,
           memberType: teamMembers.memberType,
+          contactNumber: teamMembers.contactNumber,
+          aadharNumber: teamMembers.aadharNumber,
+          address: teamMembers.address,
           status: teamMembers.status,
           isPublic: teamMembers.isPublic,
           displayOrder: teamMembers.displayOrder,
@@ -141,24 +144,179 @@ export class TeamService {
   // Writes
   // -------------------------------------------------------------------------
 
+  private async validateUniqueness(
+    input: {
+      aadharNumber?: string | null;
+      contactNumber?: string | null;
+      emailPublic?: string | null;
+    },
+    exceptId?: string,
+  ) {
+    // 1. Aadhaar
+    if (input.aadharNumber) {
+      const cleanAadhar = input.aadharNumber.replace(/\D/g, '');
+      if (cleanAadhar.length > 0) {
+        const conditions = [
+          isNull(teamMembers.deletedAt),
+          sql`regexp_replace(${teamMembers.aadharNumber}, '[^0-9]', '', 'g') = ${cleanAadhar}`,
+        ];
+        if (exceptId) conditions.push(sql`${teamMembers.id} != ${exceptId}`);
+        const [existing] = await this.database.db
+          .select({ id: teamMembers.id })
+          .from(teamMembers)
+          .where(and(...conditions))
+          .limit(1);
+        if (existing) {
+          throw new ConflictException(
+            'This Adhar number is already assigned to another team member.',
+            [
+              {
+                field: 'aadharNumber',
+                code: 'CONFLICT',
+                message: 'This Adhar number is already assigned to another team member.',
+              },
+            ],
+          );
+        }
+      }
+    }
+
+    // 2. Contact Number (Phone)
+    if (input.contactNumber) {
+      const digits = input.contactNumber.replace(/\D/g, '');
+      const last10 = digits.slice(-10);
+      if (last10.length === 10) {
+        const conditions = [
+          isNull(teamMembers.deletedAt),
+          sql`right(regexp_replace(${teamMembers.contactNumber}, '[^0-9]', '', 'g'), 10) = ${last10}`,
+        ];
+        if (exceptId) conditions.push(sql`${teamMembers.id} != ${exceptId}`);
+        const [existing] = await this.database.db
+          .select({ id: teamMembers.id })
+          .from(teamMembers)
+          .where(and(...conditions))
+          .limit(1);
+        if (existing) {
+          throw new ConflictException(
+            'This contact number is already assigned to another team member.',
+            [
+              {
+                field: 'contactNumber',
+                code: 'CONFLICT',
+                message: 'This contact number is already assigned to another team member.',
+              },
+            ],
+          );
+        }
+      }
+    }
+
+    // 3. Email Public
+    if (input.emailPublic) {
+      const cleanEmail = input.emailPublic.trim().toLowerCase();
+      if (cleanEmail.length > 0) {
+        const conditions = [
+          isNull(teamMembers.deletedAt),
+          sql`lower(btrim(${teamMembers.emailPublic})) = ${cleanEmail}`,
+        ];
+        if (exceptId) conditions.push(sql`${teamMembers.id} != ${exceptId}`);
+        const [existing] = await this.database.db
+          .select({ id: teamMembers.id })
+          .from(teamMembers)
+          .where(and(...conditions))
+          .limit(1);
+        if (existing) {
+          throw new ConflictException(
+            'This email address is already assigned to another team member.',
+            [
+              {
+                field: 'emailPublic',
+                code: 'CONFLICT',
+                message: 'This email address is already assigned to another team member.',
+              },
+            ],
+          );
+        }
+      }
+    }
+  }
+
+  private handleUniqueViolation(error: unknown): never {
+    const err = error as { code?: string; constraint?: string };
+    if (err.code === '23505') {
+      if (err.constraint === 'team_members_aadhar_unique') {
+        throw new ConflictException(
+          'This Adhar number is already assigned to another team member.',
+          [
+            {
+              field: 'aadharNumber',
+              code: 'CONFLICT',
+              message: 'This Adhar number is already assigned to another team member.',
+            },
+          ],
+        );
+      }
+      if (err.constraint === 'team_members_contact_number_unique') {
+        throw new ConflictException(
+          'This contact number is already assigned to another team member.',
+          [
+            {
+              field: 'contactNumber',
+              code: 'CONFLICT',
+              message: 'This contact number is already assigned to another team member.',
+            },
+          ],
+        );
+      }
+      if (err.constraint === 'team_members_email_public_unique') {
+        throw new ConflictException(
+          'This email address is already assigned to another team member.',
+          [
+            {
+              field: 'emailPublic',
+              code: 'CONFLICT',
+              message: 'This email address is already assigned to another team member.',
+            },
+          ],
+        );
+      }
+      throw new ConflictException('A team member with this information already exists.');
+    }
+    throw error;
+  }
+
   async create(input: CreateTeamMemberInput, actor: AuthenticatedActor, context: AuditContext) {
+    await this.validateUniqueness(input);
+
     const slug = await this.slugs.allocate('team', { title: input.name, slug: input.slug });
 
-    const [created] = await this.database.db
-      .insert(teamMembers)
-      .values({
-        ...this.writableFields(input),
-        name: input.name,
-        designation: input.designation,
-        slug,
-        // Draft and not public. A person's name, photograph and biography going
-        // live the instant somebody saves a half-typed form is the one mistake
-        // on this table that cannot be taken back — it is a real person, and
-        // the page is indexed within the hour.
-        status: 'draft',
-        isPublic: false,
-      })
-      .returning({ id: teamMembers.id });
+    const bio =
+      input.bio !== undefined
+        ? input.bio
+        : `${input.name} is a dedicated team member at Sailent Foundation.`;
+
+    let created: { id: string } | undefined;
+    try {
+      const [row] = await this.database.db
+        .insert(teamMembers)
+        .values({
+          ...this.writableFields(input),
+          name: input.name,
+          designation: input.designation,
+          bio,
+          slug,
+          // Draft and not public. A person's name, photograph and biography going
+          // live the instant somebody saves a half-typed form is the one mistake
+          // on this table that cannot be taken back — it is a real person, and
+          // the page is indexed within the hour.
+          status: 'draft',
+          isPublic: false,
+        })
+        .returning({ id: teamMembers.id });
+      created = row;
+    } catch (error) {
+      this.handleUniqueViolation(error);
+    }
 
     if (!created) throw new ConflictException('Could not create the team member.');
 
@@ -182,6 +340,8 @@ export class TeamService {
   ) {
     const before = await this.getById(id);
 
+    await this.validateUniqueness(input, id);
+
     let slug = before.slug;
     if (input.slug !== undefined && input.slug !== before.slug) {
       slug = await this.slugs.allocate('team', {
@@ -191,18 +351,22 @@ export class TeamService {
       });
     }
 
-    await this.database.db.transaction(async (tx) => {
-      // Retired inside the same transaction as the rename, so a committed slug
-      // change cannot exist without its redirect.
-      if (slug !== before.slug) {
-        await this.slugs.retire('team', id, before.slug, actor.id, tx);
-      }
+    try {
+      await this.database.db.transaction(async (tx) => {
+        // Retired inside the same transaction as the rename, so a committed slug
+        // change cannot exist without its redirect.
+        if (slug !== before.slug) {
+          await this.slugs.retire('team', id, before.slug, actor.id, tx);
+        }
 
-      await tx
-        .update(teamMembers)
-        .set({ ...this.writableFields(input), slug, updatedAt: new Date() })
-        .where(eq(teamMembers.id, id));
-    });
+        await tx
+          .update(teamMembers)
+          .set({ ...this.writableFields(input), slug, updatedAt: new Date() })
+          .where(eq(teamMembers.id, id));
+      });
+    } catch (error) {
+      this.handleUniqueViolation(error);
+    }
 
     await this.audit.record({
       action: 'team.update',
@@ -263,6 +427,40 @@ export class TeamService {
     });
 
     return this.getById(id);
+  }
+
+  /**
+   * Permanently delete a team member.
+   *
+   * Irreversibly removes the team member from the database, releases
+   * any associated slug history, and records a critical audit entry.
+   */
+  async delete(id: string, actor: AuthenticatedActor, context: AuditContext) {
+    const before = await this.getById(id);
+
+    await this.database.db.transaction(async (tx) => {
+      await tx
+        .delete(slugHistory)
+        .where(and(eq(slugHistory.entityType, 'team'), eq(slugHistory.entityId, id)));
+      await tx.delete(teamMembers).where(eq(teamMembers.id, id));
+    });
+
+    await this.audit.record({
+      action: 'team.delete',
+      entityType: 'team_member',
+      entityId: id,
+      userId: actor.id,
+      oldValues: {
+        name: before.name,
+        slug: before.slug,
+        designation: before.designation,
+        status: before.status,
+      },
+      severity: 'critical',
+      ...context,
+    });
+
+    return { deleted: true, id };
   }
 
   /**
@@ -342,6 +540,9 @@ export class TeamService {
       'designation',
       'department',
       'memberType',
+      'contactNumber',
+      'aadharNumber',
+      'address',
       'bio',
       'experience',
       'socialLinks',

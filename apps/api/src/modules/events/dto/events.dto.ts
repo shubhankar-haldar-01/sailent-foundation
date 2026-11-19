@@ -107,6 +107,15 @@ const eventFields = {
   campaignId: z.string().uuid().nullish(),
   requiresVolunteers: z.boolean().optional(),
   volunteerSlots: z.number().int().min(0).max(100_000).nullish(),
+
+  isPaid: z.boolean().optional(),
+  feeAmount: z
+    .number()
+    .int('Fee is in integer paise')
+    .min(100, 'Minimum fee is ₹1 (100 paise)')
+    .max(10_000_000)
+    .nullish(),
+  functions: z.array(z.string().trim().min(1).max(120)).max(20).nullish(),
 };
 
 /**
@@ -136,6 +145,15 @@ function refineDates<T extends z.ZodTypeAny>(schema: T) {
         message: 'Registration cannot close after the event has started.',
         path: ['registrationDeadline'],
       },
+    )
+    .refine(
+      (value: Record<string, unknown>) => {
+        if (value.isPaid && (!value.feeAmount || Number(value.feeAmount) <= 0)) {
+          return false;
+        }
+        return true;
+      },
+      { message: 'A paid event requires a positive registration fee.', path: ['feeAmount'] },
     );
 }
 
@@ -204,22 +222,62 @@ export const attendanceSchema = z.object({
 export const registerForEventSchema = z
   .object({
     fullName: z.string().trim().min(2, 'A name is required').max(200).optional(),
+    email: z.string().trim().email('Enter a valid email address').max(255).optional(),
     phone: z
       .string()
       .trim()
       .regex(/^(\+91[-\s]?)?[6-9]\d{9}$/, 'Enter a valid Indian mobile number')
       .optional(),
     attendeeCount: z
-      .literal(1, {
-        errorMap: () => ({
-          message: 'One registration is allowed for exactly one person and one seat.',
-        }),
-      })
+      .number()
+      .int('Number of passes must be a whole number')
+      .min(1, 'At least 1 pass is required')
+      .max(4, 'Maximum 4 passes can be booked at a time')
       .optional()
       .default(1),
+    functionName: z.string().trim().max(120).optional(),
+    attendees: z
+      .array(
+        z.object({
+          fullName: z.string().trim().min(1, 'Attendee name is required').max(200),
+        }),
+      )
+      .min(1)
+      .max(4)
+      .optional(),
     notes: z.string().trim().max(1000).optional(),
+    razorpayOrderId: z.string().trim().max(128).optional(),
+    razorpayPaymentId: z.string().trim().max(128).optional(),
+    razorpaySignature: z.string().trim().max(256).optional(),
   })
   .strict();
+
+export const createEventOrderSchema = z
+  .object({
+    email: z.string().trim().email('Enter a valid email address').max(255).optional(),
+    fullName: z.string().trim().max(200).optional(),
+    phone: z.string().trim().max(20).optional(),
+    attendeeCount: z
+      .number()
+      .int('Number of passes must be a whole number')
+      .min(1, 'At least 1 pass is required')
+      .max(4, 'Maximum 4 passes can be booked at a time')
+      .optional()
+      .default(1),
+    functionName: z.string().trim().max(120).optional(),
+    attendees: z
+      .array(
+        z.object({
+          fullName: z.string().trim().min(1, 'Attendee name is required').max(200),
+        }),
+      )
+      .min(1)
+      .max(4)
+      .optional(),
+  })
+  .strict();
+
+export type CreateEventOrderInput = z.infer<typeof createEventOrderSchema>;
 
 export const cancelRegistrationSchema = z
   .object({
@@ -262,14 +320,29 @@ export class CreateEventDto {
 
   @ApiPropertyOptional({ example: 'Sailent Foundation, with Ward 12 Health Committee' })
   organizer?: string;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Whether the event requires a registration fee',
+  })
+  isPaid?: boolean;
+
+  @ApiPropertyOptional({
+    example: 50000,
+    description: 'Registration fee in integer paise (e.g. 50000 = ₹500)',
+  })
+  feeAmount?: number;
 }
 
 export class RegisterForEventDto {
   @ApiPropertyOptional({
     example: 'Priya Sharma',
-    description: 'Defaults to the name on the donor record.',
+    description: 'Defaults to the name on the donor record when authenticated.',
   })
   fullName?: string;
+
+  @ApiPropertyOptional({ example: 'priya@example.com' })
+  email?: string;
 
   @ApiPropertyOptional({ example: '9876543210' })
   phone?: string;
@@ -280,6 +353,26 @@ export class RegisterForEventDto {
     description: 'One registration is allowed for exactly one person and one seat.',
   })
   attendeeCount?: 1;
+
+  @ApiPropertyOptional({ example: 'order_DA78x' })
+  razorpayOrderId?: string;
+
+  @ApiPropertyOptional({ example: 'pay_DA78y' })
+  razorpayPaymentId?: string;
+
+  @ApiPropertyOptional({ example: 'sig_123' })
+  razorpaySignature?: string;
+}
+
+export class CreateEventOrderDto {
+  @ApiPropertyOptional({ example: 'priya@example.com' })
+  email?: string;
+
+  @ApiPropertyOptional({ example: 'Priya Sharma' })
+  fullName?: string;
+
+  @ApiPropertyOptional({ example: '9876543210' })
+  phone?: string;
 }
 
 export class AttendanceDto {
@@ -290,10 +383,73 @@ export class AttendanceDto {
   entries!: { registrationId: string; status: 'attended' | 'no_show' }[];
 }
 
+export const requestEventOtpSchema = z
+  .object({
+    email: z.string().trim().email('Enter a valid email address').max(255),
+    name: z.string().trim().max(200).optional(),
+  })
+  .strict();
+
+export const verifyEventOtpSchema = z
+  .object({
+    email: z.string().trim().email('Enter a valid email address').max(255),
+    code: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, 'Enter the 6-digit verification code'),
+  })
+  .strict();
+
+export class RequestEventOtpDto {
+  @ApiProperty({ example: 'priya@example.com' })
+  email!: string;
+
+  @ApiPropertyOptional({ example: 'Priya Sharma' })
+  name?: string;
+}
+
+export class VerifyEventOtpDto {
+  @ApiProperty({ example: 'priya@example.com' })
+  email!: string;
+
+  @ApiProperty({ example: '123456' })
+  code!: string;
+}
+
+export const verifyPassSchema = z
+  .object({
+    code: z.string().trim().min(1, 'Enter or scan a pass code').max(200),
+  })
+  .strict();
+
+export class VerifyPassDto {
+  @ApiProperty({ example: 'SF-EVT-6B57C6BC-1' })
+  code!: string;
+}
+
+export const checkInPassSchema = z
+  .object({
+    registrationId: z.string().uuid('Invalid registration ID'),
+    passNumber: z.string().trim().max(100).optional(),
+  })
+  .strict();
+
+export class CheckInPassDto {
+  @ApiProperty({ example: '6b57c6bc-21c0-4907-97e5-49ae457686cd' })
+  registrationId!: string;
+
+  @ApiPropertyOptional({ example: 'SF-EVT-6B57C6BC-1' })
+  passNumber?: string;
+}
+
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;
 export type EventListQuery = z.infer<typeof eventListQuerySchema>;
 export type RegisterForEventInput = z.infer<typeof registerForEventSchema>;
+export type RequestEventOtpInput = z.infer<typeof requestEventOtpSchema>;
+export type VerifyEventOtpInput = z.infer<typeof verifyEventOtpSchema>;
 export type RegistrationListQuery = z.infer<typeof registrationListQuerySchema>;
 export type AttendanceInput = z.infer<typeof attendanceSchema>;
 export type MyEventsQuery = z.infer<typeof myEventsQuerySchema>;
+export type VerifyPassInput = z.infer<typeof verifyPassSchema>;
+export type CheckInPassInput = z.infer<typeof checkInPassSchema>;

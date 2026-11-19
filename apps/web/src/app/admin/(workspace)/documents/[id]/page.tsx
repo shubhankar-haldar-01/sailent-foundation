@@ -4,6 +4,7 @@ import { AlertCircle, FileSpreadsheet } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
 
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import {
   DocumentDetailsForm,
@@ -49,6 +50,9 @@ export default async function AdminDocumentPage({ params }: { params: Promise<{ 
     <div className="space-y-6">
       <PageHeader
         title={document.title}
+        breadcrumb={
+          <AdminBackButton href="/admin/documents">Back to reports & documents</AdminBackButton>
+        }
         description={`${DOCUMENT_TYPE_LABELS[document.documentType] ?? document.documentType} · ${formatBytes(
           document.sizeBytes,
         )} · ${document.fileName}`}

@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { API_PREFIX, REQUEST_ID_HEADER } from '@sailent/config';
 
+import { MAX_PROXIED_BODY_BYTES, readBoundedBody } from '@/lib/api/bounded-body';
 import { clientForwardingHeaders, INTERNAL_HEADERS } from '@/lib/api/forwarding';
 import { getDonorAccessToken } from '@/lib/auth/donor-session';
 import { isTrustedRequestOrigin } from '@/lib/security/origin-check';
@@ -111,11 +112,23 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
 
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
 
+  // Read with a ceiling, never `arrayBuffer()`: see `bounded-body.ts`.
+  const requestBody = hasBody ? await readBoundedBody(request, MAX_PROXIED_BODY_BYTES) : undefined;
+  if (requestBody === null) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code: 'VALIDATION_FAILED', message: 'That file is too large.', requestId },
+      },
+      { status: 413, headers: { [REQUEST_ID_HEADER]: requestId } },
+    );
+  }
+
   try {
     const response = await fetch(target, {
       method: request.method,
       headers,
-      ...(hasBody ? { body: await request.arrayBuffer() } : {}),
+      ...(requestBody !== undefined ? { body: requestBody } : {}),
       // Proxied calls are per-user and must never be shared from a cache.
       cache: 'no-store',
       signal: AbortSignal.timeout(20_000),

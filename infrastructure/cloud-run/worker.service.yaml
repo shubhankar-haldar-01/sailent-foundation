@@ -52,10 +52,11 @@ spec:
               value: '5'
             - name: PAYMENT_RECONCILE_INTERVAL_MS
               value: '600000'
-            - name: BREVO_SENDER_EMAIL
-              value: ${BREVO_SENDER_EMAIL}
-            - name: BREVO_SENDER_NAME
-              value: Sailent Foundation
+            # Email (Resend). The sender must be on the domain verified in Resend.
+            - name: RESEND_FROM_EMAIL
+              value: '${RESEND_FROM_EMAIL}'
+            - name: RESEND_REPLY_TO
+              value: '${RESEND_REPLY_TO}'
             - name: SENTRY_ENVIRONMENT
               value: production
             - name: SENTRY_RELEASE
@@ -75,10 +76,10 @@ spec:
                 secretKeyRef:
                   name: sailent-internal-api-secret
                   key: latest
-            - name: BREVO_API_KEY
+            - name: RESEND_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: sailent-brevo-api-key
+                  name: sailent-resend-api-key
                   key: latest
             - name: SENTRY_DSN
               valueFrom:

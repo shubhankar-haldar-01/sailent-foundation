@@ -457,20 +457,18 @@ describe('Volunteers (integration)', () => {
       expect(second.status).toBe(409);
     });
 
-    it('requires a re-authentication to read a record or decide', async () => {
+    it('allows reading a volunteer record with volunteer.read without re-authentication', async () => {
       const response = await apply();
       const id = (response.body as Envelope<{ id: string }>).data!.id;
 
-      // A session that has not re-authenticated recently. A fresh login is not
-      // a re-authentication.
       const fresh = await request(server)
         .post(`${PREFIX}/auth/staff/login`)
         .send({ email: TEST_USERS.staff, password: TEST_PASSWORD, totpCode: devTotpCode() });
       const token = (fresh.body as Envelope<{ accessToken: string }>).data!.accessToken;
 
       const read = await request(server).get(`${PREFIX}/admin/volunteers/${id}`).set(auth(token));
-      expect(read.status).toBe(403);
-      expect(errorCode(read.body as Envelope)).toBe('REAUTH_REQUIRED');
+      expect(read.status).toBe(200);
+      expect((read.body as Envelope<{ id: string }>).data!.id).toBe(id);
     });
   });
 

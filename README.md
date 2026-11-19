@@ -22,7 +22,7 @@ Razorpay ───────────────────────�
 Worker ───────────────────────────────► API / DB
 
   apps/api (NestJS) ──► Neon Postgres · Upstash Redis · Cloudflare R2
-  apps/worker (BullMQ) ──► Brevo
+  apps/worker (BullMQ) ──► Resend
 ```
 
 Three deployables share one database and one set of packages.

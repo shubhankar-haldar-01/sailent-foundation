@@ -20,7 +20,7 @@ describe('Team Components', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders LeadershipCard with role, name, bio, and socials', () => {
+  it('renders LeadershipCard with image, name, and designation only', () => {
     const leader = teamMembers.find((m) => m.slug === 'shubhankar-haldar')!;
     render(<LeadershipCard member={leader} />);
 
@@ -28,39 +28,35 @@ describe('Team Components', () => {
       screen.getByRole('heading', { level: 3, name: 'Shubhankar Haldar' }),
     ).toBeInTheDocument();
     expect(screen.getByText('Co-Founder & Director')).toBeInTheDocument();
-    expect(screen.getByText(/Passionate about technology/i)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Portrait of Shubhankar Haldar/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Passionate about technology/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
-  it('renders MemberCard with name, designation badge, and bio', () => {
+  it('renders MemberCard with image, name, and designation only', () => {
     const member = teamMembers.find((m) => m.slug === 'priya-mehta')!;
     render(<MemberCard member={member} />);
 
     expect(screen.getByRole('heading', { level: 3, name: 'Priya Mehta' })).toBeInTheDocument();
-    expect(screen.getByText('Communications Lead')).toBeInTheDocument();
-    expect(screen.getByText(/Handles content, storytelling/i)).toBeInTheDocument();
+    expect(screen.getByText('Team')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Portrait of Priya Mehta/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Handles content, storytelling/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
-  it('filters team directory by department and search query', () => {
+  it('renders team directory without leadership section and filters by department and search query', () => {
     render(<TeamDirectory initialMembers={teamMembers} />);
 
-    // Initially both sections are shown
-    expect(screen.getByRole('heading', { level: 2, name: 'Leadership Team' })).toBeInTheDocument();
+    // Leadership section is not present on the public team page
+    expect(
+      screen.queryByRole('heading', { level: 2, name: 'Leadership Team' }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Our Team' })).toBeInTheDocument();
-
-    // Click 'Leadership' filter
-    const leadershipBtn = screen.getByRole('button', { name: 'Leadership' });
-    fireEvent.click(leadershipBtn);
-
-    expect(screen.getByRole('heading', { level: 2, name: 'Leadership Team' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { level: 2, name: 'Our Team' })).not.toBeInTheDocument();
 
     // Click 'Programmes' filter
     const programmesBtn = screen.getByRole('button', { name: /Programmes/i });
     fireEvent.click(programmesBtn);
 
-    expect(
-      screen.queryByRole('heading', { level: 2, name: 'Leadership Team' }),
-    ).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Our Team' })).toBeInTheDocument();
     expect(screen.getByText('Priya Mehta')).toBeInTheDocument();
 

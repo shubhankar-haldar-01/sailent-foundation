@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -143,5 +154,22 @@ export class AdminTeamController {
     @Req() request: Request,
   ) {
     return this.team.setStatus(params.id, body.status, body.reason, actor, this.context(request));
+  }
+
+  @RequirePermission('team.manage')
+  @Delete('team/:id')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Permanently delete a team member',
+    description: 'Permanently removes the team member from the database.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiResponse({ status: 200, description: 'Team member permanently deleted' })
+  delete(
+    @Param(new ZodValidationPipe(teamIdParam)) params: { id: string },
+    @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
+  ) {
+    return this.team.delete(params.id, actor, this.context(request));
   }
 }

@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import { UploadPanel, VisibilityBadge } from '@/components/admin/document-library';
 import { DOCUMENT_TYPE_LABELS, formatBytes } from '@/lib/admin/documents';
@@ -62,6 +63,7 @@ export default async function AdminDocumentsPage({
       visibility: params.visibility,
       documentType: params.documentType,
       page: params.page,
+      pageSize: 10,
     });
   } catch (error) {
     if (error instanceof AdminApiError && error.code === 'REAUTH_REQUIRED') {
@@ -189,6 +191,23 @@ export default async function AdminDocumentsPage({
           ) : null}
         </CardContent>
       </Card>
+
+      {data ? (
+        <AdminPagination
+          page={data.pagination.page}
+          totalPages={data.pagination.totalPages}
+          totalItems={data.pagination.total}
+          ariaLabel="Documents pagination"
+          makeHref={(p) => {
+            const search = new URLSearchParams();
+            if (params.visibility && params.visibility !== 'all')
+              search.set('visibility', params.visibility);
+            if (params.documentType) search.set('documentType', params.documentType);
+            search.set('page', String(p));
+            return `/admin/documents?${search.toString()}`;
+          }}
+        />
+      ) : null}
     </div>
   );
 }

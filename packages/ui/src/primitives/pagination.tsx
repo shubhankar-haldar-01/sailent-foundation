@@ -1,13 +1,12 @@
 import * as React from 'react';
+import { Slot } from '@radix-ui/react-slot';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { cn } from '../lib/cn';
 import { buttonVariants } from './button';
 
 /**
- * Pagination. Real anchors that a crawler can follow — never an infinite
- * scroll that hides content behind an event handler and makes the footer
- * unreachable (docs/information-architecture.md §5.1).
+ * Pagination (shadcn/ui). Real anchors that a crawler or user can follow.
  */
 export function Pagination({ className, ...props }: React.ComponentPropsWithoutRef<'nav'>) {
   return (
@@ -29,15 +28,24 @@ export function PaginationItem(props: React.ComponentPropsWithoutRef<'li'>) {
 
 export interface PaginationLinkProps extends React.ComponentPropsWithoutRef<'a'> {
   isActive?: boolean;
+  asChild?: boolean;
 }
 
-export function PaginationLink({ className, isActive, ...props }: PaginationLinkProps) {
+export function PaginationLink({
+  className,
+  isActive,
+  asChild = false,
+  ...props
+}: PaginationLinkProps) {
+  const Comp = asChild ? Slot : 'a';
   return (
-    <a
+    <Comp
       aria-current={isActive ? 'page' : undefined}
       className={cn(
         buttonVariants({ variant: isActive ? 'secondary' : 'ghost', size: 'icon' }),
-        'size-10',
+        'size-9 min-w-9 cursor-pointer rounded-lg text-xs font-medium',
+        isActive &&
+          'border-primary bg-primary text-primary-foreground hover:bg-primary-hover hover:text-primary-foreground',
         className,
       )}
       {...props}
@@ -45,29 +53,41 @@ export function PaginationLink({ className, isActive, ...props }: PaginationLink
   );
 }
 
-export function PaginationPrevious({ className, ...props }: React.ComponentPropsWithoutRef<'a'>) {
+export type PaginationPreviousProps = PaginationLinkProps;
+
+export function PaginationPrevious({ className, children, ...props }: PaginationPreviousProps) {
   return (
-    <a
+    <PaginationLink
       aria-label="Go to previous page"
-      className={cn(buttonVariants({ variant: 'ghost', size: 'md' }), 'gap-1 pl-2.5', className)}
+      className={cn('w-auto gap-1.5 pl-2.5 pr-3 text-xs font-medium', className)}
       {...props}
     >
-      <ChevronLeft aria-hidden="true" />
-      <span>Previous</span>
-    </a>
+      {children ?? (
+        <>
+          <ChevronLeft aria-hidden="true" className="size-4" />
+          <span>Previous</span>
+        </>
+      )}
+    </PaginationLink>
   );
 }
 
-export function PaginationNext({ className, ...props }: React.ComponentPropsWithoutRef<'a'>) {
+export type PaginationNextProps = PaginationLinkProps;
+
+export function PaginationNext({ className, children, ...props }: PaginationNextProps) {
   return (
-    <a
+    <PaginationLink
       aria-label="Go to next page"
-      className={cn(buttonVariants({ variant: 'ghost', size: 'md' }), 'gap-1 pr-2.5', className)}
+      className={cn('w-auto gap-1.5 pl-3 pr-2.5 text-xs font-medium', className)}
       {...props}
     >
-      <span>Next</span>
-      <ChevronRight aria-hidden="true" />
-    </a>
+      {children ?? (
+        <>
+          <span>Next</span>
+          <ChevronRight aria-hidden="true" className="size-4" />
+        </>
+      )}
+    </PaginationLink>
   );
 }
 
@@ -78,10 +98,11 @@ export function PaginationEllipsis({
   return (
     <span
       aria-hidden="true"
-      className={cn('flex size-10 items-center justify-center', className)}
+      className={cn('text-muted-foreground flex size-9 items-center justify-center', className)}
       {...props}
     >
-      &hellip;
+      <span aria-hidden="true">&hellip;</span>
+      <span className="sr-only">More pages</span>
     </span>
   );
 }

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
-import { and, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, ilike, inArray, ne, or, sql, type SQL } from 'drizzle-orm';
 
 import { roles as rolesTable, userRoles, users, type DatabaseClient } from '@sailent/database';
 import type { AuthenticatedActor } from '@sailent/types';
@@ -111,7 +111,11 @@ export class UsersService {
     }
 
     const where = filters.length > 0 ? and(...filters) : undefined;
-    const { column, direction } = resolveSort(query.sort, USER_SORT_COLUMNS, 'createdAt');
+    const { column, direction } = resolveSort(
+      query.sort ?? '-createdAt',
+      USER_SORT_COLUMNS,
+      'createdAt',
+    );
 
     const [rows, [count]] = await Promise.all([
       this.database.db
@@ -224,37 +228,78 @@ export class UsersService {
       throw new ConflictException('An account already exists for that email address.');
     }
 
+    if (input.phone) {
+      const clean = input.phone.replace(/\D/g, '').slice(-10);
+      if (clean.length === 10) {
+        const [existingPhone] = await this.database.db
+          .select({ id: users.id })
+          .from(users)
+          .where(sql`right(regexp_replace(${users.phone}, '[^0-9]', '', 'g'), 10) = ${clean}`)
+          .limit(1);
+        if (existingPhone) {
+          throw new ConflictException(
+            'That phone number is already assigned to another user account.',
+            [
+              {
+                field: 'phone',
+                code: 'CONFLICT',
+                message: 'That phone number is already assigned to another user account.',
+              },
+            ],
+          );
+        }
+      }
+    }
+
     const roleRows = await this.resolveRoles(input.roleKeys);
 
-    const created = await this.database.db.transaction(async (tx) => {
-      const [user] = await tx
-        .insert(users)
-        .values({
-          email: normaliseEmail(input.email),
-          firstName: input.firstName,
-          lastName: input.lastName ?? null,
-          phone: input.phone ?? null,
-          status: 'invited',
-          // Unusable by construction: a random 64-byte secret nobody holds.
-          // `verify` fails against it, so the account cannot be signed into
-          // before the invitee sets a password of their own.
-          passwordHash: await this.passwords.hash(randomBytes(64).toString('base64url')),
-          mustChangePassword: true,
-        })
-        .returning({ id: users.id });
+    let created: { id: string };
+    try {
+      created = await this.database.db.transaction(async (tx) => {
+        const [user] = await tx
+          .insert(users)
+          .values({
+            email: normaliseEmail(input.email),
+            firstName: input.firstName,
+            lastName: input.lastName ?? null,
+            phone: input.phone ?? null,
+            status: 'invited',
+            // Unusable by construction: a random 64-byte secret nobody holds.
+            // `verify` fails against it, so the account cannot be signed into
+            // before the invitee sets a password of their own.
+            passwordHash: await this.passwords.hash(randomBytes(64).toString('base64url')),
+            mustChangePassword: true,
+          })
+          .returning({ id: users.id });
 
-      if (!user) throw new ConflictException('Could not create the account.');
+        if (!user) throw new ConflictException('Could not create the account.');
 
-      await tx.insert(userRoles).values(
-        roleRows.map((role) => ({
-          userId: user.id,
-          roleId: role.id,
-          grantedBy: actor.id,
-        })),
-      );
+        await tx.insert(userRoles).values(
+          roleRows.map((role) => ({
+            userId: user.id,
+            roleId: role.id,
+            grantedBy: actor.id,
+          })),
+        );
 
-      return user;
-    });
+        return user;
+      });
+    } catch (error) {
+      const err = error as { code?: string; constraint?: string };
+      if (err.code === '23505' && err.constraint === 'users_phone_unique') {
+        throw new ConflictException(
+          'That phone number is already assigned to another user account.',
+          [
+            {
+              field: 'phone',
+              code: 'CONFLICT',
+              message: 'That phone number is already assigned to another user account.',
+            },
+          ],
+        );
+      }
+      throw error;
+    }
 
     await this.audit.record({
       action: 'user.invite',
@@ -302,10 +347,55 @@ export class UsersService {
   ) {
     const before = await this.getById(id);
 
-    await this.database.db
-      .update(users)
-      .set({ ...input, updatedAt: new Date() })
-      .where(eq(users.id, id));
+    if (input.phone) {
+      const clean = input.phone.replace(/\D/g, '').slice(-10);
+      if (clean.length === 10) {
+        const [existingPhone] = await this.database.db
+          .select({ id: users.id })
+          .from(users)
+          .where(
+            and(
+              sql`right(regexp_replace(${users.phone}, '[^0-9]', '', 'g'), 10) = ${clean}`,
+              ne(users.id, id),
+            ),
+          )
+          .limit(1);
+        if (existingPhone) {
+          throw new ConflictException(
+            'That phone number is already assigned to another user account.',
+            [
+              {
+                field: 'phone',
+                code: 'CONFLICT',
+                message: 'That phone number is already assigned to another user account.',
+              },
+            ],
+          );
+        }
+      }
+    }
+
+    try {
+      await this.database.db
+        .update(users)
+        .set({ ...input, updatedAt: new Date() })
+        .where(eq(users.id, id));
+    } catch (error) {
+      const err = error as { code?: string; constraint?: string };
+      if (err.code === '23505' && err.constraint === 'users_phone_unique') {
+        throw new ConflictException(
+          'That phone number is already assigned to another user account.',
+          [
+            {
+              field: 'phone',
+              code: 'CONFLICT',
+              message: 'That phone number is already assigned to another user account.',
+            },
+          ],
+        );
+      }
+      throw error;
+    }
 
     await this.audit.record({
       action: 'user.update',

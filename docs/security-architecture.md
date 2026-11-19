@@ -167,6 +167,7 @@ Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
 X-Content-Type-Options: nosniff
 Referrer-Policy: strict-origin-when-cross-origin
 Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
+# Current (2026-11-18): payment=(self + Razorpay's two origins); camera=(self) on the two gate scanner pages only — see apps/web/src/lib/security/permissions-policy.ts
 ```
 
 CSP uses **nonces, not `unsafe-inline`**. Razorpay's checkout script is the one third-party script permitted in the payment flow, and it is pinned to its own origin.

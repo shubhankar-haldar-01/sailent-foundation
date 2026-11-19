@@ -1,10 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, ilike, isNull, notInArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, isNull, ne, notInArray, or, sql, type SQL } from 'drizzle-orm';
 
 import {
   campaignGallery,
   campaigns,
-  categories,
   donations,
   programs,
   type DatabaseClient,
@@ -19,7 +18,6 @@ import type { AuthenticatedActor } from '@sailent/types';
 
 import { DATABASE } from '../database/database.module.js';
 import { AuditService } from '../audit/audit.service.js';
-import { CategoriesService } from './categories.service.js';
 import { SlugService } from './slug.service.js';
 import type { AuditContext } from './programs.service.js';
 import { assertPublicMediaCover } from './cover-image.js';
@@ -123,7 +121,6 @@ export class CampaignsService {
   constructor(
     @Inject(DATABASE) private readonly database: DatabaseClient,
     private readonly slugs: SlugService,
-    private readonly categories: CategoriesService,
     private readonly audit: AuditService,
   ) {}
 
@@ -134,8 +131,11 @@ export class CampaignsService {
   async list(query: CampaignListQuery) {
     const filters: SQL[] = [isNull(campaigns.deletedAt)];
 
-    if (query.status && query.status !== 'all') filters.push(eq(campaigns.status, query.status));
-    if (query.categoryId) filters.push(eq(campaigns.categoryId, query.categoryId));
+    if (query.status && query.status !== 'all') {
+      filters.push(eq(campaigns.status, query.status));
+    } else {
+      filters.push(ne(campaigns.status, 'archived'));
+    }
     if (query.programId) filters.push(eq(campaigns.programId, query.programId));
     if (query.state) filters.push(eq(campaigns.state, query.state));
     if (query.startsAfter) filters.push(sql`${campaigns.startDate} >= ${query.startsAfter}`);
@@ -153,7 +153,7 @@ export class CampaignsService {
     }
 
     const where = and(...filters);
-    const { column, direction } = resolveSort(query.sort, SORTABLE, 'updatedAt');
+    const { column, direction } = resolveSort(query.sort ?? '-createdAt', SORTABLE, 'createdAt');
 
     const [rows, [count]] = await Promise.all([
       this.database.db
@@ -165,7 +165,6 @@ export class CampaignsService {
           coverImage: campaigns.coverImage,
           status: campaigns.status,
           category: campaigns.category,
-          categoryId: campaigns.categoryId,
           location: campaigns.location,
           state: campaigns.state,
           fundraisingGoal: campaigns.fundraisingGoal,
@@ -194,7 +193,6 @@ export class CampaignsService {
         // Joined, not fetched per row: a list of twenty campaigns issuing
         // twenty programme lookups is the N+1 this join exists to avoid.
         .leftJoin(programs, eq(programs.id, campaigns.programId))
-        .leftJoin(categories, eq(categories.id, campaigns.categoryId))
         .where(where)
         /*
           A DETERMINISTIC TIEBREAKER.
@@ -229,11 +227,10 @@ export class CampaignsService {
         campaign: campaigns,
         programTitle: programs.title,
         programSlug: programs.slug,
-        categoryName: categories.name,
+        categoryName: programs.title,
       })
       .from(campaigns)
       .leftJoin(programs, eq(programs.id, campaigns.programId))
-      .leftJoin(categories, eq(categories.id, campaigns.categoryId))
       .where(and(eq(campaigns.id, id), isNull(campaigns.deletedAt)))
       .limit(1);
 
@@ -272,9 +269,8 @@ export class CampaignsService {
   // -------------------------------------------------------------------------
 
   async create(input: CampaignWriteInput, actor: AuthenticatedActor, context: AuditContext) {
-    await this.assertProgramExists(input.programId);
+    const programRow = await this.assertProgramExists(input.programId);
     await assertPublicMediaCover(this.database, input.coverImage);
-    const category = await this.categories.resolveForWrite(input.categoryId, 'campaign');
     const slug = await this.slugs.allocate('campaign', { title: input.title, slug: input.slug });
 
     this.assertDatesCoherent(input.startDate ?? null, input.endDate ?? null);
@@ -290,8 +286,7 @@ export class CampaignsService {
         // become public. It lets an operator save a campaign before they know
         // the number.
         fundraisingGoal: input.fundraisingGoal ?? 0,
-        categoryId: category?.id ?? null,
-        category: category?.name ?? null,
+        category: programRow?.title ?? null,
         status: 'draft',
       })
       .returning({ id: campaigns.id });
@@ -332,13 +327,9 @@ export class CampaignsService {
   ) {
     const before = await this.getById(id);
 
-    if (input.programId !== undefined) await this.assertProgramExists(input.programId);
+    const programRow =
+      input.programId !== undefined ? await this.assertProgramExists(input.programId) : null;
     await assertPublicMediaCover(this.database, input.coverImage);
-
-    const category =
-      input.categoryId === undefined
-        ? undefined
-        : await this.categories.resolveForWrite(input.categoryId, 'campaign');
 
     this.assertDatesCoherent(
       input.startDate !== undefined ? input.startDate : before.startDate,
@@ -382,9 +373,7 @@ export class CampaignsService {
         .set({
           ...this.writableFields(input),
           slug,
-          ...(category === undefined
-            ? {}
-            : { categoryId: category?.id ?? null, category: category?.name ?? null }),
+          ...(programRow ? { category: programRow.title } : {}),
           updatedAt: new Date(),
         })
         .where(eq(campaigns.id, id));
@@ -566,11 +555,13 @@ export class CampaignsService {
   // Guards
   // -------------------------------------------------------------------------
 
-  private async assertProgramExists(programId: string | null | undefined): Promise<void> {
-    if (!programId) return;
+  private async assertProgramExists(
+    programId: string | null | undefined,
+  ): Promise<{ id: string; title: string } | null> {
+    if (!programId) return null;
 
     const [row] = await this.database.db
-      .select({ id: programs.id })
+      .select({ id: programs.id, title: programs.title })
       .from(programs)
       .where(and(eq(programs.id, programId), isNull(programs.deletedAt)))
       .limit(1);
@@ -580,6 +571,7 @@ export class CampaignsService {
         { field: 'programId', code: 'not_found', message: 'That programme does not exist.' },
       ]);
     }
+    return row;
   }
 
   private assertDatesCoherent(start: Date | null, end: Date | null): void {

@@ -71,6 +71,7 @@ export function Field({
 export function TextArea({
   name,
   defaultValue,
+  value,
   rows = 4,
   errors,
   onChange,
@@ -78,9 +79,11 @@ export function TextArea({
   maxLength,
   placeholder,
   className,
+  required,
 }: {
   name: string;
   defaultValue?: string | null;
+  value?: string | null;
   rows?: number;
   errors?: Record<string, string>;
   /**
@@ -95,13 +98,12 @@ export function TextArea({
   maxLength?: number;
   placeholder?: string;
   className?: string;
+  required?: boolean;
   /**
-   * Optional, and the field stays UNCONTROLLED.
+   * Optional, and the field stays UNCONTROLLED when value is not passed.
    *
    * A form that needs to react to typing — to warn that a figure will need a
-   * source, say — can listen without taking ownership of the value. Making
-   * these controlled instead would mean every keystroke re-rendering a form
-   * with a dozen fields, and would lose the browser's own undo stack.
+   * source, say — can listen without taking ownership of the value.
    */
   onChange?: (value: string) => void;
 }) {
@@ -113,7 +115,9 @@ export function TextArea({
       rows={rows}
       maxLength={maxLength}
       placeholder={placeholder}
-      defaultValue={defaultValue ?? ''}
+      required={required}
+      defaultValue={value !== undefined ? undefined : (defaultValue ?? '')}
+      value={value !== undefined ? (value ?? '') : undefined}
       onChange={onChange ? (event) => onChange(event.target.value) : undefined}
       aria-invalid={errors?.[name] ? true : undefined}
       aria-describedby={errors?.[name] ? `${name}-error` : undefined}
@@ -129,12 +133,24 @@ export function TextArea({
 export function SubmitButton({
   children,
   pending,
+  variant,
+  className,
+  onClick,
 }: {
   children: React.ReactNode;
   pending: boolean;
+  variant?: React.ComponentProps<typeof Button>['variant'];
+  className?: string;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }) {
   return (
-    <Button type="submit" disabled={pending}>
+    <Button
+      type="submit"
+      variant={variant}
+      disabled={pending}
+      className={className}
+      onClick={onClick}
+    >
       {pending ? 'Saving…' : children}
     </Button>
   );
@@ -143,9 +159,19 @@ export function SubmitButton({
 /** Success and failure banners, announced to assistive technology when they appear. */
 export function FormStatus({ state }: { state: ActionState }) {
   if (state.error) {
+    const errorDetails = state.fieldErrors
+      ? Object.values(state.fieldErrors).filter((msg) => msg && msg !== state.error)
+      : [];
     return (
-      <Alert variant="destructive" role="alert">
-        {state.error}
+      <Alert variant="destructive" role="alert" className="space-y-1.5">
+        <p className="font-semibold">{state.error}</p>
+        {errorDetails.length > 0 ? (
+          <ul className="text-caption list-inside list-disc space-y-0.5">
+            {errorDetails.map((msg, i) => (
+              <li key={i}>{msg}</li>
+            ))}
+          </ul>
+        ) : null}
       </Alert>
     );
   }

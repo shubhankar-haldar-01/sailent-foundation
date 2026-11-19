@@ -264,10 +264,6 @@ export function DonationCheckout({
             <Input id="phone" name="phone" type="tel" autoComplete="tel" required disabled={busy} />
           </Field>
 
-          <Field id="message" label="Message (optional)">
-            <Input id="message" name="message" disabled={busy} />
-          </Field>
-
           <div className="border-border flex items-start gap-3 rounded-lg border p-4">
             <Switch
               id="anonymous"

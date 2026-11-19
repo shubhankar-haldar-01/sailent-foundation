@@ -300,7 +300,7 @@ export class VolunteersService {
     }
 
     const where = filters.length > 0 ? and(...filters) : undefined;
-    const { column, direction } = resolveSort(query.sort, SORTABLE, 'createdAt');
+    const { column, direction } = resolveSort(query.sort ?? '-createdAt', SORTABLE, 'createdAt');
 
     const [items, [count]] = await Promise.all([
       this.database.db
@@ -555,10 +555,42 @@ export class VolunteersService {
   ) {
     const before = await this.getById(id);
 
-    await this.database.db
-      .update(volunteers)
-      .set({ ...this.writableFields(input), updatedAt: new Date() })
-      .where(eq(volunteers.id, id));
+    try {
+      await this.database.db
+        .update(volunteers)
+        .set({ ...this.writableFields(input), updatedAt: new Date() })
+        .where(eq(volunteers.id, id));
+    } catch (error) {
+      const err = error as { code?: string; constraint?: string };
+      if (err.code === '23505') {
+        if (err.constraint === 'volunteers_phone_unique') {
+          throw new ConflictException(
+            'That phone number is already assigned to another volunteer.',
+            [
+              {
+                field: 'phone',
+                code: 'CONFLICT',
+                message: 'That phone number is already assigned to another volunteer.',
+              },
+            ],
+          );
+        }
+        if (err.constraint === 'volunteers_email_live_unique') {
+          throw new ConflictException(
+            'That email address is already assigned to another volunteer.',
+            [
+              {
+                field: 'email',
+                code: 'CONFLICT',
+                message: 'That email address is already assigned to another volunteer.',
+              },
+            ],
+          );
+        }
+        throw new ConflictException('A volunteer with this information already exists.');
+      }
+      throw error;
+    }
 
     await this.audit.record({
       action: 'volunteer.update',

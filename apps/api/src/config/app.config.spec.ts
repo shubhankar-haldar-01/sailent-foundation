@@ -193,11 +193,20 @@ describe('production payment configuration', () => {
     expect(() => loadEnv(workerEnvSchema, 'worker', worker)).toThrow(
       /API_INTERNAL_URL[\s\S]*INTERNAL_API_SECRET/,
     );
+    const reconciling = {
+      ...worker,
+      API_INTERNAL_URL: 'https://api.internal.example',
+      INTERNAL_API_SECRET: 'h'.repeat(40),
+    };
+    // Email too (2026-11-18): sign-in codes and receipts travel by email.
+    expect(() => loadEnv(workerEnvSchema, 'worker', reconciling)).toThrow(
+      /RESEND_API_KEY[\s\S]*RESEND_FROM_EMAIL/,
+    );
     expect(() =>
       loadEnv(workerEnvSchema, 'worker', {
-        ...worker,
-        API_INTERNAL_URL: 'https://api.internal.example',
-        INTERNAL_API_SECRET: 'h'.repeat(40),
+        ...reconciling,
+        RESEND_API_KEY: 're_live_1234567890abcdef',
+        RESEND_FROM_EMAIL: 'Sailent Foundation <noreply@sailent.example>',
       }),
     ).not.toThrow();
   });

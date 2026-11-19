@@ -6,7 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 
 import { pageRevisions, pages, type DatabaseClient } from '@sailent/database';
 import type { AuthenticatedActor } from '@sailent/types';
@@ -81,13 +81,17 @@ export class PagesService {
 
   async list(query: PageListQuery) {
     const filters: SQL[] = [isNull(pages.deletedAt)];
-    if (query.status !== 'all') filters.push(eq(pages.status, query.status));
+    if (query.status !== 'all') {
+      filters.push(eq(pages.status, query.status));
+    } else {
+      filters.push(ne(pages.status, 'archived'));
+    }
 
     const where = and(...filters);
     const { column } = resolveSort(
-      query.sort,
-      { updatedAt: pages.updatedAt, slug: pages.slug },
-      'updatedAt',
+      query.sort ?? '-createdAt',
+      { createdAt: pages.createdAt, updatedAt: pages.updatedAt, slug: pages.slug },
+      'createdAt',
     );
 
     const [items, [count]] = await Promise.all([

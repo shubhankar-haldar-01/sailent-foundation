@@ -13,7 +13,7 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 
-import { primaryId, softDelete, timestamps } from './_shared.js';
+import { money, primaryId, softDelete, timestamps } from './_shared.js';
 import { eventRegistrationStatusEnum, publishStatusEnum } from './enums.js';
 import { campaigns } from './campaigns.js';
 import { programs } from './programs.js';
@@ -76,6 +76,11 @@ export const events = pgTable(
     requiresVolunteers: boolean('requires_volunteers').notNull().default(false),
     volunteerSlots: integer('volunteer_slots'),
 
+    isPaid: boolean('is_paid').notNull().default(false),
+    feeAmount: money('fee_amount'),
+    /** List of sub-activities or functions (e.g. ['Dance', 'Singing', 'Running']). */
+    functions: jsonb('functions').$type<string[]>().default([]),
+
     publishedAt: timestamp('published_at', { withTimezone: true }),
     ...timestamps,
     ...softDelete,
@@ -87,6 +92,7 @@ export const events = pgTable(
     index('events_campaign_idx').on(table.campaignId),
 
     check('events_capacity_non_negative', sql`capacity IS NULL OR capacity >= 0`),
+    check('events_fee_amount_non_negative', sql`fee_amount IS NULL OR fee_amount >= 0`),
     check('events_counts_non_negative', sql`registered_count >= 0 AND waitlist_count >= 0`),
     check('events_dates_ordered', sql`end_date IS NULL OR end_date >= start_date`),
   ],
@@ -114,9 +120,18 @@ export const eventRegistrations = pgTable(
     /** SENSITIVE. */
     phone: varchar('phone', { length: 20 }).notNull(),
     attendeeCount: integer('attendee_count').notNull().default(1),
+    functionName: varchar('function_name', { length: 120 }),
+    /** One entry per pass; `checkedInAt` is that person's admission at the gate. */
+    attendees: jsonb('attendees')
+      .$type<{ fullName: string; passNumber?: string; checkedInAt?: string | null }[]>()
+      .default([]),
 
     /** registered | waitlisted | confirmed | attended | no_show | cancelled */
     status: varchar('status', { length: 16 }).notNull().default('registered'),
+    isPaid: boolean('is_paid').notNull().default(false),
+    paymentId: varchar('payment_id', { length: 128 }),
+    orderId: varchar('order_id', { length: 128 }),
+    paidAmount: money('paid_amount'),
     registeredAt: timestamp('registered_at', { withTimezone: true }).notNull().defaultNow(),
     attendedAt: timestamp('attended_at', { withTimezone: true }),
     cancellationReason: text('cancellation_reason'),
@@ -127,7 +142,15 @@ export const eventRegistrations = pgTable(
     // One registration per person per event.
     uniqueIndex('event_registrations_unique').on(table.eventId, table.email),
     index('event_registrations_event_status_idx').on(table.eventId, table.status),
+    // One payment pays for one booking (migration 0037).
+    uniqueIndex('event_registrations_payment_id_unique')
+      .on(table.paymentId)
+      .where(sql`payment_id IS NOT NULL`),
     check('event_registrations_attendees_positive', sql`attendee_count > 0`),
+    check(
+      'event_registrations_attendee_count_max_four',
+      sql`attendee_count >= 1 AND attendee_count <= 4`,
+    ),
   ],
 );
 

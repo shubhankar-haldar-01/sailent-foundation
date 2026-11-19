@@ -78,6 +78,34 @@ function ensureTrailingSlash(value: string): string {
   return value.endsWith('/') ? value : `${value}/`;
 }
 
+/**
+ * Whether the signed-in staff member holds any of `permissions`, as the API
+ * reports it.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * FOR A SERVER ACTION THAT DOES ITS WORK HERE, NOT THROUGH THE API.
+ *
+ * Almost every admin action calls the API, and the API checks the permission
+ * on that call. An action that writes something itself gets no such check,
+ * and a server action is a public endpoint: anyone who has its id can call
+ * it. The session cookie proves nothing on its own. It is readable JSON that
+ * anyone can write, and the middleware only checks that it exists. The API
+ * verifies the token's signature, audience and revocation, and answers with
+ * the permissions it actually grants.
+ *
+ * Fails closed: no session, a refused token or an unreachable API all mean no.
+ * ══════════════════════════════════════════════════════════════════════════
+ */
+export async function staffHolds(...permissions: string[]): Promise<boolean> {
+  try {
+    const me = await adminFetch<{ permissions?: unknown }>('auth/me');
+    const granted = Array.isArray(me?.permissions) ? me.permissions : [];
+    return permissions.some((permission) => granted.includes(permission));
+  } catch {
+    return false;
+  }
+}
+
 // --- Shapes the admin pages read ------------------------------------------
 
 export interface Paginated<T> {
@@ -167,6 +195,9 @@ export interface AdminTeamMember {
   designation: string;
   department: string | null;
   memberType: 'staff' | 'trustee' | 'advisor' | 'board';
+  contactNumber?: string | null;
+  aadharNumber?: string | null;
+  address?: string | null;
   bio: string | null;
   experience: string | null;
   socialLinks: { label: string; url: string }[] | null;
@@ -207,6 +238,9 @@ export interface AdminEvent {
   meetingUrl: string | null;
   capacity: number | null;
   registeredCount: number;
+  isPaid: boolean;
+  feeAmount: number | null;
+  functions?: string[] | null;
   registrationStatus: 'open' | 'closed' | 'full' | 'cancelled' | 'completed';
   registrationDeadline: string | null;
   organizer: string | null;
@@ -231,7 +265,13 @@ export interface AdminEventRegistration {
   email: string;
   phone: string;
   attendeeCount: number;
+  functionName?: string | null;
+  /** One entry per pass; `checkedInAt` is that person's admission at the gate. */
+  attendees?: { fullName: string; passNumber?: string; checkedInAt?: string | null }[] | null;
   status: 'registered' | 'waitlisted' | 'confirmed' | 'attended' | 'no_show' | 'cancelled';
+  isPaid?: boolean;
+  paidAmount?: number | null;
+  paymentId?: string | null;
   registeredAt: string;
   attendedAt: string | null;
   cancellationReason: string | null;
@@ -456,6 +496,7 @@ export function listUsers(query: {
   q?: string;
   page?: string | number;
   limit?: number;
+  sort?: string;
 }) {
   return adminFetch<Paginated<AdminUser>>('admin/users', {
     query: {
@@ -463,6 +504,7 @@ export function listUsers(query: {
       q: query.q,
       page: query.page,
       limit: query.limit ?? 50,
+      sort: query.sort ?? '-createdAt',
     },
   });
 }
@@ -595,6 +637,7 @@ export function listStories(query: {
   q?: string;
   page?: string | number;
   limit?: number;
+  sort?: string;
 }) {
   return adminFetch<Paginated<AdminStorySummary>>('admin/stories', {
     query: {
@@ -602,6 +645,7 @@ export function listStories(query: {
       q: query.q,
       page: query.page,
       limit: query.limit ?? 25,
+      sort: query.sort ?? '-createdAt',
     },
   });
 }
@@ -648,6 +692,7 @@ export function listBlogPosts(query: {
   categoryId?: string;
   page?: string | number;
   limit?: number;
+  sort?: string;
 }) {
   return adminFetch<Paginated<AdminBlogSummary>>('admin/blog', {
     query: {
@@ -656,6 +701,7 @@ export function listBlogPosts(query: {
       categoryId: query.categoryId,
       page: query.page,
       limit: query.limit ?? 25,
+      sort: query.sort ?? '-createdAt',
     },
   });
 }
@@ -696,9 +742,19 @@ export interface AdminPage extends Omit<AdminPageSummary, 'sectionCount'> {
   revisions: { version: number; note: string | null; createdAt: string }[];
 }
 
-export function listPages(query: { status?: string; page?: string | number; limit?: number }) {
+export function listPages(query: {
+  status?: string;
+  page?: string | number;
+  limit?: number;
+  sort?: string;
+}) {
   return adminFetch<Paginated<AdminPageSummary>>('admin/pages', {
-    query: { status: query.status ?? 'all', page: query.page, limit: query.limit ?? 25 },
+    query: {
+      status: query.status ?? 'all',
+      page: query.page,
+      limit: query.limit ?? 25,
+      sort: query.sort ?? '-createdAt',
+    },
   });
 }
 
@@ -935,6 +991,7 @@ export function sendLog(query: {
   status?: string;
   channel?: string;
   type?: string;
+  limit?: number;
 }) {
   return adminFetch<Paginated<AdminSendLogEntry>>('admin/notifications/log', { query });
 }
@@ -1202,7 +1259,11 @@ export interface AdminContactMessage {
   createdAt: string;
 }
 
-export function listContactMessages(query: { status?: string; page?: string | number }) {
+export function listContactMessages(query: {
+  status?: string;
+  page?: string | number;
+  limit?: number;
+}) {
   return adminFetch<
     Paginated<AdminContactSummary> & { counts: Partial<Record<ContactStatus, number>> }
   >('admin/contact-messages', { query });
@@ -1223,7 +1284,11 @@ export interface AdminNewsletterSubscriber {
   unsubscribedAt: string | null;
 }
 
-export function listNewsletterSubscribers(query: { status?: string; page?: string | number }) {
+export function listNewsletterSubscribers(query: {
+  status?: string;
+  page?: string | number;
+  limit?: number;
+}) {
   return adminFetch<
     Paginated<AdminNewsletterSubscriber> & { counts: Partial<Record<NewsletterStatus, number>> }
   >('admin/newsletter/subscribers', { query });

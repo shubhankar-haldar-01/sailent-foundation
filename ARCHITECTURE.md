@@ -19,7 +19,7 @@ flowchart LR
   A -->|BullMQ jobs| R
   WK[apps/worker<br/>BullMQ] --> R
   WK --> PG
-  WK --> BR[Brevo email API]
+  WK --> BR[Resend email API]
 ```
 
 There are three deployables and one shared database. The packages are consumed as workspace dependencies:
@@ -29,7 +29,7 @@ There are three deployables and one shared database. The packages are consumed a
 - `packages/config`: environment schemas, constants, ESLint and tsconfig presets.
 - `packages/ui`: tokens and components.
 
-**Production topology (Phase 14, prepared, NOT deployed):** three Google Cloud Run services in `asia-south1` — `sailent-web` (public), `sailent-api` (public: the web server and Razorpay's webhook call it) and `sailent-worker` (internal ingress, exactly one instance, CPU always allocated because it consumes queues outside any request). Supabase Postgres (session pooler, TLS verified), Memorystore Redis over a private VPC, Cloudflare R2, Brevo, optional Sentry. Each service has its own container image (`apps/*/Dockerfile`) and service template (`infrastructure/cloud-run/`); secrets come from Secret Manager. The full diagram, settings and procedures are in `DEPLOYMENT.md` §8 and §11–§21.
+**Production topology (Phase 14, prepared, NOT deployed):** three Google Cloud Run services in `asia-south1` — `sailent-web` (public), `sailent-api` (public: the web server and Razorpay's webhook call it) and `sailent-worker` (internal ingress, exactly one instance, CPU always allocated because it consumes queues outside any request). Supabase Postgres (session pooler, TLS verified), Memorystore Redis over a private VPC, Cloudflare R2, Resend, optional Sentry. Each service has its own container image (`apps/*/Dockerfile`) and service template (`infrastructure/cloud-run/`); secrets come from Secret Manager. The full diagram, settings and procedures are in `DEPLOYMENT.md` §8 and §11–§21.
 
 ## 2. Frontend — `apps/web`
 
@@ -132,7 +132,7 @@ sequenceDiagram
   A->>D: DonationCaptureService [1 tx]: conditional status update,<br/>counters (FOR UPDATE), payment txn, receipt number
   A->>Q: enqueue email donation.confirmation (jobId = receipt)
   K->>Q: consume 'email'
-  K->>BR: Brevo send
+  K->>BR: Resend send
   B->>W: /donation/[reference] polls status
 ```
 

@@ -171,12 +171,13 @@ export function DonationBuilder({
     }
 
     /*
-      The panel's field when there is one; otherwise the first amount preset
-      in whichever copy of the card is on screen. `offsetParent` is null for the copy inside a
-      `display: none` rail, which is how the phone and desktop copies are told
-      apart without asking for the viewport width.
+      The panel's field when there is one (for campaigns without products);
+      otherwise the first amount preset in whichever copy of the card is on screen.
+      `offsetParent` is null for the copy inside a `display: none` rail, which is how
+      the phone and desktop copies are told apart without asking for the viewport width.
     */
-    const field = showCustomAmountSection
+    const hasCustomPanel = showCustomAmountSection && campaign.products.length === 0;
+    const field = hasCustomPanel
       ? document.getElementById(customInputId)
       : ([railAmountRef.current, inlineAmountRef.current].find(
           (preset) => preset !== null && preset.offsetParent !== null,
@@ -186,7 +187,7 @@ export function DonationBuilder({
     // centring it would scroll the page away from what they were reading.
     field?.scrollIntoView({
       behavior: 'smooth',
-      block: showCustomAmountSection ? 'center' : 'nearest',
+      block: hasCustomPanel ? 'center' : 'nearest',
     });
     // Focused after the scroll, so the browser does not fight its own animation.
     window.setTimeout(() => field?.focus(), 350);
@@ -429,8 +430,8 @@ export function DonationBuilder({
           </section>
         ) : null}
 
-        {/* Other ways to support --------------------------------------------- */}
-        {showCustomAmountSection ? (
+        {/* Other ways to support (only when campaign has no products) --------- */}
+        {showCustomAmountSection && campaign.products.length === 0 ? (
           /*
             WITHOUT PRODUCTS, THIS IS THE PAGE'S DONATE ANCHOR. The cards'
             "Donate Now", the programme pages and the section links all point

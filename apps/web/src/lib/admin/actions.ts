@@ -11,10 +11,12 @@ import { SOCIAL_NETWORKS } from '@sailent/validation';
 import {
   AdminApiError,
   type AdminMedia,
+  type AdminTeamMember,
   adminFetch,
   adminUpload,
   previewNotificationTemplate,
   requestDocumentLink,
+  staffHolds,
 } from './api';
 
 /**
@@ -78,7 +80,7 @@ function text(form: FormData, key: string): string | undefined {
   const value = form.get(key);
   if (value === null) return undefined;
   const trimmed = String(value).trim();
-  return trimmed === '' ? undefined : trimmed;
+  return trimmed === '' || trimmed === 'none' ? undefined : trimmed;
 }
 
 /**
@@ -125,16 +127,38 @@ function presetAmountsFromForm(form: FormData): number[] | null | undefined {
 // ---------------------------------------------------------------------------
 
 export async function createProgram(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const title = text(form, 'title');
+  const shortDescription = text(form, 'shortDescription');
+  const description = text(form, 'description');
+  const problem = text(form, 'problem');
+  const approach = text(form, 'approach');
+  const coverImage = text(form, 'coverImage');
+
+  const fieldErrors: Record<string, string> = {};
+  if (!title) fieldErrors.title = 'Title is mandatory.';
+  if (!shortDescription) fieldErrors.shortDescription = 'Short description is mandatory.';
+  if (!description) fieldErrors.description = 'About this program is mandatory.';
+  if (!problem) fieldErrors.problem = 'The challenge is mandatory.';
+  if (!approach) fieldErrors.approach = 'Our approach is mandatory.';
+  if (!coverImage) fieldErrors.coverImage = 'Upload image is mandatory.';
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { ok: false, fieldErrors, error: 'All fields are mandatory to create a program.' };
+  }
+
   let created: { id: string };
   try {
     created = await adminFetch<{ id: string }>('admin/programs', {
       method: 'POST',
       body: {
-        title: text(form, 'title'),
+        title,
         slug: text(form, 'slug'),
-        shortDescription: text(form, 'shortDescription'),
-        description: text(form, 'description'),
-        categoryId: text(form, 'categoryId'),
+        shortDescription,
+        description,
+        problem,
+        approach,
+        beneficiaries: text(form, 'beneficiaries'),
+        coverImage,
         displayOrder: text(form, 'displayOrder') ? Number(text(form, 'displayOrder')) : undefined,
       },
     });
@@ -148,18 +172,41 @@ export async function createProgram(_prev: ActionState, form: FormData): Promise
 
 export async function updateProgram(_prev: ActionState, form: FormData): Promise<ActionState> {
   const id = String(form.get('id'));
+  const title = text(form, 'title');
+  const shortDescription = text(form, 'shortDescription');
+  const description = text(form, 'description');
+  const problem = text(form, 'problem');
+  const approach = text(form, 'approach');
+  const coverImage = text(form, 'coverImage');
+
+  const fieldErrors: Record<string, string> = {};
+  if (form.has('title') && !title) fieldErrors.title = 'Title is mandatory.';
+  if (form.has('shortDescription') && !shortDescription) {
+    fieldErrors.shortDescription = 'Short description is mandatory.';
+  }
+  if (form.has('description') && !description) {
+    fieldErrors.description = 'About this program is mandatory.';
+  }
+  if (form.has('problem') && !problem) fieldErrors.problem = 'The challenge is mandatory.';
+  if (form.has('approach') && !approach) fieldErrors.approach = 'Our approach is mandatory.';
+  if (form.has('coverImage') && !coverImage) fieldErrors.coverImage = 'Upload image is mandatory.';
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { ok: false, fieldErrors, error: 'Please fill in all mandatory fields.' };
+  }
+
   try {
     await adminFetch(`admin/programs/${id}`, {
       method: 'PATCH',
       body: {
-        title: text(form, 'title'),
+        title,
         slug: text(form, 'slug'),
-        shortDescription: text(form, 'shortDescription'),
-        description: text(form, 'description'),
-        problem: text(form, 'problem'),
-        approach: text(form, 'approach'),
+        shortDescription,
+        description,
+        problem,
+        approach,
         beneficiaries: text(form, 'beneficiaries'),
-        categoryId: text(form, 'categoryId') ?? null,
+        coverImage: form.has('coverImage') ? (coverImage ?? null) : undefined,
         displayOrder: text(form, 'displayOrder') ? Number(text(form, 'displayOrder')) : undefined,
       },
     });
@@ -190,6 +237,9 @@ export async function changeProgramStatus(
   revalidateCatalogue();
   revalidatePath(`/admin/programs/${id}/edit`);
   revalidatePath('/admin/programs');
+  if (action === 'archive') {
+    redirect('/admin/programs');
+  }
   return { ok: true };
 }
 
@@ -200,12 +250,10 @@ export async function changeProgramStatus(
 export async function createCampaign(_prev: ActionState, form: FormData): Promise<ActionState> {
   const title = text(form, 'title');
   const programId = text(form, 'programId');
-  const categoryId = text(form, 'categoryId');
 
   const fieldErrors: Record<string, string> = {};
   if (!title) fieldErrors.title = 'A title is required.';
   if (!programId) fieldErrors.programId = 'Select a program for this campaign.';
-  if (!categoryId) fieldErrors.categoryId = 'Select a category for this campaign.';
 
   if (Object.keys(fieldErrors).length > 0) {
     return { ok: false, fieldErrors, error: 'Please fill in all required fields.' };
@@ -219,7 +267,6 @@ export async function createCampaign(_prev: ActionState, form: FormData): Promis
         title,
         slug: text(form, 'slug'),
         programId,
-        categoryId,
         coverImage: form.has('coverImage') ? text(form, 'coverImage') : undefined,
         shortDescription: text(form, 'shortDescription'),
         location: text(form, 'location'),
@@ -313,12 +360,10 @@ export async function updateCampaign(_prev: ActionState, form: FormData): Promis
   const id = String(form.get('id'));
   const title = text(form, 'title');
   const programId = text(form, 'programId');
-  const categoryId = text(form, 'categoryId');
 
   const fieldErrors: Record<string, string> = {};
   if (!title) fieldErrors.title = 'A title is required.';
   if (!programId) fieldErrors.programId = 'Select a program for this campaign.';
-  if (!categoryId) fieldErrors.categoryId = 'Select a category for this campaign.';
 
   if (Object.keys(fieldErrors).length > 0) {
     return { ok: false, fieldErrors, error: 'Please fill in all required fields.' };
@@ -331,7 +376,6 @@ export async function updateCampaign(_prev: ActionState, form: FormData): Promis
         title,
         slug: text(form, 'slug'),
         programId,
-        categoryId,
         coverImage: form.has('coverImage') ? (text(form, 'coverImage') ?? null) : undefined,
         shortDescription: text(form, 'shortDescription'),
         description: text(form, 'description'),
@@ -722,6 +766,16 @@ export async function deleteFaq(_prev: ActionState, form: FormData): Promise<Act
  */
 export async function correctDonor(_prev: ActionState, form: FormData): Promise<ActionState> {
   const donorId = String(form.get('donorId'));
+  const rawTaxId = text(form, 'taxIdNumber');
+  const taxIdNumber = rawTaxId ? rawTaxId.toUpperCase() : undefined;
+
+  if (taxIdNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(taxIdNumber)) {
+    return {
+      ok: false,
+      error: 'PAN must be 5 letters followed by 4 numbers and 1 letter (e.g. ABCDE1234F).',
+    };
+  }
+
   try {
     await adminFetch(`admin/donors/${donorId}`, {
       method: 'PATCH',
@@ -734,8 +788,8 @@ export async function correctDonor(_prev: ActionState, form: FormData): Promise<
         city: text(form, 'city'),
         state: text(form, 'state'),
         postalCode: text(form, 'postalCode'),
-        taxIdType: text(form, 'taxIdNumber') ? (text(form, 'taxIdType') ?? 'pan') : undefined,
-        taxIdNumber: text(form, 'taxIdNumber'),
+        taxIdType: taxIdNumber ? (text(form, 'taxIdType') ?? 'pan') : undefined,
+        taxIdNumber,
         internalNotes: text(form, 'internalNotes'),
         reason: text(form, 'reason'),
       },
@@ -783,21 +837,82 @@ function revalidateTeam(slug?: string) {
   revalidatePath('/admin/team');
 }
 
+function validateTeamMemberFormData(form: FormData): Record<string, string> | null {
+  const errors: Record<string, string> = {};
+
+  const name = text(form, 'name');
+  if (!name || name.trim().length < 2) {
+    errors.name = 'Full Name is mandatory (minimum 2 characters).';
+  }
+
+  const email = text(form, 'emailPublic') || text(form, 'email');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    errors.emailPublic = 'A valid email address is mandatory.';
+  }
+
+  const phone = text(form, 'contactNumber');
+  const cleanPhone = (phone || '').replace(/[\s\-()+]/g, '');
+  if (!cleanPhone || cleanPhone.length < 10 || !/^\d+$/.test(cleanPhone)) {
+    errors.contactNumber = 'A valid contact number is mandatory (at least 10 digits).';
+  }
+
+  const aadhar = text(form, 'aadharNumber');
+  const cleanAadhar = (aadhar || '').replace(/[\s-]/g, '');
+  if (!cleanAadhar || !/^\d{12}$/.test(cleanAadhar)) {
+    errors.aadharNumber = 'A valid 12-digit Adhar number is mandatory.';
+  }
+
+  const address = text(form, 'address');
+  if (!address || address.trim().length < 10) {
+    errors.address = 'Address is mandatory (minimum 10 characters).';
+  }
+
+  const memberType = text(form, 'memberType') || 'staff';
+  const designation = memberType === 'staff' ? 'Team' : text(form, 'designation');
+  if (!designation || designation.trim().length === 0) {
+    errors.designation = 'Designation is mandatory.';
+  }
+
+  const photoUrl = text(form, 'photoUrl');
+  if (!photoUrl || photoUrl.trim().length === 0) {
+    errors.photoUrl = 'A photograph is mandatory. Please upload an image or provide an image URL.';
+  }
+
+  return Object.keys(errors).length > 0 ? errors : null;
+}
+
 export async function createTeamMember(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const validationErrors = validateTeamMemberFormData(form);
+  if (validationErrors) {
+    return {
+      ok: false,
+      error: 'Please complete all mandatory fields with valid information.',
+      fieldErrors: validationErrors,
+    };
+  }
+
   let created: { id: string };
   try {
+    const rawType = text(form, 'memberType');
+    const memberType = rawType === 'trustee' ? 'trustee' : 'staff';
+    const designation = memberType === 'staff' ? 'Team' : text(form, 'designation') || 'Trustee';
+    const name = text(form, 'name') || '';
+
     created = await adminFetch<{ id: string }>('admin/team', {
       method: 'POST',
       body: {
-        name: text(form, 'name'),
+        name,
         slug: text(form, 'slug'),
-        designation: text(form, 'designation'),
-        department: text(form, 'department'),
-        memberType: text(form, 'memberType'),
-        bio: text(form, 'bio'),
+        designation,
+        department: text(form, 'department') || (memberType === 'trustee' ? 'Trustees' : 'Team'),
+        memberType,
+        contactNumber: text(form, 'contactNumber'),
+        aadharNumber: text(form, 'aadharNumber'),
+        address: text(form, 'address'),
+        bio: text(form, 'bio') || `${name} is a dedicated team member at Sailent Foundation.`,
         experience: text(form, 'experience'),
         photoUrl: text(form, 'photoUrl'),
-        emailPublic: text(form, 'emailPublic'),
+        emailPublic: text(form, 'emailPublic') || text(form, 'email'),
         socialLinks: socialLinks(form),
         displayOrder: text(form, 'displayOrder') ? Number(text(form, 'displayOrder')) : undefined,
       },
@@ -807,27 +922,46 @@ export async function createTeamMember(_prev: ActionState, form: FormData): Prom
   }
 
   revalidateTeam();
-  redirect(`/admin/team/${created.id}/edit`);
+  redirect(`/admin/team/${created.id}/edit?created=1`);
 }
 
 export async function updateTeamMember(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const validationErrors = validateTeamMemberFormData(form);
+  if (validationErrors) {
+    return {
+      ok: false,
+      error: 'Please complete all mandatory fields with valid information.',
+      fieldErrors: validationErrors,
+    };
+  }
+
   const id = String(form.get('id'));
   try {
+    const rawType = text(form, 'memberType');
+    const memberType = rawType === 'trustee' ? 'trustee' : 'staff';
+    const designation = memberType === 'staff' ? 'Team' : text(form, 'designation') || 'Trustee';
+    const name = text(form, 'name') || 'Team member';
+    const bio = text(form, 'bio') || `${name} is a dedicated team member at Sailent Foundation.`;
+    const department = text(form, 'department') || (memberType === 'trustee' ? 'Trustees' : 'Team');
+
     await adminFetch(`admin/team/${id}`, {
       method: 'PATCH',
       body: {
         name: text(form, 'name'),
         slug: text(form, 'slug'),
-        designation: text(form, 'designation'),
+        designation,
         // `?? null` rather than `undefined`: an emptied field must CLEAR the
         // value, and `undefined` would leave the old one in place — which on a
         // department or a public email address is the wrong way to fail.
-        department: text(form, 'department') ?? null,
-        memberType: text(form, 'memberType'),
-        bio: text(form, 'bio') ?? null,
+        department,
+        memberType,
+        contactNumber: text(form, 'contactNumber') ?? null,
+        aadharNumber: text(form, 'aadharNumber') ?? null,
+        address: text(form, 'address') ?? null,
+        bio,
         experience: text(form, 'experience') ?? null,
         photoUrl: text(form, 'photoUrl') ?? null,
-        emailPublic: text(form, 'emailPublic') ?? null,
+        emailPublic: text(form, 'emailPublic') || text(form, 'email') || null,
         socialLinks: socialLinks(form) ?? null,
         displayOrder: text(form, 'displayOrder') ? Number(text(form, 'displayOrder')) : undefined,
       },
@@ -843,13 +977,31 @@ export async function updateTeamMember(_prev: ActionState, form: FormData): Prom
 
 export async function changeTeamStatus(_prev: ActionState, form: FormData): Promise<ActionState> {
   const id = String(form.get('id'));
+  const targetStatus = String(form.get('action'));
   try {
+    if (targetStatus === 'published') {
+      const member = await adminFetch<AdminTeamMember>(`admin/team/${id}`);
+      const patchBody: Record<string, string> = {};
+      if (!member.bio?.trim()) {
+        patchBody.bio = `${member.name || 'Team member'} is a dedicated team member at Sailent Foundation.`;
+      }
+      if (!member.designation?.trim()) {
+        patchBody.designation = member.memberType === 'trustee' ? 'Trustee' : 'Team';
+      }
+      if (Object.keys(patchBody).length > 0) {
+        await adminFetch(`admin/team/${id}`, {
+          method: 'PATCH',
+          body: patchBody,
+        });
+      }
+    }
+
     await adminFetch(`admin/team/${id}/status`, {
       method: 'PATCH',
       // `action` carries the TARGET STATUS, which is what `StatusActions` puts
       // in the field it calls `endpoint`. The catalogue routes take a segment;
       // these take a body. One component, two shapes, translated here.
-      body: { status: String(form.get('action')), reason: text(form, 'reason') },
+      body: { status: targetStatus, reason: text(form, 'reason') },
     });
   } catch (error) {
     return toState(error);
@@ -858,6 +1010,21 @@ export async function changeTeamStatus(_prev: ActionState, form: FormData): Prom
   revalidateTeam(text(form, 'slug'));
   revalidatePath(`/admin/team/${id}/edit`);
   return { ok: true };
+}
+
+export async function deleteTeamMember(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const id = String(form.get('id'));
+  const slug = text(form, 'slug');
+  try {
+    await adminFetch(`admin/team/${id}`, {
+      method: 'DELETE',
+    });
+  } catch (error) {
+    return toState(error);
+  }
+
+  revalidateTeam(slug);
+  redirect('/admin/team');
 }
 
 // ---------------------------------------------------------------------------
@@ -911,13 +1078,24 @@ function eventBody(form: FormData, { partial }: { partial: boolean }) {
     address: text(form, 'address') ?? blank,
     city: text(form, 'city') ?? blank,
     state: text(form, 'state') ?? blank,
-    isOnline: form.get('isOnline') === 'on',
-    meetingUrl: text(form, 'meetingUrl') ?? blank,
+    isOnline: false,
+    meetingUrl: blank,
     organizer: text(form, 'organizer') ?? blank,
     registrationDeadline: localInstant(form, 'registrationDeadline') ?? blank,
     // An empty capacity field means UNCAPPED, which is `null` — not zero, which
     // would be an event nobody may join.
     capacity: text(form, 'capacity') ? Number(text(form, 'capacity')) : blank,
+    isPaid: form.get('isPaid') === 'true',
+    feeAmount:
+      form.get('isPaid') === 'true' && text(form, 'feeAmount')
+        ? Math.round(Number(text(form, 'feeAmount')) * 100)
+        : null,
+    functions: text(form, 'functions')
+      ? text(form, 'functions')!
+          .split(',')
+          .map((f) => f.trim())
+          .filter(Boolean)
+      : blank,
     programId: text(form, 'programId') ?? blank,
     campaignId: text(form, 'campaignId') ?? blank,
   };
@@ -956,10 +1134,12 @@ export async function updateEvent(_prev: ActionState, form: FormData): Promise<A
 
 export async function changeEventStatus(_prev: ActionState, form: FormData): Promise<ActionState> {
   const id = String(form.get('id'));
+  const rawAction = String(form.get('action'));
+  const status = rawAction === 'archive' ? 'archived' : rawAction;
   try {
     await adminFetch(`admin/events/${id}/status`, {
       method: 'PATCH',
-      body: { status: String(form.get('action')), reason: text(form, 'reason') },
+      body: { status, reason: text(form, 'reason') },
     });
   } catch (error) {
     return toState(error);
@@ -967,6 +1147,9 @@ export async function changeEventStatus(_prev: ActionState, form: FormData): Pro
 
   revalidateEvents(text(form, 'slug'));
   revalidatePath(`/admin/events/${id}/edit`);
+  if (status === 'archived') {
+    redirect('/admin/events');
+  }
   return { ok: true };
 }
 
@@ -995,6 +1178,115 @@ export async function changeEventLifecycle(
   revalidatePath(`/admin/events/${id}/edit`);
   revalidatePath(`/admin/events/${id}/registrations`);
   return { ok: true };
+}
+
+/** One person's pass, as the gate sees it. */
+export interface GatePass {
+  fullName: string;
+  passNumber: string;
+  checkedInAt: string | null;
+  /** Already through the gate — by their own scan, or by the attendance sheet. */
+  admitted: boolean;
+}
+
+/** A booking offered for a person to choose, when a lookup matched several. */
+export interface GateCandidate {
+  registrationId: string;
+  fullName: string;
+  passNumber: string;
+  attendeeNames: string[];
+  status: string;
+  totalPasses: number;
+  admittedCount: number;
+}
+
+export interface VerifyPassResponse {
+  valid: boolean;
+  status:
+    | 'valid'
+    | 'already_attended'
+    | 'cancelled'
+    | 'event_cancelled'
+    | 'wrong_event'
+    | 'multiple_matches'
+    | 'not_found';
+  /**
+   * `pass` when an exact pass number or registration id was given; `search`
+   * when it was a name, email or phone. Only a `pass` match may be admitted
+   * without a person checking it — Auto-Admit must never act on `search`.
+   */
+  matchedBy: 'pass' | 'search';
+  message: string;
+  candidates?: GateCandidate[];
+  registration?: {
+    id: string;
+    eventId: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    attendeeCount: number;
+    functionName: string | null;
+    status: string;
+    registeredAt: string;
+    attendedAt: string | null;
+    isPaid: boolean;
+    paidAmount: number | string | null;
+    basePassId?: string;
+    /** The person this lookup named, or null for a group booking found as a whole. */
+    matchedAttendee?: GatePass | null;
+    allAttendees?: GatePass[];
+  };
+  event?: {
+    id: string;
+    title: string;
+    startDate: string;
+    endDate?: string | null;
+    venueName?: string | null;
+    city?: string | null;
+  };
+}
+
+export interface CheckInResponse {
+  success: boolean;
+  message: string;
+  alreadyAttended: boolean;
+  attendedAt: string;
+  passNumber: string;
+  attendeeName: string;
+  admittedCount: number;
+  totalPasses: number;
+}
+
+export async function verifyEventPassAction(
+  eventId: string,
+  code: string,
+): Promise<{ ok: boolean; data?: VerifyPassResponse; error?: string }> {
+  try {
+    const data = await adminFetch<VerifyPassResponse>(`admin/events/${eventId}/verify-pass`, {
+      method: 'POST',
+      body: { code },
+    });
+    return { ok: true, data };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : 'Failed to verify pass' };
+  }
+}
+
+export async function checkInEventAttendeeAction(
+  eventId: string,
+  registrationId: string,
+  passNumber?: string,
+): Promise<{ ok: boolean; data?: CheckInResponse; error?: string }> {
+  try {
+    const data = await adminFetch<CheckInResponse>(`admin/events/${eventId}/check-in`, {
+      method: 'POST',
+      body: { registrationId, passNumber },
+    });
+    revalidatePath(`/admin/events/${eventId}/registrations`);
+    return { ok: true, data };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : 'Check-in failed' };
+  }
 }
 
 export async function recordAttendance(_prev: ActionState, form: FormData): Promise<ActionState> {
@@ -1030,84 +1322,6 @@ export async function recordAttendance(_prev: ActionState, form: FormData): Prom
   }
 
   revalidatePath(`/admin/events/${id}/registrations`);
-  return { ok: true };
-}
-
-// ---------------------------------------------------------------------------
-// Impact
-// ---------------------------------------------------------------------------
-
-function revalidateImpact(slug?: string) {
-  revalidateTag('impact');
-  if (slug) revalidateTag(`impact-${slug}`);
-  revalidatePath('/impact');
-  revalidatePath('/admin/impact');
-}
-
-function impactBody(form: FormData, { partial }: { partial: boolean }) {
-  const blank = partial ? null : undefined;
-  return {
-    title: text(form, 'title'),
-    slug: text(form, 'slug'),
-    description: text(form, 'description'),
-    coverImage: text(form, 'coverImage') ?? blank,
-    impactDate: text(form, 'impactDate'),
-    location: text(form, 'location') ?? blank,
-    state: text(form, 'state') ?? blank,
-    campaignId: text(form, 'campaignId') ?? blank,
-    programId: text(form, 'programId') ?? blank,
-    eventId: text(form, 'eventId') ?? blank,
-    metricType: text(form, 'metricType') ?? blank,
-    metricValue: text(form, 'metricValue') ? Number(text(form, 'metricValue')) : blank,
-    metricUnit: text(form, 'metricUnit') ?? blank,
-    verificationMethod: text(form, 'verificationMethod') ?? blank,
-  };
-}
-
-export async function createImpactRecord(_prev: ActionState, form: FormData): Promise<ActionState> {
-  let created: { id: string };
-  try {
-    created = await adminFetch<{ id: string }>('admin/impact', {
-      method: 'POST',
-      body: impactBody(form, { partial: false }),
-    });
-  } catch (error) {
-    return toState(error);
-  }
-
-  revalidateImpact();
-  redirect(`/admin/impact/${created.id}/edit`);
-}
-
-export async function updateImpactRecord(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const id = String(form.get('id'));
-  try {
-    await adminFetch(`admin/impact/${id}`, {
-      method: 'PATCH',
-      body: impactBody(form, { partial: true }),
-    });
-  } catch (error) {
-    return toState(error);
-  }
-
-  revalidateImpact(text(form, 'slug'));
-  revalidatePath(`/admin/impact/${id}/edit`);
-  return { ok: true };
-}
-
-export async function changeImpactStatus(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const id = String(form.get('id'));
-  try {
-    await adminFetch(`admin/impact/${id}/status`, {
-      method: 'PATCH',
-      body: { status: String(form.get('action')), reason: text(form, 'reason') },
-    });
-  } catch (error) {
-    return toState(error);
-  }
-
-  revalidateImpact(text(form, 'slug'));
-  revalidatePath(`/admin/impact/${id}/edit`);
   return { ok: true };
 }
 
@@ -1160,10 +1374,7 @@ export async function reauthenticate(_prev: ActionState, form: FormData): Promis
 function revalidateVolunteers(id?: string) {
   revalidatePath('/admin/volunteers');
   if (id) revalidatePath(`/admin/volunteers/${id}`);
-  // `/impact` publishes `activeVolunteers` and `verifiedVolunteerHours` as
-  // live aggregates, so an approval or a verified hour changes a public page.
   revalidateTag('impact');
-  revalidatePath('/impact');
 }
 
 /**
@@ -1625,24 +1836,24 @@ function storyFields(form: FormData) {
   return {
     title: text('title'),
     excerpt: orNull('excerpt'),
-    pullQuote: orNull('pullQuote'),
-    content: orNull('content'),
+    pullQuote: form.has('pullQuote') ? orNull('pullQuote') : undefined,
+    content: form.has('content') ? orNull('content') : undefined,
     challenge: orNull('challenge'),
     intervention: orNull('intervention'),
     journey: orNull('journey'),
     outcome: orNull('outcome'),
     impact: orNull('impact'),
-    category: orNull('category'),
+    category: form.has('category') ? orNull('category') : undefined,
     location: orNull('location'),
     subjectName: orNull('subjectName'),
-    coverImage: orNull('coverImage'),
-    programId: orNull('programId'),
-    campaignId: orNull('campaignId'),
+    coverImage: form.has('coverImage') ? orNull('coverImage') : undefined,
+    programId: form.has('programId') ? orNull('programId') : undefined,
+    campaignId: form.has('campaignId') ? orNull('campaignId') : undefined,
     // Checkboxes are absent from the payload when unticked.
     consentObtained: form.get('consentObtained') === 'on',
     isAnonymised: form.get('isAnonymised') === 'on',
-    metaTitle: orNull('metaTitle'),
-    metaDescription: orNull('metaDescription'),
+    metaTitle: form.has('metaTitle') ? orNull('metaTitle') : undefined,
+    metaDescription: form.has('metaDescription') ? orNull('metaDescription') : undefined,
   };
 }
 
@@ -1783,6 +1994,17 @@ export interface VideoUploadResult {
  * Direct video file upload from local machine for campaign About visual media.
  */
 export async function uploadCampaignVideo(form: FormData): Promise<VideoUploadResult> {
+  /*
+    This action writes to this server's disk itself, so no API call checks the
+    caller on the way. Without this line anyone could call it, with no session
+    or with a forged session cookie, and write 100 MB at a time (proven against
+    a production build). The permission is the one the campaign forms that
+    offer the upload already need.
+  */
+  if (!(await staffHolds('campaign.create', 'campaign.update'))) {
+    return { ok: false, error: 'You do not have permission to upload a campaign video.' };
+  }
+
   const file = form.get('file');
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: 'Please choose a video file.' };
@@ -1827,10 +2049,9 @@ export async function uploadCampaignVideo(form: FormData): Promise<VideoUploadRe
       url: `/uploads/videos/${filename}`,
     };
   } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : 'Failed to save video file.',
-    };
+    // The file system's own message names server paths; it stays in the log.
+    console.error('uploadCampaignVideo: could not save the file:', error);
+    return { ok: false, error: 'Failed to save the video file.' };
   }
 }
 
@@ -1992,126 +2213,6 @@ export async function setBlogStatus(_prev: ActionState, form: FormData): Promise
       },
     });
     revalidateBlog(String(form.get('slug') ?? ''));
-    return { ok: true };
-  } catch (error) {
-    return toState(error);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Pages — the section composer (Phase 10.9)
-// ---------------------------------------------------------------------------
-
-function revalidatePages(slug?: string) {
-  revalidateTag('pages');
-  revalidatePath('/admin/pages');
-  // A composed page changes a public route, and `home` is `/`.
-  if (slug) revalidatePath(slug === 'home' ? '/' : `/${slug}`);
-  revalidatePath('/admin/audit-logs');
-}
-
-/**
- * The sections, as the form carries them.
- *
- * A single hidden field holding JSON, because the control is a reorderable
- * list rather than a set of inputs — and because the API validates the array
- * against the approved registry anyway. Anything malformed is refused there,
- * which is the only place that can be authoritative.
- */
-function sectionsFrom(form: FormData): unknown {
-  const raw = form.get('sections');
-  if (typeof raw !== 'string' || raw.trim() === '') return [];
-  try {
-    return JSON.parse(raw);
-  } catch {
-    // Left as a string so the API's validation reports it, rather than this
-    // silently sending an empty page and wiping somebody's layout.
-    return raw;
-  }
-}
-
-export async function createPage(_prev: ActionState, form: FormData): Promise<ActionState> {
-  let id: string;
-
-  try {
-    const page = await adminFetch<{ id: string }>('admin/pages', {
-      method: 'POST',
-      body: {
-        slug: String(form.get('slug') ?? '').trim(),
-        title: String(form.get('title') ?? '').trim(),
-        sections: sectionsFrom(form),
-      },
-    });
-    id = page.id;
-    revalidatePages();
-  } catch (error) {
-    return toState(error);
-  }
-
-  // Redirected on the SERVER, for the reason `createBlogPost` documents: a
-  // returned `redirectTo` can be lost when a revalidation remounts the form.
-  redirect(`/admin/pages/${id}`);
-}
-
-export async function updatePage(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const id = String(form.get('id') ?? '');
-  try {
-    await adminFetch(`admin/pages/${id}`, {
-      method: 'PATCH',
-      body: {
-        title: String(form.get('title') ?? '').trim(),
-        sections: sectionsFrom(form),
-        metaTitle: String(form.get('metaTitle') ?? '').trim() || null,
-        metaDescription: String(form.get('metaDescription') ?? '').trim() || null,
-        note: String(form.get('note') ?? '').trim() || undefined,
-      },
-    });
-    revalidatePages(String(form.get('slug') ?? ''));
-    return { ok: true };
-  } catch (error) {
-    return toState(error);
-  }
-}
-
-/**
- * Publish, schedule, unpublish or archive.
- *
- * `@Sensitive()` on the API: a stale session gets `REAUTH_REQUIRED`. A future
- * `scheduledAt` keeps the page invisible until then, enforced on every public
- * read rather than by a job.
- */
-export async function setPageStatus(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const id = String(form.get('id') ?? '');
-  const scheduledAt = String(form.get('scheduledAt') ?? '').trim();
-
-  try {
-    await adminFetch(`admin/pages/${id}/status`, {
-      method: 'PATCH',
-      body: {
-        status: String(form.get('status') ?? ''),
-        scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
-        reason: String(form.get('reason') ?? '').trim() || undefined,
-      },
-    });
-    revalidatePages(String(form.get('slug') ?? ''));
-    return { ok: true };
-  } catch (error) {
-    return toState(error);
-  }
-}
-
-/** Restore an earlier version. A new save of old content, never a rewind. */
-export async function revertPage(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const id = String(form.get('id') ?? '');
-  try {
-    await adminFetch(`admin/pages/${id}/revert`, {
-      method: 'POST',
-      body: {
-        version: Number(form.get('version')),
-        reason: String(form.get('reason') ?? '').trim() || undefined,
-      },
-    });
-    revalidatePages(String(form.get('slug') ?? ''));
     return { ok: true };
   } catch (error) {
     return toState(error);

@@ -135,7 +135,7 @@ broke that assumption: most have never given money, and they need the same
 session. Verifying a code for an unknown address now opens an account. See
 §2.1 above.
 
-Codes go out by email through Brevo. In development they are logged instead;
+Codes go out by email through Resend. In development they are logged instead;
 that branch cannot run in production, because the config schema refuses to
 boot with `FEATURE_MOCK_DATA` enabled there.
 

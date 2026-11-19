@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   index,
   integer,
@@ -6,14 +7,11 @@ import {
   text,
   timestamp,
   uniqueIndex,
-  uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
 
 import { money, primaryId, softDelete, timestamps } from './_shared.js';
 import { publishStatusEnum } from './enums.js';
-import { categories } from './taxonomy.js';
-
 /** Long-term initiatives. Campaigns fund specific pieces of them. */
 export const programs = pgTable(
   'programs',
@@ -25,17 +23,7 @@ export const programs = pgTable(
     shortDescription: text('short_description'),
     description: text('description'),
     coverImage: text('cover_image'),
-    /**
-     * The category as free text — RETAINED as a denormalised cache of
-     * `categories.name`, written by the service whenever category_id changes.
-     *
-     * Why keep both: every public listing renders the category name, and a
-     * join for one short string on every row of every page is a cost paid
-     * constantly for a value that changes about once a year. `category_id` is
-     * the source of truth; this is what gets read.
-     */
     category: varchar('category', { length: 80 }),
-    categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
 
     /** [{ title, description }] — shape varies per programme. */
     /**
@@ -82,6 +70,9 @@ export const programs = pgTable(
   },
   (table) => [
     uniqueIndex('programs_slug_unique').on(table.slug),
+    uniqueIndex('programs_title_unique')
+      .on(sql`lower(btrim(${table.title}))`)
+      .where(sql`deleted_at IS NULL`),
     index('programs_status_idx').on(table.status),
     index('programs_category_idx').on(table.category),
     index('programs_created_idx').on(table.createdAt),

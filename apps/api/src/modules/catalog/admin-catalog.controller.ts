@@ -29,7 +29,6 @@ import { CurrentActor } from '../../common/decorators/actor.decorator.js';
 import {
   RequireAudience,
   RequirePermission,
-  Sensitive,
 } from '../../common/decorators/permissions.decorator.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { CampaignContentService } from './campaign-content.service.js';
@@ -70,9 +69,8 @@ import { requestClientIp } from '../../common/security/internal-request.js';
 /**
  * Programme and campaign administration.
  *
- * Every route carries an explicit permission. The four that change what the
- * public can see — archiving, and adjusting a fulfilled quantity — are also
- * `@Sensitive()`, requiring a re-authentication within the last five minutes.
+ * Every route carries an explicit permission. Archiving and lifecycle
+ * transitions are controlled by role permissions.
  *
  * Publishing is deliberately NOT sensitive: it is the routine act of this
  * phase, done many times a week, and a password prompt on every one would
@@ -240,7 +238,6 @@ export class AdminCatalogController {
   }
 
   @RequirePermission('program.archive')
-  @Sensitive()
   @Post('programs/:id/archive')
   @HttpCode(200)
   @ApiOperation({

@@ -18,6 +18,7 @@ import {
   formatDate,
 } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import {
@@ -46,7 +47,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminBlogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string; sort?: string }>;
 }) {
   const params = await searchParams;
   const actor = await currentActor();
@@ -55,7 +56,13 @@ export default async function AdminBlogPage({
   let failure: string | null = null;
 
   try {
-    data = await listBlogPosts({ status: params.status, q: params.q, page: params.page });
+    data = await listBlogPosts({
+      status: params.status,
+      q: params.q,
+      page: params.page,
+      limit: 10,
+      sort: params.sort ?? '-createdAt',
+    });
   } catch (error) {
     if (error instanceof AdminApiError && error.code === 'REAUTH_REQUIRED') {
       return <ReauthPanel returnTo="/admin/blog" what="Drafts are unpublished work." />;
@@ -63,7 +70,7 @@ export default async function AdminBlogPage({
     failure = error instanceof AdminApiError ? error.message : 'Could not load posts just now.';
   }
 
-  const statuses = ['all', 'draft', 'published', 'archived'] as const;
+  const statuses = ['all', 'draft', 'published'] as const;
   const active = params.status ?? 'all';
 
   return (
@@ -151,7 +158,6 @@ export default async function AdminBlogPage({
                   <TableRow className="bg-muted/40">
                     <TableHead className="font-semibold">Article Title</TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
-                    <TableHead className="font-semibold">Category</TableHead>
                     <TableHead className="font-semibold">Author</TableHead>
                     <TableHead className="font-semibold">Published</TableHead>
                     <TableHead className="text-right font-semibold">Last Updated</TableHead>
@@ -175,9 +181,6 @@ export default async function AdminBlogPage({
                         <StatusPill status={post.status} />
                       </TableCell>
                       <TableCell className="text-body-sm text-muted-foreground">
-                        {post.categoryName ?? '—'}
-                      </TableCell>
-                      <TableCell className="text-body-sm text-muted-foreground">
                         {post.authorName ?? '—'}
                       </TableCell>
                       <TableCell className="text-body-sm text-muted-foreground">
@@ -192,28 +195,18 @@ export default async function AdminBlogPage({
               </Table>
             </div>
           ) : null}
-
-          {data && data.pagination.totalPages > 1 ? (
-            <div className="border-border mt-4 flex items-center justify-between border-t pt-4">
-              <p className="text-body-sm text-muted-foreground">
-                Page {data.pagination.page} of {data.pagination.totalPages}
-              </p>
-              <div className="flex gap-2">
-                {data.pagination.page > 1 ? (
-                  <Button asChild variant="secondary" size="sm">
-                    <Link href={pageHref(params, data.pagination.page - 1)}>Previous</Link>
-                  </Button>
-                ) : null}
-                {data.pagination.page < data.pagination.totalPages ? (
-                  <Button asChild variant="secondary" size="sm">
-                    <Link href={pageHref(params, data.pagination.page + 1)}>Next</Link>
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
         </CardContent>
       </Card>
+
+      {data ? (
+        <AdminPagination
+          page={data.pagination.page}
+          totalPages={data.pagination.totalPages}
+          totalItems={data.pagination.total}
+          ariaLabel="Blog pagination"
+          makeHref={(p) => pageHref(params, p)}
+        />
+      ) : null}
     </div>
   );
 }

@@ -202,7 +202,7 @@ function toCampaign(row: ApiCampaignSummary | ApiCampaignDetail): Campaign {
     programName: detail.program?.title ?? row.programTitle ?? '',
     programSlug: detail.program?.slug ?? row.programSlug ?? '',
     location: row.location,
-    category: row.category ?? '',
+    category: detail.program?.title ?? row.programTitle ?? row.category ?? '',
     cover: toMedia(row.coverImage, `campaign-${row.slug}`, row.title),
 
     // Paise, straight through. No client-side arithmetic on money, ever

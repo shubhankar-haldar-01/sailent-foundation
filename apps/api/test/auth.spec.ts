@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -237,6 +239,7 @@ describe('Authentication (integration)', () => {
       'auth-spec-known@example.test',
       'auth-spec-unknown@example.test',
       'auth-spec-quiet@example.test',
+      'auth-spec-expired@example.test',
     ];
 
     beforeAll(async () => {
@@ -285,6 +288,23 @@ describe('Authentication (integration)', () => {
       const response = await request(server)
         .post(`${PREFIX}/auth/donor/otp/verify`)
         .send({ email: 'auth-spec-known@example.test', code: '000000' });
+
+      expect(response.status).toBe(401);
+    });
+
+    it('rejects the right code once it has expired', async () => {
+      // Written directly: the stored value is a hash and cannot be read back.
+      const database = app.get<{ db: { execute(query: unknown): Promise<unknown> } }>(DATABASE);
+      await database.db.execute(sql`
+        INSERT INTO otp_codes (identifier, purpose, code_hash, expires_at)
+        VALUES (${TEST_EMAILS[3]!}, 'donor_login',
+                ${createHash('sha256').update('424242').digest('hex')},
+                now() - interval '1 minute')
+      `);
+
+      const response = await request(server)
+        .post(`${PREFIX}/auth/donor/otp/verify`)
+        .send({ email: TEST_EMAILS[3], code: '424242' });
 
       expect(response.status).toBe(401);
     });

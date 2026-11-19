@@ -229,7 +229,7 @@ export class NotificationsService {
    * IT ENQUEUES; IT DOES NOT SEND. AND IT NEVER REWRITES THE OLD ROW.
    *
    * The API has no mail client and should not grow one — delivery belongs to
-   * the worker, which is where the retry policy, the Brevo configuration and
+   * the worker, which is where the retry policy, the Resend configuration and
    * the fail-soft semantics already live.
    *
    * The failed row stays exactly as it is. A new attempt produces a NEW log

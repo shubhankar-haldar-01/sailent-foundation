@@ -11,7 +11,6 @@ import {
   blogPostTags,
   blogPosts,
   blogTags,
-  categories,
   media,
   users,
   type DatabaseClient,
@@ -83,8 +82,11 @@ export class BlogService {
   async list(query: BlogListQuery) {
     const filters: SQL[] = [isNull(blogPosts.deletedAt)];
 
-    if (query.status !== 'all') filters.push(eq(blogPosts.status, query.status));
-    if (query.categoryId) filters.push(eq(blogPosts.categoryId, query.categoryId));
+    if (query.status !== 'all') {
+      filters.push(eq(blogPosts.status, query.status));
+    } else {
+      filters.push(ne(blogPosts.status, 'archived'));
+    }
 
     if (query.q) {
       const term = `%${query.q}%`;
@@ -104,7 +106,7 @@ export class BlogService {
       publishedAt: blogPosts.publishedAt,
       title: blogPosts.title,
     };
-    const { column } = resolveSort(query.sort, sortable, 'updatedAt');
+    const { column } = resolveSort(query.sort ?? '-createdAt', sortable, 'createdAt');
 
     const [items, [count]] = await Promise.all([
       this.db
@@ -114,8 +116,8 @@ export class BlogService {
           slug: blogPosts.slug,
           status: blogPosts.status,
           excerpt: blogPosts.excerpt,
-          categoryId: blogPosts.categoryId,
-          categoryName: categories.name,
+          categoryId: sql<string | null>`null`,
+          categoryName: sql<string | null>`null`,
           authorName: this.authorName(),
           featuredImageUrl: media.url,
           featuredImageAlt: media.altText,
@@ -123,7 +125,6 @@ export class BlogService {
           updatedAt: blogPosts.updatedAt,
         })
         .from(blogPosts)
-        .leftJoin(categories, eq(categories.id, blogPosts.categoryId))
         .leftJoin(users, eq(users.id, blogPosts.authorId))
         .leftJoin(media, eq(media.id, blogPosts.featuredMediaId))
         .where(where)
@@ -151,8 +152,8 @@ export class BlogService {
         featuredMediaId: blogPosts.featuredMediaId,
         featuredImageUrl: media.url,
         featuredImageAlt: media.altText,
-        categoryId: blogPosts.categoryId,
-        categoryName: categories.name,
+        categoryId: sql<string | null>`null`,
+        categoryName: sql<string | null>`null`,
         authorName: this.authorName(),
         metaTitle: blogPosts.metaTitle,
         metaDescription: blogPosts.metaDescription,
@@ -162,7 +163,6 @@ export class BlogService {
         updatedAt: blogPosts.updatedAt,
       })
       .from(blogPosts)
-      .leftJoin(categories, eq(categories.id, blogPosts.categoryId))
       .leftJoin(users, eq(users.id, blogPosts.authorId))
       .leftJoin(media, eq(media.id, blogPosts.featuredMediaId))
       .where(and(eq(blogPosts.id, id), isNull(blogPosts.deletedAt)))
@@ -411,8 +411,8 @@ export class BlogService {
       title: blogPosts.title,
       slug: blogPosts.slug,
       excerpt: blogPosts.excerpt,
-      categoryName: categories.name,
-      categorySlug: categories.slug,
+      categoryName: sql<string | null>`null`,
+      categorySlug: sql<string | null>`null`,
       authorName: this.authorName(),
       featuredImageUrl: media.url,
       featuredImageAlt: media.altText,
@@ -434,7 +434,6 @@ export class BlogService {
   async listPublished(query: PublicBlogQuery) {
     const filters: SQL[] = [];
 
-    if (query.category) filters.push(eq(categories.slug, query.category));
     if (query.q) {
       const term = `%${query.q}%`;
       // Title, excerpt and body — a reader searching the blog means it.
@@ -461,7 +460,6 @@ export class BlogService {
       this.db
         .select(this.publicColumns)
         .from(blogPosts)
-        .leftJoin(categories, eq(categories.id, blogPosts.categoryId))
         .leftJoin(users, eq(users.id, blogPosts.authorId))
         .leftJoin(media, eq(media.id, blogPosts.featuredMediaId))
         .where(where)
@@ -471,7 +469,6 @@ export class BlogService {
       this.db
         .select({ value: sql<number>`count(*)::int` })
         .from(blogPosts)
-        .leftJoin(categories, eq(categories.id, blogPosts.categoryId))
         .where(where),
     ]);
 
@@ -484,13 +481,11 @@ export class BlogService {
         id: blogPosts.id,
         ...this.publicColumns,
         content: blogPosts.content,
-        categoryId: blogPosts.categoryId,
         metaTitle: blogPosts.metaTitle,
         metaDescription: blogPosts.metaDescription,
         canonicalUrl: blogPosts.canonicalUrl,
       })
       .from(blogPosts)
-      .leftJoin(categories, eq(categories.id, blogPosts.categoryId))
       .leftJoin(users, eq(users.id, blogPosts.authorId))
       .leftJoin(media, eq(media.id, blogPosts.featuredMediaId))
       .where(this.publishedOnly([eq(blogPosts.slug, slug)]))
@@ -507,50 +502,28 @@ export class BlogService {
       throw new NotFoundException('That post does not exist.');
     }
 
-    const { id, categoryId, ...post } = row;
+    const { id, ...post } = row;
     return {
       ...post,
       tags: await this.tagsFor(id),
-      related: await this.relatedTo(id, categoryId),
+      related: await this.relatedTo(id),
     };
   }
 
   /**
-   * Related posts: same category first, then recent.
-   *
-   * Not a recommendation engine — Phase 0 does not ask for one and the corpus
-   * is far too small for one to mean anything. Same category is a real signal;
-   * "also recent" is an honest filler that never leaves the section empty.
-   *
-   * Published only, like every other public read.
+   * Related posts: recent published posts.
    */
-  private async relatedTo(id: string, categoryId: string | null) {
-    const sameCategory = categoryId
-      ? await this.db
-          .select(this.publicColumns)
-          .from(blogPosts)
-          .leftJoin(categories, eq(categories.id, blogPosts.categoryId))
-          .leftJoin(users, eq(users.id, blogPosts.authorId))
-          .leftJoin(media, eq(media.id, blogPosts.featuredMediaId))
-          .where(this.publishedOnly([eq(blogPosts.categoryId, categoryId), ne(blogPosts.id, id)]))
-          .orderBy(desc(blogPosts.publishedAt))
-          .limit(3)
-      : [];
-
-    if (sameCategory.length >= 3) return sameCategory;
-
-    const seen = new Set(sameCategory.map((post) => post.slug));
+  private async relatedTo(id: string) {
     const recent = await this.db
       .select(this.publicColumns)
       .from(blogPosts)
-      .leftJoin(categories, eq(categories.id, blogPosts.categoryId))
       .leftJoin(users, eq(users.id, blogPosts.authorId))
       .leftJoin(media, eq(media.id, blogPosts.featuredMediaId))
       .where(this.publishedOnly([ne(blogPosts.id, id)]))
       .orderBy(desc(blogPosts.publishedAt))
-      .limit(6);
+      .limit(3);
 
-    return [...sameCategory, ...recent.filter((post) => !seen.has(post.slug))].slice(0, 3);
+    return recent;
   }
 
   /** Published posts for the sitemap: slug and dates, nothing else. */
@@ -568,12 +541,7 @@ export class BlogService {
 
   /** Categories that actually carry a published post — no empty filter chips. */
   async publicCategories() {
-    return this.db
-      .selectDistinct({ name: categories.name, slug: categories.slug })
-      .from(blogPosts)
-      .innerJoin(categories, eq(categories.id, blogPosts.categoryId))
-      .where(this.publishedOnly())
-      .orderBy(categories.name);
+    return [];
   }
 
   // -------------------------------------------------------------------------
@@ -677,21 +645,6 @@ export class BlogService {
       }
     }
 
-    if (input.categoryId) {
-      const [row] = await this.db
-        .select({ id: categories.id })
-        .from(categories)
-        .where(eq(categories.id, input.categoryId))
-        .limit(1);
-      if (!row) {
-        problems.push({
-          field: 'categoryId',
-          code: 'NOT_FOUND',
-          message: 'That category does not exist.',
-        });
-      }
-    }
-
     if (problems.length > 0) throw new ValidationException(problems);
   }
 
@@ -702,7 +655,6 @@ export class BlogService {
       'excerpt',
       'content',
       'featuredMediaId',
-      'categoryId',
       'metaTitle',
       'metaDescription',
       'canonicalUrl',

@@ -7,7 +7,7 @@ import { NotificationsService } from './notifications.service.js';
  * Notifications: the inbox, the send log and the templates.
  *
  * `QueueModule` is where a retry goes — this module enqueues, it does not
- * send. Delivery belongs to the worker, which already holds the Brevo
+ * send. Delivery belongs to the worker, which already holds the Resend
  * configuration, the retry policy and the fail-soft semantics; giving the API
  * a second mail client would mean two places for those rules to drift.
  *

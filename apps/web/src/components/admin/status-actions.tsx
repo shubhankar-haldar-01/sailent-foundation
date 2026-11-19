@@ -1,11 +1,85 @@
 'use client';
 
 import * as React from 'react';
+import {
+  AlertTriangle,
+  Ban,
+  CheckCircle2,
+  EyeOff,
+  Flame,
+  Globe,
+  Loader2,
+  Pause,
+  Play,
+  RotateCcw,
+  Trash2,
+} from 'lucide-react';
 
-import { Button, ConfirmationDialog } from '@sailent/ui';
+import { Button, ConfirmationDialog, cn } from '@sailent/ui';
 
 import { FormStatus } from '@/components/admin/form-shell';
 import type { ActionState } from '@/lib/admin/actions';
+
+function getActionConfig(target: string) {
+  switch (target) {
+    case 'published':
+      return {
+        icon: Globe,
+        className:
+          'bg-primary text-white hover:bg-primary-hover active:bg-primary-active border border-transparent shadow-xs',
+      };
+    case 'open':
+      return {
+        icon: Play,
+        className:
+          'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 border border-transparent shadow-xs',
+      };
+    case 'active':
+      return {
+        icon: Flame,
+        className:
+          'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 border border-transparent shadow-xs',
+      };
+    case 'draft':
+      return {
+        icon: EyeOff,
+        className:
+          'border border-border/90 bg-surface text-foreground hover:bg-muted active:bg-muted/80 shadow-xs',
+      };
+    case 'closed':
+    case 'paused':
+      return {
+        icon: Pause,
+        className:
+          'border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 hover:bg-amber-500/20 active:bg-amber-500/30 shadow-xs',
+      };
+    case 'completed':
+      return {
+        icon: CheckCircle2,
+        className:
+          'border border-blue-500/30 bg-blue-500/10 text-blue-900 dark:text-blue-200 hover:bg-blue-500/20 active:bg-blue-500/30 shadow-xs',
+      };
+    case 'cancelled':
+      return {
+        icon: Ban,
+        className:
+          'border border-rose-500/30 bg-rose-500/10 text-rose-800 dark:text-rose-200 hover:bg-rose-500/20 active:bg-rose-500/30 shadow-xs',
+      };
+    case 'archived':
+    case 'delete':
+      return {
+        icon: Trash2,
+        className:
+          'border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive hover:text-white active:bg-destructive/90 shadow-xs transition-colors',
+      };
+    default:
+      return {
+        icon: RotateCcw,
+        className:
+          'border border-border/90 bg-surface text-foreground hover:bg-muted active:bg-muted/80 shadow-xs',
+      };
+  }
+}
 
 /**
  * Lifecycle buttons.
@@ -30,6 +104,7 @@ export function StatusActions({
   confirmRequired = [],
   deleteAction,
   canDelete = false,
+  children,
 }: {
   entityId: string;
   slug?: string;
@@ -42,6 +117,7 @@ export function StatusActions({
   confirmRequired?: string[];
   deleteAction?: (prev: ActionState, form: FormData) => Promise<ActionState>;
   canDelete?: boolean;
+  children?: React.ReactNode;
 }) {
   const [state, formAction, pending] = React.useActionState<ActionState, FormData>(action, {});
   const [deleteState, deleteFormAction, deletePending] = React.useActionState<
@@ -73,22 +149,34 @@ export function StatusActions({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="w-full space-y-3">
       <FormStatus state={state} />
       <FormStatus state={deleteState} />
 
       {reasonFor ? (
         <form
           action={formAction}
-          className="border-border bg-surface-sunken space-y-3 rounded-lg border p-4"
+          className="shadow-xs space-y-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4"
         >
           <input type="hidden" name="id" value={entityId} />
           {slug ? <input type="hidden" name="slug" value={slug} /> : null}
           <input type="hidden" name="action" value={labels[reasonFor]!.endpoint} />
 
-          <label htmlFor="reason" className="text-body-sm block font-medium">
-            Why are you {labels[reasonFor]!.label.toLowerCase()}?
-          </label>
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div className="flex-1 space-y-1">
+              <label htmlFor="reason" className="text-foreground block text-xs font-semibold">
+                {labels[reasonFor]!.label.toLowerCase() === 'delete'
+                  ? 'Reason for deletion required'
+                  : `Reason required to ${labels[reasonFor]!.label.toLowerCase()}`}
+              </label>
+              <p className="text-caption text-muted-foreground">
+                This explanation is required and will be permanently recorded in the administrative
+                audit log.
+              </p>
+            </div>
+          </div>
+
           <textarea
             id="reason"
             name="reason"
@@ -96,41 +184,66 @@ export function StatusActions({
             required
             minLength={3}
             autoFocus
-            className="border-input bg-surface text-body-sm w-full rounded-md border px-3 py-2"
-            placeholder="This is recorded in the audit log."
+            className="border-input bg-surface text-body-sm focus-visible:outline-primary shadow-xs w-full rounded-lg border px-3 py-2 transition-colors"
+            placeholder="Please enter a detailed explanation..."
           />
-          <div className="flex gap-2">
-            <Button type="submit" size="sm" disabled={pending}>
-              {pending ? 'Working…' : labels[reasonFor]!.label}
+          <div className="flex items-center gap-2 pt-1">
+            <Button
+              type="submit"
+              variant="ghost"
+              className={cn(
+                'h-8.5 gap-1.5 rounded-lg px-3.5 text-xs font-semibold',
+                getActionConfig(reasonFor).className,
+              )}
+              disabled={pending}
+            >
+              {pending ? (
+                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                React.createElement(getActionConfig(reasonFor).icon, { className: 'size-3.5' })
+              )}
+              <span>{pending ? 'Saving…' : `Confirm ${labels[reasonFor]!.label}`}</span>
             </Button>
-            <Button type="button" size="sm" variant="ghost" onClick={() => setReasonFor(null)}>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-8.5 border-border bg-surface text-foreground hover:bg-muted rounded-lg border px-3.5 text-xs font-semibold"
+              onClick={() => setReasonFor(null)}
+            >
               Cancel
             </Button>
           </div>
         </form>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          {options.length === 0 ? (
-            <p className="text-body-sm text-muted-foreground">
-              No further status changes are available from “{current}”.
-            </p>
+        <div className="flex flex-wrap items-center gap-2">
+          {options.length === 0 && !children ? (
+            <div className="border-border/80 bg-muted/30 text-muted-foreground flex items-center gap-2 rounded-lg border px-3 py-2 text-xs">
+              <CheckCircle2 className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span>No further status transitions available from “{current}”.</span>
+            </div>
           ) : null}
 
           {options.map((target) => {
             const meta = labels[target]!;
             const needsReason = reasonRequired.includes(target);
             const needsConfirm = confirmRequired.includes(target);
+            const config = getActionConfig(target);
+            const Icon = config.icon;
 
             if (needsReason) {
               return (
                 <Button
                   key={target}
                   type="button"
-                  size="sm"
-                  variant="secondary"
+                  variant="ghost"
+                  className={cn(
+                    'h-8.5 gap-1.5 rounded-lg px-3.5 text-xs font-semibold',
+                    config.className,
+                  )}
                   onClick={() => setReasonFor(target)}
                 >
-                  {meta.label}
+                  <Icon className="size-3.5" aria-hidden="true" />
+                  <span>{meta.label}</span>
                 </Button>
               );
             }
@@ -140,12 +253,20 @@ export function StatusActions({
                 <Button
                   key={target}
                   type="button"
-                  size="sm"
-                  variant={target === 'archived' ? 'secondary' : 'primary'}
+                  variant="ghost"
+                  className={cn(
+                    'h-8.5 gap-1.5 rounded-lg px-3.5 text-xs font-semibold',
+                    config.className,
+                  )}
                   disabled={pending}
                   onClick={() => setConfirmTarget(target)}
                 >
-                  {meta.label}
+                  {pending && confirmTarget === target ? (
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Icon className="size-3.5" aria-hidden="true" />
+                  )}
+                  <span>{meta.label}</span>
                 </Button>
               );
             }
@@ -157,25 +278,40 @@ export function StatusActions({
                 <input type="hidden" name="action" value={meta.endpoint} />
                 <Button
                   type="submit"
-                  size="sm"
-                  variant={target === 'archived' ? 'secondary' : 'primary'}
+                  variant="ghost"
+                  className={cn(
+                    'h-8.5 gap-1.5 rounded-lg px-3.5 text-xs font-semibold',
+                    config.className,
+                  )}
                   disabled={pending}
                 >
-                  {meta.label}
+                  {pending ? (
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Icon className="size-3.5" aria-hidden="true" />
+                  )}
+                  <span>{meta.label}</span>
                 </Button>
               </form>
             );
           })}
 
+          {children}
+
           {canDelete && deleteAction ? (
             <Button
               type="button"
-              size="sm"
-              variant="destructive"
+              variant="ghost"
+              className="h-8.5 border-destructive/30 bg-destructive/10 text-destructive shadow-xs hover:bg-destructive rounded-lg border px-3.5 text-xs font-semibold transition-colors hover:text-white"
               disabled={deletePending || pending}
               onClick={() => setConfirmDeleteOpen(true)}
             >
-              {deletePending ? 'Deleting…' : 'Delete campaign'}
+              {deletePending ? (
+                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Trash2 className="size-3.5" aria-hidden="true" />
+              )}
+              <span>{deletePending ? 'Deleting…' : 'Delete campaign'}</span>
             </Button>
           ) : null}
         </div>
@@ -185,11 +321,27 @@ export function StatusActions({
       <ConfirmationDialog
         open={Boolean(confirmTarget)}
         onOpenChange={(open) => !open && setConfirmTarget(null)}
-        title={confirmTarget ? `${labels[confirmTarget]?.label}?` : ''}
-        description="This can be undone, but the page and record will be removed from public view immediately."
-        confirmLabel={confirmTarget ? labels[confirmTarget]?.label : 'Confirm'}
-        variant={confirmTarget === 'archived' ? 'secondary' : 'primary'}
-        icon="warning"
+        title={
+          confirmTarget === 'archived'
+            ? 'Delete this record?'
+            : confirmTarget
+              ? `${labels[confirmTarget]?.label}?`
+              : ''
+        }
+        description={
+          confirmTarget === 'archived'
+            ? 'This record will be removed from all public listings.'
+            : 'This can be undone, but the page and record will be removed from public view immediately.'
+        }
+        confirmLabel={
+          confirmTarget === 'archived'
+            ? 'Delete'
+            : confirmTarget
+              ? labels[confirmTarget]?.label
+              : 'Confirm'
+        }
+        variant={confirmTarget === 'archived' ? 'destructive' : 'primary'}
+        icon={confirmTarget === 'archived' ? 'danger' : 'warning'}
         loading={pending}
         onConfirm={handleConfirmStatus}
         error={state.error}

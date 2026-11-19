@@ -1,17 +1,10 @@
 import Link from 'next/link';
-import { Search, Image as ImageIcon } from 'lucide-react';
+import { Search, X, Globe, Lock, Layers } from 'lucide-react';
 
-import {
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  PageHeader,
-} from '@sailent/ui';
+import { Button, Card, CardContent, PageHeader } from '@sailent/ui';
 
-import { MediaTile, UploadPanel } from '@/components/admin/media-library';
+import { AdminPagination } from '@/components/admin/admin-pagination';
+import { MediaGallery, UploadPanel } from '@/components/admin/media-library';
 import { AdminApiError, listMedia, type AdminMedia, type Paginated } from '@/lib/admin/api';
 import { currentActor, can } from '@/lib/auth/session';
 
@@ -41,14 +34,18 @@ export default async function AdminMediaPage({
       error instanceof AdminApiError ? error.message : 'Could not load the media library just now.';
   }
 
-  const filters = ['all', 'public', 'private'] as const;
+  const filters = [
+    { key: 'all', label: 'All Assets', icon: Layers },
+    { key: 'public', label: 'Public', icon: Globe },
+    { key: 'private', label: 'Private', icon: Lock },
+  ] as const;
   const active = params.visibility ?? 'all';
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Media Assets"
-        description="Public and private media assets. Every image requires accessible alt text before public publication."
+        description="Public and private media assets. Every image requires accessible alt text before publication."
         count={data?.pagination.total}
         actions={can(actor, 'media.create') ? <UploadPanel /> : null}
       />
@@ -59,27 +56,41 @@ export default async function AdminMediaPage({
         </Card>
       ) : null}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <nav aria-label="Filter by visibility" className="flex flex-wrap gap-1.5">
-          {filters.map((filter) => (
-            <Link
-              key={filter}
-              href={filter === 'all' ? '/admin/media' : `/admin/media?visibility=${filter}`}
-              aria-current={active === filter ? 'page' : undefined}
-              className={`text-caption rounded-full px-3 py-1 font-medium capitalize transition-colors ${
-                active === filter
-                  ? 'bg-primary text-primary-foreground shadow-xs'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-              }`}
-            >
-              {filter}
-            </Link>
-          ))}
+      {/* Filter and Search Bar */}
+      <div className="border-border/70 bg-surface shadow-xs flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
+        <nav aria-label="Filter by visibility" className="flex flex-wrap items-center gap-1.5">
+          {filters.map((filter) => {
+            const Icon = filter.icon;
+            const isCurrent = active === filter.key;
+            return (
+              <Link
+                key={filter.key}
+                href={
+                  filter.key === 'all'
+                    ? params.q
+                      ? `/admin/media?q=${encodeURIComponent(params.q)}`
+                      : '/admin/media'
+                    : params.q
+                      ? `/admin/media?visibility=${filter.key}&q=${encodeURIComponent(params.q)}`
+                      : `/admin/media?visibility=${filter.key}`
+                }
+                aria-current={isCurrent ? 'page' : undefined}
+                className={`text-caption flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-colors ${
+                  isCurrent
+                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <Icon className="size-3.5" />
+                <span>{filter.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         <form className="flex items-center gap-2" action="/admin/media">
-          <input type="hidden" name="visibility" value={active} />
-          <div className="relative">
+          {active !== 'all' ? <input type="hidden" name="visibility" value={active} /> : null}
+          <div className="relative flex-1 sm:w-72">
             <Search className="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2" />
             <input
               type="search"
@@ -87,70 +98,37 @@ export default async function AdminMediaPage({
               defaultValue={params.q ?? ''}
               placeholder="Search alt text, caption..."
               aria-label="Search media"
-              className="border-input bg-surface text-body-sm shadow-xs focus-visible:outline-ring h-9 w-64 rounded-md border pl-8 pr-3 focus-visible:outline-2"
+              className="border-input bg-surface text-body-sm shadow-xs focus-visible:outline-ring h-9 w-full rounded-md border pl-8 pr-8 focus-visible:outline-2"
             />
+            {params.q ? (
+              <Link
+                href={active !== 'all' ? `/admin/media?visibility=${active}` : '/admin/media'}
+                aria-label="Clear search"
+                className="text-muted-foreground hover:text-foreground absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5"
+              >
+                <X className="size-3.5" />
+              </Link>
+            ) : null}
           </div>
-          <Button type="submit" variant="secondary" size="sm">
+          <Button type="submit" variant="secondary" size="sm" className="h-9">
             Search
           </Button>
         </form>
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ImageIcon className="text-primary size-4" />
-            Image Library
-          </CardTitle>
-          <CardDescription>
-            {data ? `${data.pagination.total} assets found` : 'Asset gallery'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {data && data.items.length === 0 ? (
-            <div className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed py-12 text-center">
-              {params.q
-                ? `No image matches “${params.q}”.`
-                : 'Nothing here yet. Upload an image to get started.'}
-            </div>
-          ) : null}
+      {/* Main Gallery Area */}
+      <MediaGallery items={data?.items ?? []} query={params.q} />
 
-          {data && data.items.length > 0 ? (
-            <ul className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {data.items.map((item) => (
-                <li key={item.id}>
-                  <Link
-                    href={`/admin/media/${item.id}`}
-                    className="focus-visible:outline-ring block rounded-lg"
-                  >
-                    <MediaTile item={item} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
-          {data && data.pagination.totalPages > 1 ? (
-            <div className="border-border mt-6 flex items-center justify-between border-t pt-4">
-              <p className="text-body-sm text-muted-foreground">
-                Page {data.pagination.page} of {data.pagination.totalPages}
-              </p>
-              <div className="flex gap-2">
-                {data.pagination.page > 1 ? (
-                  <Button asChild variant="secondary" size="sm">
-                    <Link href={pageHref(params, data.pagination.page - 1)}>Previous</Link>
-                  </Button>
-                ) : null}
-                {data.pagination.page < data.pagination.totalPages ? (
-                  <Button asChild variant="secondary" size="sm">
-                    <Link href={pageHref(params, data.pagination.page + 1)}>Next</Link>
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+      {/* Pagination */}
+      {data && data.pagination.totalPages > 1 ? (
+        <AdminPagination
+          page={data.pagination.page}
+          totalPages={data.pagination.totalPages}
+          totalItems={data.pagination.total}
+          ariaLabel="Media pagination"
+          makeHref={(p) => pageHref(params, p)}
+        />
+      ) : null}
     </div>
   );
 }

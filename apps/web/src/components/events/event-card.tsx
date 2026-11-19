@@ -54,7 +54,7 @@ export function EventCard({ event, className }: { event: SailentEvent; className
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
           <span className="text-caption text-muted-foreground flex items-center gap-1">
             <MapPin className="size-3" aria-hidden="true" />
-            {event.isOnline ? 'Online' : (event.venueName ?? event.city ?? 'Venue to be confirmed')}
+            {event.venueName ?? event.city ?? 'Venue to be confirmed'}
           </span>
 
           {/* Capacity is only worth showing where it constrains the decision. */}

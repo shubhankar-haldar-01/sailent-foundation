@@ -218,6 +218,55 @@
       "when": 1790102376000,
       "tag": "0030_archived_campaign_zero_goal",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1790102377000,
+      "tag": "0031_team_member_contact_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790102378000,
+      "tag": "0032_uniqueness_constraints",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1790102379000,
+      "tag": "0033_drop_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1790102380000,
+      "tag": "0034_unique_program_title",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1790102381000,
+      "tag": "0035_event_paid_registration_fee",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1790102382000,
+      "tag": "0036_event_functions_and_multi_attendee_registration",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1790102383000,
+      "tag": "0037_event_registration_payment_unique",
+      "breakpoints": true
     }
   ]
 }

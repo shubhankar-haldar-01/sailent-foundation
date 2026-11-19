@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, ilike, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, ilike, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 
 import { campaigns, programs, successStories, type DatabaseClient } from '@sailent/database';
 import type { AuthenticatedActor } from '@sailent/types';
@@ -58,7 +58,11 @@ export class StoriesService {
   async list(query: StoryListQuery) {
     const filters: SQL[] = [isNull(successStories.deletedAt)];
 
-    if (query.status !== 'all') filters.push(eq(successStories.status, query.status));
+    if (query.status !== 'all') {
+      filters.push(eq(successStories.status, query.status));
+    } else {
+      filters.push(ne(successStories.status, 'archived'));
+    }
     if (query.programId) filters.push(eq(successStories.programId, query.programId));
     if (query.campaignId) filters.push(eq(successStories.campaignId, query.campaignId));
 
@@ -84,7 +88,7 @@ export class StoriesService {
       publishedAt: successStories.publishedAt,
       title: successStories.title,
     };
-    const { column } = resolveSort(query.sort, sortable, 'updatedAt');
+    const { column } = resolveSort(query.sort ?? '-createdAt', sortable, 'createdAt');
 
     const [items, [count]] = await Promise.all([
       this.db

@@ -1,7 +1,5 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
-  ArrowLeft,
   Award,
   Calendar,
   CheckSquare,
@@ -22,7 +20,7 @@ import {
   PageHeader,
 } from '@sailent/ui';
 
-import { ReauthPanel } from '@/components/admin/reauth-panel';
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 import {
   IssueCertificate,
   VolunteerReview,
@@ -49,30 +47,24 @@ export const dynamic = 'force-dynamic';
 
 /**
  * One volunteer profile in full.
- *
- * Highly sensitive screen requiring re-authentication as it exposes home addresses,
- * date of birth, and emergency contacts.
  */
 export default async function AdminVolunteerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const actor = await currentActor();
 
   let volunteer: AdminVolunteer | null = null;
-  let needsReauth = false;
 
   try {
     volunteer = await adminFetch<AdminVolunteer>(`admin/volunteers/${id}`);
   } catch (error) {
-    if (error instanceof AdminApiError && error.code === 'REAUTH_REQUIRED') {
-      needsReauth = true;
-    } else if (error instanceof AdminApiError && error.status === 404) {
+    if (error instanceof AdminApiError && error.status === 404) {
       notFound();
     } else if (error instanceof AdminApiError && error.status === 403) {
       return (
         <div className="p-8">
           <Card className="border-border p-8 text-center">
             <p className="text-body text-muted-foreground">
-              You do not have permission to view sensitive volunteer records.
+              You do not have permission to view volunteer records.
             </p>
           </Card>
         </div>
@@ -82,28 +74,8 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
     }
   }
 
-  if (needsReauth || !volunteer) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Volunteer Profile"
-          breadcrumb={
-            <Link
-              href="/admin/volunteers"
-              className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
-            >
-              <ArrowLeft className="size-4" aria-hidden="true" />
-              Back to volunteers
-            </Link>
-          }
-          description="Authentication required to access personal contact records."
-        />
-        <ReauthPanel
-          returnTo={`/admin/volunteers/${id}`}
-          what="This record contains a residential address, date of birth, and emergency contact."
-        />
-      </div>
-    );
+  if (!volunteer) {
+    notFound();
   }
 
   const [transitions, assignments, attendance, certificates] = await Promise.all([
@@ -120,15 +92,7 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
     <div className="space-y-6">
       <PageHeader
         title={name}
-        breadcrumb={
-          <Link
-            href="/admin/volunteers"
-            className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
-          >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            Back to volunteers
-          </Link>
-        }
+        breadcrumb={<AdminBackButton href="/admin/volunteers">Back to volunteers</AdminBackButton>}
         status={<VolunteerStatusBadge status={volunteer.status} />}
         description={`${volunteer.volunteerId ? `${volunteer.volunteerId} · ` : ''}${volunteer.verifiedHours} verified service hours recorded`}
       />

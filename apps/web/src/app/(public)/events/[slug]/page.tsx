@@ -98,31 +98,29 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     startDate: event.startsAt,
     ...(event.endsAt ? { endDate: event.endsAt } : {}),
     eventStatus: `https://schema.org/Event${event.status === 'cancelled' ? 'Cancelled' : 'Scheduled'}`,
-    eventAttendanceMode: event.isOnline
-      ? 'https://schema.org/OnlineEventAttendanceMode'
-      : 'https://schema.org/OfflineEventAttendanceMode',
-    location: event.isOnline
-      ? { '@type': 'VirtualLocation', url: 'https://sailentfoundation.org/events' }
-      : {
-          '@type': 'Place',
-          name: event.venueName ?? 'Venue to be confirmed',
-          address: event.address ?? event.city ?? 'India',
-        },
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    location: {
+      '@type': 'Place',
+      name: event.venueName ?? 'Venue to be confirmed',
+      address: event.address ?? event.city ?? 'India',
+    },
     organizer: { '@type': 'NGO', name: 'Sailent Foundation' },
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#F8FAFC]">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#F8FAFC] print:m-0 print:min-h-0 print:overflow-visible print:bg-white print:p-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(eventSchema)} />
 
       {/* 1. Event Hero Section matching exact design */}
-      <EventRegistrationHero event={event} categoryName={categoryName} />
+      <div className="print:hidden">
+        <EventRegistrationHero event={event} categoryName={categoryName} />
+      </div>
 
       {/* 2. Main Two-Column Layout */}
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10 print:m-0 print:w-full print:max-w-none print:p-0">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10 print:m-0 print:block print:w-full print:p-0">
           {/* Left Column (Width ~ 7 cols): Event Registration Form */}
-          <div className="lg:col-span-7 xl:col-span-7">
+          <div className="lg:col-span-7 xl:col-span-7 print:m-0 print:block print:w-full print:max-w-none print:p-0">
             <EventRegistrationFlow
               eventId={event.id || ''}
               slug={event.slug}
@@ -131,19 +129,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               endsAt={event.endsAt}
               venueName={event.venueName}
               city={event.city}
-              isOnline={event.isOnline}
-              meetingUrl={myReg?.meetingUrl}
+              isPaid={event.isPaid}
+              feeAmount={event.feeAmount}
               isRegistered={isRegistered}
               isSignedIn={Boolean(donor)}
               availability={action.kind}
               registrationDeadline={event.registrationDeadline ?? null}
               signInHref={`/sign-in?next=/events/${event.slug}`}
               initialProfile={initialProfile}
+              supportEmail={supportEmail}
+              supportPhone={supportPhone}
+              functions={event.functions}
             />
           </div>
 
           {/* Right Column (Width ~ 5 cols): Event Summary Card */}
-          <div className="lg:sticky lg:top-24 lg:col-span-5 xl:col-span-5">
+          <div className="lg:sticky lg:top-24 lg:col-span-5 xl:col-span-5 print:hidden">
             <EventSummaryCard
               event={event}
               categoryName={categoryName}

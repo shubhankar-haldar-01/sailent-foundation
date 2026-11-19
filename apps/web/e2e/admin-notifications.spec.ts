@@ -17,7 +17,7 @@ import { e2eStack } from '../playwright.config';
  * answer it.
  *
  * Sending is not exercised here: `playwright.config.ts` runs the stack without
- * a Brevo key, so nothing leaves the machine. The rows these tests read are
+ * a Resend key, so nothing leaves the machine. The rows these tests read are
  * written straight into the send log, which is exactly what the worker does.
  * ══════════════════════════════════════════════════════════════════════════
  */

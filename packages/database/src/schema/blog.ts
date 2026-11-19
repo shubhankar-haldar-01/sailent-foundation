@@ -11,7 +11,6 @@ import {
 
 import { primaryId, softDelete, timestamps } from './_shared.js';
 import { publishStatusEnum } from './enums.js';
-import { categories } from './taxonomy.js';
 import { media } from './media.js';
 import { users } from './users.js';
 
@@ -65,9 +64,6 @@ export const blogPosts = pgTable(
       onDelete: 'set null',
     }),
 
-    /** One primary category, from the shared taxonomy. */
-    categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
-
     /**
      * The staff member who wrote it.
      *
@@ -95,7 +91,6 @@ export const blogPosts = pgTable(
     uniqueIndex('blog_posts_slug_unique').on(table.slug),
     // The public listing's exact access path: published, newest first.
     index('blog_posts_status_published_idx').on(table.status, table.publishedAt),
-    index('blog_posts_category_idx').on(table.categoryId),
     index('blog_posts_author_idx').on(table.authorId),
   ],
 );

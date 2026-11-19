@@ -1,15 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import {
-  AlertTriangle,
-  ArrowLeft,
-  History,
-  Lock,
-  Mail,
-  ShieldAlert,
-  User,
-  UserCog,
-} from 'lucide-react';
+import { AlertTriangle, History, User, UserCog } from 'lucide-react';
 
 import {
   Badge,
@@ -29,6 +20,7 @@ import {
 } from '@sailent/ui';
 
 import { DonorCorrectionForm } from '@/components/admin/donor-correction-form';
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 import { AdminApiError, adminFetch } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
 
@@ -99,25 +91,37 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
 
   const name =
     [donor.firstName, donor.lastName].filter(Boolean).join(' ').trim() || 'Unnamed donor';
-  const sensitive = can(actor, 'donor.read_sensitive');
   const canUpdate = can(actor, 'donor.update');
   const drifted =
     donor.recomputed.totalDonated !== donor.totalDonated ||
     donor.recomputed.donationCount !== donor.donationCount;
 
+  const hasRegisteredAddress = Boolean(
+    donor.addressLine1?.trim() ||
+    donor.addressLine2?.trim() ||
+    donor.city?.trim() ||
+    donor.state?.trim() ||
+    donor.postalCode?.trim(),
+  );
+
+  const registeredAddress = hasRegisteredAddress
+    ? [
+        donor.addressLine1,
+        donor.addressLine2,
+        donor.city,
+        donor.state,
+        donor.postalCode,
+        donor.country === 'IN' ? 'India' : donor.country,
+      ]
+        .filter(Boolean)
+        .join(', ')
+    : 'None recorded';
+
   return (
     <div className="space-y-6">
       <PageHeader
         title={name}
-        breadcrumb={
-          <Link
-            href="/admin/donors"
-            className="text-body-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
-          >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            Back to donors
-          </Link>
-        }
+        breadcrumb={<AdminBackButton href="/admin/donors">Back to donors</AdminBackButton>}
         description={`${donor.donorCode ? `Donor Code: ${donor.donorCode} · ` : ''}Member since ${formatDate(donor.createdAt)}`}
         status={
           <div className="flex items-center gap-2">
@@ -192,10 +196,10 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
         <Card className="border-border">
           <CardContent className="p-4">
             <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
-              First Gift Date
+              First Donation Date
             </p>
             <p className="text-body text-foreground mt-2 font-medium">
-              {donor.firstDonatedAt ? formatDate(donor.firstDonatedAt) : 'No gifts recorded'}
+              {donor.firstDonatedAt ? formatDate(donor.firstDonatedAt) : 'No donations recorded'}
             </p>
           </CardContent>
         </Card>
@@ -203,7 +207,7 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
         <Card className="border-border">
           <CardContent className="p-4">
             <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
-              Last Gift Date
+              Last Donation Date
             </p>
             <p className="text-body text-foreground mt-2 font-medium">
               {donor.lastDonatedAt ? formatDate(donor.lastDonatedAt) : '—'}
@@ -212,123 +216,29 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Contact and Profile Card */}
-        <Card className="border-border">
-          <CardHeader className="border-border border-b pb-4">
-            <div className="flex items-center gap-2">
-              <User className="text-primary size-5" aria-hidden="true" />
-              <CardTitle className="text-base font-semibold">Contact & Profile</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <dl className="divide-border divide-y">
-              <Row label="Email" value={donor.email ?? '—'} />
-              <Row label="Phone" value={donor.phone ?? '—'} mono />
-              <Row label="Donor Type" value={donor.donorType} />
-              <Row
-                label="Public Listing"
-                value={donor.isAnonymous ? 'Anonymous' : 'Named publicly'}
-              />
-              <Row label="Acquisition Source" value={donor.source ?? 'Direct website'} />
-            </dl>
-          </CardContent>
-        </Card>
-
-        {/* Communication Consents Card */}
-        <Card className="border-border">
-          <CardHeader className="border-border border-b pb-4">
-            <div className="flex items-center gap-2">
-              <Mail className="text-primary size-5" aria-hidden="true" />
-              <CardTitle className="text-base font-semibold">Communication Consents</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <dl className="divide-border divide-y">
-              <Row
-                label="Primary Consent"
-                value={donor.communicationConsent ? 'Granted' : 'Revoked / Withheld'}
-              />
-              <Row label="Email Channel" value={donor.emailOptIn ? 'Opted In' : 'Opted Out'} />
-              <Row label="SMS Channel" value={donor.smsOptIn ? 'Opted In' : 'Opted Out'} />
-              <Row
-                label="WhatsApp Channel"
-                value={donor.whatsappOptIn ? 'Opted In' : 'Opted Out'}
-              />
-              <Row
-                label="Campaign & Impact Updates"
-                value={donor.notifyCampaignUpdates ? 'Subscribed' : 'Off'}
-              />
-              <Row
-                label="Quarterly Newsletter"
-                value={donor.notifyNewsletter ? 'Subscribed' : 'Off'}
-              />
-            </dl>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Sensitive Tax & Address block (requires donor.read_sensitive) */}
-      {sensitive ? (
-        <Card className="border-border">
-          <CardHeader className="border-border border-b pb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="text-primary size-5" aria-hidden="true" />
-                <CardTitle className="text-base font-semibold">
-                  Statutory Tax & Address Information
-                </CardTitle>
-              </div>
-              <Badge variant="outline" className="text-xs">
-                donor.read_sensitive
-              </Badge>
-            </div>
-            <p className="text-caption text-muted-foreground mt-1">
-              Protected statutory data required for annual Form 10BD filing with the Income Tax
-              Department.
-            </p>
-          </CardHeader>
-          <CardContent className="p-0">
-            <dl className="divide-border divide-y">
-              <Row
-                label="PAN / Tax Identification"
-                value={
-                  donor.taxIdNumber
-                    ? `${donor.taxIdType ?? 'PAN'} · ${donor.taxIdNumber}`
-                    : 'None recorded'
-                }
-                mono
-              />
-              <Row
-                label="Registered Address"
-                value={
-                  [
-                    donor.addressLine1,
-                    donor.addressLine2,
-                    donor.city,
-                    donor.state,
-                    donor.postalCode,
-                    donor.country,
-                  ]
-                    .filter(Boolean)
-                    .join(', ') || 'None recorded'
-                }
-              />
-              <Row label="Internal Staff Notes" value={donor.internalNotes ?? '—'} />
-            </dl>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="border-border bg-muted/10 p-5">
-          <div className="flex items-center gap-3">
-            <Lock className="text-muted-foreground size-5 shrink-0" aria-hidden="true" />
-            <p className="text-caption text-muted-foreground">
-              Statutory tax ID and address records are restricted. They require the sensitive{' '}
-              <code>donor.read_sensitive</code> permission with recent re-authentication.
-            </p>
+      {/* Contact and Profile Card */}
+      <Card className="border-border">
+        <CardHeader className="border-border border-b pb-4">
+          <div className="flex items-center gap-2">
+            <User className="text-primary size-5" aria-hidden="true" />
+            <CardTitle className="text-base font-semibold">Contact & Profile</CardTitle>
           </div>
-        </Card>
-      )}
+        </CardHeader>
+        <CardContent className="p-0">
+          <dl className="divide-border divide-y">
+            <Row label="Email" value={donor.email ?? '—'} />
+            <Row label="Phone" value={donor.phone ?? '—'} mono />
+            {donor.taxIdNumber ? <Row label="PAN" value={donor.taxIdNumber} mono /> : null}
+            {hasRegisteredAddress ? <Row label="Address" value={registeredAddress} /> : null}
+            <Row label="Donor Type" value={donor.donorType} />
+            <Row
+              label="Public Listing"
+              value={donor.isAnonymous ? 'Anonymous' : 'Named publicly'}
+            />
+            <Row label="Acquisition Source" value={donor.source ?? 'Direct website'} />
+          </dl>
+        </CardContent>
+      </Card>
 
       {/* Donor Record Correction Form (Audit-logged) */}
       {canUpdate ? (
@@ -339,8 +249,8 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
               <CardTitle className="text-base font-semibold">Correct Donor Record</CardTitle>
             </div>
             <p className="text-caption text-muted-foreground mt-1">
-              Updates to donor profile details are recorded in the immutable audit log with a
-              mandatory justification reason.
+              For transcription errors — a misspelled name, an updated address, or adding a PAN for
+              Form 10BD. Every change is audited with the mandatory reason you provide.
             </p>
           </CardHeader>
           <CardContent className="p-6">
@@ -380,7 +290,7 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
                       <TableCell>
                         <Link
                           href={`/admin/donations/${donation.id}`}
-                          className="text-primary font-medium hover:underline"
+                          className="text-foreground hover:text-primary font-medium transition-colors"
                         >
                           {donation.reference}
                         </Link>

@@ -71,7 +71,8 @@ const EMPTY_PUBLIC_SETTINGS: OrganisationSettings = {
  * dropped. Wiring them would change the donation flow (Phase 11), which
  * Phase 13 deliberately does not.
  *
- * Email still goes out under `BREVO_SENDER_NAME` (environment), and the worker
+ * Email still goes out under the sender in `RESEND_FROM_EMAIL` (the worker's
+ * environment), and the worker
  * templates name the organisation in their own wording.
  * ══════════════════════════════════════════════════════════════════════════
  */

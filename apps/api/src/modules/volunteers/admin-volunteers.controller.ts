@@ -17,7 +17,6 @@ import { CurrentActor } from '../../common/decorators/actor.decorator.js';
 import {
   RequireAudience,
   RequirePermission,
-  Sensitive,
 } from '../../common/decorators/permissions.decorator.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { VolunteersService } from './volunteers.service.js';
@@ -43,23 +42,8 @@ import { requestClientIp } from '../../common/security/internal-request.js';
 /**
  * Volunteer administration.
  *
- * ══════════════════════════════════════════════════════════════════════════
- * FOUR ROUTES ARE `@Sensitive()`, AND THE CHOICE OF WHICH FOUR IS THE POINT.
- *
- * Re-authentication has a cost: prompt for it too often and operators learn to
- * keep a window permanently open, which defeats it everywhere it matters. So
- * it guards the four acts that are hard to undo or that expose a person:
- *
- *   • the decision      — approving or rejecting changes what somebody may do
- *                          on behalf of the organisation, and allocates a
- *                          permanent identifier
- *   • reading a record  — name, phone, address and emergency contact together
- *   • issuing           — a document a future employer will rely on
- *   • withdrawing one   — after somebody may already have shown it
- *
- * Recording attendance and creating an assignment are NOT sensitive. They are
- * the daily work of the phase, done at a venue on a phone, and are correctable.
- * ══════════════════════════════════════════════════════════════════════════
+ * Protected by staff role permissions (`volunteer.read` and `volunteer.approve`).
+ * Volunteer profiles and decisions do not require re-authentication.
  */
 @ApiTags('admin: volunteers')
 @ApiBearerAuth('staff')
@@ -118,12 +102,11 @@ export class AdminVolunteersController {
   }
 
   @RequirePermission('volunteer.read')
-  @Sensitive()
   @Get('volunteers/:id')
   @ApiOperation({
     summary: 'One volunteer, in full',
     description:
-      'Includes phone, address, emergency contact, internal notes and the frozen application. Requires a re-authentication within the last five minutes.',
+      'Includes phone, address, emergency contact, internal notes and the frozen application.',
   })
   @ApiParam({ name: 'id', format: 'uuid' })
   get(@Param(new ZodValidationPipe(volunteerIdParam)) params: { id: string }) {
@@ -131,7 +114,6 @@ export class AdminVolunteersController {
   }
 
   @RequirePermission('volunteer.approve')
-  @Sensitive()
   @Patch('volunteers/:id/decision')
   @ApiOperation({
     summary: 'Approve, reject, activate, suspend or archive',
@@ -310,7 +292,6 @@ export class AdminVolunteersController {
   }
 
   @RequirePermission('volunteer.approve')
-  @Sensitive()
   @Post('volunteers/:id/certificates')
   @HttpCode(201)
   @ApiOperation({
@@ -330,7 +311,6 @@ export class AdminVolunteersController {
   }
 
   @RequirePermission('volunteer.approve')
-  @Sensitive()
   @Patch('certificates/:id/revoke')
   @ApiOperation({
     summary: 'Withdraw a certificate',

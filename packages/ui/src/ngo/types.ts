@@ -76,6 +76,8 @@ export interface EventCardModel {
   capacity: number | null;
   registeredCount: number;
   status: 'registration_open' | 'registration_closed' | 'completed' | 'cancelled';
+  isPaid?: boolean;
+  feeAmount?: number | null;
 }
 
 export interface TeamMemberModel {

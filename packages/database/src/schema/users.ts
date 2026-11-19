@@ -56,6 +56,9 @@ export const users = pgTable(
   },
   (table) => [
     uniqueIndex('users_email_unique').on(sql`lower(${table.email})`),
+    uniqueIndex('users_phone_unique')
+      .on(sql`right(regexp_replace(${table.phone}, '[^0-9]', '', 'g'), 10)`)
+      .where(sql`phone IS NOT NULL AND length(regexp_replace(phone, '[^0-9]', '', 'g')) >= 10`),
     index('users_status_idx').on(table.status),
   ],
 );

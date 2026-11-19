@@ -90,7 +90,7 @@ export const searchIndex: SearchRecord[] = [
     excerpt: event.summary,
     href: `/events/${event.slug}`,
     type: 'event',
-    keywords: [event.city ?? '', event.isOnline ? 'online' : 'in person'],
+    keywords: [event.city ?? '', 'in person'],
   })),
 ];
 

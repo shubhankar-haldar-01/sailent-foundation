@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { and, asc, desc, eq, ilike, inArray, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 
 import {
   campaigns,
@@ -58,6 +58,8 @@ const SORTABLE = {
  */
 @Injectable()
 export class EventsService {
+  private readonly logger = new Logger(EventsService.name);
+
   constructor(
     @Inject(DATABASE) private readonly database: DatabaseClient,
     private readonly slugs: SlugService,
@@ -74,6 +76,8 @@ export class EventsService {
 
     if (query.status && query.status !== 'all') {
       filters.push(eq(events.status, query.status));
+    } else {
+      filters.push(ne(events.status, 'archived'));
     }
     if (query.lifecycle) {
       filters.push(eq(events.registrationStatus, query.lifecycle));
@@ -97,9 +101,7 @@ export class EventsService {
     }
 
     const where = and(...filters);
-    // Newest-first by date is wrong for an event list: the next one is the one
-    // an organiser is working on. Ascending start date, so today is at the top.
-    const { column, direction } = resolveSort(query.sort, SORTABLE, 'startDate');
+    const { column, direction } = resolveSort(query.sort ?? '-createdAt', SORTABLE, 'createdAt');
 
     const [items, [count]] = await Promise.all([
       this.database.db
@@ -118,6 +120,8 @@ export class EventsService {
           registeredCount: events.registeredCount,
           registrationStatus: events.registrationStatus,
           registrationDeadline: events.registrationDeadline,
+          isPaid: events.isPaid,
+          feeAmount: events.feeAmount,
           organizer: events.organizer,
           status: events.status,
           publishedAt: events.publishedAt,
@@ -362,19 +366,25 @@ export class EventsService {
     if (status === 'published') this.assertPublishable(before);
 
     /**
-     * Archiving an event that still holds live registrations is refused.
-     *
-     * `archived` is a 404 to the public, so archiving here would take the page
-     * away from everyone holding a place without telling any of them. Cancel it
-     * first — that notifies them — and archive afterwards.
+     * Archiving an event sets status to 'archived'. If the event still had active
+     * registrations and was not completed, it automatically transitions lifecycle
+     * to 'cancelled' so attendees are cleanly notified.
      */
-    if (status === 'archived' && before.counts.registrations > 0) {
-      const lifecycle = before.registrationStatus as EventLifecycle;
-      if (lifecycle !== 'cancelled' && lifecycle !== 'completed') {
-        throw new ConflictException(
-          `${before.counts.registrations} ${
-            before.counts.registrations === 1 ? 'person holds' : 'people hold'
-          } a registration for this event. Cancel or complete it first — archiving would remove the page without telling them.`,
+    const autoCancelLifecycle =
+      status === 'archived' &&
+      before.registrationStatus !== 'completed' &&
+      before.registrationStatus !== 'cancelled';
+
+    if (autoCancelLifecycle && before.counts.registrations > 0) {
+      try {
+        await this.notifyCancellation(
+          id,
+          before.title,
+          reason || 'The event has been cancelled and removed by the administration.',
+        );
+      } catch (err) {
+        this.logger.error(
+          `Could not notify cancellation during archive: ${err instanceof Error ? err.message : 'unknown'}`,
         );
       }
     }
@@ -383,6 +393,7 @@ export class EventsService {
       .update(events)
       .set({
         status,
+        ...(autoCancelLifecycle ? { registrationStatus: 'cancelled' as const } : {}),
         // Stamped on first publication and never overwritten: it is the date
         // the event became public, not the date it was last touched.
         publishedAt:
@@ -643,6 +654,9 @@ export class EventsService {
       'campaignId',
       'requiresVolunteers',
       'volunteerSlots',
+      'isPaid',
+      'feeAmount',
+      'functions',
     ] as const;
 
     const output: Record<string, unknown> = {};

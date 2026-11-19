@@ -8,10 +8,12 @@ import {
   CardHeader,
   CardTitle,
   PageHeader,
+  formatBytes,
   formatDate,
 } from '@sailent/ui';
 
 import { MediaDetailPanel } from '@/components/admin/media-library';
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import { AdminApiError, getMedia, type AdminMediaDetail } from '@/lib/admin/api';
 import { currentActor, can } from '@/lib/auth/session';
@@ -40,7 +42,8 @@ export default async function AdminMediaItemPage({ params }: { params: Promise<{
     <div className="space-y-6">
       <PageHeader
         title={item.altText || 'Media Asset'}
-        description={`Uploaded ${formatDate(item.createdAt)} · ${Math.round(item.sizeBytes / 1024)} KB`}
+        breadcrumb={<AdminBackButton href="/admin/media">Back to media</AdminBackButton>}
+        description={`Uploaded ${formatDate(item.createdAt)} · ${formatBytes(item.sizeBytes)}${item.width && item.height ? ` · ${item.width} × ${item.height} px` : ''}`}
         status={
           <Badge variant={item.visibility === 'public' ? 'success' : 'neutral'}>
             {item.visibility}
@@ -84,7 +87,7 @@ export default async function AdminMediaItemPage({ params }: { params: Promise<{
             <CardContent className="pt-0">
               <dl className="text-body-sm divide-border/60 divide-y">
                 <Row label="MIME Type">{item.mimeType}</Row>
-                <Row label="File Size">{Math.round(item.sizeBytes / 1024)} KB</Row>
+                <Row label="File Size">{formatBytes(item.sizeBytes)}</Row>
                 <Row label="Resolution">
                   {item.width && item.height ? `${item.width} × ${item.height} px` : 'Unknown'}
                 </Row>

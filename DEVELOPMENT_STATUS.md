@@ -6,7 +6,7 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
+**Last updated:** 2026-11-19 for the security audit (§2, "Security audit"). **Before that:** 2026-11-18 for the event pass and gate fixes and the move to Resend for email (§2, "Email through Resend" and "Event passes and gate check-in fixes"); the header table below was not re-audited and is still as of 2026-10-21. **Previously:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
 
 | | |
 |---|---|
@@ -428,6 +428,133 @@ These are **local** results. **CI is not passing** as of the last observed run (
 The likely cause is WebKit keyboard behaviour; this was **not investigated**.
 
 **The full Playwright suite** (712 tests) last ran on 2026-10-06, before the featured and deadline work: 551 passed, 158 skipped, 3 failed. Two were the WebKit failures above; the third was an axe flake that `settle-animations.ts` has since fixed.
+
+### Security audit — 2026-11-19 (local, uncommitted)
+
+A full application security audit. The fixes and their reasons are in `CHANGELOG.md` (2026-11-19, "Security audit: fixes"), and the control status in `SECURITY.md` (rows dated 2026-11-19).
+- **Fixed, each with a regression test that fails without the fix:** an unauthenticated file write through the campaign video upload server action (high, proven on a production build, then re-tested after the fix); `next` 15.5.29 and three transitive patches (critical/high advisories); rate limits on the public event routes; the open redirect after donor sign-in; body-parser refusals answered as 500; uncapped upload form fields; the BFF proxy's unbounded body read.
+- **Validation (2026-11-19):** API ✅ 979 passed, 9 skipped; web ✅ 445/445; worker ✅ 75/75; validation ✅ 300/300; config ✅ 49/49; database ✅ 180/180; typecheck and lint ✅ 13/13; Prettier clean on the changed files; production build ✅ in an isolated copy (Next.js 15.5.29, 39/39 static pages). `pnpm audit --prod`: 0 critical, 2 high, 3 moderate.
+- **Known issue (pre-existing, not changed):** `public-api.spec.ts` › "splits the default listing between open and closed" can fail in the full run, when `cms-communications.spec.ts` creates or removes its `p13-…` campaigns between the test's three queries. It passes on its own (47/47 on 2026-11-19). Seen once; the earlier full run that day passed it.
+- **Restart the running dev servers.** `next dev` was started before the upgrade and still runs Next.js 15.5.25 from memory.
+
+**Owner decisions found by the audit (nothing changed):**
+1. **Campaign videos are blocked by the site's CSP** (YouTube, Vimeo and direct files; seen in Chrome). Fix: add `https://www.youtube-nocookie.com` and `https://player.vimeo.com` to `frame-src`, and a `media-src` for the media host.
+2. **The campaign video upload cannot work in production**: files written after the build are not served (404 on `next start`), and Cloud Run's disk is per instance and in memory. Move it to the media library's object storage or remove it, then lower `serverActions.bodySizeLimit` from 100 MB (any caller can send that much to any server action).
+3. **Major upgrades:** `drizzle-orm` ≥ 0.45.2 (high; not reachable here), `zod` 4 (high; bounded by the 100 kB body limit), Nest 11 (`@nestjs/core` and `file-type` moderates; neither path is used). CI's audit job keeps failing until these are done.
+4. **One "Super Admin" role or the existing five:** the audit brief described a single role; the existing RBAC model was kept.
+5. The open items already listed below and in §9: `@Sensitive()` removed from the attendee list (row 31), the 12A/80G line and the placeholder support line on the website pass (row 35), the runtime database role (`SECURITY.md`, "App database role"), and the production database residue (`SECURITY.md`, HIGH, human-only).
+
+### Registration email: PDF passes and professional layout — 2026-11-19 (local, uncommitted)
+
+- **What changed:** the confirmation now attaches the passes as a PDF (one page per person, the website pass's design) and uses a professional layout. Details are in `CHANGELOG.md`.
+- **Dependency:** `pdf-lib` 1.17.1 added to the worker.
+- **Tests:** worker suite ✅ 72/72; typecheck, lint, Prettier and build clean. The built `dist/` contains the logo, PDF and email modules.
+- **Checked:** the gate kiosk read a QR code taken from the PDF. A real send through Resend was accepted (19 Nov 00:56 IST).
+
+**Owner questions found on the website pass (not changed):**
+1. `event-entry-pass.tsx` and `download-pass.ts` print "Section 12A & 80G Registered NGO" as fixed text. AGENTS.md §10 forbids tax claims until the owner provides them, and settings hold no 12A/80G details. The PDF leaves it out.
+2. `download-pass.ts` falls back to a placeholder support line, "hello@sailentfoundation.org | +91 98765 43210", when none is set. The PDF and the email show only recorded contacts.
+
+### Registration email with passes and payment — 2026-11-19 (local, uncommitted)
+
+The confirmation sent after every registration now includes each person's pass (number and QR code, inline and attached) and, for paid bookings, the amount paid, the payment reference and the date. Details are in `CHANGELOG.md`.
+- **Tests:** worker suite ✅ 60/60; typecheck, lint and Prettier clean.
+- **Checked:** the gate kiosk read the QR code taken from the email. A real send through Resend was accepted (send log `sent`, 19 Nov 00:28 IST).
+- **Not done:** a personal "view your pass" link (guests have no account, so it needs a signed link); a cancel link in the email.
+
+### Gate desk Auto-Admit result and Admitted list — 2026-11-18 (local, uncommitted)
+
+**Fixed:**
+- A fresh Auto-Admit showed "ALREADY ADMITTED".
+- A pass held up was looked up again about 1.2 seconds later.
+- The Admitted tab emptied on every reload.
+
+Details in `CHANGELOG.md`. Web suite ✅ 428/428; typecheck, lint and Prettier clean. **Not checked end to end on a fresh admission in a browser:** every pass on the local event was already admitted, so that path is covered by the kiosk test. Seven pre-existing `text-2xs` uses remain elsewhere in the kiosk.
+
+### Gate desk "Exit Desk" crash fixed — 2026-11-18 (local, uncommitted)
+
+- **Cause:** the scanner was asked to stop twice, and the second request threw from a React cleanup, so the next page showed "Something went wrong".
+- **Fix:** all stops go through `createScannerStopper` (`lib/admin/camera.ts`), in both scanners. A camera still starting when the page is left is switched off.
+- **Checks:** web suite ✅ 418/418, typecheck, lint and Prettier clean. Checked in Chrome with Exit Desk, both with the camera running and while starting.
+
+Details in `CHANGELOG.md`.
+
+### Event pass barcode removed — 2026-11-18 (local, uncommitted)
+
+The barcode is gone from the on-screen pass and the downloaded pass image; the pass ID and QR code remain (`CHANGELOG.md`). It was checked visually with a temporary preview page, which has been deleted, at 390, 768, 1024 and 1440px plus the download. Web suite ✅ 412/412, lint, typecheck and Prettier clean.
+
+**Known issue found, not fixed (owner to decide):** a signed-in donor who is already registered sees a pass whose number is built from the **event's** id, not their registration's. This is in `event-registration-flow.tsx`, where the `isRegistered` view uses `SF-EVT-${eventId…}` for the pass shown and for the download. That pass's QR code finds no booking at the gate. The pass shown right after registering is correct, because it comes from the server. Fixing it means passing the donor's registration (its pass number and attendees) from the event and register pages into the flow.
+
+### Gate scanner camera — validation on 2026-11-18 (local, uncommitted)
+
+**Fixed:**
+- The camera is allowed on the two scanner pages; the site-wide `camera=()` had blocked it on every device.
+- The camera area stays on screen while the camera starts. Before, the preview showed but html5-qrcode never read a pass.
+- Camera errors now say what is wrong.
+
+Details are in `CHANGELOG.md` (2026-11-18).
+
+| Check | Result |
+|---|---|
+| Web unit tests | ✅ 411/411 (54 files) |
+| Web lint / typecheck / Prettier | ✅ clean |
+| Headers from the running dev server | ✅ `camera=(self)` on `/admin/gate/:id` and `/admin/events/:id/check-in`; `camera=()` on `/`, `/events` and `/admin/events` |
+| Chrome (headless, simulated camera showing a QR pass for `SF-EVT-65696872`), Auto-Admit off | ✅ After the fix, both pages read the pass ("Valid entry", nobody admitted). Before the fix, nothing was read and the page raised the qrbox error |
+| The same page on `http://172.20.10.3:3000` (the laptop's network address) | Not a secure context. The browser offers no camera, and the kiosk now says the page needs https |
+
+**Phones (2026-11-18):** a phone on the local network gets the camera only over https. `pnpm dev:https` now provides `https://<laptop address>:3443` (`DEPLOYMENT.md` §3, "Testing on a phone"). In phone-sized Chrome with a simulated camera it read the QR pass, both with the certificate trusted and with the warning tapped through. The owner reported the camera still not opening on an iPhone. iPhone Safari refuses untrusted certificates, so a plain-http setup page (`:3080`) now offers the certificate and the trust steps, and the script logs refusals. **Not yet confirmed on the owner's iPhone.**
+
+### Email through Resend — validation on 2026-11-18 (local, uncommitted)
+
+**What changed.** Resend replaces Brevo for every email (owner's decision). The details are in `CHANGELOG.md` (2026-11-18) and the setup steps in `DEPLOYMENT.md` §7, "Email: setting up Resend".
+- One mail module: `apps/worker/src/lib/email.ts`, with the layout in `lib/email-layout.ts`.
+- Startup checks in `packages/config/src/env.ts`: **production now requires** `RESEND_API_KEY` and `RESEND_FROM_EMAIL`.
+- Deploy templates and `check:deploy` updated.
+- `resend@6.35.0` was added to `apps/worker/package.json` and `pnpm-lock.yaml`. The lockfile already held other uncommitted changes.
+- The root `.env` has empty `RESEND_*` lines, so no email is sent until the owner adds a key.
+
+| Check | Result |
+|---|---|
+| Worker tests (`pnpm --filter @sailent/worker test`) | ✅ 55/55 (7 files; new: `email.spec.ts` 21, `donor-login-code.processor.spec.ts` 3, `donation-confirmation.processor.spec.ts` 4, plus 1 in `communications.processor.spec.ts`). No email sent: Resend's answers are stubbed |
+| Config tests | ✅ 49/49 (new `env.test.ts`: 8) |
+| API suite (`pnpm --filter @sailent/api test`) | ✅ 967 passed, 9 skipped, 0 failed (second run). The first run had one intended failure (`app.config.spec.ts` expected a production worker to start without email, which this change refuses; the test was updated to assert the new rule) and 15 `pages.spec.ts` time-outs that pass 31/31 alone (the intermittent stall in the gate fixes section below) |
+| New API tests | ✅ an expired donor sign-in code is refused (`auth.spec.ts`); an expired or already-used event registration code is refused (`events.spec.ts`) |
+| `pnpm check:deploy` | ✅ 46/46 |
+| `pnpm typecheck` / `pnpm lint` | ✅ 13/13 tasks each |
+| Prettier | ✅ clean on every changed file (`.env.example` has no parser) |
+| Mutation checks | Removing the IST time zone (run with `TZ=UTC`) or the contact reply-to each fails its test |
+| Real `.env` loads | ✅ email reported off. A key without a sender is refused at startup; a key with the test sender loads |
+| A real send through Resend | **Not done:** no key exists yet |
+| `pnpm build` | Not run |
+
+**Open questions for the owner** (not changed):
+1. **Contact-form acknowledgement** to the visitor: not added. It would send email to any address typed into a public form. That is a spam route, and on the free plan (100 a day) it could use up the quota that sign-in codes need.
+2. **Payment-failure email:** not added. Nothing emails a donor about a failed payment today, and when to send one is a product rule.
+3. **Development code log:** the API still logs sign-in and registration codes to its own console when `FEATURE_MOCK_DATA` is on. It is never on in production; the brief says codes are never logged. Remove it, or keep it for working without a key?
+4. **Free plan, 100 emails a day:** move to a paid plan before launch (DEPLOYMENT.md §7).
+5. **Observation:** one verified event registration code allows public registrations for 15 minutes; the code itself cannot be used twice.
+
+### Event passes and gate check-in fixes — validation on 2026-11-18 (local, uncommitted work)
+
+HEAD `3e01587`, level with `origin/main` (nothing unpushed). The pass and gate feature itself is uncommitted, as is a large body of other uncommitted work in the tree (`git status`). Fixes in `CHANGELOG.md` (2026-11-18). Migration `0037` applied to `sailent_dev` only; `drizzle.__drizzle_migrations` has 39 rows there (`0000`–`0037` plus the unknown row of §5.1).
+
+| Check | Result |
+|---|---|
+| `pnpm --filter @sailent/api exec vitest run test/events.spec.ts` | ✅ 40 passed (33 existing + 7 new) |
+| `pnpm --filter @sailent/validation exec vitest run src/__tests__/event.test.ts` | ✅ 28 passed (8 new) |
+| `pnpm --filter @sailent/web exec vitest run src/components/admin` | ✅ 78 passed (4 new in `gate-kiosk-view.test.tsx`) |
+| Mutation checks | Removing the check-in row lock, the LIKE escaping, the `matchedBy` guard on Auto-Admit, or the guard on a booking picked from a list each made its test fail |
+| `pnpm --filter @sailent/api test` (API only) | ✅ 965 passed, 0 failed, 9 skipped |
+| `pnpm test` (all packages in parallel), run 1 | config 41, validation 300, worker 26, web 400, database 180 all ✅. API: ❌ `events.spec.ts` stalled after its 16th test — every later request in that process waited before authentication (no query logged), and the 24 remaining tests timed out at 60 s; 941 passed |
+| `pnpm test`, run 2 | ✅ every package except API; API: 3 failed (`auth.spec.ts` refresh rotation ×2: 404/400 instead of 401; `settings.spec.ts` negative minimum: 200 instead of 422), 962 passed. Those two files then passed 3 runs of 3 alone |
+| `pnpm typecheck` / `pnpm lint` | ✅ 13/13 tasks each |
+| `pnpm prettier --check .` | Clean on every file changed here. ❌ 51 other files (agent-skill folders, `scratch/`, and uncommitted pages including `events/[id]/check-in/page.tsx`), all outside this change |
+| Browser (`/admin/gate/<id>`, dev servers, 1440 and 390px) | ✅ guest list loads (5 people); a group shows one row per person; "Kavya" with Auto-Admit on lists both matches and admits nobody, including after picking one; an exact pass auto-admits; a rescan reads "already admitted at … IST"; no horizontal overflow. Test data deleted afterwards |
+| `pnpm build` | Not run |
+
+**Intermittent full-run failures (new observation, cause not established).** The two `pnpm test` runs failed in different, unrelated places, and none of those failures reproduced alone or in the API-only run. The stall in run 1 began on an event-publish request before authentication. One candidate, not proven: `RedisThrottlerStorage.increment` awaits `eval` with no timeout and falls back only on an error, so an unanswered Redis command would hold a request indefinitely. Diagnostics captured during later runs found no blocked Redis clients or Postgres locks, because the stall did not recur.
+
+**Owner decisions (2026-11-18):** gate check-in stays allowed before an event starts, while the attendance sheet stays closed until the start; public registration and bookings of up to four passes are approved. Both are recorded in `AGENTS.md` §10 (and the matching sentence in §11 item 14), with no code change. **Still open:** §9 row 31. The gate files use `text-2xs`, which no token defines (so it renders at the inherited size), in places this change did not touch.
 
 ### History rewrite, pre-push review and cleanup — validation on 2026-10-21 (local commits, not pushed)
 
@@ -863,6 +990,13 @@ These are recorded here and **not** silently resolved in the source documents.
 | 27 | `apps/web/src/app/layout.tsx` comment: Manrope loads 600 and 700 only, "anything heavier than 700 on Manrope at 700 — the cap is part of the system" | Since 2026-10-08 (uncommitted), `lib/fonts.ts` loads Manrope 800 for three headings only — the /programs hero, /sign-in and /sign-up (owner's designs). Every other page still loads 600/700 only |
 | 28 | `CHANGELOG.md` 2026-10-17 (the events page redesign) and the owner's 17 October design | **Resolved 2026-10-21:** the panel and the past events are back under the listing; the panoramic banner stays |
 | 29 | `CHANGELOG.md` 2026-10-16: the photography work of 16 October was undone | The working tree carries a re-application of it dated 2026-10-17. It is kept out of the commits and left uncommitted (`CHANGELOG.md`, 2026-10-21) |
+| 30 | `AGENTS.md` §10: "Event registration requires a donor session"; "One registration is one person and one seat: the API accepts `attendeeCount` 1 only" | Uncommitted code (as of 2026-11-18): `POST /events/:id/public-register` registers without a donor session (the email is verified by a one-time code), and a booking holds up to four passes (`attendeeCount` 1–4; migration `0036`). **Resolved 2026-11-18:** the owner approved both; `AGENTS.md` §10 and §11 item 14 now describe them |
+| 31 | `apps/web/src/lib/admin/api.ts` (`AdminEventRegistration.email`): the attendee list "is `@Sensitive()` and needs a fresh re-auth" | The uncommitted `admin-events.controller.ts` removed `@Sensitive()` from `GET /admin/events/:id/registrations`, which the gate kiosk now loads. **Owner decision:** keep the re-authentication (the kiosk then needs a re-auth step) or record its removal in `SECURITY.md` |
+| 32 | `DATABASE.md` §5 described migrations up to `0025` | The journal holds `0000`–`0037` (as of 2026-11-18). `0037` was added on 2026-11-18; `0026`–`0036` are listed there as not yet described |
+| 33 | `docs/phase-0-decisions.md` and the phase documents name Brevo as the email provider | Superseded on 2026-11-18: the owner chose Resend, and current documents say so. The historical records are left as written |
+| 34 | `notification_templates.brevo_template_id` (`database-architecture.md`) | Unused since the move to Resend. Dropping or renaming it needs a migration; left as it is |
+| 35 | AGENTS.md §10: no tax claims until the owner provides them | The website pass and its download print "Section 12A & 80G Registered NGO" as fixed text, and settings hold no 12A/80G details. The PDF pass leaves it out (2026-11-19). **Owner decision** |
+| 36 | `SECURITY.md` ("SQL injection"): "no `sql.raw`" | `packages/database/src/harden.ts` uses `sql.raw` for an id list it reads from the database (never input). **Resolved 2026-11-19:** the row now says so |
 
 ---
 

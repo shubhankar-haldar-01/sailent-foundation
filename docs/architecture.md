@@ -35,7 +35,7 @@
         └───────┬──────┘ └─────┬──────┘ └─────────────┘
                 │              │
             ┌───▼──────────────▼───┐        ┌──────────┐
-            │ apps/worker — BullMQ │───────►│  Brevo   │  email
+            │ apps/worker — BullMQ │───────►│  Resend  │  email
             │ webhooks · receipts  │        └──────────┘
             │ email · reconciliation│
             │ scheduled jobs        │
@@ -58,7 +58,7 @@ Three deployables — web, api, worker — sharing one database and one set of p
 
 ### Why the worker is separate from the API
 
-Receipt PDF generation is CPU-heavy. Email sending depends on a third party that will occasionally be slow. Reconciliation scans thousands of rows. If any of those shared a process with the donation endpoint, a Brevo outage or a large PDF would degrade the one path that must never degrade.
+Receipt PDF generation is CPU-heavy. Email sending depends on a third party that will occasionally be slow. Reconciliation scans thousands of rows. If any of those shared a process with the donation endpoint, an email-provider outage or a large PDF would degrade the one path that must never degrade.
 
 The separation also makes the failure semantics right: a payment capture commits its transaction and *then* enqueues the receipt. If receipt generation fails, it retries independently — it does not roll back a donation that genuinely succeeded.
 
@@ -92,7 +92,7 @@ The browser is absent from that last path after the payment. That is the design 
 |---|---|---|---|
 | `webhooks` | Process Razorpay event | On intake | 5×, exponential, then dead-letter + alert |
 | `receipts` | Generate PDF → R2 | On capture | 3× |
-| `email` | Send via Brevo | Various | 5×, exponential |
+| `email` | Send via Resend | Various | 5×, exponential |
 | `notifications` | In-app | Various | 3× |
 | `exports` | CSV / 10BD generation | On request | 2× |
 | `certificates` | Volunteer certificate PDF | On issue | 3× |
@@ -167,7 +167,7 @@ Three deployables share types, validation and design tokens. In separate reposit
 | API | localhost:4000 | Render | Render |
 | DB | Neon branch | Neon branch | Neon primary |
 | Razorpay | Test keys | Test keys | **Live keys** |
-| Email | Sandbox | Sandbox | Brevo live |
+| Email | Sandbox | Sandbox | Resend live |
 
 Neon's branching gives every environment — and every pull request — a real database copy without a separate instance. Production credentials never exist on a developer machine (`security-architecture.md` §8), and events whose mode does not match the environment are rejected.
 

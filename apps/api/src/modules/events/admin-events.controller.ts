@@ -17,15 +17,17 @@ import { CurrentActor } from '../../common/decorators/actor.decorator.js';
 import {
   RequireAudience,
   RequirePermission,
-  Sensitive,
 } from '../../common/decorators/permissions.decorator.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { EventRegistrationsService } from './event-registrations.service.js';
 import { EventsService } from './events.service.js';
 import {
   AttendanceDto,
+  CheckInPassDto,
   CreateEventDto,
+  VerifyPassDto,
   attendanceSchema,
+  checkInPassSchema,
   createEventSchema,
   eventIdParam,
   eventLifecycleSchema,
@@ -33,6 +35,7 @@ import {
   eventPublishSchema,
   registrationListQuerySchema,
   updateEventSchema,
+  verifyPassSchema,
 } from './dto/events.dto.js';
 import { requestClientIp } from '../../common/security/internal-request.js';
 
@@ -50,13 +53,12 @@ import { requestClientIp } from '../../common/security/internal-request.js';
  * Everyone holding a registration needs to land on that page and read the
  * notice, and `archived` is a 404 to the public.
  *
- * The attendee list is `@Sensitive()`: it is the only route that returns the
- * names, emails and phone numbers of everyone attending in one response, and
- * `event.registration.read` is marked sensitive in the permission catalogue for
- * that reason. Publishing and opening registration are deliberately NOT
- * sensitive — they are the routine acts of this phase, and a re-auth prompt on
- * every one trains operators to keep a window permanently open, which defeats
- * the control everywhere it does matter.
+ * The attendee list returns the names, emails and phone numbers of everyone
+ * attending in one response, protected by `event.registration.read`.
+ * Publishing and opening registration are deliberately NOT sensitive — they
+ * are the routine acts of this phase, and a re-auth prompt on every one trains
+ * operators to keep a window permanently open, which defeats the control
+ * everywhere it does matter.
  * ══════════════════════════════════════════════════════════════════════════
  */
 @ApiTags('admin: events')
@@ -212,12 +214,11 @@ export class AdminEventsController {
   // =========================================================================
 
   @RequirePermission('event.registration.read')
-  @Sensitive()
   @Get('events/:id/registrations')
   @ApiOperation({
     summary: 'The attendee list',
     description:
-      'Names, emails and phone numbers. Requires a re-authentication within the last five minutes. Cancellations are excluded unless asked for by status.',
+      'Names, emails and phone numbers. Cancellations are excluded unless asked for by status.',
   })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiQuery({
@@ -250,6 +251,40 @@ export class AdminEventsController {
     @Req() request: Request,
   ) {
     return this.registrations.recordAttendance(params.id, body, actor, this.context(request));
+  }
+
+  @RequirePermission('event.attendance')
+  @Post('events/:id/verify-pass')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Verify an entry pass for gate admission',
+    description: 'Looks up a pass by QR code, pass number, UUID, attendee name, or phone number.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiBody({ type: VerifyPassDto })
+  verifyPass(
+    @Param(new ZodValidationPipe(eventIdParam)) params: { id: string },
+    @Body(new ZodValidationPipe(verifyPassSchema)) body: VerifyPassDto,
+  ) {
+    return this.registrations.verifyPass(params.id, body.code);
+  }
+
+  @RequirePermission('event.attendance')
+  @Post('events/:id/check-in')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Instant gate admission & check-in',
+    description: 'Marks an attendee as attended and stamps attendedAt.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiBody({ type: CheckInPassDto })
+  checkInPass(
+    @Param(new ZodValidationPipe(eventIdParam)) params: { id: string },
+    @Body(new ZodValidationPipe(checkInPassSchema)) body: CheckInPassDto,
+    @CurrentActor() actor: AuthenticatedActor,
+    @Req() request: Request,
+  ) {
+    return this.registrations.checkInPass(params.id, body, actor, this.context(request));
   }
 
   @RequirePermission('event.manage')

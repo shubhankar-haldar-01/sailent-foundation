@@ -42,3 +42,7 @@ pnpm-debug.log*
 
 # local user uploads
 apps/web/public/uploads/
+
+# Local https for phones (scripts/dev-https.mjs): certificates and the local
+# certificate authority's PRIVATE KEY. Never commit.
+.dev-https/

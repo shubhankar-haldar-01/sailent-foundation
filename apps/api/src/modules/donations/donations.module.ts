@@ -60,6 +60,6 @@ import { ReceiptsService } from './receipts.service.js';
     PaymentExceptionsService,
     DonationIdempotencyService,
   ],
-  exports: [ReceiptsService, DonationCaptureService, PaymentExceptionsService],
+  exports: [ReceiptsService, DonationCaptureService, PaymentExceptionsService, RazorpayClient],
 })
 export class DonationsModule {}

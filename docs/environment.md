@@ -189,7 +189,7 @@ match the environment is rejected.
 
 | Variable | Phase | Notes |
 |---|---|---|
-| `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME` | 4 | Transactional email |
+| `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `RESEND_REPLY_TO` | 4 | Transactional email (worker only; the key and sender are required in production; Brevo before 2026-11-18) |
 | `SMS_PROVIDER`, `SMS_API_KEY`, `SMS_SENDER_ID` | 3 | Donor OTP. Needs a DLT-registered sender ID and pre-approved templates under Indian telecom regulation — this has a lead time. Vendor is open question 3. |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | 4 | Cloudflare R2. **API process only** — see below. Required when `APP_ENV=production`. |
 | `R2_BUCKET_PUBLIC` | 4 | `sailent-public`. Campaign images, team photos, public documents. |

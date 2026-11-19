@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 
 import { Button, PageHeader, SearchInput } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { ProductTable } from '@/components/products/product-table';
 import type { CatalogueProduct } from '@/components/products/types';
 import { adminFetch, type Paginated } from '@/lib/admin/api';
@@ -14,7 +15,6 @@ const STATUSES = [
   { value: 'all', label: 'All products' },
   { value: 'active', label: 'Active' },
   { value: 'inactive', label: 'Inactive' },
-  { value: 'archived', label: 'Archived' },
 ] as const;
 
 /**
@@ -25,7 +25,7 @@ const STATUSES = [
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string; sort?: string }>;
 }) {
   const params = await searchParams;
   const actor = await currentActor();
@@ -35,8 +35,8 @@ export default async function AdminProductsPage({
       status: params.status,
       q: params.q,
       page: params.page,
-      limit: 50,
-      sort: 'name',
+      limit: 10,
+      sort: params.sort ?? '-createdAt',
     },
   });
 
@@ -106,6 +106,20 @@ export default async function AdminProductsPage({
       </div>
 
       <ProductTable products={data.items} />
+
+      <AdminPagination
+        page={data.pagination.page}
+        totalPages={data.pagination.totalPages}
+        totalItems={data.pagination.total}
+        ariaLabel="Products pagination"
+        makeHref={(p) => {
+          const search = new URLSearchParams();
+          if (params.status && params.status !== 'all') search.set('status', params.status);
+          if (params.q) search.set('q', params.q);
+          search.set('page', String(p));
+          return `/admin/products?${search.toString()}`;
+        }}
+      />
     </div>
   );
 }

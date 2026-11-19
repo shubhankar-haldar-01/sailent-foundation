@@ -17,6 +17,7 @@ import {
   TableRow,
 } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { RetryButton, StatusIcon } from '@/components/admin/notification-panels';
 import { AdminApiError, sendLog } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
@@ -52,6 +53,7 @@ export default async function AdminSendLogPage({
     data = await sendLog({
       page: params.page,
       status: active === 'all' ? undefined : active,
+      limit: 10,
     });
   } catch (error) {
     return (
@@ -172,6 +174,19 @@ export default async function AdminSendLogPage({
           )}
         </CardContent>
       </Card>
+
+      <AdminPagination
+        page={data.pagination.page}
+        totalPages={data.pagination.totalPages}
+        totalItems={data.pagination.total}
+        ariaLabel="Notification send log pagination"
+        makeHref={(p) => {
+          const search = new URLSearchParams();
+          if (active && active !== 'all') search.set('status', active);
+          search.set('page', String(p));
+          return `/admin/notifications/log?${search.toString()}`;
+        }}
+      />
     </div>
   );
 }

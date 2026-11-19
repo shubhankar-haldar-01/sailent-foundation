@@ -1,14 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, ilike, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 
-import { campaigns, categories, programs, type DatabaseClient } from '@sailent/database';
+import { campaigns, programs, type DatabaseClient } from '@sailent/database';
 import { canTransitionProgram, type ProgramStatus } from '@sailent/validation';
 import type { AuthenticatedActor } from '@sailent/types';
 
 import { assertPublicMediaCover } from './cover-image.js';
 import { DATABASE } from '../database/database.module.js';
 import { AuditService } from '../audit/audit.service.js';
-import { CategoriesService } from './categories.service.js';
 import { SlugService } from './slug.service.js';
 import {
   ConflictException,
@@ -70,7 +69,6 @@ export class ProgramsService {
   constructor(
     @Inject(DATABASE) private readonly database: DatabaseClient,
     private readonly slugs: SlugService,
-    private readonly categories: CategoriesService,
     private readonly audit: AuditService,
   ) {}
 
@@ -83,9 +81,8 @@ export class ProgramsService {
 
     if (query.status && query.status !== 'all') {
       filters.push(eq(programs.status, query.status));
-    }
-    if (query.categoryId) {
-      filters.push(eq(programs.categoryId, query.categoryId));
+    } else {
+      filters.push(ne(programs.status, 'archived'));
     }
     if (query.q) {
       const term = `%${query.q}%`;
@@ -98,7 +95,7 @@ export class ProgramsService {
     }
 
     const where = and(...filters);
-    const { column, direction } = resolveSort(query.sort, SORTABLE, 'displayOrder');
+    const { column, direction } = resolveSort(query.sort ?? '-createdAt', SORTABLE, 'createdAt');
 
     const [items, [count]] = await Promise.all([
       this.database.db
@@ -109,8 +106,7 @@ export class ProgramsService {
           shortDescription: programs.shortDescription,
           coverImage: programs.coverImage,
           category: programs.category,
-          categoryId: programs.categoryId,
-          categoryName: categories.name,
+          categoryName: programs.category,
           status: programs.status,
           displayOrder: programs.displayOrder,
           publishedAt: programs.publishedAt,
@@ -129,7 +125,6 @@ export class ProgramsService {
           )`,
         })
         .from(programs)
-        .leftJoin(categories, eq(categories.id, programs.categoryId))
         .where(where)
         /*
           A DETERMINISTIC TIEBREAKER.
@@ -155,9 +150,8 @@ export class ProgramsService {
 
   async getById(id: string) {
     const [row] = await this.database.db
-      .select({ program: programs, categoryName: categories.name })
+      .select({ program: programs, categoryName: programs.category })
       .from(programs)
-      .leftJoin(categories, eq(categories.id, programs.categoryId))
       .where(and(eq(programs.id, id), isNull(programs.deletedAt)))
       .limit(1);
 
@@ -188,8 +182,28 @@ export class ProgramsService {
   // -------------------------------------------------------------------------
 
   async create(input: ProgramWriteInput, actor: AuthenticatedActor, context: AuditContext) {
+    const [existingTitle] = await this.database.db
+      .select({ id: programs.id })
+      .from(programs)
+      .where(
+        and(
+          sql`lower(btrim(${programs.title})) = lower(btrim(${input.title}))`,
+          isNull(programs.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    if (existingTitle) {
+      throw new ValidationException([
+        {
+          field: 'title',
+          code: 'duplicate',
+          message: 'A program with this title already exists.',
+        },
+      ]);
+    }
+
     await assertPublicMediaCover(this.database, input.coverImage);
-    const category = await this.categories.resolveForWrite(input.categoryId, 'program');
     const slug = await this.slugs.allocate('program', { title: input.title, slug: input.slug });
 
     const [created] = await this.database.db
@@ -198,8 +212,7 @@ export class ProgramsService {
         ...this.writableFields(input),
         title: input.title,
         slug,
-        categoryId: category?.id ?? null,
-        category: category?.name ?? null,
+        category: input.title,
         // Always created as a draft. A record that goes live the instant it is
         // saved leaves no moment to read it back before the public does.
         status: 'draft',
@@ -213,7 +226,7 @@ export class ProgramsService {
       entityType: 'program',
       entityId: created.id,
       userId: actor.id,
-      newValues: { title: input.title, slug, category: category?.name ?? null },
+      newValues: { title: input.title, slug, category: input.title },
       ...context,
     });
 
@@ -227,12 +240,32 @@ export class ProgramsService {
     context: AuditContext,
   ) {
     const before = await this.getById(id);
-    await assertPublicMediaCover(this.database, input.coverImage);
 
-    const category =
-      input.categoryId === undefined
-        ? undefined
-        : await this.categories.resolveForWrite(input.categoryId, 'program');
+    if (input.title && input.title.trim().toLowerCase() !== before.title.trim().toLowerCase()) {
+      const [existingTitle] = await this.database.db
+        .select({ id: programs.id })
+        .from(programs)
+        .where(
+          and(
+            sql`lower(btrim(${programs.title})) = lower(btrim(${input.title}))`,
+            ne(programs.id, id),
+            isNull(programs.deletedAt),
+          ),
+        )
+        .limit(1);
+
+      if (existingTitle) {
+        throw new ValidationException([
+          {
+            field: 'title',
+            code: 'duplicate',
+            message: 'A program with this title already exists.',
+          },
+        ]);
+      }
+    }
+
+    await assertPublicMediaCover(this.database, input.coverImage);
 
     /**
      * A slug change retires the old one INSIDE the same transaction as the
@@ -258,9 +291,7 @@ export class ProgramsService {
         .set({
           ...this.writableFields(input),
           slug,
-          ...(category === undefined
-            ? {}
-            : { categoryId: category?.id ?? null, category: category?.name ?? null }),
+          ...(input.title !== undefined ? { category: input.title } : {}),
           updatedAt: new Date(),
         })
         .where(eq(programs.id, id));
@@ -308,6 +339,7 @@ export class ProgramsService {
       .update(programs)
       .set({
         status,
+        deletedAt: status === 'archived' ? new Date() : null,
         // Stamped on first publication and never overwritten: it is the date
         // the programme became public, not the date it was last touched.
         publishedAt:

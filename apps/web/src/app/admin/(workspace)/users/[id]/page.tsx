@@ -1,7 +1,5 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
-  Button,
   Card,
   CardContent,
   CardHeader,
@@ -11,8 +9,9 @@ import {
   Badge,
   formatDate,
 } from '@sailent/ui';
-import { Shield, Key, ArrowLeft } from 'lucide-react';
+import { Shield, Key } from 'lucide-react';
 
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
 import {
@@ -69,18 +68,10 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   const isSelf = actor?.id === user.id;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
-          <Link href="/admin/users">
-            <ArrowLeft className="h-4 w-4" />
-            Back to staff accounts
-          </Link>
-        </Button>
-      </div>
-
+    <div className="space-y-6">
       <PageHeader
         title={`${user.firstName} ${user.lastName ?? ''}`}
+        breadcrumb={<AdminBackButton href="/admin/users">Back to staff accounts</AdminBackButton>}
         description={user.email}
         status={<StatusPill status={user.status} />}
       />

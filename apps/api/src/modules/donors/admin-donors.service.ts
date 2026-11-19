@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, desc, eq, gt, ilike, or, sql, type SQL } from 'drizzle-orm';
 
@@ -86,7 +87,7 @@ export class AdminDonorsService {
     }
 
     const where = filters.length > 0 ? and(...filters) : undefined;
-    const sort = resolveSort(query.sort, SORTABLE, 'createdAt');
+    const sort = resolveSort(query.sort ?? '-createdAt', SORTABLE, 'createdAt');
 
     const [rows, totals] = await Promise.all([
       this.database.db
@@ -263,7 +264,34 @@ export class AdminDonorsService {
     const write: Record<string, string> = { ...patch };
     if (write.email !== undefined) write.email = normaliseEmail(write.email);
     if (write.taxIdNumber !== undefined) {
-      write.taxIdNumber = this.encryption.encrypt(write.taxIdNumber, TAX_ID_CONTEXT);
+      if (write.taxIdNumber) {
+        const hash = crypto
+          .createHash('sha256')
+          .update(write.taxIdNumber.trim().toUpperCase())
+          .digest('hex');
+        const [existing] = await this.database.db
+          .select({ id: donors.id })
+          .from(donors)
+          .where(and(eq(donors.taxIdHash, hash), sql`${donors.id} != ${id}`))
+          .limit(1);
+        if (existing) {
+          throw new ConflictException(
+            'That PAN / Tax ID number already belongs to another donor.',
+            [
+              {
+                field: 'taxIdNumber',
+                code: 'CONFLICT',
+                message: 'That PAN / Tax ID number already belongs to another donor.',
+              },
+            ],
+          );
+        }
+        write.taxIdHash = hash;
+        write.taxIdNumber = this.encryption.encrypt(write.taxIdNumber, TAX_ID_CONTEXT);
+      } else {
+        write.taxIdHash = null as unknown as string;
+        write.taxIdNumber = null as unknown as string;
+      }
     }
 
     try {
@@ -272,9 +300,27 @@ export class AdminDonorsService {
         .set({ ...write, updatedAt: new Date() })
         .where(eq(donors.id, id));
     } catch (error) {
-      // `donors_email_lower_unique`: the address belongs to another donor.
-      if ((error as { code?: string }).code === '23505') {
-        throw new ConflictException('That email address already belongs to another donor.');
+      const err = error as { code?: string; constraint?: string };
+      if (err.code === '23505') {
+        if (err.constraint === 'donors_tax_id_hash_unique') {
+          throw new ConflictException(
+            'That PAN / Tax ID number already belongs to another donor.',
+            [
+              {
+                field: 'taxIdNumber',
+                code: 'CONFLICT',
+                message: 'That PAN / Tax ID number already belongs to another donor.',
+              },
+            ],
+          );
+        }
+        throw new ConflictException('That email address already belongs to another donor.', [
+          {
+            field: 'email',
+            code: 'CONFLICT',
+            message: 'That email address already belongs to another donor.',
+          },
+        ]);
       }
       throw error;
     }

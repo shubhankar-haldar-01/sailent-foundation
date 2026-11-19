@@ -36,6 +36,16 @@ function isFieldKey(value: string): boolean {
   }
 }
 
+/**
+ * The address in an email sender: `Name <address>` or a bare `address`, the
+ * two forms Resend accepts in `from`. Null when there is no valid address.
+ */
+export function senderAddress(value: string): string | null {
+  const match = /^\s*"?([^"<>]*?)"?\s*<([^<>\s]+)>\s*$/.exec(value);
+  const address = (match ? match[2]! : value).trim();
+  return z.string().email().safeParse(address).success ? address : null;
+}
+
 /** A public URL a production deployment may use: HTTPS and not a loopback host. */
 export function isPublicHttpsUrl(value: string): boolean {
   try {
@@ -222,18 +232,6 @@ export const apiEnvSchema = baseSchema
     INTERNAL_API_SECRET: optional(z.string().min(32)),
 
     /*
-      BREVO, for the donor's confirmation email.
-
-      Optional everywhere, including production, and that is deliberate: a
-      failure to send a receipt email must never stop a donation being
-      recorded. Without a key the notification row is still written and marked
-      unsent, so nothing is lost and the backlog is visible.
-    */
-    BREVO_API_KEY: optional(z.string().min(8)),
-    BREVO_SENDER_EMAIL: optional(z.string().email()),
-    BREVO_SENDER_NAME: z.string().default('Sailent Foundation'),
-
-    /*
       CLOUDFLARE R2, the object store (decision from Phase 0, §11 of
       architecture.md). S3-compatible, which is why the adapter uses an S3
       client rather than a Cloudflare-specific one.
@@ -368,9 +366,37 @@ export const workerEnvSchema = baseSchema
   .extend({
     DATABASE_URL: postgresUrl,
     REDIS_URL: redisUrl,
-    BREVO_API_KEY: optional(z.string().min(8)),
-    BREVO_SENDER_EMAIL: optional(z.string().email()),
-    BREVO_SENDER_NAME: z.string().default('Sailent Foundation'),
+    /*
+      RESEND, the email provider (every transactional email; Brevo until
+      2026-11-18). Read by the worker only — the API enqueues and never sends,
+      so the key is never given to it.
+
+      Optional in development and test: without it nothing is sent, each
+      notification row is written as `not_configured`, and the worker says so
+      at startup. REQUIRED in production, below: sign-in codes, event
+      registration codes and receipts all travel by email, so a production
+      worker without it would leave nobody able to sign in.
+
+      Setting only one of the key and the sender is refused everywhere: it is
+      never what anyone meant, and it would fail every send at runtime.
+    */
+    RESEND_API_KEY: optional(
+      z
+        .string()
+        .regex(
+          /^re_[A-Za-z0-9_-]{8,}$/,
+          'RESEND_API_KEY must be a Resend API key (it starts with re_)',
+        ),
+    ),
+    RESEND_FROM_EMAIL: optional(
+      z
+        .string()
+        .refine(
+          (value) => senderAddress(value) !== null,
+          'RESEND_FROM_EMAIL must be "Name <address@your-domain>" or an address',
+        ),
+    ),
+    RESEND_REPLY_TO: optional(z.string().email('RESEND_REPLY_TO must be an email address')),
     APP_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
 
     WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(100).default(5),
@@ -396,9 +422,27 @@ export const workerEnvSchema = baseSchema
       .default(600_000),
   })
   .superRefine((env, ctx) => {
+    // Everywhere: a key without a sender, or a sender without a key.
+    if (Boolean(env.RESEND_API_KEY) !== Boolean(env.RESEND_FROM_EMAIL)) {
+      const missing = env.RESEND_API_KEY ? 'RESEND_FROM_EMAIL' : 'RESEND_API_KEY';
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [missing],
+        message: `${missing} is required when ${
+          missing === 'RESEND_API_KEY' ? 'RESEND_FROM_EMAIL' : 'RESEND_API_KEY'
+        } is set (set both, or neither to send no email)`,
+      });
+    }
+
     if (env.APP_ENV !== 'production') return;
-    // Without these, no pending donation is ever reconciled or expired.
-    for (const key of ['API_INTERNAL_URL', 'INTERNAL_API_SECRET'] as const) {
+    // Without the first two, no pending donation is ever reconciled or
+    // expired; without the last two, no sign-in code or receipt is delivered.
+    for (const key of [
+      'API_INTERNAL_URL',
+      'INTERNAL_API_SECRET',
+      'RESEND_API_KEY',
+      'RESEND_FROM_EMAIL',
+    ] as const) {
       if (!env[key]) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -406,6 +450,19 @@ export const workerEnvSchema = baseSchema
           message: `${key} is required when APP_ENV=production`,
         });
       }
+    }
+    /*
+      Resend's shared test sender delivers only to the Resend account's own
+      address. In production every donor's email would be refused.
+    */
+    const sender = env.RESEND_FROM_EMAIL ? senderAddress(env.RESEND_FROM_EMAIL) : null;
+    if (sender?.toLowerCase().endsWith('@resend.dev')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['RESEND_FROM_EMAIL'],
+        message:
+          'RESEND_FROM_EMAIL must be an address on your own verified domain in production, not @resend.dev',
+      });
     }
     // Every link in every email is built from this; the localhost default
     // would send donors to their own machine (Phase 12).

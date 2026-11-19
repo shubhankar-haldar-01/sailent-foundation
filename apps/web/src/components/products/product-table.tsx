@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 
-import { Button, cn, formatCurrency } from '@sailent/ui';
+import { Button, Card, CardContent, cn, formatCurrency } from '@sailent/ui';
 
 import { FormStatus } from '@/components/admin/form-shell';
 import { setProductStatus, type ActionState } from '@/lib/admin/actions';
@@ -14,7 +14,7 @@ import type { CatalogueProduct } from './types';
 const STATUS_STYLE: Record<CatalogueProduct['status'], string> = {
   active: 'bg-success-subtle text-success',
   inactive: 'bg-muted text-muted-foreground',
-  archived: 'bg-muted text-muted-foreground',
+  archived: 'bg-destructive/10 text-destructive font-semibold',
 };
 
 /**
@@ -42,16 +42,18 @@ export function ProductTable({ products }: { products: CatalogueProduct[] }) {
 
   if (products.length === 0) {
     return (
-      <div className="border-border rounded-lg border border-dashed p-8 text-center">
-        <p className="text-body font-medium">The catalogue is empty</p>
-        <p className="text-body-sm text-muted-foreground mx-auto mt-1 max-w-md">
-          A product is a specific thing a donor can fund — a school kit, a clinic day. Define it
-          once here and every campaign can offer it without anyone rewriting the description.
-        </p>
-        <Button asChild className="mt-4">
-          <Link href="/admin/products/new">Add the first product</Link>
-        </Button>
-      </div>
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+          <p className="text-body font-medium">The catalogue is empty</p>
+          <p className="text-body-sm text-muted-foreground mx-auto mt-1 max-w-md">
+            A product is a specific thing a donor can fund — a school kit, a clinic day. Define it
+            once here and every campaign can offer it without anyone rewriting the description.
+          </p>
+          <Button asChild className="mt-4">
+            <Link href="/admin/products/new">Add the first product</Link>
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -59,108 +61,119 @@ export function ProductTable({ products }: { products: CatalogueProduct[] }) {
     <div className="space-y-4">
       <FormStatus state={state} />
 
-      {/* The only element on the page allowed to scroll sideways. */}
-      <div className="border-border overflow-x-auto rounded-lg border">
-        <table className="w-full min-w-[46rem] border-collapse">
-          <caption className="sr-only">
-            Every product in the catalogue, with its default price, status and the number of
-            campaigns offering it.
-          </caption>
-          <thead>
-            <tr className="border-border bg-muted/50 border-b text-left">
-              <th scope="col" className="text-caption px-4 py-2.5 font-semibold">
-                Product
-              </th>
-              <th scope="col" className="text-caption px-4 py-2.5 text-right font-semibold">
-                Default price
-              </th>
-              <th scope="col" className="text-caption px-4 py-2.5 text-right font-semibold">
-                Campaigns
-              </th>
-              <th scope="col" className="text-caption px-4 py-2.5 font-semibold">
-                Status
-              </th>
-              <th scope="col" className="px-4 py-2.5">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-border divide-y">
-            {products.map((product) => (
-              <tr key={product.id} className={cn(product.status === 'archived' && 'opacity-60')}>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <ProductImage
-                      image={product.image}
-                      slug={product.slug}
-                      name={product.name}
-                      className="size-11 shrink-0"
-                      size={44}
-                    />
-                    <div className="min-w-0">
-                      <Link
-                        href={`/admin/products/${product.id}`}
-                        className="text-body-sm focus-visible:outline-ring rounded-sm font-medium underline-offset-4 hover:underline focus-visible:outline-2"
-                      >
-                        {product.name}
-                      </Link>
-                      <p className="text-caption text-muted-foreground line-clamp-1">
-                        {product.description}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td data-numeric="" className="text-body-sm px-4 py-3 text-right tabular-nums">
-                  {formatCurrency(product.defaultPrice)}
-                  <span className="text-muted-foreground"> / {product.unit}</span>
-                </td>
-                <td data-numeric="" className="text-body-sm px-4 py-3 text-right tabular-nums">
-                  {product.campaignCount === 0 ? (
-                    <span className="text-muted-foreground" title="Not offered on any campaign yet">
-                      —
-                    </span>
-                  ) : (
-                    product.campaignCount
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={cn(
-                      'text-caption inline-flex rounded-full px-2 py-0.5 font-medium capitalize',
-                      STATUS_STYLE[product.status],
-                    )}
-                  >
-                    {product.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {product.status === 'archived' ? (
-                    <form action={action} className="inline">
-                      <input type="hidden" name="id" value={product.id} />
-                      <input type="hidden" name="status" value="inactive" />
-                      <Button type="submit" size="sm" variant="ghost">
-                        Restore
-                      </Button>
-                    </form>
-                  ) : (
-                    <form action={action} className="inline">
-                      <input type="hidden" name="id" value={product.id} />
-                      <input
-                        type="hidden"
-                        name="status"
-                        value={product.status === 'active' ? 'inactive' : 'active'}
-                      />
-                      <Button type="submit" size="sm" variant="ghost">
-                        {product.status === 'active' ? 'Deactivate' : 'Activate'}
-                      </Button>
-                    </form>
-                  )}
-                </td>
+      {/* Card container with white background matching other admin tables */}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[46rem] border-collapse text-left text-sm">
+            <caption className="sr-only">
+              Every product in the catalogue, with its default price, status and the number of
+              campaigns offering it.
+            </caption>
+            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
+              <tr>
+                <th scope="col" className="px-5 py-3.5 font-semibold">
+                  Product
+                </th>
+                <th scope="col" className="px-5 py-3.5 text-right font-semibold">
+                  Default price
+                </th>
+                <th scope="col" className="px-5 py-3.5 text-right font-semibold">
+                  Campaigns
+                </th>
+                <th scope="col" className="px-5 py-3.5 font-semibold">
+                  Status
+                </th>
+                <th scope="col" className="px-5 py-3.5 text-right font-semibold">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-border bg-surface divide-y">
+              {products.map((product) => (
+                <tr
+                  key={product.id}
+                  className={cn(
+                    'hover:bg-muted/30 transition-colors',
+                    product.status === 'archived' && 'opacity-60',
+                  )}
+                >
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <ProductImage
+                        image={product.image}
+                        slug={product.slug}
+                        name={product.name}
+                        className="size-11 shrink-0"
+                        size={44}
+                      />
+                      <div className="min-w-0">
+                        <Link
+                          href={`/admin/products/${product.id}`}
+                          className="text-foreground hover:text-primary focus-visible:outline-ring rounded-sm font-medium transition-colors focus-visible:outline-2"
+                        >
+                          {product.name}
+                        </Link>
+                        <p className="text-caption text-muted-foreground line-clamp-1">
+                          {product.description}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td data-numeric="" className="text-body-sm px-5 py-3.5 text-right tabular-nums">
+                    {formatCurrency(product.defaultPrice)}
+                    <span className="text-muted-foreground"> / {product.unit}</span>
+                  </td>
+                  <td data-numeric="" className="text-body-sm px-5 py-3.5 text-right tabular-nums">
+                    {product.campaignCount === 0 ? (
+                      <span
+                        className="text-muted-foreground"
+                        title="Not offered on any campaign yet"
+                      >
+                        —
+                      </span>
+                    ) : (
+                      product.campaignCount
+                    )}
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span
+                      className={cn(
+                        'text-caption inline-flex rounded-full px-2 py-0.5 font-medium capitalize',
+                        STATUS_STYLE[product.status],
+                      )}
+                    >
+                      {product.status === 'archived' ? 'Deleted' : product.status}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    {product.status === 'archived' ? (
+                      <form action={action} className="inline">
+                        <input type="hidden" name="id" value={product.id} />
+                        <input type="hidden" name="status" value="inactive" />
+                        <Button type="submit" size="sm" variant="ghost">
+                          Restore
+                        </Button>
+                      </form>
+                    ) : (
+                      <form action={action} className="inline">
+                        <input type="hidden" name="id" value={product.id} />
+                        <input
+                          type="hidden"
+                          name="status"
+                          value={product.status === 'active' ? 'inactive' : 'active'}
+                        />
+                        <Button type="submit" size="sm" variant="ghost">
+                          {product.status === 'active' ? 'Deactivate' : 'Activate'}
+                        </Button>
+                      </form>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

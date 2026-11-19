@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   index,
@@ -34,6 +35,9 @@ export const teamMembers = pgTable(
     designation: varchar('designation', { length: 160 }).notNull(),
     department: varchar('department', { length: 120 }),
     memberType: teamMemberTypeEnum('member_type').notNull().default('staff'),
+    contactNumber: varchar('contact_number', { length: 30 }),
+    aadharNumber: varchar('aadhar_number', { length: 20 }),
+    address: text('address'),
     bio: text('bio'),
     experience: text('experience'),
     /** [{ label, url }] */
@@ -58,6 +62,17 @@ export const teamMembers = pgTable(
      * re-seed silently duplicates the whole team.
      */
     uniqueIndex('team_members_slug_unique').on(table.slug),
+    uniqueIndex('team_members_aadhar_unique')
+      .on(sql`regexp_replace(${table.aadharNumber}, '[^0-9]', '', 'g')`)
+      .where(sql`deleted_at IS NULL AND aadhar_number IS NOT NULL AND aadhar_number != ''`),
+    uniqueIndex('team_members_contact_number_unique')
+      .on(sql`right(regexp_replace(${table.contactNumber}, '[^0-9]', '', 'g'), 10)`)
+      .where(
+        sql`deleted_at IS NULL AND contact_number IS NOT NULL AND length(regexp_replace(contact_number, '[^0-9]', '', 'g')) >= 10`,
+      ),
+    uniqueIndex('team_members_email_public_unique')
+      .on(sql`lower(btrim(${table.emailPublic}))`)
+      .where(sql`deleted_at IS NULL AND email_public IS NOT NULL AND email_public != ''`),
     index('team_members_public_idx').on(table.isPublic, table.displayOrder),
     index('team_members_department_idx').on(table.department),
   ],

@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { Calendar, ChevronLeft, ChevronRight, Plus, Search, Users } from 'lucide-react';
+import { Calendar, Plus, Search, Users } from 'lucide-react';
 
 import { Badge, Button, Card, CardContent, formatDate, PageHeader } from '@sailent/ui';
 
+import { AdminPagination } from '@/components/admin/admin-pagination';
 import { StatusPill } from '@/components/admin/status-pill';
 import { adminFetch, type AdminEvent, type Paginated } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
@@ -14,7 +15,6 @@ const STATUSES = [
   { value: 'published', label: 'Published' },
   { value: 'draft', label: 'Draft' },
   { value: 'cancelled', label: 'Cancelled' },
-  { value: 'archived', label: 'Archived' },
 ] as const;
 
 const TIMINGS = [
@@ -67,7 +67,13 @@ function LifecycleBadge({ lifecycle }: { lifecycle?: string }) {
 export default async function AdminEventsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; when?: string; q?: string; page?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    when?: string;
+    q?: string;
+    page?: string;
+    sort?: string;
+  }>;
 }) {
   const params = await searchParams;
   const actor = await currentActor();
@@ -78,8 +84,8 @@ export default async function AdminEventsPage({
       when: params.when && params.when !== 'all' ? params.when : undefined,
       q: params.q,
       page: params.page,
-      limit: 25,
-      sort: 'startDate',
+      limit: 10,
+      sort: params.sort ?? '-createdAt',
     },
   });
 
@@ -213,6 +219,9 @@ export default async function AdminEventsPage({
                     Event
                   </th>
                   <th scope="col" className="px-5 py-3.5">
+                    Fee
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
                     Date & Time
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
@@ -241,12 +250,19 @@ export default async function AdminEventsPage({
                       </Link>
                       <p className="text-muted-foreground mt-0.5 text-xs">
                         /{event.slug}
-                        {event.isOnline
-                          ? ' · Virtual / Online'
-                          : event.venueName
-                            ? ` · ${event.venueName}`
-                            : ''}
+                        {event.venueName ? ` · ${event.venueName}` : ''}
                       </p>
+                    </td>
+                    <td className="px-5 py-3.5 text-xs">
+                      {event.isPaid && event.feeAmount ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-300">
+                          ₹{Math.round(event.feeAmount / 100)}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                          Free
+                        </span>
+                      )}
                     </td>
                     <td className="text-muted-foreground px-5 py-3.5 text-xs">
                       {formatDate(event.startDate)}
@@ -272,19 +288,14 @@ export default async function AdminEventsPage({
                       <LifecycleBadge lifecycle={event.registrationStatus} />
                     </td>
                     <td className="whitespace-nowrap px-5 py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {can(actor, 'event.registration.read') ? (
-                          <Button asChild variant="ghost" size="sm" className="gap-1 text-xs">
-                            <Link href={`/admin/events/${event.id}/registrations`}>
-                              <Users className="size-3.5" aria-hidden="true" />
-                              Attendees ({event.registeredCount})
-                            </Link>
-                          </Button>
-                        ) : null}
-                        <Button asChild variant="ghost" size="sm" className="text-xs">
-                          <Link href={`/admin/events/${event.id}/edit`}>Edit</Link>
+                      {can(actor, 'event.registration.read') ? (
+                        <Button asChild variant="ghost" size="sm" className="gap-1 text-xs">
+                          <Link href={`/admin/events/${event.id}/registrations`}>
+                            <Users className="size-3.5" aria-hidden="true" />
+                            Attendees ({event.registeredCount})
+                          </Link>
                         </Button>
-                      </div>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -294,67 +305,20 @@ export default async function AdminEventsPage({
         </Card>
       )}
 
-      {data.pagination.totalPages > 1 ? (
-        <Pagination
-          page={data.pagination.page}
-          totalPages={data.pagination.totalPages}
-          hasNext={data.pagination.hasNext}
-          query={params}
-          activeStatus={activeStatus}
-          activeWhen={activeWhen}
-        />
-      ) : null}
+      <AdminPagination
+        page={data.pagination.page}
+        totalPages={data.pagination.totalPages}
+        totalItems={data.pagination.total}
+        ariaLabel="Events pagination"
+        makeHref={(p) => {
+          const search = new URLSearchParams();
+          if (activeStatus && activeStatus !== 'all') search.set('status', activeStatus);
+          if (activeWhen && activeWhen !== 'all') search.set('when', activeWhen);
+          if (params.q) search.set('q', params.q);
+          search.set('page', String(p));
+          return `/admin/events?${search.toString()}`;
+        }}
+      />
     </div>
-  );
-}
-
-function Pagination({
-  page,
-  totalPages,
-  hasNext,
-  query,
-  activeStatus,
-  activeWhen,
-}: {
-  page: number;
-  totalPages: number;
-  hasNext: boolean;
-  query: { q?: string };
-  activeStatus: string;
-  activeWhen: string;
-}) {
-  const href = (target: number) => {
-    const search = new URLSearchParams();
-    if (activeStatus && activeStatus !== 'all') search.set('status', activeStatus);
-    if (activeWhen && activeWhen !== 'all') search.set('when', activeWhen);
-    if (query.q) search.set('q', query.q);
-    search.set('page', String(target));
-    return `/admin/events?${search.toString()}`;
-  };
-
-  return (
-    <nav aria-label="Events pagination" className="flex items-center justify-between pt-2">
-      <p className="text-muted-foreground text-xs">
-        Page {page} of {totalPages}
-      </p>
-      <div className="flex gap-2">
-        {page > 1 ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page - 1)} className="gap-1">
-              <ChevronLeft className="size-4" aria-hidden="true" />
-              Previous
-            </Link>
-          </Button>
-        ) : null}
-        {hasNext ? (
-          <Button asChild variant="secondary" size="sm">
-            <Link href={href(page + 1)} className="gap-1">
-              Next
-              <ChevronRight className="size-4" aria-hidden="true" />
-            </Link>
-          </Button>
-        ) : null}
-      </div>
-    </nav>
   );
 }

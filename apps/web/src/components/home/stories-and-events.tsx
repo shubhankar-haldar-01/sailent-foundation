@@ -89,9 +89,7 @@ function EventRow({ event }: { event: SailentEvent }) {
             </Link>
           </h3>
           <p className="mt-1 truncate text-xs text-[#64748B] sm:text-[13px] dark:text-slate-400">
-            {event.isOnline
-              ? 'Online Event'
-              : (event.venueName ?? event.city ?? 'Venue to be confirmed')}
+            {event.venueName ?? event.city ?? 'Venue to be confirmed'}
           </p>
           <time dateTime={event.startsAt} className="sr-only">
             {formatDate(event.startsAt)}

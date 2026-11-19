@@ -52,7 +52,7 @@ export async function alertStaffOfFailedSend(
     /*
       `not_configured` is not an incident.
 
-      On a development machine, and on any deployment without a Brevo key, every
+      On a development machine, and on any deployment without a Resend key, every
       single send reports it. Alerting on that would fill the inbox with rows
       saying the same thing about a state the administrator already knows, and
       train them to ignore the feed — which is how a real failure gets missed.

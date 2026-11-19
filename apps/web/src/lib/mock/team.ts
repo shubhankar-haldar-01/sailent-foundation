@@ -86,7 +86,7 @@ export const teamMembers: TeamMember[] = [
   {
     slug: 'priya-mehta',
     name: 'Priya Mehta',
-    designation: 'Communications Lead',
+    designation: 'Team',
     department: 'Programmes',
     memberType: 'staff',
     displayOrder: 5,
@@ -105,7 +105,7 @@ export const teamMembers: TeamMember[] = [
   {
     slug: 'karan-joshi',
     name: 'Karan Joshi',
-    designation: 'Program Associate',
+    designation: 'Team',
     department: 'Programmes',
     memberType: 'staff',
     displayOrder: 6,
@@ -124,7 +124,7 @@ export const teamMembers: TeamMember[] = [
   {
     slug: 'neha-sharma',
     name: 'Neha Sharma',
-    designation: 'Volunteer Coordinator',
+    designation: 'Team',
     department: 'Community Outreach',
     memberType: 'staff',
     displayOrder: 7,
@@ -143,7 +143,7 @@ export const teamMembers: TeamMember[] = [
   {
     slug: 'amit-kumar',
     name: 'Amit Kumar',
-    designation: 'Community Outreach',
+    designation: 'Team',
     department: 'Community Outreach',
     memberType: 'staff',
     displayOrder: 8,
@@ -162,7 +162,7 @@ export const teamMembers: TeamMember[] = [
   {
     slug: 'sneha-patel',
     name: 'Sneha Patel',
-    designation: 'Education Coordinator',
+    designation: 'Team',
     department: 'Programmes',
     memberType: 'staff',
     displayOrder: 9,
@@ -181,7 +181,7 @@ export const teamMembers: TeamMember[] = [
   {
     slug: 'vikram-rao',
     name: 'Vikram Rao',
-    designation: 'Program Support',
+    designation: 'Team',
     department: 'Operations',
     memberType: 'staff',
     displayOrder: 10,
@@ -200,7 +200,7 @@ export const teamMembers: TeamMember[] = [
   {
     slug: 'pooja-nair',
     name: 'Pooja Nair',
-    designation: 'Healthcare Coordinator',
+    designation: 'Team',
     department: 'Programmes',
     memberType: 'staff',
     displayOrder: 11,
@@ -219,7 +219,7 @@ export const teamMembers: TeamMember[] = [
   {
     slug: 'rahul-verma',
     name: 'Rahul Verma',
-    designation: 'Field Operations Specialist',
+    designation: 'Team',
     department: 'Operations',
     memberType: 'staff',
     displayOrder: 12,
@@ -238,7 +238,7 @@ export const teamMembers: TeamMember[] = [
   {
     slug: 'deepa-sen',
     name: 'Deepa Sen',
-    designation: 'Partnership Specialist',
+    designation: 'Team',
     department: 'Community Outreach',
     memberType: 'staff',
     displayOrder: 13,
@@ -257,7 +257,7 @@ export const teamMembers: TeamMember[] = [
   {
     slug: 'rajesh-gupta',
     name: 'Rajesh Gupta',
-    designation: 'Finance & Logistics',
+    designation: 'Team',
     department: 'Operations',
     memberType: 'staff',
     displayOrder: 14,

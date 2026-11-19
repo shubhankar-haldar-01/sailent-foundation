@@ -187,6 +187,34 @@ export class MeService {
       The tax id is ENCRYPTED before it is written; the plaintext never
       reaches the database.
     */
+    let taxIdHash: string | null | undefined;
+    if (input.taxIdNumber !== undefined) {
+      if (input.taxIdNumber) {
+        taxIdHash = createHash('sha256')
+          .update(input.taxIdNumber.trim().toUpperCase())
+          .digest('hex');
+        const [existing] = await this.database.db
+          .select({ id: donors.id })
+          .from(donors)
+          .where(and(eq(donors.taxIdHash, taxIdHash), ne(donors.id, donorId)))
+          .limit(1);
+        if (existing) {
+          throw new ConflictException(
+            'That PAN / Tax ID number already belongs to another donor.',
+            [
+              {
+                field: 'taxIdNumber',
+                code: 'CONFLICT',
+                message: 'That PAN / Tax ID number already belongs to another donor.',
+              },
+            ],
+          );
+        }
+      } else {
+        taxIdHash = null;
+      }
+    }
+
     const patch = {
       ...(input.firstName !== undefined ? { firstName: input.firstName } : {}),
       ...(input.lastName !== undefined ? { lastName: input.lastName } : {}),
@@ -197,16 +225,35 @@ export class MeService {
       ...(input.postalCode !== undefined ? { postalCode: input.postalCode } : {}),
       ...(input.taxIdType !== undefined ? { taxIdType: input.taxIdType } : {}),
       ...(input.taxIdNumber !== undefined
-        ? { taxIdNumber: this.encryption.encrypt(input.taxIdNumber, TAX_ID_CONTEXT) }
+        ? {
+            taxIdNumber: input.taxIdNumber
+              ? this.encryption.encrypt(input.taxIdNumber, TAX_ID_CONTEXT)
+              : null,
+            taxIdHash,
+          }
         : {}),
     };
 
     if (Object.keys(patch).length === 0) return this.profile(donorId);
 
-    await this.database.db
-      .update(donors)
-      .set({ ...patch, updatedAt: new Date() })
-      .where(eq(donors.id, donorId));
+    try {
+      await this.database.db
+        .update(donors)
+        .set({ ...patch, updatedAt: new Date() })
+        .where(eq(donors.id, donorId));
+    } catch (error) {
+      const err = error as { code?: string; constraint?: string };
+      if (err.code === '23505' && err.constraint === 'donors_tax_id_hash_unique') {
+        throw new ConflictException('That PAN / Tax ID number already belongs to another donor.', [
+          {
+            field: 'taxIdNumber',
+            code: 'CONFLICT',
+            message: 'That PAN / Tax ID number already belongs to another donor.',
+          },
+        ]);
+      }
+      throw error;
+    }
 
     /**
      * Audited with `actorType: 'donor'`.

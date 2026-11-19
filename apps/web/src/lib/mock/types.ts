@@ -224,6 +224,7 @@ export interface SailentEvent extends Omit<EventCardModel, 'coverImage'> {
   /** When registration shuts, if it shuts before the event starts. */
   registrationDeadline?: string | null;
   organizer?: string | null;
+  functions?: string[] | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -235,6 +236,7 @@ export interface TeamMember extends Omit<TeamMemberModel, 'photo'> {
   photo: MediaRef;
   memberType: 'staff' | 'trustee' | 'advisor';
   displayOrder: number;
+  createdAt?: string;
 }
 
 // ---------------------------------------------------------------------------

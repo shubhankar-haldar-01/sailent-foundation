@@ -12,7 +12,6 @@ import {
   CircleDollarSign,
   FileCode2,
   FileText,
-  Globe,
   Heart,
   HelpCircle,
   History,
@@ -24,14 +23,12 @@ import {
   Megaphone,
   MessageSquare,
   Package,
+  QrCode,
   Receipt,
   Scale,
-  Shield,
   ShieldCheck,
   Sliders,
   Sparkles,
-  Tag,
-  Target,
   UserCheck,
   UserCog,
   type LucideIcon,
@@ -110,9 +107,13 @@ export const adminNav: AdminNavGroup[] = [
     label: 'Programs & work',
     items: [
       { label: 'Programs', href: '/admin/programs', icon: Layers, permission: 'program.read' },
-      { label: 'Categories', href: '/admin/categories', icon: Tag, permission: 'category.read' },
       { label: 'Events', href: '/admin/events', icon: Calendar, permission: 'event.read' },
-      { label: 'Impact records', href: '/admin/impact', icon: Target, permission: 'impact.read' },
+      {
+        label: 'Gate scanner',
+        href: '/admin/gate',
+        icon: QrCode,
+        permission: 'event.attendance',
+      },
       {
         label: 'Success stories',
         href: '/admin/stories',
@@ -124,7 +125,6 @@ export const adminNav: AdminNavGroup[] = [
   {
     label: 'Content',
     items: [
-      { label: 'Pages', href: '/admin/pages', icon: Globe, permission: 'page.read' },
       { label: 'Blog', href: '/admin/blog', icon: BookOpen, permission: 'blog.read' },
       { label: 'Media library', href: '/admin/media', icon: Image, permission: 'media.read' },
       { label: 'FAQs', href: '/admin/faqs', icon: HelpCircle, permission: 'faq.read' },
@@ -170,7 +170,6 @@ export const adminNav: AdminNavGroup[] = [
     label: 'System',
     items: [
       { label: 'Users', href: '/admin/users', icon: UserCog, permission: 'user.read' },
-      { label: 'Roles & permissions', href: '/admin/roles', icon: Shield, permission: 'role.read' },
       { label: 'Settings', href: '/admin/settings', icon: Sliders, permission: 'settings.read' },
       { label: 'Audit logs', href: '/admin/audit-logs', icon: History, permission: 'audit.read' },
     ],

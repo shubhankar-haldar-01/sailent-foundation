@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
 
+import { AdminBackButton } from '@/components/admin/admin-back-button';
 import { StoryForm } from '@/components/admin/story-form';
 import { listMedia } from '@/lib/admin/api';
 import { currentActor, can } from '@/lib/auth/session';
@@ -18,13 +19,14 @@ export default async function NewStoryPage() {
     the picker is a convenience and the field still accepts a pasted URL.
   */
   const media = can(actor, 'media.read')
-    ? await listMedia({ visibility: 'public', limit: 10 }).catch(() => null)
+    ? await listMedia({ visibility: 'public', limit: 100 }).catch(() => null)
     : null;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Draft Success Story"
+        breadcrumb={<AdminBackButton href="/admin/stories">Back to stories</AdminBackButton>}
         description="Saved as a draft. Nothing is public until verified and published deliberately."
       />
 

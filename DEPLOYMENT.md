@@ -63,7 +63,7 @@ Copy `.env.example` to `.env` at the repo root (`.env` is gitignored), then adju
 - `FIELD_ENCRYPTION_KEY`: without it, saving a donor's PAN returns 503 (everything else works). Generate a local-only key with `openssl rand -base64 32`; the API tests use their own fixed test key.
 - `JWT_*`: a development fallback secret is used if unset.
 - `RAZORPAY_*`: without them, payments are unavailable (§6).
-- `BREVO_*`: without them, email is not sent.
+- `RESEND_*`: without them, no email is sent and the worker says so at startup (§7, "Email: setting up Resend").
 - `R2_*`: without them, uploads return 503.
 - `TEST_DATABASE_URL`, `TEST_REDIS_URL`, `E2E_DATABASE_URL`, `E2E_REDIS_URL`.
 
@@ -94,9 +94,27 @@ Build the workspace packages (`pnpm build`) before `pnpm dev`, and again after c
 **Donor:**
 1. Open `http://localhost:3000/sign-in` and enter an email address.
 2. In development, when `FEATURE_MOCK_DATA` is on and the environment is not production, the **API process console** logs the code at warn level as `[dev] OTP for <email>: <code>` (`apps/api/src/modules/auth/auth.service.ts`).
-   - The code is also emailed if Brevo is configured.
+   - The code is also emailed if Resend is configured (§7).
    - Codes expire after 10 minutes, allow 5 attempts, and are limited to 3 per 15 minutes per email address.
 3. Verifying a code signs the donor in, and creates a donor record if none exists.
+
+### Testing on a phone (camera, https)
+
+Browsers give the camera only to secure pages: `https://`, or `localhost` on the computer itself. A phone opening `http://<laptop address>:3000` therefore has no camera, and the gate scanner cannot read passes there.
+
+**An iPhone must trust the development certificate.** iPhone Safari refuses an untrusted certificate, and tapping past a warning is not enough for the camera.
+
+- **Run** `pnpm dev:https` next to `pnpm dev` (`scripts/dev-https.mjs`). It prints two addresses:
+  - `http://<laptop address>:3080`: a setup page. It serves only the instructions and the certificate download, over plain http, because a phone cannot open the https address before it trusts the certificate.
+  - `https://<laptop address>:3443`: the site, in front of the dev server. The desktop keeps using `http://localhost:3000`.
+- **Set the phone up once:** open the setup page on the phone and follow it.
+  - **iPhone** (use Safari): Download → Allow. Then Settings → Profile Downloaded → Install. Then Settings → General → About → Certificate Trust Settings → turn **on** "Sailent Foundation local development CA". Without that last step the camera stays off.
+  - **Android:** Settings → Security → Encryption & credentials → Install a certificate → CA certificate.
+- **Then** open `https://<laptop address>:3443/admin/gate/<event id>` on the phone, sign in, and allow the camera.
+- **The script lists phone visits as they happen.** That includes `REFUSED THE CERTIFICATE` when a phone does not trust it yet, and when a phone downloads the certificate. Paths are logged without query strings.
+- **Certificate files:** on the first run it creates a local certificate authority and a certificate for this computer's network addresses, in `.dev-https/`. That folder is git-ignored and holds the authority's **private key**, which never leaves the computer. When the network address changes, the certificate is re-issued automatically, signed by the same authority, so a phone is set up only once.
+- **When testing is over,** remove the profile from the phone: Settings → General → VPN & Device Management.
+- Development only. Production is served over https by Cloud Run.
 
 ## 4. Running E2E safely
 
@@ -212,7 +230,7 @@ Set **`APP_ENV=production`** when building and starting the web: it turns on HST
 
 **Organisation details (staff, in Admin → Settings).** Enter the contact email (contact-form messages are emailed there), phone, office hours, postal address, social links, and the registration details (registration number, PAN, 12A, 80G, registered as, trust deed, date of registration, CSR-1). The public site shows only what is entered; the DEMO values are never shown in production. The registration number is printed on receipts issued afterwards.
 
-**Email (Brevo, §7).** Contact notifications, newsletter confirmations, staff invitations and password-reset links go through the existing transactional email (`BREVO_*`) and use the worker's `APP_PUBLIC_URL` for links. Without Brevo, contact messages are still stored (Admin → Messages) and the send log shows `not_configured`; invitations and resets cannot be delivered, so the CLI scripts (§10) stay the way to create the first administrator.
+**Email (Resend, §7).** Contact notifications, newsletter confirmations, staff invitations and password-reset links go through the existing transactional email (`RESEND_*`) and use the worker's `APP_PUBLIC_URL` for links. Without Resend, contact messages are still stored (Admin → Messages) and the send log shows `not_configured`; invitations and resets cannot be delivered, so the CLI scripts (§10) stay the way to create the first administrator.
 
 **`MEDIA_PUBLIC_BASE_URL` (web, BUILD time).** The same value as the API's `R2_PUBLIC_BASE_URL`. `next.config.ts` turns it into the allowed remote image host, so library covers and gallery images render through `next/image`. Unset, no remote image is allowed (as before).
 
@@ -228,7 +246,7 @@ Set **`APP_ENV=production`** when building and starting the web: it turns on HST
 | Redis | api, worker | `REDIS_URL`, `TEST_REDIS_URL`, `E2E_REDIS_URL` | Local. Production: Memorystore over Direct VPC egress (§14). |
 | Cloudflare R2 | api only (the web reads only `MEDIA_PUBLIC_BASE_URL`) | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_PUBLIC`, `R2_BUCKET_PRIVATE`, `R2_PUBLIC_BASE_URL` | Implemented. Not set locally. The web's `MEDIA_PUBLIC_BASE_URL` must equal `R2_PUBLIC_BASE_URL`; it becomes one exact `images.remotePatterns` entry (no wildcard). In production both must be `https`, with no credentials, query or fragment — the API, the web's start-up check and the web build all refuse otherwise (Phase 14). |
 | Razorpay | api (the web loads `checkout.js`) | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Implemented; no keys anywhere. Webhook: `POST {API}/api/v1/payments/razorpay/webhook`. Production requires a live key (§6a). |
-| Brevo | worker | `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`, `APP_PUBLIC_URL` | Implemented; optional |
+| Resend | worker only | `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `RESEND_REPLY_TO`, `APP_PUBLIC_URL` | Implemented 2026-11-18 (replaced Brevo). Not set locally. **Required in production.** |
 | Sentry | api, worker, web (server side only) | `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE` | Implemented (Phase 14), off unless `SENTRY_DSN` is set; scrubbed (§17). `NEXT_PUBLIC_SENTRY_DSN` is reserved and unused. |
 | GA4 | — | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | **Not wired** (Phase 14 decision: no consent mechanism yet; §17) |
 | SMS | — | `SMS_*` | Declared, unused |
@@ -249,9 +267,31 @@ Other variable names:
 
 **Also enforced by `apiEnvSchema` in production (Phase 14):** `R2_PUBLIC_BASE_URL` is a safe public `https` base URL.
 
-**Enforced by `workerEnvSchema` in production:** `API_INTERNAL_URL` and `INTERNAL_API_SECRET`.
+**Enforced by `workerEnvSchema` in production:** `API_INTERNAL_URL`, `INTERNAL_API_SECRET`, `RESEND_API_KEY` and `RESEND_FROM_EMAIL` (a sender on your own domain, not `@resend.dev`). Everywhere: setting only one of `RESEND_API_KEY` and `RESEND_FROM_EMAIL` is refused, and each is checked for its format.
 
 **Enforced by `webEnvSchema` at start-up (`instrumentation.ts`, Phase 12; the container wrapper exits on failure, Phase 14):** `INTERNAL_API_SECRET`, `FEATURE_MOCK_DATA=false`, public `https` URLs, and a safe `MEDIA_PUBLIC_BASE_URL` in production. A malformed `SENTRY_DSN` is refused on all three services.
+
+### Email: setting up Resend (HUMAN; 2026-11-18)
+
+Every email is sent by the worker through Resend (`apps/worker/src/lib/email.ts`). The API only enqueues, so it never holds the key. Each email's outcome is written to the send log (Admin → Notifications), and a failed send also raises an in-app alert to staff.
+
+1. **Account and domain.** Create a Resend account. The free plan allows 3,000 emails a month and 100 a day. Under **Domains**, add the foundation's sending domain; a subdomain such as `mail.<domain>` keeps it apart from the main mailboxes. Resend then shows the DNS records to add at the DNS provider (Cloudflare): DKIM (a TXT record on `resend._domainkey`) and SPF (a TXT record and an MX record on the `send` subdomain). Copy them exactly as shown, and wait until the domain reads **Verified**. If the domain has no DMARC record, add one (`_dmarc`, starting `v=DMARC1; p=none;`): Gmail and Yahoo expect it.
+2. **API key.** Create a key with **Sending access** only, optionally limited to that domain. It is shown once.
+3. **Local.** In the root `.env`, set `RESEND_API_KEY` and `RESEND_FROM_EMAIL` (`Sailent Foundation <noreply@<verified domain>>`). `RESEND_REPLY_TO` is optional. Set both or neither: one without the other stops the worker.
+   - **Before the domain is verified:** use `Sailent Foundation <onboarding@resend.dev>`. Resend then delivers only to the address the account was created with.
+   - **Check it:** start the worker (`pnpm dev` starts it with everything else, or `pnpm --filter @sailent/worker dev`). Its log reads `Email: sending through Resend`. Request a sign-in or event registration code, and it arrives in the inbox.
+4. **Production (human, approved).**
+   - Create the secret with shell history off: `printf '%s' "$KEY" | gcloud secrets create sailent-resend-api-key --data-file=-`.
+   - Grant `roles/secretmanager.secretAccessor` on it to the **worker's** service account only.
+   - Export `RESEND_FROM_EMAIL` (and `RESEND_REPLY_TO`, or leave it empty) before filling the worker template (§12).
+   - The worker refuses to start in production without the key and the sender, or with an `@resend.dev` sender. Cloud Run then keeps the previous revision serving.
+5. **After deploying.** The worker log shows `Email: sending through Resend` and the sender domain, and Resend's **Emails** page lists each send. Two failure states show in the send log:
+   - `rejected`: permanent. For example, an unverified domain or a revoked key.
+   - `unreachable`: retried three times, then left failed. For example, an outage, a rate limit, or the daily quota.
+
+**Quota before launch.** The free plan's 100 emails a day can run out on a busy day, such as an event cancelled for a full hall or a donation drive. Sign-in and registration codes then stop arriving until the quota resets. Move to a paid plan before launch traffic.
+
+**Retries never send twice.** Each send carries an idempotency key derived from the message itself. A retried send whose answer was lost is recognised by Resend and not delivered again; Resend keeps these keys for 24 hours.
 
 ## 8. Production architecture on Google Cloud Run (Phase 14; owner decision — NOT YET DEPLOYED)
 
@@ -272,7 +312,7 @@ Other variable names:
      ▼
    Supabase Postgres (production; session pooler, TLS verified)
      ▲
-     │        ┌─► Brevo (transactional email)
+     │        ┌─► Resend (transactional email)
    Cloud Run: sailent-worker  (BullMQ consumer, INTERNAL, 1 instance, CPU always on)
               └─► calls sailent-api /internal/payments/reconcile every 10 min
 ```
@@ -286,7 +326,7 @@ Other variable names:
 | Redis | **Memorystore for Redis**, same region, reached over Direct VPC egress — never public | BullMQ needs a durable, non-evicting Redis (§17) |
 | Object storage | **Cloudflare R2** (external) | Existing architecture; credentials on the API only |
 | Payments | **Razorpay** (external) | Dashboard configuration is human-only (§6a) |
-| Email | **Brevo** (external) | Existing transactional email |
+| Email | **Resend** (external) | Transactional email, sent by the worker only |
 | Error tracking | **Sentry** (external, optional) | Server-side errors, scrubbed (§17) |
 | Logs and metrics | **Cloud Logging / Cloud Monitoring** (built in) | JSON logs with `severity`, `service`, `environment`, `requestId` |
 | Scheduling | **None external** — the always-on worker owns the one schedule (§18) | No Cloud Scheduler needed |
@@ -393,7 +433,8 @@ gcloud builds submit --config infrastructure/cloud-run/cloudbuild.yaml \
 ```bash
 export PROJECT_ID=<project> REGION=asia-south1 IMAGE_TAG=<sha> SITE_URL=https://<site> \
   API_URL=https://<api host> MEDIA_PUBLIC_BASE_URL=https://<media host> \
-  VPC_NETWORK=<network> VPC_SUBNET=<subnet> BREVO_SENDER_EMAIL=<sender> CLIENT_IP_HEADER=cf-connecting-ip
+  VPC_NETWORK=<network> VPC_SUBNET=<subnet> CLIENT_IP_HEADER=cf-connecting-ip \
+  RESEND_FROM_EMAIL='Sailent Foundation <noreply@<verified domain>>' RESEND_REPLY_TO=<reply address or empty>
 envsubst < infrastructure/cloud-run/api.service.yaml > /tmp/api.yaml   # review it
 gcloud run services replace /tmp/api.yaml --region "$REGION"
 ```
@@ -481,12 +522,11 @@ Values in **bold** come from Secret Manager (§16); everything else is a plain e
 | **`R2_ACCOUNT_ID`**, **`R2_ACCESS_KEY_ID`**, **`R2_SECRET_ACCESS_KEY`** | an R2 API token scoped to the two buckets |
 | `R2_BUCKET_PUBLIC`, `R2_BUCKET_PRIVATE` | `sailent-public`, `sailent-private` |
 | `R2_PUBLIC_BASE_URL` | the public bucket's custom domain, `https://…` — must equal the web's `MEDIA_PUBLIC_BASE_URL` |
-| **`BREVO_API_KEY`**, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME` | Brevo, with the sender domain verified |
 | `CORS_ORIGINS` | the site's origin |
 | `SWAGGER_ENABLED`, `FEATURE_MOCK_DATA` | `false` (enforced) |
 | **`SENTRY_DSN`**, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE` | optional; release = image tag |
 
-**Worker (`sailent-worker`)**: `APP_ENV`/`NODE_ENV`, **`DATABASE_URL`**, **`REDIS_URL`**, `APP_PUBLIC_URL` (the site, for links in emails), `API_INTERNAL_URL` (the API's URL) and **`INTERNAL_API_SECRET`** (both required in production), `WORKER_CONCURRENCY` (5), `PAYMENT_RECONCILE_INTERVAL_MS` (600000), **`BREVO_API_KEY`**, `BREVO_SENDER_*`, Sentry as above. `PORT` from Cloud Run takes precedence over `WORKER_PORT`.
+**Worker (`sailent-worker`)**: `APP_ENV`/`NODE_ENV`, **`DATABASE_URL`**, **`REDIS_URL`**, `APP_PUBLIC_URL` (the site, for links in emails), `API_INTERNAL_URL` (the API's URL) and **`INTERNAL_API_SECRET`** (both required in production), `WORKER_CONCURRENCY` (5), `PAYMENT_RECONCILE_INTERVAL_MS` (600000), **`RESEND_API_KEY`** and **`RESEND_FROM_EMAIL`** (both required in production), `RESEND_REPLY_TO`, Sentry as above. `PORT` from Cloud Run takes precedence over `WORKER_PORT`.
 
 **Web (`sailent-web`)**:
 - build arguments (§12): `APP_ENV=production`, `NEXT_PUBLIC_APP_URL`, `MEDIA_PUBLIC_BASE_URL` (https, exact host, no wildcard);
@@ -494,12 +534,12 @@ Values in **bold** come from Secret Manager (§16); everything else is a plain e
 
 **Client address (rate limits, audit):** `cf-connecting-ip` is trustworthy only if the service cannot be reached except through Cloudflare. A Cloud Run service with `ingress: all` also answers on its `*.run.app` address, where a caller can set that header to anything. Either take the direct address out of reach (a load balancer or domain mapping with `run.googleapis.com/default-url-disabled: 'true'`), or use `x-forwarded-for` with the right `TRUSTED_PROXY_HOPS`. After the first deploy, check one `auth.staff.login_succeeded` audit row against your own address before relying on either.
 
-**Outside the services (human):** Razorpay webhook URL `https://<api>/api/v1/payments/razorpay/webhook` with the events in §6a; the R2 public bucket's custom domain; Cloudflare DNS and TLS for the site, API and media hosts; Brevo sender-domain DNS (SPF, DKIM); a SUPER_ADMIN account created with `db:create-admin` and `db:harden` run (§10). **GA4 is not wired** (§7) — leave `NEXT_PUBLIC_GA_MEASUREMENT_ID` unset.
+**Outside the services (human):** Razorpay webhook URL `https://<api>/api/v1/payments/razorpay/webhook` with the events in §6a; the R2 public bucket's custom domain; Cloudflare DNS and TLS for the site, API and media hosts; the Resend sending domain's DNS (DKIM and SPF; §7); a SUPER_ADMIN account created with `db:create-admin` and `db:harden` run (§10). **GA4 is not wired** (§7) — leave `NEXT_PUBLIC_GA_MEASUREMENT_ID` unset.
 
 ## 16. Secret management
 
 - **Google Secret Manager holds every secret**, one secret per variable, named `sailent-<variable-in-kebab-case>` (`sailent-database-url`, `sailent-jwt-access-secret`, …; the full list is in the templates). The templates reference `version: latest`; pin a version number if you want rotations to require a deploy.
-- **Created by a human**, never by an agent, never in the repository: `printf '%s' "$VALUE" | gcloud secrets create sailent-jwt-access-secret --data-file=-` (with shell history off), then grant `roles/secretmanager.secretAccessor` **on that secret** to the service account(s) that need it — the API's on all its secrets; the worker's on database, Redis, internal secret, Brevo and Sentry; the web's on the internal secret and Sentry only. R2 and Razorpay credentials reach the API alone.
+- **Created by a human**, never by an agent, never in the repository: `printf '%s' "$VALUE" | gcloud secrets create sailent-jwt-access-secret --data-file=-` (with shell history off), then grant `roles/secretmanager.secretAccessor` **on that secret** to the service account(s) that need it — the API's on all its secrets; the worker's on database, Redis, internal secret, Resend and Sentry; the web's on the internal secret and Sentry only. R2 and Razorpay credentials reach the API alone.
 - **Never** put a secret in a `value:` field, a build argument, a Dockerfile, Cloud Build substitutions or a commit. `pnpm check:deploy` fails if a template sets a secret variable to a literal or contains a credential-shaped string.
 - **Generate** with `openssl rand -base64 48` (JWT, internal secret) and `openssl rand -base64 32` (field encryption key).
 - **Rotation:** add a new version, then deploy (or restart) the services that read it. Effects:

@@ -205,26 +205,6 @@ export const auditActorTypeEnum = pgEnum('audit_actor_type', [
 export const auditSeverityEnum = pgEnum('audit_severity', ['info', 'warning', 'critical']);
 
 /**
- * Which entities a category may be applied to.
- *
- * One lookup table serves programmes and campaigns because the sets overlap
- * almost entirely — "Disaster Relief" is both — and two tables would mean two
- * places to add a category and two chances to spell it differently.
- *
- * `blog` joined them in Phase 10.7 for the same reason, and only after asking
- * whether the blog needed a taxonomy of its own. It does not: an article about
- * the education programme belongs under the education the site already names.
- * A second `blog_categories` table would have meant two spellings of
- * "Child Welfare" and a public URL for each.
- *
- * `both` continues to mean "programme AND campaign", NOT "every kind". It
- * predates this value and widening it would silently re-file every existing
- * category as a blog category too; a category that should appear on articles
- * as well is filed as `blog` explicitly.
- */
-export const categoryKindEnum = pgEnum('category_kind', ['program', 'campaign', 'both', 'blog']);
-
-/**
  * What an FAQ is attached to (docs/database-architecture.md).
  *
  * `general` FAQs have a null context_id and appear on /faq; the rest hang off
