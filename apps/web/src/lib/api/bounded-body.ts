@@ -15,17 +15,18 @@
  * arrives and abandoned at the first byte past the ceiling, so a false or
  * missing length gains nothing.
  *
- * Next.js already caps the body it hands a route when the middleware runs on
- * that path (`middlewareClientMaxBodySize`, 10 MB), but it TRUNCATES silently:
+ * Next.js already caps the body it hands a route when `proxy.ts` (Next.js's
+ * middleware) runs on that path (`proxyClientMaxBodySize`, 10 MB), but it
+ * TRUNCATES silently:
  * the API then receives a cut-off upload and refuses it with a confusing
- * error. And the middleware does not run on a path that ends in a file
+ * error. And `proxy.ts` does not run on a path that ends in a file
  * extension (see its matcher), which the catch-all proxy route still accepts,
  * so `/api/bff/anything.png` had no cap at all.
  * ══════════════════════════════════════════════════════════════════════════
  */
 
 /**
- * Equal to Next.js's own middleware body limit, so a body over it is refused
+ * Equal to Next.js's own body limit behind `proxy.ts`, so a body over it is refused
  * whole with a 413 instead of being cut off. The largest legitimate body
  * through the proxy is an admin image upload, which the API caps at 10 MB.
  */

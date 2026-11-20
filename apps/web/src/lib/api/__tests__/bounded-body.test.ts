@@ -74,7 +74,7 @@ describe('readBoundedBody', () => {
     expect((await readBoundedBody(request, 64))?.byteLength).toBe(0);
   });
 
-  it('never exceeds the body Next.js hands a route behind middleware, which it truncates', () => {
+  it('never exceeds the body Next.js hands a route behind proxy.ts, which it truncates', () => {
     // Above this, Next.js cuts the body off silently; refusing whole is better.
     expect(MAX_PROXIED_BODY_BYTES).toBeLessThanOrEqual(10 * 1024 * 1024);
   });

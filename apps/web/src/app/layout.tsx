@@ -40,7 +40,11 @@ const bodyFont = Inter({
   weight: ['400', '500', '600'],
   display: 'swap',
   variable: '--font-body',
-  fallback: ['system-ui', 'sans-serif'],
+  // 'Inter Fallback' is defined in globals.css: Turbopack (Next.js 16) stopped
+  // generating it for Inter, so next/font's own adjustment is off here and the
+  // same metrics come from that @font-face instead.
+  adjustFontFallback: false,
+  fallback: ['Inter Fallback', 'system-ui', 'sans-serif'],
 });
 
 const headingFont = Manrope({
@@ -89,6 +93,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       lang="en-IN"
       suppressHydrationWarning
+      /*
+        `scroll-behavior: smooth` is set on <html> (tokens.css) for in-page
+        anchors. This attribute asks Next.js (16+) to suspend it during page
+        navigations, so a new page still starts at the top at once rather than
+        gliding up from where the last one was (the behaviour Next 15 had by
+        default).
+      */
+      data-scroll-behavior="smooth"
       className={`${bodyFont.variable} ${headingFont.variable} ${scriptFont.variable}`}
     >
       <body className="min-h-dvh antialiased">

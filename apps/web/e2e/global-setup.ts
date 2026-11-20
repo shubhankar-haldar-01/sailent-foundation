@@ -46,6 +46,16 @@ export function donorStateFor(project: string): string {
   return `e2e/.auth/donor-${project}.json`;
 }
 
+/**
+ * A donor of its own for `save-under-load.spec.ts` (2026-11-21).
+ *
+ * That test saves the donor profile again and again; borrowing a project's
+ * donor raced `dashboard.spec.ts`, whose last test SIGNS OUT and so revokes the
+ * session for every copy of it. A fifth sign-in stays inside the OTP budget
+ * (ten a window; see above), and the counters are cleared after setup anyway.
+ */
+export const SAVE_UNDER_LOAD_DONOR = 'save-under-load';
+
 /** Stable per project, so a re-run reuses the donor rather than making a new one. */
 export function donorFor(project: string) {
   const index = ['desktop', 'tablet', 'mobile', 'mobile-xs'].indexOf(project) + 1;
@@ -526,6 +536,7 @@ export default async function globalSetup() {
   for (const project of playwrightConfig.projects ?? []) {
     if (project.name) await createDonorSession(apiBase, appBase, project.name);
   }
+  await createDonorSession(apiBase, appBase, SAVE_UNDER_LOAD_DONOR);
 
   // And once more, because the donor sign-ins above spend the OTP budget the
   // same way — `dashboard.spec.ts` signs in a donor of its own.

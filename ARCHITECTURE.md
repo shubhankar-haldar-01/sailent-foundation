@@ -8,7 +8,7 @@ Verified against the code on 2026-10-06, with §1, §7–§11 updated for Phase 
 
 ```mermaid
 flowchart LR
-  B[Browser] -->|HTML, RSC| W[apps/web<br/>Next.js 15]
+  B[Browser] -->|HTML, RSC| W[apps/web<br/>Next.js 16]
   B -->|/api/bff/* with cookie| W
   W -->|server-side fetch<br/>Bearer token| A[apps/api<br/>NestJS /api/v1]
   RZ[Razorpay] -->|webhook| A
@@ -34,7 +34,7 @@ There are three deployables and one shared database. The packages are consumed a
 
 ## 2. Frontend — `apps/web`
 
-- **Framework:** Next.js 15 App Router with React 19 server components by default, and Tailwind v4.
+- **Framework:** Next.js 16 App Router (upgraded from 15.5 on 2026-11-21) with React 19 server components by default, and Tailwind v4. Builds use Turbopack, Next 16's default.
 - **Route groups:** `(public)` is the site, `(dashboard)/dashboard` is the donor area, and `admin` holds `admin/login` and `admin/(workspace)`.
 - **Public content** goes through `src/lib/content/*`:
   - `loadContent({ fromApi, fallback })` calls the API server-side via `createServerApiClient()` using `API_URL`, with a 10s timeout.
@@ -48,8 +48,8 @@ There are three deployables and one shared database. The packages are consumed a
 - **Organisation details** (Phase 13, `src/lib/content/organisation.ts`): the footer, `/contact`, `/about`, the site-wide JSON-LD and the "years of service" figure read `GET /settings/public` (Admin → Settings). An unset detail is left out; `lib/demo-org.ts` fills gaps only while mock data is on, never in production. The loader never throws (it feeds every page's footer).
 - **Public forms** (Phase 13): the contact form and newsletter sign-up are server actions (`src/lib/communications/actions.ts`) forwarding the client address; newsletter links land on `/newsletter/confirm` and `/newsletter/unsubscribe`, which act only on a button press.
 - **Search and FAQ** (Phase 13): `/search` is a GET form whose results come from `GET /search` on the server (published content only); `/faq` reads `GET /faqs`. Fixtures are only the development fallback.
-- **Staff account pages** (Phase 13): `/admin/accept-invite`, `/admin/forgot-password`, `/admin/reset-password` are reachable without a session (the middleware's allow-list); the token is read from the link's `#` fragment in the browser.
-- **Middleware** `src/middleware.ts` checks only that the session cookie *exists* for `/admin/*` and `/dashboard/*`. This is for redirect UX; it is not authorization.
+- **Staff account pages** (Phase 13): `/admin/accept-invite`, `/admin/forgot-password`, `/admin/reset-password` are reachable without a session (the proxy's allow-list); the token is read from the link's `#` fragment in the browser.
+- **Proxy** `src/proxy.ts` (Next.js's middleware, renamed in Next 16; it always runs on Node) checks only that the session cookie *exists* for `/admin/*` and `/dashboard/*`. This is for redirect UX; it is not authorization.
 - **Tokens:** `src/lib/auth/token-store.ts` keeps one httpOnly JSON cookie per audience: `{accessToken, refreshToken, expiresAt, actor}`. It refreshes 60s before expiry. There is a known risk: a refresh during a server-component render cannot set the cookie (see `SECURITY.md`).
 - **SEO:** `src/lib/seo/*` provides `buildMetadata`, canonical URLs, JSON-LD builders and the sitemap segments (route handlers `sitemap*.xml`).
 - **Design system:** `packages/ui/src/styles/tokens.css` (OKLCH tokens and utilities such as `hover-lift`, `rise-in`, `band-y` and `rail`), with Radix-based primitives.

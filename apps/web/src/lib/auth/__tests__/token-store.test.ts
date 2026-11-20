@@ -83,7 +83,7 @@ describe('session store — never rotate a token that cannot be saved', () => {
     canSet = false;
     expect(await store.accessToken()).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
-    // The cookie is left as it was, for the middleware to refresh.
+    // The cookie is left as it was, for `proxy.ts` to refresh.
     expect(JSON.parse(jar.get('test_session')!).refreshToken).toBe('old-refresh');
   });
 

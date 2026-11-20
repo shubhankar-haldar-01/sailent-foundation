@@ -227,3 +227,5 @@ grep -rn "animate-spin" apps/web/src --include='*.tsx'                          
 ```
 
 All three found nothing on 2026-11-20 (Phase 4).
+
+**Weight:** the system's budget is about 15 kB gzipped of JavaScript per page (Phase 5 measured at most +5 kB). Since Next.js 16 (2026-11-21), `next build` no longer prints "First Load JS", so measure a page's transferred JavaScript in the browser's network panel or Lighthouse, before and after a change.

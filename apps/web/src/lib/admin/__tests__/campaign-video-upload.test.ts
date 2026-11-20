@@ -22,7 +22,7 @@ vi.mock('node:fs', () => disk);
 const session = vi.hoisted(() => ({ token: null as string | null }));
 vi.mock('@/lib/auth/session', () => ({ getAccessToken: async () => session.token }));
 vi.mock('@/lib/api/forwarding', () => ({ requestForwardingHeaders: async () => ({}) }));
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 
 import { uploadCampaignVideo } from '../actions';

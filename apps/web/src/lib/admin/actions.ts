@@ -3,7 +3,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { randomBytes } from 'node:crypto';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { SOCIAL_NETWORKS } from '@sailent/validation';
@@ -68,11 +68,11 @@ function toState(error: unknown): ActionState {
  * public content nobody notices.
  */
 function revalidateCatalogue(slug?: string) {
-  for (const tag of ['programs', 'campaigns', 'impact']) revalidateTag(tag);
+  for (const tag of ['programs', 'campaigns', 'impact']) updateTag(tag);
   revalidatePath('/', 'layout');
   if (slug) {
-    revalidateTag(`campaign-${slug}`);
-    revalidateTag(`program-${slug}`);
+    updateTag(`campaign-${slug}`);
+    updateTag(`program-${slug}`);
   }
 }
 
@@ -831,8 +831,8 @@ function socialLinks(form: FormData): { label: string; url: string }[] | undefin
 }
 
 function revalidateTeam(slug?: string) {
-  revalidateTag('team');
-  if (slug) revalidateTag(`team-${slug}`);
+  updateTag('team');
+  if (slug) updateTag(`team-${slug}`);
   revalidatePath('/team');
   revalidatePath('/admin/team');
 }
@@ -1032,8 +1032,8 @@ export async function deleteTeamMember(_prev: ActionState, form: FormData): Prom
 // ---------------------------------------------------------------------------
 
 function revalidateEvents(slug?: string) {
-  revalidateTag('events');
-  if (slug) revalidateTag(`event-${slug}`);
+  updateTag('events');
+  if (slug) updateTag(`event-${slug}`);
   revalidatePath('/events');
   revalidatePath('/admin/events');
 }
@@ -1374,7 +1374,7 @@ export async function reauthenticate(_prev: ActionState, form: FormData): Promis
 function revalidateVolunteers(id?: string) {
   revalidatePath('/admin/volunteers');
   if (id) revalidatePath(`/admin/volunteers/${id}`);
-  revalidateTag('impact');
+  updateTag('impact');
 }
 
 /**
@@ -1780,7 +1780,7 @@ export async function updateSettings(_prev: ActionState, form: FormData): Promis
     revalidatePath('/admin/settings');
     revalidatePath('/admin/audit-logs');
     // The footer on every page, /contact, /about and the structured data.
-    revalidateTag('settings');
+    updateTag('settings');
     revalidatePath('/', 'layout');
     return { ok: true };
   } catch (error) {
@@ -1818,7 +1818,7 @@ const SETTINGS_FIELD_NAMES: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 function revalidateStories(slug?: string) {
-  revalidateTag('stories');
+  updateTag('stories');
   revalidatePath('/admin/stories');
   revalidatePath('/stories');
   if (slug) revalidatePath(`/stories/${slug}`);
@@ -2096,7 +2096,7 @@ export async function deleteMedia(_prev: ActionState, form: FormData): Promise<A
 // ---------------------------------------------------------------------------
 
 function revalidateBlog(slug?: string) {
-  revalidateTag('blog');
+  updateTag('blog');
   revalidatePath('/admin/blog');
   revalidatePath('/blog');
   if (slug) revalidatePath(`/blog/${slug}`);
@@ -2107,7 +2107,7 @@ function revalidateBlog(slug?: string) {
 
     `revalidatePath('/sitemap.xml')` looks right and is both redundant and
     harmful. Redundant because `sitemap.ts` reads the blog through the same
-    tagged fetch that `revalidateTag('blog')` above already invalidates; and
+    tagged fetch that `updateTag('blog')` above already invalidates; and
     harmful because revalidating a non-page route from an action invalidated
     enough of the client router that the form REMOUNTED — which reset
     `useActionState`, so the `redirectTo` it had just returned was discarded
@@ -2499,7 +2499,7 @@ export async function setContactMessageStatus(
 }
 
 function revalidateFaqs() {
-  revalidateTag('faqs');
+  updateTag('faqs');
   revalidatePath('/faq');
   revalidatePath('/admin/faqs');
 }
@@ -2643,7 +2643,7 @@ export async function setCampaignUpdateStatus(
       body: { status: String(form.get('status') ?? '') },
     });
     revalidateCatalogue(String(form.get('slug') ?? '') || undefined);
-    for (const tag of ['impact']) revalidateTag(tag);
+    for (const tag of ['impact']) updateTag(tag);
     revalidatePath(`/admin/campaigns/${campaignId}/edit`);
     return { ok: true };
   } catch (error) {

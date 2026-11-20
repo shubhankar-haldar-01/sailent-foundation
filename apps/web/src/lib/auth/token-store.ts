@@ -59,7 +59,7 @@ export function createSessionStore<TActor>(options: {
   }
 
   async function write(session: StoredSession<TActor>): Promise<void> {
-    // The same attributes the middleware writes (`sessionCookieOptions`).
+    // The same attributes `proxy.ts` writes (`sessionCookieOptions`).
     (await cookies()).set(
       options.cookieName,
       JSON.stringify(session),
@@ -137,7 +137,7 @@ export function createSessionStore<TActor>(options: {
       In a page render the new cookie cannot be written. Rotating anyway spends
       the old refresh token and loses the new one, and the next request's
       replay of the spent token revokes the whole session — which signed donors
-      out about fifteen minutes into every visit. The middleware refreshes two
+      out about fifteen minutes into every visit. `proxy.ts` refreshes two
       minutes early, before any render, so a render only gets here if that
       failed; it then uses the token while it lasts and never calls the API.
     */

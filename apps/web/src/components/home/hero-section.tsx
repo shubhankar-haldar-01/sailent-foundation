@@ -134,7 +134,12 @@ export function HeroSection({ metrics }: { metrics: ImpactMetric[] }) {
                   </li>
                 ))}
               </ul>
-              <p className="text-foreground sm:text-body-sm whitespace-nowrap text-xs font-medium">
+              {/*
+                One line from 360px up. Below that (WCAG reflow requires 320px)
+                the four avatars and the sentence do not fit side by side, so
+                the sentence may wrap rather than push the page sideways.
+              */}
+              <p className="text-foreground sm:text-body-sm min-w-0 whitespace-nowrap text-xs font-medium max-[359px]:whitespace-normal max-[359px]:leading-snug">
                 <span data-numeric="" className="text-primary font-bold tabular-nums">
                   {formatNumber(reached.value)}
                 </span>{' '}

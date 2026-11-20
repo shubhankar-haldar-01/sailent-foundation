@@ -89,7 +89,7 @@ function ensureTrailingSlash(value: string): string {
  * on that call. An action that writes something itself gets no such check,
  * and a server action is a public endpoint: anyone who has its id can call
  * it. The session cookie proves nothing on its own. It is readable JSON that
- * anyone can write, and the middleware only checks that it exists. The API
+ * anyone can write, and `proxy.ts` only checks that it exists. The API
  * verifies the token's signature, audience and revocation, and answers with
  * the permissions it actually grants.
  *

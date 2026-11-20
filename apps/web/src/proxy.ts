@@ -22,7 +22,7 @@ import {
  * revoked the session. Donors were signed out about fifteen minutes into a
  * visit, on whatever page they happened to open next.
  *
- * The middleware runs before any render and can set cookies, so it refreshes
+ * The proxy runs before any render and can set cookies, so it refreshes
  * a session that is within two minutes of expiry: the new cookie goes to the
  * browser AND into this request, so the page about to render sees it. A
  * session the API refuses is cleared rather than left to fail later. See
@@ -42,7 +42,7 @@ import {
  * 401 and the operator sees an error page instead of the sign-in form — which
  * is what happened before this file existed.
  *
- * Middleware runs before any rendering at all, so a request without a session
+ * The proxy runs before any rendering at all, so a request without a session
  * never reaches a page.
  *
  * WHAT THIS DOES AND DOES NOT CHECK.
@@ -56,7 +56,7 @@ import {
  * the correct outcome: the UI is not what protects anything. For donors in
  * particular, ownership is enforced in the SQL of every donor endpoint — the
  * API scopes each query by the session's donor id, so there is no request this
- * middleware could wave through that would return somebody else's giving.
+ * proxy could wave through that would return somebody else's giving.
  * ══════════════════════════════════════════════════════════════════════════
  */
 
@@ -90,7 +90,7 @@ const AREAS = [
 
 type CookieChange = { name: string; value: string; maxAge: number } | { name: string; value: null };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // 1. Keep sessions alive. Each audience's cookie is refreshed on its own —
   //    a donor cookie never touches the staff session, or the reverse.
   const changes: CookieChange[] = [];
@@ -156,12 +156,13 @@ function protect(request: NextRequest): NextResponse | null {
 }
 
 export const config = {
-  /**
-   * Node, not Edge: the refresh reads the client address the same way the
-   * rest of the server does, and keeps a short in-process memory of recent
-   * refreshes (`session-refresh.ts`), which the Edge runtime does not promise.
-   */
-  runtime: 'nodejs',
+  /*
+    Node, not Edge, and it must stay so: the refresh reads the client address
+    the same way the rest of the server does, and keeps a short in-process
+    memory of recent refreshes (`session-refresh.ts`), which the Edge runtime
+    does not promise. Since Next.js 16 a `proxy` always runs on Node (it was
+    `middleware.ts` with `runtime: 'nodejs'` before, 2026-11-21).
+  */
   /**
    * Every route except static files and images. The BFF passes through for
    * the refresh only — it never gets a redirect (it is not under `/admin` or

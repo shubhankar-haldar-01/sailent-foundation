@@ -10,6 +10,21 @@ Newest first.
 
 ---
 
+## 2026-11-21 — Next.js 16 (fixes the save stuck on "Saving…") (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| **`next` 15.5.29 → 16.4.6**; `@types/react(-dom)` 19.3; `@next/eslint-plugin-next` 16.4.6 | A server-action save could stay on "Saving…" for ever under server load on 15.5.29 (investigation below) | Web only. Builds use Turbopack, Next 16's default |
+| `revalidateTag(tag)` → **`updateTag(tag)`** in the admin actions (13 calls) | Next 16 requires a cache profile; `updateTag` keeps the immediate, read-your-writes behaviour | An edit shows on the public page at once, as before |
+| `middleware.ts` → **`proxy.ts`** (`export function proxy`) | Next 16 renamed it; it always runs on Node now | Session refresh and route protection unchanged (`proxy.test.ts`, `dashboard.spec`) |
+| `<html data-scroll-behavior="smooth">` | Next 16 no longer suspends smooth scrolling on page changes by itself | A new page still starts at the top at once |
+| **Inter's fallback face defined in `globals.css`**, next/font's own off for Inter | Turbopack builds stopped generating it for Inter | Text before Inter loads is metric-matched again; no shift when it swaps in |
+| **Hero impact ticker wraps below 360 px** | It overflowed a 320 px screen by 3 px (also on 15) | WCAG reflow at 320 px; unchanged from 360 px up |
+| **`e2e/save-under-load.spec.ts`**, with a donor of its own in `global-setup.ts` | Regression test: fails on 15.5.29 every run, passes on 16 | — |
+| Docs: `AGENTS.md`, `ARCHITECTURE.md`, `SECURITY.md`, `DEPLOYMENT.md` §4, `docs/ui-feedback.md` §9 | Next 16, the proxy, `.next/dev`, page-weight measurement | — |
+
+Tests: web 525/525, validation 317/317, typecheck and lint 15/15. Full e2e in an isolated copy: 380 passed / 77 failed on 16 against 376 / 80 on 15.5.29, same failures apart from one known flaky contrast check; four fixed. Screenshots of six pages at four widths: no visual change.
+
 ## 2026-11-21 — Investigation: a save stuck on "Saving…" under server load (no code changed)
 
 | Finding | Evidence | Next |

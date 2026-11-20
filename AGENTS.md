@@ -36,7 +36,7 @@ Universal instructions for **any** AI coding agent working in this repository: C
 |---|---|
 | Monorepo | pnpm workspaces (`packageManager: pnpm@9.15.4`) + Turborepo 2 (`apps/*`, `packages/*`) |
 | Node | `engines.node: ">=20.9.0"`. CI runs **Node 22** (`NODE_VERSION: '22'` in `ci.yml`). As of 2026-10-06 there is no `.nvmrc`. Use Node 22 locally to match CI. |
-| Web | Next.js 15 App Router, React 19, Tailwind CSS v4 (`@utility`, OKLCH tokens), TanStack Query, Radix primitives (`apps/web`) |
+| Web | Next.js 16 App Router (since 2026-11-21), React 19, Tailwind CSS v4 (`@utility`, OKLCH tokens), TanStack Query, Radix primitives (`apps/web`) |
 | API | NestJS (`apps/api`), Zod validation, pino logging, Swagger outside production |
 | Worker | BullMQ on Redis (`apps/worker`), Resend email (owner's choice, 2026-11-18; Brevo before) |
 | Database | PostgreSQL 17 locally; Supabase Postgres for production; Drizzle ORM (`packages/database`) |

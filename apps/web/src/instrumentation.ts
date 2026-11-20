@@ -22,7 +22,7 @@ import type { ErrorReporter } from '@sailent/config';
  * ══════════════════════════════════════════════════════════════════════════
  */
 export async function register(): Promise<void> {
-  // The edge runtime has no Node APIs and serves only the middleware.
+  // The edge runtime has no Node APIs; nothing here runs on it (`proxy.ts` is always Node).
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
 
   const { loadEnv, webEnvSchema } = await import('@sailent/config');

@@ -1,11 +1,11 @@
 // @vitest-environment node
-// The middleware runs on Node (`runtime: 'nodejs'`), not in a browser.
+// The proxy runs on Node (always, since Next.js 16), not in a browser.
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resetRefreshCache } from '@/lib/auth/session-refresh';
 
-import { middleware } from '../middleware';
+import { proxy } from '../proxy';
 
 const DONOR = 'sailent_donor_session';
 const STAFF = 'sailent_staff_session';
@@ -27,7 +27,7 @@ function visit(path: string, cookies: Record<string, string> = {}) {
   const header = Object.entries(cookies)
     .map(([name, value]) => `${name}=${encodeURIComponent(value)}`)
     .join('; ');
-  return middleware(
+  return proxy(
     new NextRequest(`http://localhost:3000${path}`, {
       headers: header ? { cookie: header } : {},
     }),
@@ -70,7 +70,7 @@ afterEach(() => {
  * cannot sign in yet, so they must not bounce to sign-in — and nothing else
  * under /admin may become reachable without a session.
  */
-describe('middleware — route protection', () => {
+describe('proxy — route protection', () => {
   it.each([
     '/admin/accept-invite',
     '/admin/forgot-password',
@@ -104,7 +104,7 @@ describe('middleware — route protection', () => {
  * cannot save the new cookie — refreshing there spent the token, lost the new
  * one, and the next replay revoked the session.
  */
-describe('middleware — keeping sessions alive', () => {
+describe('proxy — keeping sessions alive', () => {
   it('does nothing for a visitor without a session', async () => {
     const response = await visit('/');
     expect(fetchMock).not.toHaveBeenCalled();

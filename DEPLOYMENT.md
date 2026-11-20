@@ -118,7 +118,7 @@ Browsers give the camera only to secure pages: `https://`, or `localhost` on the
 
 ## 4. Running E2E safely
 
-`next dev` and `next start` share `apps/web/.next`. **Do not build or run Playwright in the main checkout while `next dev` is running.** Use an isolated copy:
+Since Next.js 16 (2026-11-21), `next dev` writes to `apps/web/.next/dev`, apart from `next build`/`next start` (`apps/web/.next`), and a lockfile stops two `next dev` or `next build` runs on one checkout. **Still run builds and Playwright in an isolated copy, not the main checkout:** the suite starts its own servers on ports 3100/4100 against the E2E database, and a build in the main checkout would change what a running `next start` serves. Use an isolated copy:
 
 1. Copy the repository:
    ```bash
@@ -464,7 +464,7 @@ Templates: `infrastructure/cloud-run/{api,worker,web}.service.yaml` (placeholder
 
 **Minimum one instance** on the API and web avoids cold starts on the donation path. Setting them to 0 is acceptable for a staging deployment.
 
-**More than one web instance signs people out unless requests stick (2026-10-09, not yet decided).** The web server renews a signed-in session in its middleware and remembers each renewal for 60 seconds, so the several requests of one page load share it (`apps/web/src/lib/auth/session-refresh.ts`). That memory is per instance. With `maxScale` above 1, two requests from one browser can reach different instances; the second has no memory of the renewal, sends the spent refresh token to the API, and the API revokes the session as a replay — the donor is signed out. Before the web service runs more than one instance, choose one (owner decision):
+**More than one web instance signs people out unless requests stick (2026-10-09, not yet decided).** The web server renews a signed-in session in its proxy (`proxy.ts`, Next.js's middleware) and remembers each renewal for 60 seconds, so the several requests of one page load share it (`apps/web/src/lib/auth/session-refresh.ts`). That memory is per instance. With `maxScale` above 1, two requests from one browser can reach different instances; the second has no memory of the renewal, sends the spent refresh token to the API, and the API revokes the session as a replay — the donor is signed out. Before the web service runs more than one instance, choose one (owner decision):
 - **Session affinity** on the web service (`gcloud run services update sailent-web --session-affinity`, or `run.googleapis.com/sessionAffinity: 'true'` in `web.service.yaml`) — best-effort, so it makes the collision rare rather than impossible;
 - **one web instance** (`maxScale: '1'`) to start with;
 - or later, **move that 60-second memory to Redis**, shared by every instance (needs the web service on the VPC, as the API is).

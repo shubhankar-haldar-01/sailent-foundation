@@ -18,11 +18,11 @@ import { clientIpFrom } from '@/lib/api/client-ip';
  * exactly like a stolen token being replayed, and the API revoked the whole
  * session. A donor was signed out about fifteen minutes into every visit.
  *
- * The middleware runs before any render and CAN set cookies, so the refresh
- * happens there (`middleware.ts`), and a render never rotates a token it
+ * The proxy (`proxy.ts`, Next.js's middleware) runs before any render and CAN
+ * set cookies, so the refresh happens there, and a render never rotates a token it
  * cannot save (`token-store.ts`).
  *
- * NOT `server-only`, and no `next/headers`: the middleware imports this.
+ * NOT `server-only`, and no `next/headers`: `proxy.ts` imports this.
  * ══════════════════════════════════════════════════════════════════════════
  */
 
@@ -62,14 +62,14 @@ export const STAFF_SESSION: SessionAudience = {
 export const SESSION_AUDIENCES = [DONOR_SESSION, STAFF_SESSION] as const;
 
 /**
- * How early the middleware refreshes. WIDER than the 60 seconds the session
+ * How early `proxy.ts` refreshes. WIDER than the 60 seconds the session
  * store allows itself, so by the time a page renders the token always has at
  * least a minute left and the render never reaches its own refresh path.
  */
 export const MIDDLEWARE_REFRESH_MARGIN_MS = 2 * 60_000;
 
 /**
- * The cookie's attributes — one definition for every writer, so the middleware
+ * The cookie's attributes — one definition for every writer, so `proxy.ts`
  * and the session store can never set two different cookies under one name.
  */
 export function sessionCookieOptions(maxAgeSeconds: number) {
