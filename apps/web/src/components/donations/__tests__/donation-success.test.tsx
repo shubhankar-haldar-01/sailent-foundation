@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { Toaster, resetToastsForTests } from '@sailent/ui';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -41,6 +42,7 @@ const organisation = (overrides: Partial<ReceiptOrganisation> = {}): ReceiptOrga
 });
 
 afterEach(() => {
+  resetToastsForTests();
   vi.unstubAllGlobals();
 });
 
@@ -93,18 +95,61 @@ describe('DonationSuccess', () => {
     expect(screen.queryByText('12A registration no.')).toBeNull();
   });
 
-  it('downloads the receipt through the BFF, and offers it only once there is a receipt', () => {
-    const { rerender } = render(
-      <DonationSuccess donation={donation()} receipt={receipt} organisation={organisation()} />,
+  it('downloads the receipt through the BFF, with a loading state and a toast', async () => {
+    let finish: (response: Response) => void = () => undefined;
+    const fetchMock = vi.fn(() => new Promise<Response>((resolve) => (finish = resolve)));
+    vi.stubGlobal('fetch', fetchMock);
+    const createObjectURL = vi.fn(() => 'blob:receipt');
+    Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() });
+    const clicked = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+    render(
+      <>
+        <DonationSuccess donation={donation()} receipt={receipt} organisation={organisation()} />
+        <Toaster />
+      </>,
     );
-    const link = screen.getByRole('link', { name: /download receipt \(pdf\)/i });
-    expect(link).toHaveAttribute('href', '/api/bff/donations/DON-TX7B7Z8D/receipt/pdf');
-    expect(link).toHaveAttribute('download', 'Donation-receipt-SFL-2026-003176.pdf');
 
-    rerender(
-      <DonationSuccess donation={donation()} receipt={null} organisation={organisation()} />,
+    const button = screen.getByRole('button', { name: /download receipt \(pdf\)/i });
+    fireEvent.click(button);
+    expect(fetchMock).toHaveBeenCalledWith('/api/bff/donations/DON-TX7B7Z8D/receipt/pdf', {
+      cache: 'no-store',
+    });
+    // Busy, and a second press does nothing.
+    expect(screen.getByRole('button', { name: /preparing receipt/i })).toBeDisabled();
+
+    await act(async () => {
+      finish(new Response(new Blob(['%PDF-']), { status: 200 }));
+    });
+    const anchor = clicked.mock.contexts[0] as HTMLAnchorElement;
+    expect(anchor.download).toBe('Donation-receipt-SFL-2026-003176.pdf');
+    expect(await screen.findByText('Receipt downloaded')).toBeVisible();
+  });
+
+  it('says so when the receipt cannot be downloaded, and offers to try again', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('', { status: 503 })),
     );
-    expect(screen.queryByRole('link', { name: /download receipt/i })).toBeNull();
+    render(
+      <>
+        <DonationSuccess donation={donation()} receipt={receipt} organisation={organisation()} />
+        <Toaster />
+      </>,
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /download receipt \(pdf\)/i }));
+    });
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Couldn’t download the receipt');
+    expect(within(alert).getByRole('button', { name: 'Try again' })).toBeVisible();
+  });
+
+  it('offers no download before there is a receipt', () => {
+    render(<DonationSuccess donation={donation()} receipt={null} organisation={organisation()} />);
+    expect(screen.queryByRole('button', { name: /download receipt/i })).toBeNull();
   });
 
   it('shares the campaign’s link, never this page’s', async () => {
@@ -126,7 +171,10 @@ describe('DonationSuccess', () => {
     const writeText = vi.fn(async () => undefined);
     vi.stubGlobal('navigator', { ...navigator, share: undefined, clipboard: { writeText } });
     render(
-      <DonationSuccess donation={donation()} receipt={receipt} organisation={organisation()} />,
+      <>
+        <DonationSuccess donation={donation()} receipt={receipt} organisation={organisation()} />
+        <Toaster />
+      </>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: /share this campaign/i }));
@@ -134,6 +182,7 @@ describe('DonationSuccess', () => {
     await waitFor(() =>
       expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/campaigns/mountain`),
     );
+    // The "Copied" pill.
     expect(await screen.findByText('Campaign link copied')).toBeVisible();
   });
 

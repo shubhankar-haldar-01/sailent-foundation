@@ -2,12 +2,34 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, ArrowLeft, FileText, Loader2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, FileText, ShieldCheck } from 'lucide-react';
 
-import { Alert, Button, Card, Input, Label, Switch, cn, formatCurrency } from '@sailent/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  FieldError,
+  Input,
+  Label,
+  Spinner,
+  Switch,
+  cn,
+  fieldErrorProps,
+  formatCurrency,
+} from '@sailent/ui';
 import { emailSchema, phoneSchema } from '@sailent/validation';
 
 import { attemptFor, basketKey, type CheckoutAttempt } from '@/lib/payments/checkout-attempt';
+import {
+  forgetAttempt,
+  saveAttempt,
+  saveDonor,
+  selectionKey,
+  storedAttempt,
+  storedDonor,
+  verdictFor,
+  type CheckoutDonorDetails,
+} from '@/lib/payments/checkout-session';
 import {
   loadRazorpayScript,
   openRazorpayCheckout,
@@ -26,10 +48,41 @@ export interface CheckoutSelection {
 
 type Stage =
   | { kind: 'form' }
+  | { kind: 'checking' }
   | { kind: 'creating' }
   | { kind: 'paying' }
   | { kind: 'verifying' }
-  | { kind: 'error'; message: string; retryable: boolean };
+  | { kind: 'cancelled' }
+  | { kind: 'error'; message: string; retryable: boolean; reference?: string };
+
+type FieldName = 'name' | 'email' | 'phone';
+const FIELD_ORDER: FieldName[] = ['name', 'email', 'phone'];
+
+/** One field's rule; the same rules run again on the server. */
+function validateField(field: FieldName, value: string): string | null {
+  const trimmed = value.trim();
+  if (field === 'name') return trimmed.length < 2 ? 'Enter your name' : null;
+  if (field === 'email') {
+    const result = emailSchema.safeParse(trimmed);
+    return result.success ? null : (result.error.issues[0]?.message ?? 'Enter a valid email');
+  }
+  const result = phoneSchema.safeParse(trimmed);
+  return result.success ? null : (result.error.issues[0]?.message ?? 'Enter a valid mobile number');
+}
+
+/** The donation's status on the server, or `unreachable`. */
+async function donationStatus(reference: string): Promise<string | null | 'unreachable'> {
+  try {
+    const response = await fetch(`/api/bff/donations/${encodeURIComponent(reference)}`, {
+      cache: 'no-store',
+    });
+    if (response.status === 404) return null;
+    const payload = (await response.json()) as { success?: boolean; data?: { status?: string } };
+    return payload.success && payload.data?.status ? payload.data.status : 'unreachable';
+  } catch {
+    return 'unreachable';
+  }
+}
 
 /**
  * Donor details, then payment.
@@ -52,6 +105,13 @@ type Stage =
  * connection, a closed laptop — the donation is still recorded when Razorpay
  * calls the server directly. That is why a failed verification says the payment
  * may still complete rather than declaring it lost.
+ *
+ * NEVER TWICE (Phase 3 of the UI feedback system, 2026-11-19). A second press
+ * of Pay while one is under way is ignored. An earlier attempt for the same
+ * basket, remembered by this tab (`checkout-session.ts`), is checked with the
+ * server before anything is created: paid goes to the receipt, still open
+ * reopens the same order, finished starts afresh. Closing Razorpay is
+ * "cancelled", not an error, and the donor's details stay for a retry.
  * ══════════════════════════════════════════════════════════════════════════
  */
 export function DonationCheckout({
@@ -65,20 +125,83 @@ export function DonationCheckout({
 }) {
   const router = useRouter();
   const [stage, setStage] = React.useState<Stage>({ kind: 'form' });
-  // A failed payment's message is brought into view and focused (`useRevealResult`).
-  const resultRef = useRevealResult(stage.kind === 'error' ? stage : null);
-  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  // A payment's outcome here (failed, cancelled) is brought into view and focused.
+  const resultRef = useRevealResult(
+    stage.kind === 'error' || stage.kind === 'cancelled' ? stage : null,
+  );
+  const [errors, setErrors] = React.useState<Partial<Record<FieldName, string>>>({});
   const [isAnonymous, setIsAnonymous] = React.useState(false);
   /*
     The current attempt: the donation and order already created for this exact
-    request, reused when the donor tries again (Phase 11, `checkout-attempt.ts`).
+    request, reused when the donor tries again (Phase 11, `checkout-attempt.ts`),
+    and remembered by this tab (`checkout-session.ts`).
   */
   const attemptRef = React.useRef<CheckoutAttempt | null>(null);
+  const submitting = React.useRef(false);
+  const formRef = React.useRef<HTMLFormElement>(null);
+  const basket = React.useMemo(() => selectionKey(selection), [selection]);
+  // Details remembered from earlier in this visit; the inputs remount once to show them.
+  const [prefill, setPrefill] = React.useState<{
+    version: number;
+    donor: CheckoutDonorDetails | null;
+  }>({ version: 0, donor: null });
 
-  const busy = stage.kind === 'creating' || stage.kind === 'paying' || stage.kind === 'verifying';
+  const busy =
+    stage.kind === 'checking' ||
+    stage.kind === 'creating' ||
+    stage.kind === 'paying' ||
+    stage.kind === 'verifying';
+
+  /** Paid or being confirmed: show the result, and never take a second payment. */
+  const showResult = React.useCallback(
+    (reference: string) => {
+      router.replace(`/donation/${reference}`);
+    },
+    [router],
+  );
+
+  // On arrival: restore what this tab remembers, and settle an earlier attempt.
+  React.useEffect(() => {
+    let cancelled = false;
+    const donor = storedDonor();
+    if (donor) {
+      setPrefill({ version: 1, donor });
+      setIsAnonymous(donor.anonymous);
+    }
+    const earlier = storedAttempt(basket);
+    if (!earlier?.handoff?.reference) return;
+    const reference = earlier.handoff.reference;
+    void donationStatus(reference).then((status) => {
+      if (cancelled || status === 'unreachable') return;
+      const verdict = verdictFor(status);
+      if (verdict === 'show-result') {
+        if (status === 'successful') forgetAttempt();
+        showResult(reference);
+      } else if (verdict === 'reopen') {
+        attemptRef.current = earlier;
+      } else {
+        forgetAttempt();
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [basket, showResult]);
+
+  function onFieldBlur(field: FieldName, value: string) {
+    setErrors((current) => ({ ...current, [field]: validateField(field, value) ?? undefined }));
+  }
+
+  function onFieldChange(field: FieldName, value: string) {
+    // Corrected live once shown, so the donor sees the moment it is right.
+    if (!errors[field]) return;
+    setErrors((current) => ({ ...current, [field]: validateField(field, value) ?? undefined }));
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // A second press before the first has finished does nothing.
+    if (submitting.current) return;
     const form = new FormData(event.currentTarget);
 
     const donor = {
@@ -94,18 +217,39 @@ export function DonationCheckout({
      * server. It exists so a typo is caught before a network round trip, not
      * because anything here is trusted.
      */
-    const next: Record<string, string> = {};
-    if (donor.name.length < 2) next.name = 'Enter your name';
-    const email = emailSchema.safeParse(donor.email);
-    if (!email.success) next.email = email.error.issues[0]?.message ?? 'Enter a valid email';
-    const phone = phoneSchema.safeParse(donor.phone);
-    if (!phone.success)
-      next.phone = phone.error.issues[0]?.message ?? 'Enter a valid mobile number';
-
+    const next: Partial<Record<FieldName, string>> = {};
+    for (const field of FIELD_ORDER) {
+      const error = validateField(field, donor[field]);
+      if (error) next[field] = error;
+    }
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    const firstInvalid = FIELD_ORDER.find((field) => next[field]);
+    if (firstInvalid) {
+      const input = formRef.current?.querySelector<HTMLInputElement>(`#${firstInvalid}`);
+      input?.scrollIntoView?.({ block: 'center' });
+      input?.focus({ preventScroll: true });
+      return;
+    }
 
-    setStage({ kind: 'creating' });
+    submitting.current = true;
+    try {
+      await pay(donor);
+    } finally {
+      submitting.current = false;
+    }
+  }
+
+  async function pay(donor: CheckoutDonorDetails) {
+    saveDonor(donor);
+
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setStage({
+        kind: 'error',
+        message: 'You’re offline. Check your connection, then try again. Nothing has been charged.',
+        retryable: true,
+      });
+      return;
+    }
 
     const requestBody = {
       campaignSlug: selection.campaignSlug,
@@ -117,6 +261,33 @@ export function DonationCheckout({
     };
     const attempt = attemptFor(attemptRef.current, basketKey(requestBody));
     attemptRef.current = attempt;
+
+    // An earlier attempt for this request: ask the server what became of it first.
+    if (attempt.handoff?.reference) {
+      setStage({ kind: 'checking' });
+      const status = await donationStatus(attempt.handoff.reference);
+      if (status === 'unreachable') {
+        setStage({
+          kind: 'error',
+          message: 'We could not reach our server. Nothing new has been charged.',
+          retryable: true,
+          reference: attempt.handoff.reference,
+        });
+        return;
+      }
+      const verdict = verdictFor(status);
+      if (verdict === 'show-result') {
+        showResult(attempt.handoff.reference);
+        return;
+      }
+      if (verdict === 'start-afresh') {
+        forgetAttempt();
+        attemptRef.current = attemptFor(null, basketKey(requestBody));
+        return pay(donor);
+      }
+    }
+
+    setStage({ kind: 'creating' });
 
     // The same request as last time reopens its order rather than creating a
     // second donation for it; otherwise the donation is created now.
@@ -148,6 +319,7 @@ export function DonationCheckout({
         }
 
         attempt.handoff = payload.data;
+        saveAttempt(basket, attempt);
       } catch {
         setStage({
           kind: 'error',
@@ -166,6 +338,7 @@ export function DonationCheckout({
         kind: 'error',
         message: 'The payment window could not load. Nothing has been charged.',
         retryable: true,
+        reference: handoff.reference,
       });
       return;
     }
@@ -175,46 +348,78 @@ export function DonationCheckout({
 
     // Closing the payment window is a normal thing to do, and is not an error.
     if (outcome.kind === 'dismissed') {
-      setStage({ kind: 'form' });
+      setStage({ kind: 'cancelled' });
       return;
     }
 
     if (outcome.kind === 'failed') {
-      setStage({ kind: 'error', message: outcome.reason, retryable: true });
+      setStage({
+        kind: 'error',
+        message: outcome.reason,
+        retryable: true,
+        reference: handoff.reference,
+      });
       return;
     }
 
     setStage({ kind: 'verifying' });
 
     try {
-      const verified = await fetch(`/api/bff/donations/${handoff.donationId}/verify-payment`, {
+      await fetch(`/api/bff/donations/${handoff.donationId}/verify-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(outcome.result),
       });
-
-      if (!verified.ok) {
-        /**
-         * Verification failed, but the money may well have been taken — and
-         * Razorpay's webhook will record it independently. Sending the donor to
-         * the status page is the honest move: it polls, and it will show the
-         * donation succeeding a few seconds later if it did.
-         *
-         * Telling them it failed here would be a guess, and the wrong guess
-         * makes somebody pay twice.
-         */
-        router.push(`/donation/${handoff.reference}`);
-        return;
-      }
-
-      router.push(`/donation/${handoff.reference}`);
     } catch {
-      router.push(`/donation/${handoff.reference}`);
+      // Unreachable: the status page asks again, and the webhook records it.
     }
+    /**
+     * Whatever verification said, the status page decides what to show. A
+     * failed verification may still be a taken payment that Razorpay's
+     * webhook records a moment later; calling it failed here would be a
+     * guess, and the wrong guess makes somebody pay twice.
+     */
+    if (handoff.reference) router.push(`/donation/${handoff.reference}`);
   }
+
+  const payLabel = `Pay ${formatCurrency(selection.displayTotal)}`;
+  const busyLabel =
+    stage.kind === 'checking'
+      ? 'Checking…'
+      : stage.kind === 'creating'
+        ? 'Preparing your donation…'
+        : stage.kind === 'paying'
+          ? 'Waiting for payment…'
+          : 'Confirming your payment…';
+  const fieldEvents = (field: FieldName) => ({
+    onBlur: (event: React.FocusEvent<HTMLInputElement>) =>
+      onFieldBlur(field, event.currentTarget.value),
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+      onFieldChange(field, event.currentTarget.value),
+  });
 
   return (
     <div className={cn('grid gap-8 lg:grid-cols-[1fr_20rem] lg:items-start', className)}>
+      {stage.kind === 'verifying' ? (
+        /*
+          Full screen while the SERVER confirms. Nothing can be pressed, and
+          the donor is told not to leave: the result is on its way.
+        */
+        <div
+          role="status"
+          aria-live="polite"
+          className="bg-background/95 z-(--z-overlay) fixed inset-0 grid place-items-center p-6 backdrop-blur-sm"
+        >
+          <div className="max-w-sm text-center">
+            <Spinner className="text-primary mx-auto size-8" />
+            <p className="text-h3 mt-4 font-semibold">Confirming your payment…</p>
+            <p className="text-body-sm text-muted-foreground mt-2">
+              This usually takes a few seconds. Please don’t close or refresh this page.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
       <Card className="p-6 md:p-8">
         {onBack ? (
           <Button variant="ghost" size="sm" onClick={onBack} disabled={busy} className="-ml-2 mb-4">
@@ -230,14 +435,41 @@ export function DonationCheckout({
 
         {stage.kind === 'error' ? (
           <Alert ref={resultRef} variant="destructive" role="alert" className="mt-5">
-            <AlertTriangle className="size-4" aria-hidden="true" />
             <span>{stage.message}</span>
+            {stage.reference ? (
+              <span className="text-caption mt-1 block">
+                Reference{' '}
+                <span data-numeric="" className="font-semibold">
+                  {stage.reference}
+                </span>
+                . Your details are still here; you can try again.
+              </span>
+            ) : null}
           </Alert>
         ) : null}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-5" noValidate>
+        {stage.kind === 'cancelled' ? (
+          <Alert ref={resultRef} variant="info" role="status" className="mt-5">
+            <span>
+              <strong>Payment cancelled.</strong> Your donation wasn’t made. Your details are still
+              here, so you can pay whenever you’re ready.
+            </span>
+          </Alert>
+        ) : null}
+
+        <form ref={formRef} onSubmit={handleSubmit} className="mt-6 space-y-5" noValidate>
           <Field id="name" label="Full name" error={errors.name} required>
-            <Input id="name" name="name" autoComplete="name" required disabled={busy} />
+            <Input
+              key={`name-${prefill.version}`}
+              id="name"
+              name="name"
+              autoComplete="name"
+              required
+              disabled={busy}
+              defaultValue={prefill.donor?.name}
+              {...fieldEvents('name')}
+              {...fieldErrorProps('name', errors.name)}
+            />
           </Field>
 
           <Field
@@ -248,12 +480,16 @@ export function DonationCheckout({
             hint="Your receipt goes here."
           >
             <Input
+              key={`email-${prefill.version}`}
               id="email"
               name="email"
               type="email"
               autoComplete="email"
               required
               disabled={busy}
+              defaultValue={prefill.donor?.email}
+              {...fieldEvents('email')}
+              {...fieldErrorProps('email', errors.email, 'email-hint')}
             />
           </Field>
 
@@ -264,7 +500,18 @@ export function DonationCheckout({
             required
             hint="Used to find your giving history if you contact us."
           >
-            <Input id="phone" name="phone" type="tel" autoComplete="tel" required disabled={busy} />
+            <Input
+              key={`phone-${prefill.version}`}
+              id="phone"
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              required
+              disabled={busy}
+              defaultValue={prefill.donor?.phone}
+              {...fieldEvents('phone')}
+              {...fieldErrorProps('phone', errors.phone, 'phone-hint')}
+            />
           </Field>
 
           <div className="border-border flex items-start gap-3 rounded-lg border p-4">
@@ -297,16 +544,25 @@ export function DonationCheckout({
             terms off the site until there is (e2e/phase-9.spec.ts).
           */}
 
-          <Button type="submit" size="lg" fullWidth disabled={busy}>
-            {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-            {stage.kind === 'creating'
-              ? 'Preparing your donation…'
-              : stage.kind === 'paying'
-                ? 'Waiting for payment…'
-                : stage.kind === 'verifying'
-                  ? 'Confirming your payment…'
-                  : `Pay ${formatCurrency(selection.displayTotal)}`}
+          <Button
+            type="submit"
+            size="lg"
+            fullWidth
+            isLoading={busy}
+            loadingText={busyLabel}
+            loadingLabel={busyLabel}
+          >
+            {payLabel}
           </Button>
+
+          {stage.kind === 'paying' || stage.kind === 'verifying' ? (
+            <p
+              role="status"
+              className="text-caption text-warning-foreground bg-warning-subtle rounded-md px-3 py-2 text-center font-medium"
+            >
+              Don’t close or refresh this page until your payment is complete.
+            </p>
+          ) : null}
 
           <p className="text-caption text-muted-foreground text-center">
             Payments are handled by Razorpay. We never see your card details.
@@ -407,12 +663,13 @@ function Field({
         ) : null}
       </Label>
       {children}
-      {hint ? <p className="text-caption text-muted-foreground">{hint}</p> : null}
-      {error ? (
-        <p role="alert" className="text-caption text-destructive">
-          {error}
+      {hint ? (
+        <p id={`${id}-hint`} className="text-caption text-muted-foreground">
+          {hint}
         </p>
       ) : null}
+      {/* Linked to the input (`fieldErrorProps`), so it is read with the field. */}
+      <FieldError fieldId={id} error={error} />
     </div>
   );
 }

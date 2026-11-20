@@ -4,8 +4,10 @@ import * as React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Check, Download, Info, Lock, Share2 } from 'lucide-react';
 
-import { Button, Card, formatCurrency } from '@sailent/ui';
+import { Button, Card, formatCurrency, toast } from '@sailent/ui';
 import { rupeesInWords } from '@sailent/validation';
+
+import { useAsyncAction } from '@/lib/feedback/use-async-action';
 
 /**
  * A successful donation: the page a donor lands on after paying.
@@ -113,8 +115,6 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 
 /** Shares the CAMPAIGN, never this page: this page's link is private to the donor. */
 function ShareCampaign({ slug, title }: { slug: string; title: string }) {
-  const [copied, setCopied] = React.useState(false);
-
   async function share() {
     const url = `${window.location.origin}/campaigns/${slug}`;
     if (typeof navigator.share === 'function') {
@@ -127,10 +127,10 @@ function ShareCampaign({ slug, title }: { slug: string; title: string }) {
     }
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2500);
+      toast.copied('Campaign link copied');
     } catch {
-      window.prompt('Copy this link to share the campaign', url);
+      // No clipboard: the link itself, to copy by hand.
+      toast.info('Copy this link to share', { description: url, duration: 10_000 });
     }
   }
 
@@ -142,7 +142,60 @@ function ShareCampaign({ slug, title }: { slug: string; title: string }) {
       onClick={() => void share()}
     >
       <Share2 aria-hidden="true" />
-      <span aria-live="polite">{copied ? 'Campaign link copied' : 'Share this campaign'}</span>
+      Share this campaign
+    </Button>
+  );
+}
+
+/**
+ * Downloads the receipt PDF with a loading state and a toast either way
+ * (Phase 3 of the UI feedback system), instead of a plain link that gives no
+ * sign of progress or failure.
+ */
+function DownloadReceipt({
+  reference,
+  receiptNumber,
+}: {
+  reference: string;
+  receiptNumber: string;
+}) {
+  const download = useAsyncAction(
+    async () => {
+      const response = await fetch(
+        `/api/bff/donations/${encodeURIComponent(reference)}/receipt/pdf`,
+        {
+          cache: 'no-store',
+        },
+      );
+      if (!response.ok) {
+        throw Object.assign(new Error('receipt download failed'), {
+          code: response.status === 404 ? 'NOT_FOUND' : 'SERVICE_UNAVAILABLE',
+          status: response.status,
+        });
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Donation-receipt-${receiptNumber}.pdf`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    },
+    { success: 'Receipt downloaded', errorTitle: 'Couldn’t download the receipt' },
+  );
+
+  return (
+    <Button
+      type="button"
+      className="w-full"
+      isLoading={download.pending}
+      loadingText="Preparing receipt…"
+      onClick={() => void download.run()}
+    >
+      <Download aria-hidden="true" />
+      Download receipt (PDF)
     </Button>
   );
 }
@@ -308,15 +361,10 @@ export function DonationSuccess({
 
           <div className="mt-3.5 space-y-2">
             {receipt ? (
-              <Button asChild className="w-full">
-                <a
-                  href={`/api/bff/donations/${donation.reference}/receipt/pdf`}
-                  download={`Donation-receipt-${receipt.receiptNumber}.pdf`}
-                >
-                  <Download aria-hidden="true" />
-                  Download receipt (PDF)
-                </a>
-              </Button>
+              <DownloadReceipt
+                reference={donation.reference}
+                receiptNumber={receipt.receiptNumber}
+              />
             ) : null}
             {donation.campaignSlug ? (
               <ShareCampaign slug={donation.campaignSlug} title={campaign} />

@@ -2,9 +2,9 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { AlertTriangle, Clock, Loader2, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Clock, RotateCcw } from 'lucide-react';
 
-import { Alert, Button, Card } from '@sailent/ui';
+import { Alert, Button, Card, Spinner } from '@sailent/ui';
 
 import { DonationSuccess, type ReceiptOrganisation } from './donation-success';
 
@@ -75,6 +75,8 @@ export function DonationStatus({
   React.useEffect(() => {
     let cancelled = false;
     let attempt = 0;
+    let settledNow = false;
+    let timer: number | undefined;
     // ~90 seconds of backoff: brisk at first, because most donations settle
     // almost immediately, then slower so a long wait is not a request storm.
     const delays = [
@@ -98,6 +100,7 @@ export function DonationStatus({
 
         const settled = payload.data.status !== 'pending' && payload.data.status !== 'processing';
         if (settled) {
+          settledNow = true;
           setPhase('settled');
           if (payload.data.status === 'successful') void loadReceipt();
           return;
@@ -111,7 +114,7 @@ export function DonationStatus({
         setPhase('waiting');
         const delay = delays[attempt] ?? 20_000;
         attempt += 1;
-        window.setTimeout(() => void poll(), delay);
+        timer = window.setTimeout(() => void poll(), delay);
       } catch {
         if (cancelled) return;
         if (attempt >= delays.length) {
@@ -120,9 +123,24 @@ export function DonationStatus({
         }
         const delay = delays[attempt] ?? 20_000;
         attempt += 1;
-        window.setTimeout(() => void poll(), delay);
+        timer = window.setTimeout(() => void poll(), delay);
       }
     }
+
+    /*
+      BACK ONLINE: ASK AGAIN NOW (Phase 3 of the UI feedback system). A
+      connection lost while waiting must not leave the page on "taking longer
+      than usual" once it returns: the status is checked again straight away,
+      and the wait starts over, before any result is shown.
+    */
+    function onOnline() {
+      if (cancelled || settledNow) return;
+      window.clearTimeout(timer);
+      attempt = 0;
+      setPhase((current) => (current === 'timeout' ? 'waiting' : current));
+      void poll();
+    }
+    window.addEventListener('online', onOnline);
 
     async function loadReceipt() {
       try {
@@ -141,6 +159,8 @@ export function DonationStatus({
     void poll();
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
+      window.removeEventListener('online', onOnline);
     };
   }, [reference]);
 
@@ -148,10 +168,7 @@ export function DonationStatus({
     return (
       <Narrow>
         <Card className="p-10 text-center">
-          <Loader2
-            className="text-muted-foreground mx-auto size-6 animate-spin"
-            aria-hidden="true"
-          />
+          <Spinner className="text-muted-foreground mx-auto size-6" />
           <p className="text-body-sm text-muted-foreground mt-4">Looking up your donation…</p>
         </Card>
       </Narrow>
@@ -246,7 +263,7 @@ export function DonationStatus({
   return (
     <Narrow>
       <Card className="p-10 text-center">
-        <Loader2 className="text-cta-glow mx-auto size-7 animate-spin" aria-hidden="true" />
+        <Spinner className="text-cta-glow mx-auto size-7" />
         <h1 className="text-h3 mt-4 font-semibold">Confirming your payment</h1>
         <p className="text-body-sm text-muted-foreground mx-auto mt-3 max-w-prose">
           We are waiting for our payment provider to confirm this with our server. It usually takes
