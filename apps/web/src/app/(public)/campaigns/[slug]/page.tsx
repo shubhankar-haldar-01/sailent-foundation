@@ -11,6 +11,7 @@ import {
   CampaignSectionNav,
   type CampaignSectionLink,
 } from '@/components/campaigns/campaign-section-nav';
+import { acceptsDonationsNow } from '@/components/campaigns/campaign-status';
 import { CampaignAssurances } from '@/components/campaigns/campaign-trust';
 import { RecentDonors } from '@/components/campaigns/recent-donors';
 import { StoriesStrip } from '@/components/campaigns/stories-strip';
@@ -112,8 +113,13 @@ export default async function CampaignDetailPage({
   // Only sections that will actually render get a link.
   const sections: CampaignSectionLink[] = [
     // The ask comes first on every campaign: the product grid when there is
-    // one, otherwise the amount panel — both carry `id="give"`.
-    { id: 'give', label: hasProducts ? 'Products' : 'Donate' },
+    // one, otherwise the amount panel — both carry `id="give"`. A campaign not
+    // taking donations has no amount panel, so no "Donate" link to it.
+    ...(hasProducts
+      ? [{ id: 'give', label: 'Products' }]
+      : acceptsDonationsNow(campaign)
+        ? [{ id: 'give', label: 'Donate' }]
+        : []),
     ...(hasAboutContent(campaign) ? [{ id: 'campaign-about', label: 'About' }] : []),
     ...(stories.length > 0 ? [{ id: 'campaign-stories', label: 'Stories' }] : []),
     ...(campaign.faqs.length > 0 ? [{ id: 'campaign-faqs', label: 'FAQs' }] : []),

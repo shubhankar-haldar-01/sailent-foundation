@@ -50,7 +50,7 @@ export function AttendanceSheet({
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="id" value={eventId} />
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Register saved" />
 
       <div className="border-border overflow-x-auto rounded-lg border">
         <table className="text-body-sm w-full">

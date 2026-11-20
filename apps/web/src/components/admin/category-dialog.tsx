@@ -8,7 +8,6 @@ import {
   Globe,
   Heart,
   Home,
-  Loader2,
   PawPrint,
   Shield,
   Sparkles,
@@ -37,6 +36,7 @@ import {
   SelectValue,
   Switch,
   cn,
+  Spinner,
 } from '@sailent/ui';
 import { slugify } from '@sailent/validation';
 
@@ -355,7 +355,7 @@ export function CategoryDialog({ category, open, onOpenChange, onSuccess }: Cate
             <Button type="submit" disabled={isPending} className="gap-1.5">
               {isPending ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" />
+                  <Spinner className="size-4" />
                   Saving...
                 </>
               ) : isEditing ? (

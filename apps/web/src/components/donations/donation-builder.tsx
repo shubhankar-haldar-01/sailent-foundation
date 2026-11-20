@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Gift, Info } from 'lucide-react';
-import { Card, Input, cn, percentOf } from '@sailent/ui';
+import { Gift } from 'lucide-react';
+import { Banner, Input, cn, percentOf } from '@sailent/ui';
 import { summariseDonation, type DonationSummary } from '@sailent/validation';
 
 import {
@@ -10,6 +10,7 @@ import {
   PRESET_AMOUNTS,
   type CampaignProgressFigures,
 } from '@/components/donations/campaign-donation-summary';
+import { CampaignClosedCard } from '@/components/donations/campaign-closed-card';
 import { CampaignProductCard } from '@/components/donations/campaign-product-card';
 import { DonationCheckout } from '@/components/donations/donation-checkout';
 import { donationColumns } from '@/components/donations/donation-layout';
@@ -200,6 +201,7 @@ export function DonationBuilder({
     campaign.status === 'completed' ||
     campaign.status === 'archived' ||
     campaign.donation?.state === 'ended';
+  const closedState = isClosed ? 'ended' : isPaused ? 'paused' : null;
 
   const setQuantity = (productId: string, quantity: number) => {
     setQuantities((current) => ({ ...current, [productId]: Math.max(0, quantity) }));
@@ -220,6 +222,9 @@ export function DonationBuilder({
       donorCount: campaign.donorCount,
     };
   }, [campaign.progress, campaign.goalAmount, campaign.amountRaised, campaign.donorCount]);
+
+  // From the record only (decision A6: `raised` moves on captured payments).
+  const goalReached = !closedState && progress.goal > 0 && progress.raised >= progress.goal;
 
   /**
    * MOVE TO THE CHECKOUT WHEN IT OPENS, and back to the products on return.
@@ -354,30 +359,22 @@ export function DonationBuilder({
       <div className="min-w-0">
         {lead}
 
-        {isPaused ? (
-          <Card className="border-warning/30 bg-warning-subtle mt-6 flex gap-3 p-4 first:mt-0">
-            <Info className="text-warning-foreground mt-0.5 size-5 shrink-0" aria-hidden="true" />
-            <div>
-              <p className="text-body-sm font-semibold">Donations are paused for this campaign</p>
-              <p className="text-body-sm text-muted-foreground mt-1">
-                We have paused giving while the program team reviews delivery. The story below stays
-                available, and you can support the program instead.
-              </p>
-            </div>
-          </Card>
+        {/*
+          NOT TAKING DONATIONS: the reason, where the donation card would be
+          (owner, 2026-11-19). Here in the page below `lg`; in the rail above it.
+        */}
+        {closedState ? (
+          <CampaignClosedCard
+            state={closedState}
+            progress={progress}
+            className={cn('mt-6 first:mt-0', showSummary && 'lg:hidden')}
+          />
         ) : null}
 
-        {isClosed ? (
-          <Card className="bg-surface-sunken mt-6 flex gap-3 p-4 first:mt-0">
-            <Info className="text-muted-foreground mt-0.5 size-5 shrink-0" aria-hidden="true" />
-            <div>
-              <p className="text-body-sm font-semibold">This campaign has finished</p>
-              <p className="text-body-sm text-muted-foreground mt-1">
-                It is no longer accepting donations. The story and the results stay here, and the
-                programme it belongs to is still running.
-              </p>
-            </div>
-          </Card>
+        {goalReached ? (
+          <Banner tone="success" title="Goal reached" className="mt-6 first:mt-0">
+            Thank you to everyone who gave. This campaign is still accepting donations.
+          </Banner>
         ) : null}
 
         {campaign.products.length > 0 ? (
@@ -431,7 +428,8 @@ export function DonationBuilder({
         ) : null}
 
         {/* Other ways to support (only when campaign has no products) --------- */}
-        {showCustomAmountSection && campaign.products.length === 0 ? (
+        {/* Not on a campaign that is not taking donations: a disabled field is no way to give. */}
+        {showCustomAmountSection && campaign.products.length === 0 && !closedState ? (
           /*
             WITHOUT PRODUCTS, THIS IS THE PAGE'S DONATE ANCHOR. The cards'
             "Donate Now", the programme pages and the section links all point
@@ -496,7 +494,7 @@ export function DonationBuilder({
           </section>
         ) : null}
 
-        {showSummary ? (
+        {showSummary && !closedState ? (
           /*
             BELOW `lg`, THE CARD IS PART OF THE PAGE.
 
@@ -513,7 +511,13 @@ export function DonationBuilder({
 
       {showSummary ? (
         /* Desktop only: the card, sticky with everything in this column. */
-        <StickyRail className="hidden lg:flex">{renderSummary(railAmountRef)}</StickyRail>
+        <StickyRail className="hidden lg:flex">
+          {closedState ? (
+            <CampaignClosedCard state={closedState} progress={progress} />
+          ) : (
+            renderSummary(railAmountRef)
+          )}
+        </StickyRail>
       ) : null}
     </div>
   );

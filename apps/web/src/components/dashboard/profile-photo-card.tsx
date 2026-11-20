@@ -2,8 +2,9 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, Loader2, Trash2, Upload, User } from 'lucide-react';
-import { Alert } from '@sailent/ui';
+import { Camera, Trash2, Upload, User } from 'lucide-react';
+import { Alert, Spinner, toast } from '@sailent/ui';
+import { errorText } from '@/lib/feedback/error-messages';
 import { useRevealResult } from '@/lib/ui/reveal-result';
 
 interface ProfilePhotoCardProps {
@@ -20,8 +21,7 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
   const [isUploading, setIsUploading] = React.useState(false);
   const [isRemoving, setIsRemoving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState<string | null>(null);
-  const resultRef = useRevealResult(error ?? success);
+  const resultRef = useRevealResult(error);
 
   // Sync with prop when server updates
   React.useEffect(() => {
@@ -33,7 +33,6 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
     if (!file) return;
 
     setError(null);
-    setSuccess(null);
 
     // Client-side validations
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -73,11 +72,11 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
       const uploadedUrl = json.data?.avatarUrl || objectUrl;
       setAvatarUrl(uploadedUrl);
       setPreviewUrl(null);
-      setSuccess('Your profile photo has been updated.');
+      toast.success('Photo updated');
       router.refresh();
     } catch (err) {
       setPreviewUrl(null);
-      setError(err instanceof Error ? err.message : 'Could not upload photo. Please try again.');
+      setError(errorText(err, 'Could not upload photo. Please try again.'));
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -86,7 +85,6 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
 
   const handleRemove = async () => {
     setError(null);
-    setSuccess(null);
     setIsRemoving(true);
 
     try {
@@ -102,10 +100,10 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
 
       setAvatarUrl(null);
       setPreviewUrl(null);
-      setSuccess('Your profile photo has been removed.');
+      toast.success('Photo removed');
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not remove photo. Please try again.');
+      setError(errorText(err, 'Could not remove photo. Please try again.'));
     } finally {
       setIsRemoving(false);
     }
@@ -119,13 +117,6 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
         <div className="mb-4">
           <Alert ref={resultRef} variant="destructive" role="alert">
             {error}
-          </Alert>
-        </div>
-      ) : null}
-      {success ? (
-        <div className="mb-4">
-          <Alert ref={resultRef} variant="success" role="status">
-            {success}
           </Alert>
         </div>
       ) : null}
@@ -151,7 +142,7 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
 
             {isUploading || isRemoving ? (
               <div className="bg-background/70 backdrop-blur-xs absolute inset-0 flex items-center justify-center">
-                <Loader2 className="text-primary size-6 animate-spin" aria-hidden="true" />
+                <Spinner className="text-primary size-6" />
               </div>
             ) : null}
           </div>
@@ -185,7 +176,7 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
               className="border-primary text-primary hover:bg-primary/10 focus-visible:outline-ring inline-flex items-center justify-center gap-2 rounded-full border px-5 py-1.5 text-xs font-bold transition-colors focus-visible:outline-2 disabled:opacity-50 sm:py-2 sm:text-sm"
             >
               {isUploading ? (
-                <Loader2 className="size-3.5 animate-spin sm:size-4" aria-hidden="true" />
+                <Spinner className="size-3.5 sm:size-4" />
               ) : (
                 <Upload className="size-3.5 stroke-[2] sm:size-4" aria-hidden="true" />
               )}
@@ -200,7 +191,7 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
                 className="border-border/80 hover:bg-muted text-foreground/85 focus-visible:outline-ring inline-flex items-center justify-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-2 disabled:opacity-50 sm:py-2 sm:text-sm"
               >
                 {isRemoving ? (
-                  <Loader2 className="size-3.5 animate-spin sm:size-4" aria-hidden="true" />
+                  <Spinner className="size-3.5 sm:size-4" />
                 ) : (
                   <Trash2 className="size-3.5 stroke-[2] sm:size-4" aria-hidden="true" />
                 )}

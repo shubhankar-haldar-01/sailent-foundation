@@ -91,7 +91,7 @@ export function UploadPanel({ campaigns }: { campaigns: { id: string; title: str
   return (
     <form action={action} className="border-border w-full max-w-lg space-y-4 rounded-lg border p-5">
       <h2 className="text-h4 font-semibold">Upload a document</h2>
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Document uploaded" />
 
       <Field
         label="File"
@@ -182,7 +182,9 @@ export function UploadPanel({ campaigns }: { campaigns: { id: string; title: str
       </Field>
 
       <div className="flex gap-2">
-        <SubmitButton pending={pending}>{pending ? 'Uploading…' : 'Upload'}</SubmitButton>
+        <SubmitButton pending={pending} pendingText="Uploading…">
+          Upload
+        </SubmitButton>
         <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
           Cancel
         </Button>
@@ -255,7 +257,7 @@ export function DocumentDetailsForm({ document }: { document: AdminDocument }) {
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="id" value={document.id} />
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Changes saved" />
 
       <Field label="Title" name="title" required errors={state.fieldErrors}>
         <Input id="title" name="title" defaultValue={document.title} required maxLength={240} />
@@ -338,7 +340,7 @@ export function VisibilityControls({ document }: { document: AdminDocument }) {
         </p>
       </div>
 
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Visibility updated" />
 
       {target === null ? (
         <div className="flex flex-wrap gap-2">
@@ -418,7 +420,7 @@ export function DeleteDocumentControls({ document }: { document: AdminDocument }
           keep it, change its visibility instead.
         </p>
       </div>
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Document deleted" />
       {confirming ? (
         <form action={action} className="space-y-4">
           <input type="hidden" name="id" value={document.id} />

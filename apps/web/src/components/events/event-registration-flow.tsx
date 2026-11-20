@@ -7,7 +7,6 @@ import {
   Check,
   CheckCircle2,
   Download,
-  Loader2,
   Mail,
   Phone,
   ShieldCheck,
@@ -16,7 +15,7 @@ import {
   UserCheck,
   Users,
 } from 'lucide-react';
-import { Alert, Button, Card, Input, Label, cn } from '@sailent/ui';
+import { Alert, Button, Card, Input, Label, cn, Spinner } from '@sailent/ui';
 
 import {
   createEventRegistrationOrder,
@@ -317,12 +316,12 @@ export function EventRegistrationFlow({
             {downloaded ? (
               <>
                 <Check className="size-4 text-white" />
-                <span>Pass Downloaded!</span>
+                <span>Pass downloaded</span>
               </>
             ) : isDownloading ? (
               <>
-                <Loader2 className="size-4 animate-spin text-white" />
-                <span>Downloading Pass...</span>
+                <Spinner className="size-4 text-white" />
+                <span>Downloading pass…</span>
               </>
             ) : (
               <>
@@ -445,12 +444,12 @@ export function EventRegistrationFlow({
               <>
                 <Check className="size-4 text-white" />
                 <span>
-                  {effectiveAttendees.length > 1 ? 'All Passes Downloaded!' : 'Pass Downloaded!'}
+                  {effectiveAttendees.length > 1 ? 'All passes downloaded' : 'Pass downloaded'}
                 </span>
               </>
             ) : isDownloading ? (
               <>
-                <Loader2 className="size-4 animate-spin text-white" />
+                <Spinner className="size-4 text-white" />
                 <span>Generating Ticket File...</span>
               </>
             ) : (
@@ -522,7 +521,7 @@ export function EventRegistrationFlow({
       const result = await verifyEventRegistrationOtp(eventId, email, otpCode);
       if (result.ok) {
         setIsEmailVerified(true);
-        setOtpSuccessMessage('Email verified successfully! Registration is now active.');
+        setOtpSuccessMessage('Email verified. Registration is now active.');
         setFieldErrors((prev) => ({ ...prev, email: undefined }));
       } else {
         setOtpError(result.error || 'Invalid or expired verification code.');

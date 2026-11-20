@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   XCircle,
   Search,
-  RefreshCw,
   Phone,
   Mail,
   Ticket,
@@ -34,6 +33,7 @@ import {
   CardHeader,
   CardTitle,
   Badge,
+  Spinner,
 } from '@sailent/ui';
 import { formatDate } from '@sailent/ui';
 import {
@@ -337,13 +337,7 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
     ]);
 
     setVerification((prev) =>
-      admitInVerification(
-        prev,
-        reg.id,
-        pass.passNumber,
-        admittedAt,
-        `Checked in successfully at ${timeStr}.`,
-      ),
+      admitInVerification(prev, reg.id, pass.passNumber, admittedAt, `Checked in at ${timeStr}.`),
     );
   };
 
@@ -541,8 +535,8 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                 >
                   {verifying ? (
                     <>
-                      <RefreshCw className="mr-1.5 size-4 animate-spin" />
-                      Checking...
+                      <Spinner className="mr-1.5 size-4" />
+                      Checking…
                     </>
                   ) : (
                     <>
@@ -599,9 +593,9 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
             <CardContent className="space-y-4">
               {verifying && (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <RefreshCw className="text-primary size-8 animate-spin" />
+                  <Spinner className="text-primary size-8" />
                   <p className="text-body-sm text-muted-foreground mt-3 font-medium">
-                    Verifying pass against event registry...
+                    Verifying the pass…
                   </p>
                 </div>
               )}
@@ -880,8 +874,8 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                               {checkingIn ===
                               verification.registration.matchedAttendee.passNumber ? (
                                 <>
-                                  <RefreshCw className="mr-2 size-5 animate-spin" />
-                                  Admitting Attendee...
+                                  <Spinner className="mr-2 size-5" />
+                                  Admitting attendee…
                                 </>
                               ) : (
                                 <>

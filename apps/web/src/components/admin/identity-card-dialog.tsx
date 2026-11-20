@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { IdCard, Download, Edit3, RotateCcw, Check, Sparkles, Loader2 } from 'lucide-react';
+import { IdCard, Download, Edit3, RotateCcw, Check, Sparkles } from 'lucide-react';
 
 import {
   Button,
@@ -14,6 +14,7 @@ import {
   Input,
   Label,
   cn,
+  Spinner,
 } from '@sailent/ui';
 
 export interface IdentityCardData {
@@ -746,7 +747,7 @@ export function IssueIdentityCardDialog({
                 className="shadow-xs gap-1.5 text-xs font-semibold"
               >
                 {isDownloading ? (
-                  <Loader2 className="size-3.5 animate-spin" />
+                  <Spinner className="size-3.5" />
                 ) : (
                   <Download className="size-3.5" />
                 )}

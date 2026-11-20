@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   XCircle,
   Search,
-  RefreshCw,
   Phone,
   Mail,
   Ticket,
@@ -28,7 +27,7 @@ import {
 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 
-import { Button, formatDate } from '@sailent/ui';
+import { Button, formatDate, Spinner } from '@sailent/ui';
 import { passNumberFor } from '@sailent/validation';
 import {
   verifyEventPassAction,
@@ -775,11 +774,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                 disabled={verifying || !manualCode.trim()}
                 className="shadow-xs h-12 rounded-2xl px-5 font-bold"
               >
-                {verifying ? (
-                  <RefreshCw className="size-5 animate-spin" />
-                ) : (
-                  <Search className="size-5" />
-                )}
+                {verifying ? <Spinner className="size-5" /> : <Search className="size-5" />}
               </Button>
             </form>
 
@@ -1002,8 +997,8 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                             {checkingInId ===
                             verification.registration.matchedAttendee.passNumber ? (
                               <>
-                                <RefreshCw className="size-5 animate-spin" />
-                                Admitting Guest...
+                                <Spinner className="size-5" />
+                                Admitting guest…
                               </>
                             ) : (
                               <>
@@ -1199,8 +1194,8 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                                     >
                                       {isCheckingIn ? (
                                         <>
-                                          <RefreshCw className="size-3.5 animate-spin" />
-                                          Admitting...
+                                          <Spinner className="size-3.5" />
+                                          Admitting…
                                         </>
                                       ) : (
                                         <>

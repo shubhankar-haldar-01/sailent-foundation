@@ -35,7 +35,7 @@ export function ProgramForm({
   return (
     <form action={action} className="max-w-2xl space-y-6">
       {program ? <input type="hidden" name="id" value={program.id} /> : null}
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Program saved" />
 
       {/* 1. Title */}
       <Field label="Title" name="title" errors={state.fieldErrors} required>

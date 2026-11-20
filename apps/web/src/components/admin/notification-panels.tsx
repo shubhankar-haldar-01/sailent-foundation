@@ -173,7 +173,7 @@ export function TemplateEditor({ template }: { template: AdminTemplate }) {
     <div className="grid gap-6 xl:grid-cols-2">
       <form action={action} className="space-y-4">
         <input type="hidden" name="id" value={template.id} />
-        <FormStatus state={state} />
+        <FormStatus state={state} success="Template saved" />
 
         <Field
           label="Subject"
@@ -342,7 +342,7 @@ function TemplateRevisions({ template }: { template: AdminTemplate }) {
       <p className="text-body-sm text-muted-foreground mt-1">
         Going back writes a new version, so nothing is lost by doing it.
       </p>
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Earlier version restored" />
       <ul className="divide-border mt-3 divide-y">
         {template.revisions.map((revision) => (
           <li key={revision.version} className="flex items-center justify-between gap-3 py-2">

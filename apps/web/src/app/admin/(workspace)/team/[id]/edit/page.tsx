@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Users } from 'lucide-react';
 
-import { Alert, Card, CardContent, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
+import { Card, CardContent, CardHeader, CardTitle, PageHeader } from '@sailent/ui';
 
 import { AdminBackButton } from '@/components/admin/admin-back-button';
 import { StatusActions } from '@/components/admin/status-actions';
@@ -63,15 +63,6 @@ export default async function EditTeamMemberPage({
           />
         }
       />
-
-      {created ? (
-        <Alert variant="success" className="shadow-xs">
-          <p className="text-success font-semibold">Team member profile created successfully!</p>
-          <p className="text-muted-foreground mt-0.5 text-xs">
-            The profile is saved in draft state. Review the details below or publish when ready.
-          </p>
-        </Alert>
-      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
         {/* Left: Form */}

@@ -59,7 +59,7 @@ export function ProductTable({ products }: { products: CatalogueProduct[] }) {
 
   return (
     <div className="space-y-4">
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Status updated" />
 
       {/* Card container with white background matching other admin tables */}
       <Card className="overflow-hidden">

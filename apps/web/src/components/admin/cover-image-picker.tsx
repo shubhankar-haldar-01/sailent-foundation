@@ -8,7 +8,6 @@ import {
   Layers,
   LayoutGrid,
   List,
-  Loader2,
   Lock,
   Plus,
   Search,
@@ -39,8 +38,10 @@ import {
   cn,
   formatBytes,
   formatDate,
+  Spinner,
 } from '@sailent/ui';
 
+import { errorText } from '@/lib/feedback/error-messages';
 import { uploadMediaDirect, type DirectUploadResult } from '@/lib/admin/actions';
 import type { AdminMedia } from '@/lib/admin/api';
 
@@ -330,7 +331,7 @@ export function CoverImagePicker({
         setUploadError(res.error || 'Failed to upload photo.');
       }
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Network error uploading photo.');
+      setUploadError(errorText(err, 'Couldn’t upload the photo. Try again.'));
     } finally {
       setIsUploading(false);
     }
@@ -362,7 +363,7 @@ export function CoverImagePicker({
         setUploadError(res.error || 'Failed to upload photo.');
       }
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Network error uploading photo.');
+      setUploadError(errorText(err, 'Couldn’t upload the photo. Try again.'));
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -509,7 +510,7 @@ export function CoverImagePicker({
           className="gap-2 font-medium"
         >
           {isUploading ? (
-            <Loader2 className="text-primary size-4 animate-spin" />
+            <Spinner className="text-primary size-4" />
           ) : (
             <Upload className="text-primary size-4" />
           )}
@@ -693,7 +694,7 @@ export function CoverImagePicker({
                         className="gap-2"
                       >
                         {isUploading ? (
-                          <Loader2 className="size-3.5 animate-spin" />
+                          <Spinner className="size-3.5" />
                         ) : (
                           <Upload className="size-3.5" />
                         )}

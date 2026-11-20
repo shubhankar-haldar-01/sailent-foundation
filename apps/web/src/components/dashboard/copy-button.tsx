@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
+import { toast } from '@sailent/ui';
 
 export function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -10,6 +11,8 @@ export function CopyButton({ text, label = 'Copy' }: { text: string; label?: str
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
+      // Announced (role="status"): the icon swap alone says nothing to a screen reader.
+      toast.copied();
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback if clipboard API is not available
@@ -20,6 +23,7 @@ export function CopyButton({ text, label = 'Copy' }: { text: string; label?: str
       document.execCommand('copy');
       document.body.removeChild(textarea);
       setCopied(true);
+      toast.copied();
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -29,7 +33,7 @@ export function CopyButton({ text, label = 'Copy' }: { text: string; label?: str
       type="button"
       onClick={handleCopy}
       aria-label={`${label} ${text}`}
-      title={copied ? 'Copied!' : label}
+      title={copied ? 'Copied' : label}
       className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:outline-ring inline-flex size-7 items-center justify-center rounded-md transition-colors focus-visible:outline-2"
     >
       {copied ? (

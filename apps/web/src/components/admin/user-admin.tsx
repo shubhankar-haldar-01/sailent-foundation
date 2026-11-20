@@ -62,7 +62,7 @@ export function InviteUserForm() {
   return (
     <form action={action} className="border-border w-full max-w-lg space-y-4 rounded-lg border p-5">
       <h2 className="text-h4 font-semibold">Invite a staff member</h2>
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Invitation sent" />
 
       {/*
         Said plainly rather than discovered afterwards (Phase 13): the account
@@ -110,12 +110,13 @@ export function ResendInvitationForm({ user }: { user: AdminUser }) {
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="id" value={user.id} />
-      <FormStatus state={state} />
-      {state.ok ? (
-        <p role="status" className="text-body-sm text-success">
-          A new invitation is on its way to {user.email}. Earlier links no longer work.
-        </p>
-      ) : null}
+      <FormStatus
+        state={state}
+        success={{
+          title: 'Invitation sent',
+          description: `A new link is on its way to ${user.email}. Earlier links no longer work.`,
+        }}
+      />
       <p className="text-body-sm text-muted-foreground">
         {user.email} has not accepted their invitation yet. A new link replaces any earlier one.
       </p>
@@ -131,7 +132,7 @@ export function EditUserForm({ user }: { user: AdminUser }) {
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="id" value={user.id} />
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Changes saved" />
 
       <Field label="First name" name="firstName" required errors={state.fieldErrors}>
         <Input id="firstName" name="firstName" defaultValue={user.firstName} required />
@@ -180,7 +181,7 @@ export function UserStatusControls({ user }: { user: AdminUser }) {
   if (!confirming) {
     return (
       <div className="space-y-2">
-        <FormStatus state={state} />
+        <FormStatus state={state} success="Account updated" />
         <Button
           type="button"
           variant={suspended ? 'primary' : 'destructive'}
@@ -195,7 +196,7 @@ export function UserStatusControls({ user }: { user: AdminUser }) {
   return (
     <form action={action} className="border-border space-y-4 rounded-lg border p-5">
       <input type="hidden" name="id" value={user.id} />
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Account updated" />
 
       <h3 className="text-h4 font-semibold">
         {suspended ? 'Reactivate' : 'Suspend'} {user.email}?
@@ -236,7 +237,7 @@ export function GrantRoleForm({ user }: { user: AdminUser }) {
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="id" value={user.id} />
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Roles updated" />
       <Field
         label="Reason"
         name="reason"

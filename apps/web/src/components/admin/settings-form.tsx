@@ -48,7 +48,7 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
 
   return (
     <form action={action} className="max-w-2xl space-y-8">
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Settings saved" />
 
       <section className="space-y-4">
         <h2 className="text-h3 font-semibold">Organisation</h2>

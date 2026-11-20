@@ -1,9 +1,9 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 
-import { Alert, Button } from '@sailent/ui';
+import { Alert, Button, toast } from '@sailent/ui';
 
 import { updateDonorSettings, type DonorActionState } from '@/lib/donor/actions';
 import type { DonorSettings } from '@/lib/donor/api';
@@ -72,16 +72,15 @@ export function SettingsForm({ settings }: { settings: DonorSettings }) {
   const [state, action] = useActionState<DonorActionState, FormData>(updateDonorSettings, {});
   const resultRef = useRevealResult(state);
 
+  useEffect(() => {
+    if (state.ok && !state.error) toast.success('Preferences saved');
+  }, [state]);
+
   return (
     <form action={action} className="space-y-8">
       {state.error ? (
         <Alert ref={resultRef} variant="destructive" role="alert">
           {state.error}
-        </Alert>
-      ) : null}
-      {state.ok ? (
-        <Alert ref={resultRef} variant="success" role="status">
-          Your preferences have been saved.
         </Alert>
       ) : null}
 

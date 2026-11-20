@@ -172,7 +172,7 @@ export function UploadPanel() {
         </DialogHeader>
 
         <form action={action} className="space-y-4">
-          <FormStatus state={state} />
+          <FormStatus state={state} success="Uploaded" />
 
           {/* Real file input (hidden visually but present for Playwright & accessibility) */}
           <input
@@ -404,7 +404,7 @@ export function MediaTile({ item }: { item: AdminMedia }) {
               {copied ? (
                 <>
                   <Check className="size-3 text-emerald-600" />
-                  <span>Copied!</span>
+                  <span>Copied</span>
                 </>
               ) : (
                 <>
@@ -750,7 +750,7 @@ export function MediaDetailPanel({ item }: { item: AdminMediaDetail }) {
 
       <section className="border-border space-y-3 border-t pt-4">
         <h2 className="text-h4 text-destructive font-semibold">Danger Zone</h2>
-        <FormStatus state={deleteState} />
+        <FormStatus state={deleteState} success="File deleted" />
 
         {inUse ? (
           <Alert variant="destructive" role="status">

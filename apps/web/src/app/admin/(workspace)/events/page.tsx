@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { Calendar, Plus, Search, Users } from 'lucide-react';
 
-import { Badge, Button, Card, CardContent, formatDate, PageHeader } from '@sailent/ui';
+import { Badge, Button, Card, formatDate, PageHeader } from '@sailent/ui';
 
 import { AdminPagination } from '@/components/admin/admin-pagination';
+import { AdminListEmpty, isFiltered } from '@/components/admin/list-empty';
 import { StatusPill } from '@/components/admin/status-pill';
 import { adminFetch, type AdminEvent, type Paginated } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
@@ -196,15 +197,14 @@ export default async function AdminEventsPage({
       </div>
 
       {data.items.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-            <Calendar className="text-muted-foreground/40 mb-3 h-10 w-10" />
-            <p className="text-foreground text-sm font-medium">No events found</p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              No events match the active filter criteria.
-            </p>
-          </CardContent>
-        </Card>
+        <AdminListEmpty
+          icon={Calendar}
+          noun="events"
+          filtered={isFiltered(params)}
+          clearHref="/admin/events"
+          filteredDescription={'No events match the active filter criteria.'}
+          emptyDescription="New events appear here, starting as drafts."
+        />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">

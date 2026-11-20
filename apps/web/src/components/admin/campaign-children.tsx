@@ -51,8 +51,8 @@ export function FaqsPanel({ campaignId, faqs }: { campaignId: string; faqs: FaqR
 
   return (
     <div className="space-y-5">
-      <FormStatus state={publishState} />
-      <FormStatus state={deleteState} />
+      <FormStatus state={publishState} success="Visibility updated" />
+      <FormStatus state={deleteState} success="Question deleted" />
 
       {faqs.length === 0 ? (
         <p className="text-body-sm text-muted-foreground">
@@ -117,7 +117,7 @@ export function FaqsPanel({ campaignId, faqs }: { campaignId: string; faqs: FaqR
         <summary className="text-body-sm cursor-pointer font-medium">Add an FAQ</summary>
         <form action={action} className="mt-4 space-y-4">
           <input type="hidden" name="campaignId" value={campaignId} />
-          <FormStatus state={state} />
+          <FormStatus state={state} success="Question added" />
           <Field label="Question" name="question" errors={state.fieldErrors} required>
             <Input id="question" name="question" required />
           </Field>

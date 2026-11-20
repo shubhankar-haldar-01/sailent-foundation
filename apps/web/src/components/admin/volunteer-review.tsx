@@ -64,7 +64,7 @@ export function VolunteerReview({
   if (!target) {
     return (
       <div className="space-y-3">
-        <FormStatus state={state} />
+        <FormStatus state={state} success="Application updated" />
         <div className="flex flex-wrap gap-2">
           {options.map((value) => (
             <Button
@@ -89,7 +89,7 @@ export function VolunteerReview({
     <form action={action} className="space-y-3">
       <input type="hidden" name="id" value={volunteerId} />
       <input type="hidden" name="action" value={target} />
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Application updated" />
 
       <p className="text-body-sm font-medium">{LABELS[target]}?</p>
 
@@ -188,7 +188,7 @@ export function IssueCertificate({
   if (!open) {
     return (
       <>
-        <FormStatus state={state} />
+        <FormStatus state={state} success="Certificate issued" />
         <Button size="sm" onClick={() => setOpen(true)}>
           Issue a certificate
         </Button>
@@ -201,7 +201,7 @@ export function IssueCertificate({
   return (
     <form action={formAction} className="space-y-3">
       <input type="hidden" name="id" value={volunteerId} />
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Certificate issued" />
 
       <p className="text-caption text-muted-foreground">
         The hours are counted from VERIFIED attendance inside the period and frozen on the

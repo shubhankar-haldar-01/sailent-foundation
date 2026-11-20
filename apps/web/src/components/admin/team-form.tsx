@@ -1,13 +1,13 @@
 'use client';
 
 import * as React from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   AlertCircle,
   Briefcase,
   CheckCircle2,
   CreditCard,
   ImageIcon,
-  Loader2,
   Mail,
   MapPin,
   Phone,
@@ -34,6 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
+  Spinner,
+  toast,
 } from '@sailent/ui';
 
 import { createTeamMember, updateTeamMember, type ActionState } from '@/lib/admin/actions';
@@ -118,8 +120,27 @@ export function TeamForm({
   // A save's result is brought into view and focused, as everywhere on the site.
   const resultRef = useRevealResult(state);
 
-  // Arriving from a create (a redirect to this page with the saved flag): show
-  // the page from the top, header and banner together.
+  // Success is a toast; the form stays where the operator is (docs/ui-feedback.md).
+  React.useEffect(() => {
+    if (state.ok && !state.error)
+      toast.success(member ? 'Team member saved' : 'Team member created');
+  }, [state, member]);
+
+  // Arriving from a create (a redirect to this page with the saved flag): say so
+  // with a toast (docs/ui-feedback.md), once, and drop the flag from the address
+  // so a reload does not say it again; show the page from the top.
+  const router = useRouter();
+  const pathname = usePathname();
+  const announcedCreate = React.useRef(false);
+  React.useEffect(() => {
+    if (!initialSuccess || announcedCreate.current) return;
+    announcedCreate.current = true;
+    toast.success('Team member created', {
+      description: 'It is saved as a draft. Review the details, or publish it when ready.',
+    });
+    router.replace(pathname, { scroll: false });
+  }, [initialSuccess, router, pathname]);
+
   React.useEffect(() => {
     if (initialSuccess) {
       const scrollToTop = () => {
@@ -380,20 +401,6 @@ export function TeamForm({
               `${name || 'Team member'} is a dedicated team member at Sailent Foundation.`
             }
           />
-
-          {/* Prominent success status banner */}
-          {state.ok ? (
-            <Alert ref={resultRef} variant="success" className="shadow-xs">
-              <p className="text-success font-semibold">
-                {member
-                  ? 'Team member profile saved successfully!'
-                  : 'Team member created successfully!'}
-              </p>
-              <p className="text-muted-foreground mt-0.5 text-xs">
-                All details have been updated and stored.
-              </p>
-            </Alert>
-          ) : null}
 
           {/* Prominent server error status banner */}
           {state.error ? (
@@ -709,7 +716,7 @@ export function TeamForm({
                   >
                     {isUploading ? (
                       <>
-                        <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                        <Spinner className="mr-1.5 size-3.5" />
                         Uploading...
                       </>
                     ) : (
@@ -779,7 +786,7 @@ export function TeamForm({
             >
               {pending ? (
                 <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  <Spinner className="mr-2 size-4" />
                   {member ? 'Saving Changes...' : 'Creating Profile...'}
                 </>
               ) : member ? (

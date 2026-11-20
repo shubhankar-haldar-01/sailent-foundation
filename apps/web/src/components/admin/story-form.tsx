@@ -6,6 +6,7 @@ import { Alert, Button, Input } from '@sailent/ui';
 
 import { Field, FormStatus, SubmitButton, TextArea } from '@/components/admin/form-shell';
 import { CoverImagePicker } from '@/components/admin/cover-image-picker';
+import { useEditorGuard } from '@/lib/feedback/use-unsaved-changes-guard';
 import { createStory, setStoryStatus, updateStory, type ActionState } from '@/lib/admin/actions';
 import type { AdminMedia, AdminStory, PublishBlocker } from '@/lib/admin/api';
 
@@ -38,6 +39,8 @@ export function StoryForm({
 }) {
   const action = story ? updateStory : createStory;
   const [state, formAction, pending] = React.useActionState<ActionState, FormData>(action, {});
+  // A long editor: leaving with unsaved edits asks first (docs/ui-feedback.md).
+  const guard = useEditorGuard(state);
   const router = useRouter();
 
   const [namesSomebody, setNamesSomebody] = React.useState(Boolean(story?.subjectName));
@@ -57,11 +60,12 @@ export function StoryForm({
   const consentMissing = namesSomebody && !anonymised && !consent;
 
   return (
-    <form action={formAction} className="max-w-3xl space-y-8">
+    <form action={formAction} onChange={guard.markDirty} className="max-w-3xl space-y-8">
+      {guard.dialog}
       {story ? <input type="hidden" name="id" value={story.id} /> : null}
       {story ? <input type="hidden" name="slug" value={story.slug} /> : null}
 
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Story saved" />
       {story && story.publishBlockers.length > 0 ? (
         <BlockerNotice blockers={story.publishBlockers} status={story.status} />
       ) : null}
@@ -238,7 +242,7 @@ export function StoryStatusControls({
   if (!target) {
     return (
       <div className="space-y-3">
-        <FormStatus state={state} />
+        <FormStatus state={state} success="Status updated" />
         <div className="flex flex-wrap gap-2">
           {story.status === 'archived' && !canArchive ? (
             <p className="text-body-sm text-muted-foreground">
@@ -277,7 +281,7 @@ export function StoryStatusControls({
       <input type="hidden" name="id" value={story.id} />
       <input type="hidden" name="slug" value={story.slug} />
       <input type="hidden" name="status" value={target} />
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Status updated" />
 
       <h3 className="text-h4 font-semibold">
         {target === 'published'

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { ArrowRight, Lock, Minus, Plus, Share2, Trash2 } from 'lucide-react';
 
-import { Button, Card, cn, formatCurrency, formatNumber } from '@sailent/ui';
+import { Button, Card, cn, formatCurrency, formatNumber, toast } from '@sailent/ui';
 
 import { PaymentLogos } from '@/components/donations/payment-logos';
 import { MediaFrame } from '@/components/media/media-frame';
@@ -153,7 +153,7 @@ export function CampaignDonationSummary({
                 // the design's single row. Below 360px it may wrap: the card is
                 // in the page there, and a label that cannot wrap pushed the
                 // page 2px wider than a 320px screen.
-                'focus-visible:outline-ring min-h-7 flex-1 text-nowrap rounded-md px-2 text-[0.8125rem] font-semibold tracking-tight transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 max-[359px]:text-wrap max-[359px]:py-1 max-[359px]:leading-tight',
+                'focus-visible:outline-ring touch-target relative min-h-7 flex-1 text-nowrap rounded-md px-2 text-[0.8125rem] font-semibold tracking-tight transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 max-[359px]:text-wrap max-[359px]:py-1 max-[359px]:leading-tight',
                 mode === value
                   ? // `-ink-strong`: the ordinary mint ink on the mint wash is
                     // 4.31:1 against a 4.5:1 floor for 13px text.
@@ -261,7 +261,7 @@ export function CampaignDonationSummary({
                     onClick={() => onCustomAmountChange(pressed ? '' : String(rupees))}
                     data-numeric=""
                     className={cn(
-                      'text-caption focus-visible:outline-ring h-8 min-w-[52px] flex-1 rounded-lg border font-semibold tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60',
+                      'text-caption focus-visible:outline-ring touch-target relative h-8 min-w-[52px] flex-1 rounded-lg border font-semibold tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60',
                       pressed
                         ? // `-ink-strong` on the mint wash: the ordinary ink is 4.31:1.
                           'border-success bg-wash-mint text-wash-mint-ink-strong'
@@ -384,7 +384,7 @@ function SummaryLine({
         type="button"
         onClick={onRemove}
         aria-label={`Remove ${product.name} from your donation`}
-        className="text-destructive hover:bg-destructive/10 focus-visible:outline-ring grid size-8 shrink-0 place-items-center rounded-md transition-colors focus-visible:outline-2"
+        className="text-destructive hover:bg-destructive/10 focus-visible:outline-ring touch-target relative grid size-8 shrink-0 place-items-center rounded-md transition-colors focus-visible:outline-2"
       >
         <Trash2 className="size-4" aria-hidden="true" />
       </button>
@@ -409,7 +409,7 @@ function MiniStep({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="text-foreground/80 hover:bg-muted hover:text-foreground focus-visible:outline-ring grid size-7 place-items-center rounded-full transition-colors focus-visible:outline-2 disabled:cursor-not-allowed disabled:opacity-40"
+      className="text-foreground/80 hover:bg-muted hover:text-foreground focus-visible:outline-ring touch-target relative grid size-7 place-items-center rounded-full transition-colors focus-visible:outline-2 disabled:cursor-not-allowed disabled:opacity-40"
     >
       <Icon className="size-3.5" aria-hidden="true" />
     </button>
@@ -524,8 +524,10 @@ export function ShareButton() {
 
     try {
       await navigator.clipboard.writeText(url);
+      toast.copied('Campaign link copied');
     } catch {
-      // Clipboard blocked; nothing useful left to try.
+      // Clipboard blocked: show the link so it can be copied by hand.
+      toast.info('Copy this link to share the campaign', { description: url });
     }
   };
 

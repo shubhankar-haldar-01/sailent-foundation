@@ -1,8 +1,10 @@
 import Link from 'next/link';
-import { Button, Card, CardContent, PageHeader, formatDate } from '@sailent/ui';
+import { Button, Card, PageHeader, formatDate } from '@sailent/ui';
+
 import { Shield, Key, Search } from 'lucide-react';
 
 import { AdminPagination } from '@/components/admin/admin-pagination';
+import { AdminListEmpty, isFiltered } from '@/components/admin/list-empty';
 import { IssueIdentityCardDialog } from '@/components/admin/identity-card-dialog';
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
@@ -119,17 +121,18 @@ export default async function AdminUsersPage({
       </div>
 
       {data && data.items.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-            <Shield className="text-muted-foreground/40 mb-3 h-10 w-10" />
-            <p className="text-foreground text-sm font-medium">No staff accounts found</p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {params.q
-                ? `No staff account matches “${params.q}”.`
-                : 'No staff accounts match the selected status filter.'}
-            </p>
-          </CardContent>
-        </Card>
+        <AdminListEmpty
+          icon={Shield}
+          noun="staff accounts"
+          filtered={isFiltered(params)}
+          clearHref="/admin/users"
+          filteredDescription={
+            params.q
+              ? `No staff account matches “${params.q}”.`
+              : 'No staff accounts match the selected status filter.'
+          }
+          emptyDescription="Staff you invite appear here."
+        />
       ) : null}
 
       {data && data.items.length > 0 ? (

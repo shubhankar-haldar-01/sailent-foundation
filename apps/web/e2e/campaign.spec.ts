@@ -170,7 +170,7 @@ test.describe('campaign page', () => {
     const donate = page
       .getByRole('button', { name: /^Donate( ₹[\d,.]+)?$/ })
       .locator('visible=true');
-    const assurances = page.getByText('80G Tax Benefit').filter({ visible: true });
+    const assurances = page.getByText('Tax relief (80G)').filter({ visible: true });
 
     // Arrival: the whole donation card, top to Donate button.
     await expect(title).toBeInViewport({ ratio: 1 });

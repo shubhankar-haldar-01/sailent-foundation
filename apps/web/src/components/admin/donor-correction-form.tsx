@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useMemo, useState } from 'react';
+import { useActionState, useEffect, useMemo, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import {
@@ -13,6 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  toast,
 } from '@sailent/ui';
 
 import { correctDonor } from '@/lib/admin/actions';
@@ -91,6 +92,12 @@ export function DonorCorrectionForm({ donor }: { donor: CorrectableDonor }) {
   const [state, action] = useActionState<ActionState, FormData>(correctDonor, {});
   const resultRef = useRevealResult(state);
 
+  useEffect(() => {
+    if (state.ok && !state.error) {
+      toast.success('Record corrected', { description: 'The change is in the audit log.' });
+    }
+  }, [state]);
+
   const [pan, setPan] = useState<string>(donor.taxIdNumber ?? '');
   const isPanIncomplete = pan.length > 0 && pan.length < 10;
   const isPanValid = pan.length === 10 && /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan);
@@ -165,11 +172,6 @@ export function DonorCorrectionForm({ donor }: { donor: CorrectableDonor }) {
       {state.error ? (
         <Alert ref={resultRef} variant="destructive" role="alert">
           {state.error}
-        </Alert>
-      ) : null}
-      {state.ok ? (
-        <Alert ref={resultRef} variant="success" role="status">
-          The record has been corrected and the change audited.
         </Alert>
       ) : null}
 

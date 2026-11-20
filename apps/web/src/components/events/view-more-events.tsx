@@ -1,9 +1,9 @@
 'use client';
 
 import Link, { useLinkStatus } from 'next/link';
-import { ChevronDown, Loader2 } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
-import { cn } from '@sailent/ui';
+import { cn, Spinner } from '@sailent/ui';
 
 /**
  * "View More Events" — the outlined orange pill centred under the grid, as
@@ -50,7 +50,7 @@ function Label() {
   return pending ? (
     <>
       <span data-pending="" hidden />
-      <Loader2 className="size-4.5 animate-spin" aria-hidden="true" />
+      <Spinner className="size-4.5" />
       Loading more events…
     </>
   ) : (

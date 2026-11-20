@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { Alert, Button, Input, Label, cn } from '@sailent/ui';
+import { Alert, Button, Input, Label, cn, toast } from '@sailent/ui';
 
 import type { ActionState } from '@/lib/admin/actions';
 import { useRevealResult } from '@/lib/ui/reveal-result';
@@ -137,32 +137,67 @@ export function SubmitButton({
   variant,
   className,
   onClick,
+  pendingText = 'Saving…',
 }: {
   children: React.ReactNode;
   pending: boolean;
   variant?: React.ComponentProps<typeof Button>['variant'];
   className?: string;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  /** What the button says while the action runs ("Uploading…", "Sending…"). */
+  pendingText?: string;
 }) {
+  // The kit's loading state: a spinner, the pending words, the width held so
+  // nothing beside it jumps, and disabled so a second press sends nothing
+  // (docs/ui-feedback.md).
   return (
     <Button
       type="submit"
       variant={variant}
-      disabled={pending}
+      isLoading={pending}
+      loadingText={pendingText}
       className={className}
       onClick={onClick}
     >
-      {pending ? 'Saving…' : children}
+      {children}
     </Button>
   );
 }
 
+/** Results already announced, so a remount or a second banner for the same state adds no second toast. */
+const announced = new WeakSet<ActionState>();
+
 /**
- * Success and failure banners, announced to assistive technology when they
- * appear, and brought into view with focus after each save (`useRevealResult`).
+ * The outcome of an admin save (docs/ui-feedback.md, owner decision A of
+ * 2026-11-19).
+ *
+ * SUCCESS IS A TOAST. The form stays on screen and the operator carries on
+ * where they are, so a banner pushing the form down (and the page scrolling
+ * to it) was more interruption than answer. `success` names what happened
+ * ("Campaign saved", "File deleted"); `null` when the form shows its own
+ * outcome, or moves on to it.
+ *
+ * FAILURE STAYS A BANNER beside the form, announced (`role="alert"`) and
+ * brought into view with focus (`useRevealResult`), listing each field's
+ * problem, because it is something to read and fix, not to glance at.
  */
-export function FormStatus({ state }: { state: ActionState }) {
+export function FormStatus({
+  state,
+  success = 'Changes saved',
+}: {
+  state: ActionState;
+  success?: string | { title: string; description?: string } | null;
+}) {
   const ref = useRevealResult(state);
+  const title = typeof success === 'string' ? success : (success?.title ?? null);
+  const description = typeof success === 'object' ? success?.description : undefined;
+
+  React.useEffect(() => {
+    if (!state.ok || state.error || announced.has(state)) return;
+    announced.add(state);
+    if (title) toast.success(title, description ? { description } : undefined);
+  }, [state, title, description]);
+
   if (state.error) {
     const errorDetails = state.fieldErrors
       ? Object.values(state.fieldErrors).filter((msg) => msg && msg !== state.error)
@@ -177,13 +212,6 @@ export function FormStatus({ state }: { state: ActionState }) {
             ))}
           </ul>
         ) : null}
-      </Alert>
-    );
-  }
-  if (state.ok) {
-    return (
-      <Alert ref={ref} variant="success" role="status">
-        Saved.
       </Alert>
     );
   }

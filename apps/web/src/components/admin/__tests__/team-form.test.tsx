@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { Toaster, resetToastsForTests } from '@sailent/ui';
 
 import {
   formatAadhaar,
@@ -14,6 +15,13 @@ import {
 vi.mock('@/lib/admin/actions', () => ({
   createTeamMember: vi.fn(),
   updateTeamMember: vi.fn(),
+}));
+
+// Arriving from a create, the form drops the `created` flag with the router (UI feedback, Phase 5).
+const replace = vi.hoisted(() => vi.fn());
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace, refresh: vi.fn() }),
+  usePathname: () => '/admin/team/member-1/edit',
 }));
 
 describe('TeamForm - In-Box Validation Helpers', () => {
@@ -191,6 +199,28 @@ describe('TeamForm (Admin Add/Edit Team Member)', () => {
     render(<TeamForm initialSuccess />);
 
     expect(scrollToSpy).toHaveBeenCalledWith({ top: 0, left: 0, behavior: 'instant' });
+  });
+
+  it('says the member was created with ONE toast on arrival, and drops the flag so a reload does not repeat it', () => {
+    resetToastsForTests();
+    window.scrollTo = vi.fn();
+    replace.mockReset();
+
+    const { rerender } = render(
+      <>
+        <Toaster />
+        <TeamForm initialSuccess />
+      </>,
+    );
+    rerender(
+      <>
+        <Toaster />
+        <TeamForm initialSuccess />
+      </>,
+    );
+
+    expect(screen.getAllByText('Team member created')).toHaveLength(1);
+    expect(replace).toHaveBeenCalledWith('/admin/team/member-1/edit', { scroll: false });
   });
 
   it('allows custom designation when member is a Trustee and enforces designation validation', () => {

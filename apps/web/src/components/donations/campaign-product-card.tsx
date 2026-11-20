@@ -183,7 +183,7 @@ function StepButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="text-wash-violet-ink hover:bg-muted focus-visible:outline-ring grid h-10 w-9 place-items-center transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40 sm:w-10"
+      className="text-wash-violet-ink hover:bg-muted focus-visible:outline-ring touch-target relative grid h-10 w-9 place-items-center transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40 sm:w-10"
     >
       <Icon className="size-4" strokeWidth={2.5} aria-hidden="true" />
     </button>

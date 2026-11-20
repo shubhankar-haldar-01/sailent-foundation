@@ -10,7 +10,10 @@ import { cn } from '@sailent/ui';
  *
  * Each column is an icon on its own tinted tile, a bold title and a short
  * line under it, all centred — so the three read as one row of reassurance
- * rather than a list to work through. The wording is the approved design's.
+ * rather than a list to work through. The wording is the approved design's,
+ * except the 80G tile: the owner replaced "Get tax deduction on your donation"
+ * (a promise no page could keep for every donor) with how relief is actually
+ * claimed (2026-11-19, Phase 4 of the UI feedback system; AGENTS.md §10).
  *
  * The icons are decoration (`aria-hidden`); the titles carry the meaning.
  * ══════════════════════════════════════════════════════════════════════════
@@ -21,8 +24,8 @@ export function CampaignAssurances() {
       <Assurance
         icon={Gift}
         tone="bg-wash-mint text-wash-mint-ink-strong"
-        title="80G Tax Benefit"
-        body="Get tax deduction on your donation."
+        title="Tax relief (80G)"
+        body="Relief is claimed through Form 10BE, issued after our annual Form 10BD filing."
       />
       <Assurance
         icon={ShieldCheck}

@@ -37,7 +37,7 @@ export function ProductForm({ product }: { product?: CatalogueProduct }) {
   return (
     <form action={action} className="space-y-6">
       {isEdit ? <input type="hidden" name="id" value={product?.id} /> : null}
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Product saved" />
 
       <Field
         label="Name"

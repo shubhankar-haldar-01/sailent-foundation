@@ -129,7 +129,7 @@ export function CreateFaqForm() {
   return (
     <form action={action} className="border-border max-w-2xl space-y-4 rounded-lg border p-5">
       <h2 className="text-h4 font-semibold">New question</h2>
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Question added" />
       <FaqFields prefix="new" state={state} />
       <div className="flex gap-2">
         <SubmitButton pending={pending}>Save</SubmitButton>
@@ -197,7 +197,7 @@ export function FaqRow({ faq, canManage }: { faq: AdminGeneralFaq; canManage: bo
           className="border-destructive/40 bg-destructive/5 space-y-3 rounded-lg border p-4"
         >
           <input type="hidden" name="id" value={faq.id} />
-          <FormStatus state={deleteState} />
+          <FormStatus state={deleteState} success="Question deleted" />
           <p className="text-body-sm font-semibold">Delete this question? It cannot be undone.</p>
           <div className="flex gap-2">
             <SubmitButton pending={deletePending}>Delete</SubmitButton>

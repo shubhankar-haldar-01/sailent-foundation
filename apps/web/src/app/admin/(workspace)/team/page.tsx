@@ -2,11 +2,12 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Plus, Search, Users } from 'lucide-react';
 
-import { Alert, Button, Card, CardContent, formatDate, PageHeader } from '@sailent/ui';
+import { Alert, Button, Card, formatDate, PageHeader } from '@sailent/ui';
 
 import { AdminPagination } from '@/components/admin/admin-pagination';
 import { DeleteTeamMemberButton } from '@/components/admin/delete-team-member';
 import { IssueIdentityCardDialog } from '@/components/admin/identity-card-dialog';
+import { AdminListEmpty, isFiltered } from '@/components/admin/list-empty';
 import { StatusPill } from '@/components/admin/status-pill';
 import { AdminApiError, adminFetch, type AdminTeamMember, type Paginated } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
@@ -137,17 +138,18 @@ export default async function AdminTeamPage({
       </div>
 
       {data.items.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-            <Users className="text-muted-foreground/40 mb-3 h-10 w-10" />
-            <p className="text-foreground text-sm font-medium">No team members found</p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {params.q
-                ? `No team members match “${params.q}”.`
-                : 'No team members match the selected status filter.'}
-            </p>
-          </CardContent>
-        </Card>
+        <AdminListEmpty
+          icon={Users}
+          noun="team members"
+          filtered={isFiltered(params)}
+          clearHref="/admin/team"
+          filteredDescription={
+            params.q
+              ? `No team members match “${params.q}”.`
+              : 'No team members match the selected status filter.'
+          }
+          emptyDescription="Team members you add appear here."
+        />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">

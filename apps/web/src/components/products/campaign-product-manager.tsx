@@ -77,7 +77,7 @@ export function CampaignProductManager({
         <summary className="text-body-sm cursor-pointer font-medium">Offer another product</summary>
 
         <div className="mt-4 space-y-4">
-          <FormStatus state={addState} />
+          <FormStatus state={addState} success="Product added" />
 
           <p className="text-body-sm text-muted-foreground">
             Choose from the catalogue. Products are shared across campaigns, so editing one here
@@ -293,7 +293,7 @@ function CampaignProductItem({
         )
       )}
 
-      <FormStatus state={removeState} />
+      <FormStatus state={removeState} success="Product removed" />
 
       <details>
         <summary className="text-caption text-muted-foreground hover:text-foreground cursor-pointer">

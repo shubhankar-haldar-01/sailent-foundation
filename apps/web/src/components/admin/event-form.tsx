@@ -17,6 +17,7 @@ import {
 import { Field, FormStatus, SubmitButton, TextArea } from '@/components/admin/form-shell';
 import { CoverImagePicker } from '@/components/admin/cover-image-picker';
 import { DateTimePicker } from '@/components/admin/date-time-picker';
+import { useEditorGuard } from '@/lib/feedback/use-unsaved-changes-guard';
 import { createEvent, updateEvent, type ActionState } from '@/lib/admin/actions';
 import type { AdminEvent, AdminMedia, AdminProgram } from '@/lib/admin/api';
 
@@ -77,6 +78,8 @@ export function EventForm({
     event ? updateEvent : createEvent,
     {},
   );
+  // A long editor: leaving with unsaved edits asks first (docs/ui-feedback.md).
+  const guard = useEditorGuard(state);
 
   // Persistent form state so validation errors never clear the user's filled data
   const [title, setTitle] = React.useState(event?.title ?? '');
@@ -143,11 +146,17 @@ export function EventForm({
   };
 
   return (
-    <form action={action} onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+    <form
+      action={action}
+      onSubmit={handleSubmit}
+      onChange={guard.markDirty}
+      className="max-w-2xl space-y-6"
+    >
+      {guard.dialog}
       <div ref={formTopRef} className="scroll-mt-8" />
       {event ? <input type="hidden" name="id" value={event.id} /> : null}
       {event?.slug ? <input type="hidden" name="slug" value={event.slug} /> : null}
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Event saved" />
 
       <Field label="Title" name="title" errors={state.fieldErrors} required>
         <Input

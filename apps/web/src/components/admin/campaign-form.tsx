@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
-  Loader2,
   Plus,
   Sparkles,
   Trash2,
@@ -30,11 +29,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Spinner,
 } from '@sailent/ui';
 
 import { Field, FormStatus, SubmitButton, TextArea } from '@/components/admin/form-shell';
 import { getVideoEmbedUrl } from '@/components/campaigns/campaign-gallery';
 import type { CatalogueProduct } from '@/components/products/types';
+import { errorText } from '@/lib/feedback/error-messages';
+import { useEditorGuard } from '@/lib/feedback/use-unsaved-changes-guard';
 import {
   createCampaign,
   updateCampaign,
@@ -296,11 +298,7 @@ function CampaignVideoUploadField({ initialUrl }: { initialUrl: string }) {
           )}
         >
           <div className="bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary mb-3 grid size-12 place-items-center rounded-full transition-colors">
-            {isUploading ? (
-              <Loader2 className="size-6 animate-spin" />
-            ) : (
-              <Video className="size-6" />
-            )}
+            {isUploading ? <Spinner className="size-6" /> : <Video className="size-6" />}
           </div>
           <p className="text-body-sm text-foreground font-semibold">
             {isUploading
@@ -473,7 +471,7 @@ function CampaignGalleryPicker({
         setUploadPhotoError(res.error || 'Failed to upload photo.');
       }
     } catch (err) {
-      setUploadPhotoError(err instanceof Error ? err.message : 'Network error uploading photo.');
+      setUploadPhotoError(errorText(err, 'Couldn’t upload the photo. Try again.'));
     } finally {
       setIsUploadingPhoto(false);
       if (photoInputRef.current) photoInputRef.current.value = '';
@@ -597,7 +595,7 @@ function CampaignGalleryPicker({
           className="border-border bg-surface text-body-sm text-foreground hover:bg-muted inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3.5 py-2 font-medium transition-colors"
         >
           {isUploadingPhoto ? (
-            <Loader2 className="text-primary size-4 animate-spin" />
+            <Spinner className="text-primary size-4" />
           ) : (
             <Upload className="text-primary size-4" />
           )}
@@ -623,7 +621,7 @@ function CampaignGalleryPicker({
               className="text-caption text-primary hover:text-primary-hover inline-flex cursor-pointer items-center gap-1.5 font-medium transition-colors"
             >
               {isUploadingPhoto ? (
-                <Loader2 className="size-3.5 animate-spin" />
+                <Spinner className="size-3.5" />
               ) : (
                 <Upload className="size-3.5" />
               )}
@@ -757,7 +755,7 @@ function CampaignCoverPicker({
         setUploadError(res.error || 'Failed to upload photo.');
       }
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Network error uploading photo.');
+      setUploadError(errorText(err, 'Couldn’t upload the photo. Try again.'));
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -836,7 +834,7 @@ function CampaignCoverPicker({
           className="border-border bg-surface text-body-sm text-foreground hover:bg-muted inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3.5 py-2 font-medium transition-colors"
         >
           {isUploading ? (
-            <Loader2 className="text-primary size-4 animate-spin" />
+            <Spinner className="text-primary size-4" />
           ) : (
             <Upload className="text-primary size-4" />
           )}
@@ -859,11 +857,7 @@ function CampaignCoverPicker({
               disabled={isUploading}
               className="text-caption text-primary hover:text-primary-hover inline-flex cursor-pointer items-center gap-1.5 font-medium transition-colors"
             >
-              {isUploading ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Upload className="size-3.5" />
-              )}
+              {isUploading ? <Spinner className="size-3.5" /> : <Upload className="size-3.5" />}
               {isUploading ? 'Uploading...' : 'Upload new photo'}
             </button>
           </div>
@@ -978,6 +972,8 @@ export function CampaignForm({
     campaign ? updateCampaign : createCampaign,
     {},
   );
+  // A long editor: leaving with unsaved edits asks first (docs/ui-feedback.md).
+  const guard = useEditorGuard(state);
   const [isFeatured, setIsFeatured] = React.useState(campaign?.isFeatured ?? false);
   const [extraMedia, setExtraMedia] = React.useState<AdminMedia[]>([]);
   const [stagedProducts, setStagedProducts] = React.useState<StagedCampaignProduct[]>([]);
@@ -1268,18 +1264,20 @@ export function CampaignForm({
 
   if (campaign) {
     return (
-      <form action={action} className="max-w-2xl space-y-5">
+      <form action={action} onChange={guard.markDirty} className="max-w-2xl space-y-5">
         <input type="hidden" name="id" value={campaign.id} />
-        <FormStatus state={state} />
+        <FormStatus state={state} success="Campaign saved" />
         {formFields}
         <SubmitButton pending={pending}>Save changes</SubmitButton>
+        {guard.dialog}
       </form>
     );
   }
 
   return (
-    <form action={action} className="space-y-6">
-      <FormStatus state={state} />
+    <form action={action} onChange={guard.markDirty} className="space-y-6">
+      {guard.dialog}
+      <FormStatus state={state} success="Campaign saved" />
 
       {/* Card 1: Campaign Details & Goals */}
       <Card className="border-border">

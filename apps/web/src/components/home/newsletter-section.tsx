@@ -152,8 +152,9 @@ export function NewsletterSection() {
                     size="md"
                     className="shrink-0"
                   >
-                    <span>{pending ? 'Subscribing...' : 'Subscribe'}</span>
-                    {!pending && <ArrowRight className="size-4 stroke-[2.5]" aria-hidden="true" />}
+                    {/* While sending, the spinner takes the arrow's place: same width. */}
+                    <span>Subscribe</span>
+                    <ArrowRight className="size-4 stroke-[2.5]" aria-hidden="true" />
                   </Button>
                 </div>
 

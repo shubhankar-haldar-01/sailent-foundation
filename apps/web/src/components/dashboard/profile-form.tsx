@@ -1,8 +1,9 @@
 'use client';
 
-import { useActionState } from 'react';
+import type * as React from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Loader2, Save, Send } from 'lucide-react';
+import { Save, Send } from 'lucide-react';
 import {
   Alert,
   Input,
@@ -12,6 +13,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Spinner,
+  toast,
 } from '@sailent/ui';
 
 import {
@@ -63,6 +66,25 @@ const INDIAN_STATES = [
   'Puducherry',
 ];
 
+/** A submit button that shows it is working and takes one press per send. */
+function PendingSubmit({
+  children,
+  pendingText,
+  className,
+}: {
+  children: React.ReactNode;
+  pendingText: string;
+  className: string;
+}) {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending} aria-busy={pending || undefined} className={className}>
+      {pending ? <Spinner /> : null}
+      {pending ? <span>{pendingText}</span> : children}
+    </button>
+  );
+}
+
 function SaveButton() {
   const { pending } = useFormStatus();
   return (
@@ -72,7 +94,7 @@ function SaveButton() {
       className="bg-primary hover:bg-primary/90 text-primary-foreground focus-visible:outline-ring shadow-xs inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 disabled:opacity-50"
     >
       {pending ? (
-        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+        <Spinner className="size-4" />
       ) : (
         <Save className="size-4 stroke-[2]" aria-hidden="true" />
       )}
@@ -85,17 +107,18 @@ export function ProfileForm({ profile }: { profile: DonorProfile }) {
   const [state, action] = useActionState<DonorActionState, FormData>(updateDonorProfile, {});
   const resultRef = useRevealResult(state);
 
+  // A save that leaves the form on screen answers with a toast (docs/ui-feedback.md);
+  // an error stays a banner above the form, revealed and focused.
+  useEffect(() => {
+    if (state.ok && !state.error) toast.success('Profile saved');
+  }, [state]);
+
   return (
     <div className="space-y-6">
       <form action={action} className="space-y-6">
         {state.error ? (
           <Alert ref={resultRef} variant="destructive" role="alert">
             {state.error}
-          </Alert>
-        ) : null}
-        {state.ok ? (
-          <Alert ref={resultRef} variant="success" role="status">
-            Your profile has been saved.
           </Alert>
         ) : null}
 
@@ -303,13 +326,13 @@ function EmailChangeCard({ currentEmail }: { currentEmail: string | null }) {
           </div>
 
           <div>
-            <button
-              type="submit"
-              className="border-primary text-primary hover:bg-primary/10 focus-visible:outline-ring inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-colors focus-visible:outline-2"
+            <PendingSubmit
+              pendingText="Sending…"
+              className="border-primary text-primary hover:bg-primary/10 focus-visible:outline-ring inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 disabled:opacity-60"
             >
               <Send className="size-4 stroke-[2]" aria-hidden="true" />
               <span>Send a code</span>
-            </button>
+            </PendingSubmit>
           </div>
         </form>
       ) : (
@@ -339,12 +362,12 @@ function EmailChangeCard({ currentEmail }: { currentEmail: string | null }) {
             />
           </div>
           <div>
-            <button
-              type="submit"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground focus-visible:outline-ring shadow-xs inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-colors focus-visible:outline-2"
+            <PendingSubmit
+              pendingText="Confirming…"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground focus-visible:outline-ring shadow-xs inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 disabled:opacity-60"
             >
               <span>Confirm the new address</span>
-            </button>
+            </PendingSubmit>
           </div>
         </form>
       )}

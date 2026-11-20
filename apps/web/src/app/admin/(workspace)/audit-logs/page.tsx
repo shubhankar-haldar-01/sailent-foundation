@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { Button, Card, CardContent, PageHeader, Badge } from '@sailent/ui';
+
 import { Filter, History } from 'lucide-react';
 
 import { AdminPagination } from '@/components/admin/admin-pagination';
+import { AdminListEmpty, isFiltered } from '@/components/admin/list-empty';
 import { listAuditEntries, type AdminAuditEntry } from '@/lib/admin/api';
 
 export const dynamic = 'force-dynamic';
@@ -97,15 +99,14 @@ export default async function AdminAuditLogsPage({
       </Card>
 
       {data.items.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-            <History className="text-muted-foreground/40 mb-3 h-10 w-10" />
-            <p className="text-foreground text-sm font-medium">No audit entries found</p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              No recorded actions match the active filter criteria.
-            </p>
-          </CardContent>
-        </Card>
+        <AdminListEmpty
+          icon={History}
+          noun="audit entries"
+          filtered={isFiltered(params)}
+          clearHref="/admin/audit-logs"
+          filteredDescription={'No recorded actions match the active filter criteria.'}
+          emptyDescription="Recorded actions appear here as staff work."
+        />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">

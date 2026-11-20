@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, Loader2, Search } from 'lucide-react';
+import { CalendarDays, Search } from 'lucide-react';
 
 import {
   Select,
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
   cn,
+  Spinner,
 } from '@sailent/ui';
 
 import { eventsHref, type DateOption, type EventsQuery } from './events-query';
@@ -101,7 +102,7 @@ export function EventToolbar({
           className="text-muted-foreground pointer-events-none absolute inset-y-0 left-4 grid place-items-center"
         >
           {pending ? (
-            <Loader2 className="size-[1.125rem] animate-spin" />
+            <Spinner className="size-[1.125rem]" />
           ) : (
             <Search className="size-[1.125rem]" strokeWidth={2} />
           )}

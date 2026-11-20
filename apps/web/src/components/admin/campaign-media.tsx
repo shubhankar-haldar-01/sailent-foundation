@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
+  ConfirmationDialog,
 } from '@sailent/ui';
 
 import { FormStatus, SubmitButton } from '@/components/admin/form-shell';
@@ -77,7 +78,7 @@ export function CoverImagePanel({
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="coverImage" value={selected?.url ?? ''} />
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Cover image saved" />
       {current && !initial ? (
         <p className="text-body-sm text-muted-foreground">
           The current cover is not one of the images listed below. Choosing one replaces it; “Save
@@ -142,8 +143,8 @@ export function GalleryPanel({
 
   return (
     <div className="space-y-5">
-      <FormStatus state={orderState} />
-      <FormStatus state={removeState} />
+      <FormStatus state={orderState} success="Order saved" />
+      <FormStatus state={removeState} success="Removed from the gallery" />
 
       {items.length === 0 ? (
         <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-6">
@@ -237,7 +238,7 @@ export function GalleryPanel({
         <input type="hidden" name="campaignId" value={campaignId} />
         <input type="hidden" name="slug" value={slug} />
         <input type="hidden" name="mediaId" value={choice?.id ?? ''} />
-        <FormStatus state={addState} />
+        <FormStatus state={addState} success="Added to the gallery" />
         <MediaPicker
           options={available}
           selectedId={choice?.id ?? null}
@@ -294,26 +295,52 @@ export function CampaignUpdatesPanel({
     if (createState.ok) setOpen(false);
   }, [createState]);
 
-  const statusButton = (update: AdminCampaignUpdate, status: string, label: string) => (
-    <form action={statusAction}>
-      <input type="hidden" name="campaignId" value={campaignId} />
-      <input type="hidden" name="updateId" value={update.id} />
-      <input type="hidden" name="slug" value={slug} />
-      <input type="hidden" name="status" value={status} />
-      <Button
-        type="submit"
-        variant={status === 'archived' ? 'destructive' : 'secondary'}
-        size="sm"
-        disabled={statusPending}
-      >
-        {label}
-      </Button>
-    </form>
-  );
+  const statusForm = (update: AdminCampaignUpdate, status: string) => {
+    const form = new FormData();
+    form.set('campaignId', campaignId);
+    form.set('updateId', update.id);
+    form.set('slug', slug);
+    form.set('status', status);
+    return form;
+  };
+
+  const statusButton = (update: AdminCampaignUpdate, status: string, label: string) =>
+    status === 'archived' ? (
+      /* Taking an update off the campaign page asks first (owner decision F, docs/ui-feedback.md). */
+      <ConfirmationDialog
+        title="Delete this update?"
+        description={`“${update.title}” is taken off the campaign page. It stays in the record.`}
+        confirmLabel="Delete update"
+        variant="destructive"
+        icon="danger"
+        loading={statusPending}
+        trigger={
+          <Button type="button" variant="destructive" size="sm" disabled={statusPending}>
+            {label}
+          </Button>
+        }
+        onConfirm={() => React.startTransition(() => statusAction(statusForm(update, status)))}
+      />
+    ) : (
+      <form action={statusAction}>
+        <input type="hidden" name="campaignId" value={campaignId} />
+        <input type="hidden" name="updateId" value={update.id} />
+        <input type="hidden" name="slug" value={slug} />
+        <input type="hidden" name="status" value={status} />
+        <Button
+          type="submit"
+          variant={status === 'archived' ? 'destructive' : 'secondary'}
+          size="sm"
+          disabled={statusPending}
+        >
+          {label}
+        </Button>
+      </form>
+    );
 
   return (
     <div className="space-y-4">
-      <FormStatus state={statusState} />
+      <FormStatus state={statusState} success="Status updated" />
       {updates.length === 0 ? (
         <p className="border-border text-body-sm text-muted-foreground rounded-lg border border-dashed p-6">
           No progress updates yet.
@@ -357,7 +384,7 @@ export function CampaignUpdatesPanel({
           <form action={createAction} className="border-border space-y-3 rounded-lg border p-4">
             <h3 className="text-body font-semibold">New progress update (saved as a draft)</h3>
             <input type="hidden" name="campaignId" value={campaignId} />
-            <FormStatus state={createState} />
+            <FormStatus state={createState} success="Draft saved" />
             <div className="space-y-1.5">
               <Label htmlFor="update-title">Title</Label>
               <Input id="update-title" name="title" required maxLength={240} />

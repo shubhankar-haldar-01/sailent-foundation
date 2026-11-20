@@ -53,7 +53,7 @@ export function ArchiveProductPanel({
           campaigns that offered it keep their record. Restoring brings it back as inactive, so it
           is reviewed before it goes back on sale.
         </p>
-        <FormStatus state={state} />
+        <FormStatus state={state} success="Status updated" />
         <form action={action} className="mt-3">
           <input type="hidden" name="id" value={productId} />
           <input type="hidden" name="status" value="inactive" />
@@ -84,7 +84,7 @@ export function ArchiveProductPanel({
         </p>
       ) : (
         <>
-          <FormStatus state={state} />
+          <FormStatus state={state} success="Status updated" />
           <form ref={formRef} action={action} className="mt-3 space-y-3">
             <input type="hidden" name="id" value={productId} />
             <input type="hidden" name="status" value="archived" />

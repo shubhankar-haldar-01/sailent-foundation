@@ -57,7 +57,7 @@ export function ReauthPanel({
 
       <form action={action} className="mt-5 space-y-4">
         <input type="hidden" name="returnTo" value={returnTo} />
-        <FormStatus state={state} />
+        <FormStatus state={state} success={null} />
 
         <Field label="Password" name="password" errors={state.fieldErrors} required>
           <Input

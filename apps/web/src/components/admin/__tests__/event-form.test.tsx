@@ -10,6 +10,11 @@ vi.mock('@/lib/admin/actions', () => ({
   uploadMediaDirect: vi.fn(),
 }));
 
+// The editor's unsaved-changes guard (Phase 4) navigates with the router.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+}));
+
 describe('EventForm', () => {
   const samplePrograms: AdminProgram[] = [
     {

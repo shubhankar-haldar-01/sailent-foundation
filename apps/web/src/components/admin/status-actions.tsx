@@ -8,14 +8,13 @@ import {
   EyeOff,
   Flame,
   Globe,
-  Loader2,
   Pause,
   Play,
   RotateCcw,
   Trash2,
 } from 'lucide-react';
 
-import { Button, ConfirmationDialog, cn } from '@sailent/ui';
+import { Button, ConfirmationDialog, cn, Spinner } from '@sailent/ui';
 
 import { FormStatus } from '@/components/admin/form-shell';
 import type { ActionState } from '@/lib/admin/actions';
@@ -150,8 +149,8 @@ export function StatusActions({
 
   return (
     <div className="w-full space-y-3">
-      <FormStatus state={state} />
-      <FormStatus state={deleteState} />
+      <FormStatus state={state} success="Status updated" />
+      <FormStatus state={deleteState} success="Deleted" />
 
       {reasonFor ? (
         <form
@@ -198,7 +197,7 @@ export function StatusActions({
               disabled={pending}
             >
               {pending ? (
-                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                <Spinner className="size-3.5" />
               ) : (
                 React.createElement(getActionConfig(reasonFor).icon, { className: 'size-3.5' })
               )}
@@ -262,7 +261,7 @@ export function StatusActions({
                   onClick={() => setConfirmTarget(target)}
                 >
                   {pending && confirmTarget === target ? (
-                    <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                    <Spinner className="size-3.5" />
                   ) : (
                     <Icon className="size-3.5" aria-hidden="true" />
                   )}
@@ -286,7 +285,7 @@ export function StatusActions({
                   disabled={pending}
                 >
                   {pending ? (
-                    <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                    <Spinner className="size-3.5" />
                   ) : (
                     <Icon className="size-3.5" aria-hidden="true" />
                   )}
@@ -307,7 +306,7 @@ export function StatusActions({
               onClick={() => setConfirmDeleteOpen(true)}
             >
               {deletePending ? (
-                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                <Spinner className="size-3.5" />
               ) : (
                 <Trash2 className="size-3.5" aria-hidden="true" />
               )}

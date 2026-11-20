@@ -127,7 +127,7 @@ export default async function AdminPaymentExceptionsPage() {
         <CardContent className="p-0">
           {report.webhooks.length === 0 ? (
             <p className="text-body-sm text-muted-foreground p-8 text-center">
-              All incoming payment webhooks processed successfully. No exceptions pending.
+              Every incoming payment webhook was processed. No exceptions are pending.
             </p>
           ) : (
             <div className="overflow-x-auto">

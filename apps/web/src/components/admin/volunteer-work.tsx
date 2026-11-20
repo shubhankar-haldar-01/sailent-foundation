@@ -40,7 +40,7 @@ export function NewAssignment({
   if (!open) {
     return (
       <>
-        <FormStatus state={state} />
+        <FormStatus state={state} success="Assignment added" />
         <Button size="sm" onClick={() => setOpen(true)}>
           New assignment
         </Button>
@@ -51,7 +51,7 @@ export function NewAssignment({
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="id" value={volunteerId} />
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Assignment added" />
 
       <div className="space-y-1.5">
         <Label htmlFor="role">What will they be doing?</Label>
@@ -127,7 +127,7 @@ export function RecordAttendance({
   if (!open) {
     return (
       <>
-        <FormStatus state={state} />
+        <FormStatus state={state} success="Attendance recorded" />
         <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
           Record attendance
         </Button>
@@ -139,7 +139,7 @@ export function RecordAttendance({
     <form action={action} className="border-border mt-3 space-y-3 rounded-md border p-3">
       <input type="hidden" name="id" value={volunteerId} />
       <input type="hidden" name="assignmentId" value={assignment.id} />
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Attendance recorded" />
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
@@ -206,7 +206,7 @@ export function VerifyAttendance({
 
   return (
     <div className="space-y-3">
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Hours updated" />
 
       <form action={action} className="space-y-3">
         <input type="hidden" name="id" value={volunteerId} />

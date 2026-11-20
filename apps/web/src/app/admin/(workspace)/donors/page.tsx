@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { FileCheck, FileWarning, Search, Users } from 'lucide-react';
 
-import { Badge, Button, Card, CardContent, formatCurrency, PageHeader } from '@sailent/ui';
+import { Badge, Button, Card, formatCurrency, PageHeader } from '@sailent/ui';
 
 import { AdminPagination } from '@/components/admin/admin-pagination';
+import { AdminListEmpty, isFiltered } from '@/components/admin/list-empty';
 import { adminFetch, type Paginated } from '@/lib/admin/api';
 
 export const dynamic = 'force-dynamic';
@@ -119,17 +120,18 @@ export default async function AdminDonorsPage({
       </div>
 
       {data.items.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-            <Users className="text-muted-foreground/40 mb-3 h-10 w-10" />
-            <p className="text-foreground text-sm font-medium">No donors found</p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {params.q
-                ? `No donors match “${params.q}”.`
-                : 'No donors match the selected giving filter.'}
-            </p>
-          </CardContent>
-        </Card>
+        <AdminListEmpty
+          icon={Users}
+          noun="donors"
+          filtered={isFiltered(params)}
+          clearHref="/admin/donors"
+          filteredDescription={
+            params.q
+              ? `No donors match “${params.q}”.`
+              : 'No donors match the selected giving filter.'
+          }
+          emptyDescription="Donors appear here once they give or create an account."
+        />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">

@@ -2,9 +2,9 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
-import { cn } from '@sailent/ui';
+import { cn, Spinner } from '@sailent/ui';
 
 import { CampaignStatusMenu } from './campaign-status-menu';
 import { listingHref, type CampaignStatusFilter, type ListingQuery } from './listing-query';
@@ -110,7 +110,7 @@ export function CampaignSearchBar({ query }: { query: ListingQuery }) {
             'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
           )}
         >
-          {pending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+          {pending ? <Spinner className="size-4" /> : null}
           Search
         </button>
       </div>

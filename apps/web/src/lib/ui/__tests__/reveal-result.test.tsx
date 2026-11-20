@@ -2,6 +2,8 @@ import { act, render, screen } from '@testing-library/react';
 import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { Toaster, resetToastsForTests } from '@sailent/ui';
+
 import { FormStatus } from '@/components/admin/form-shell';
 import type { ActionState } from '@/lib/admin/actions';
 
@@ -98,24 +100,71 @@ describe('useRevealResult', () => {
 });
 
 describe('FormStatus (every admin form)', () => {
-  it('reveals "Saved." and an error after each save, even when the result repeats', () => {
-    // A real keypress, which the copy of the module FormStatus uses is listening for.
+  /*
+    Phase 4 of the UI feedback system (owner decision A, 2026-11-19): a save
+    that leaves the form on screen answers with a toast, not a banner, so the
+    page no longer scrolls for success. A failure is still a banner beside the
+    form, revealed and focused, because it is something to read and fix.
+  */
+  beforeEach(() => resetToastsForTests());
+
+  it('answers each save with ONE toast, never a banner or a scroll', () => {
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown'));
+    });
+    const { rerender } = render(
+      <>
+        <Toaster />
+        <FormStatus state={{}} success="Campaign saved" />
+      </>,
+    );
+
+    const saved = { ok: true } as ActionState;
+    rerender(
+      <>
+        <Toaster />
+        <FormStatus state={saved} success="Campaign saved" />
+        {/* The same result shown twice (a form with two banner slots): still one toast. */}
+        <FormStatus state={saved} success="Campaign saved" />
+      </>,
+    );
+    expect(screen.getAllByText('Campaign saved')).toHaveLength(1);
+    expect(screen.getByText('Campaign saved').closest('[role="status"]')).not.toBeNull();
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    // Saving again is a new result: a new toast.
+    rerender(
+      <>
+        <Toaster />
+        <FormStatus state={{ ok: true } as ActionState} success="Campaign saved" />
+      </>,
+    );
+    expect(screen.getAllByText('Campaign saved')).toHaveLength(2);
+  });
+
+  it('says nothing when the form shows its own outcome', () => {
+    render(
+      <>
+        <Toaster />
+        <FormStatus state={{ ok: true } as ActionState} success={null} />
+      </>,
+    );
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('reveals an error after each failed save, even when the message repeats', () => {
     act(() => {
       window.dispatchEvent(new KeyboardEvent('keydown'));
     });
     const { rerender } = render(<FormStatus state={{}} />);
 
-    rerender(<FormStatus state={{ ok: true } as ActionState} />);
-    expect(document.activeElement).toBe(screen.getByRole('status'));
-    expect(scrollIntoView).toHaveBeenCalledTimes(1);
-
-    // Saving again gives a new state object with the same message: revealed again.
-    (document.activeElement as HTMLElement).blur();
-    rerender(<FormStatus state={{ ok: true } as ActionState} />);
-    expect(document.activeElement).toBe(screen.getByRole('status'));
-    expect(scrollIntoView).toHaveBeenCalledTimes(2);
-
     rerender(<FormStatus state={{ error: 'Could not save.' } as ActionState} />);
     expect(document.activeElement).toBe(screen.getByRole('alert'));
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+
+    (document.activeElement as HTMLElement).blur();
+    rerender(<FormStatus state={{ error: 'Could not save.' } as ActionState} />);
+    expect(document.activeElement).toBe(screen.getByRole('alert'));
+    expect(scrollIntoView).toHaveBeenCalledTimes(2);
   });
 });

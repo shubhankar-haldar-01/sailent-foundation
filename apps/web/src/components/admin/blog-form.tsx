@@ -7,6 +7,7 @@ import { Alert, Button, Input } from '@sailent/ui';
 
 import { Field, FormStatus, SubmitButton, TextArea } from '@/components/admin/form-shell';
 import { MediaPicker } from '@/components/admin/media-picker';
+import { useEditorGuard } from '@/lib/feedback/use-unsaved-changes-guard';
 import {
   createBlogPost,
   setBlogStatus,
@@ -46,6 +47,8 @@ export function BlogForm({
 }) {
   const action = post ? updateBlogPost : createBlogPost;
   const [state, formAction, pending] = React.useActionState<ActionState, FormData>(action, {});
+  // A long editor: leaving with unsaved edits asks first (docs/ui-feedback.md).
+  const guard = useEditorGuard(state);
   const router = useRouter();
 
   const [title, setTitle] = React.useState(post?.title ?? '');
@@ -108,7 +111,8 @@ export function BlogForm({
   ];
 
   return (
-    <form action={formAction} className="space-y-8">
+    <form action={formAction} onChange={guard.markDirty} className="space-y-8">
+      {guard.dialog}
       {post ? <input type="hidden" name="id" value={post.id} /> : null}
       {post ? <input type="hidden" name="previousSlug" value={post.slug} /> : null}
       <input type="hidden" name="featuredMediaId" value={featured ?? ''} />
@@ -128,7 +132,7 @@ export function BlogForm({
         </Alert>
       ) : null}
 
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Post saved" />
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -337,7 +341,7 @@ export function BlogStatusControls({ post }: { post: AdminBlogPost }) {
           Status: <span className="capitalize">{post.status}</span>
         </p>
 
-        <FormStatus state={state} />
+        <FormStatus state={state} success="Status updated" />
 
         <div className="flex flex-wrap gap-2">
           {post.status !== 'published' ? (
@@ -380,7 +384,7 @@ export function BlogStatusControls({ post }: { post: AdminBlogPost }) {
       <input type="hidden" name="slug" value={post.slug} />
       <input type="hidden" name="status" value={target} />
 
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Status updated" />
 
       <h3 className="text-h4 font-semibold">
         {target === 'published'

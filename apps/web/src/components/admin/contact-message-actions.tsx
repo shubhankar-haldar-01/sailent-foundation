@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import { Button, ConfirmationDialog } from '@sailent/ui';
 
 import { FormStatus, SubmitButton } from '@/components/admin/form-shell';
 import { setContactMessageStatus, type ActionState } from '@/lib/admin/actions';
@@ -32,20 +33,39 @@ export function ContactMessageActions({ id, status }: { id: string; status: Cont
 
   return (
     <div className="space-y-3">
-      <FormStatus state={state} />
+      <FormStatus state={state} success="Status updated" />
       <div className="flex flex-wrap gap-2">
-        {NEXT[status].map((next) => (
-          <form key={next.status} action={action}>
-            <input type="hidden" name="id" value={id} />
-            <input type="hidden" name="status" value={next.status} />
-            <SubmitButton
-              pending={pending}
-              variant={next.status === 'archived' ? 'destructive' : undefined}
-            >
-              {next.label}
-            </SubmitButton>
-          </form>
-        ))}
+        {NEXT[status].map((next) =>
+          next.status === 'archived' ? (
+            /* "Delete" asks first (owner decision F, docs/ui-feedback.md); it can be undone with "Mark as new again". */
+            <ConfirmationDialog
+              key={next.status}
+              title="Delete this message?"
+              description="It leaves the inbox. You can mark it as new again later."
+              confirmLabel="Delete message"
+              variant="destructive"
+              icon="danger"
+              loading={pending}
+              trigger={
+                <Button type="button" variant="destructive" disabled={pending}>
+                  {next.label}
+                </Button>
+              }
+              onConfirm={() => {
+                const form = new FormData();
+                form.set('id', id);
+                form.set('status', next.status);
+                React.startTransition(() => action(form));
+              }}
+            />
+          ) : (
+            <form key={next.status} action={action}>
+              <input type="hidden" name="id" value={id} />
+              <input type="hidden" name="status" value={next.status} />
+              <SubmitButton pending={pending}>{next.label}</SubmitButton>
+            </form>
+          ),
+        )}
       </div>
     </div>
   );

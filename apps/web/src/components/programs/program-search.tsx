@@ -2,9 +2,9 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
-import { cn } from '@sailent/ui';
+import { cn, Spinner } from '@sailent/ui';
 
 import { programsHref, type ProgramsQuery } from './programs-query';
 
@@ -62,11 +62,7 @@ export function ProgramSearch({ query, className }: { query: ProgramsQuery; clas
         aria-hidden="true"
         className="text-muted-foreground pointer-events-none absolute inset-y-0 left-4 grid place-items-center"
       >
-        {pending ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : (
-          <Search className="size-4" strokeWidth={2} />
-        )}
+        {pending ? <Spinner className="size-4" /> : <Search className="size-4" strokeWidth={2} />}
       </span>
       <label htmlFor="program-search" className="sr-only">
         Search programs

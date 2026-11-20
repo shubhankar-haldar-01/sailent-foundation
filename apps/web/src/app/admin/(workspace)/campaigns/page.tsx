@@ -1,18 +1,10 @@
 import Link from 'next/link';
 import { Plus, Search, Sparkles, Flag, Info } from 'lucide-react';
 
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  formatCurrency,
-  formatDate,
-  PageHeader,
-  Progress,
-} from '@sailent/ui';
+import { Badge, Button, Card, formatCurrency, formatDate, PageHeader, Progress } from '@sailent/ui';
 
 import { AdminPagination } from '@/components/admin/admin-pagination';
+import { AdminListEmpty, isFiltered } from '@/components/admin/list-empty';
 import { StatusPill } from '@/components/admin/status-pill';
 import { adminFetch, type AdminCampaign, type Paginated } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
@@ -143,17 +135,18 @@ export default async function AdminCampaignsPage({
       </div>
 
       {data.items.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-            <Flag className="text-muted-foreground/40 mb-3 h-10 w-10" />
-            <p className="text-foreground text-sm font-medium">No campaigns found</p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {params.q
-                ? `No campaigns match “${params.q}”.`
-                : 'No campaigns match the selected status filter.'}
-            </p>
-          </CardContent>
-        </Card>
+        <AdminListEmpty
+          icon={Flag}
+          noun="campaigns"
+          filtered={isFiltered(params)}
+          clearHref="/admin/campaigns"
+          filteredDescription={
+            params.q
+              ? `No campaigns match “${params.q}”.`
+              : 'No campaigns match the selected status filter.'
+          }
+          emptyDescription="New campaigns appear here, starting as drafts."
+        />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
