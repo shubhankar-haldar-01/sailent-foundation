@@ -128,6 +128,7 @@ verifying the certificate, which is the setting that looks secure and is not.
 |---|---|---|---|
 | `NEXT_PUBLIC_APP_URL` | no | `http://localhost:3000` | Canonical URLs, sitemap, OG tags |
 | `NEXT_PUBLIC_APP_NAME` | no | `Sailent Foundation` | |
+| `NEXT_PUBLIC_MAINTENANCE_MESSAGE` | no | empty | A planned-maintenance notice on every page (`docs/ui-feedback.md`). Build-time; not yet a Docker build argument. |
 | `API_URL` | no | `http://localhost:4000` | **Server-side only.** Where the BFF reaches the API. Never exposed to the browser (A1). |
 
 Anything the browser needs must be prefixed `NEXT_PUBLIC_`. Anything else stays

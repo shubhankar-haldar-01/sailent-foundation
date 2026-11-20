@@ -10,6 +10,86 @@ Newest first.
 
 ---
 
+## 2026-11-20 — UI feedback system, Phase 5: the quality pass (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| **Grep proof, and the leftovers it found fixed:** the kit's confirmation dialog and `LoadingState` drew their own spinner (the dialog's ignored reduced motion); they use `Spinner`. The team page's "Team member created" banner is a toast on arrival, and the `created` flag is dropped from the address so a reload does not repeat it | Brief: one pattern per situation | `alert/confirm/prompt`, `Loader2`, `animate-spin` outside `Spinner`, and save banners: none left (`DEVELOPMENT_STATUS.md` has the output) |
+| **No full-page spinner for a first load:** the root `app/loading.tsx` (pages without their own) is a skeleton, a heading and paragraphs, after 300 ms | Brief | — |
+| **44×44 px tap areas** without changing any look: a `touch-target` utility (`tokens.css`, an invisible layer centred on the control) on the toast's × and action, the banner's dismiss, the amount chips and the "One-Time Donation / Support with Products" switch, the steppers and the remove button in the donation card and on the product cards, and the small buttons in `EmptyState`, `AdminListEmpty` and `CampaignClosedCard` | Brief and `docs/design-system.md` | Before/after screenshots of the campaign page match (anti-aliasing only) |
+| **Loading buttons keep their width exactly:** while busy the spinner takes the place of the button's own icon (`aria-busy:[&>svg…]:hidden`); the newsletter's Subscribe keeps its label and swaps its arrow for the spinner instead of becoming "Subscribing..." | Brief: no layout shift | Measured at 360 and 1280: every loading button within 0.5 px |
+| **Never a raw error on screen:** the admin error page no longer prints the error's name and message (it shows what to do and the reference); photo and upload errors go through the new `errorText`, which keeps the API's own words and turns "Failed to fetch" into "Check your connection and try again" | Brief: no stack traces or raw server messages | — |
+| **Wording:** "Checked in successfully" → "Checked in at …", "Email verified successfully!" → "Email verified.", "Pass Downloaded!" → "Pass downloaded", "Copied!" → "Copied", the payment-exceptions empty line; the dashboard's copy button now announces "Copied" | Brief: sentence case, no "successfully", no "!" | — |
+| `docs/ui-feedback.md`: the tap-area utility, the loading-button rule, `errorText`, reduced motion, the orange-contrast exception | Brief: the documentation item | — |
+
+Checks (2026-11-20): web ✅ 525/525, validation ✅ 317/317, `pnpm typecheck` ✅ (15/15 tasks), `pnpm lint` ✅ (15/15), Prettier ✅ on every changed file. axe (WCAG 2.0–2.2 A/AA) on the states page, an ended and an open campaign and the 404 page at 360, 768 and 1280: no sideways scroll, no layout shift (CLS 0), and the only finding is white on the brand orange (owner decision, §5.6). Bundle: the largest First Load JS increase over HEAD is +5 kB gzipped (campaign, donation and two admin editor pages); the shared bundle is unchanged at 103 kB. End-to-end (isolated copy): the admin list empty, an admin save toast, the editor's leave dialog and the donor profile toast checked at 360, 768 and 1280 in a throwaway spec (all pass); the ten-spec run's failures all predate this work (`DEVELOPMENT_STATUS.md`).
+
+## 2026-11-20 — UI feedback system, Phase 4: the screens (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| **Admin saves answer with a toast** naming what was saved ("Campaign saved", "Invitation sent", "File deleted"), not a "Saved." banner. `FormStatus` takes a `success` title (`null` where the form shows its own outcome, as the password confirmation does); one toast per save, even where a form shows the result twice. **Errors stay a banner** at the form, revealed and focused | Owner decision A; `AGENTS.md` §11 item 18 | Every admin form at once, through `form-shell.tsx`; no page scroll on success any more |
+| **Admin Save buttons show the kit's loading state** (spinner, "Saving…" or `pendingText`, width held, disabled) | Brief | 40 buttons, through `SubmitButton` |
+| Donor **profile, preferences and photo**, the **team** form and the **donor correction** form: success is a toast ("Profile saved", "Preferences saved", "Photo updated", "Team member saved", "Record corrected"); their errors keep the revealed banner. The email-change buttons show "Sending…" / "Confirming…" and take one press | Same rule | "Team member profile saved successfully!" wording gone |
+| **Admin pages have a loading skeleton** (`app/admin/(workspace)/loading.tsx`): header, filters and table rows inside the shell, after 300 ms | Brief | — |
+| **Top progress bar** mounted site-wide (links to other pages; not `/api/…` downloads), and a **maintenance banner** shown when `NEXT_PUBLIC_MAINTENANCE_MESSAGE` is set (dismissible per message) | Brief | Build-time value; not yet a Docker build argument (`docs/environment.md`) |
+| **One spinner**: the 15 files with their own `Loader2`/`RefreshCw` + `animate-spin` use `Spinner` (still under reduced motion); gate desk wording "Admitting…" etc. | Brief | `grep animate-spin` finds nothing in `apps/web/src` |
+| **A campaign not taking donations shows why, in place of the donation card** (`CampaignClosedCard`): "This campaign has ended" / "Donations are paused for now", **See open campaigns**, and its progress. No amount chips, no Donate button, no amount field, no "Donate" section link; no reason invented for a pause | Owner, 2026-11-19 (item 1); `AGENTS.md` §11 item 20 | `donations.spec.ts` › "a completed campaign offers no way to pay" passes again (desktop, phone, 320px) |
+| **80G tile reworded**: "Tax relief (80G)" / "Relief is claimed through Form 10BE, issued after our annual Form 10BD filing." | Owner, 2026-11-19 (item 2); §10 forbids the old "Get tax deduction on your donation" | The donation card is about 60 px taller; it still fits a 1280×800 laptop whole (`campaign.spec.ts`) |
+| **"Goal reached"** banner on an open campaign whose raised figure has reached its goal (from the record) | Brief | — |
+| **Share Campaign** confirms with the "Campaign link copied" pill, or shows the link when the clipboard is blocked | Brief | — |
+| **Admin list empties** (campaigns, donors, events, programmes, team, staff, audit log): "No campaigns match" with **Clear filters** when a search or filter emptied the list, "No campaigns yet" when there is nothing (`AdminListEmpty`) | One message for two situations misled | — |
+| **Unsaved-changes guard** on the campaign, event, blog and story editors (`useEditorGuard`): "Leave without saving?" on in-site links, the browser's prompt on closing the tab; cleared by a successful save | Brief | Fields set only by script (pickers) do not mark the form; typed fields do |
+| **Delete asks first** for a contact message and a campaign progress update (`ConfirmationDialog`, the button names the action) | Owner decision F | Archive of campaigns, programmes and events already asked |
+
+Tests: web ✅ 521/521 (new: 5 for a campaign not taking donations, 10 for the progress bar, maintenance banner, editor guard, list empties and delete confirmation; the `FormStatus` test now checks one toast per save, none for `success={null}`, and the error banner's reveal; `event-form.test.tsx` gained the router mock the guard needs). Typecheck, lint and Prettier ✅ on every changed file. **End-to-end** (isolated copy, Chrome): `donations`, `campaign` and `payment-outcomes` specs on desktop, mobile and 320px: 75 passed, 3 skipped, 12 failed; the 12 are four `campaign.spec.ts` tests that fail the same at HEAD. A wider run (ten specs) and the HEAD comparison are in `DEVELOPMENT_STATUS.md`: every failure there is pre-existing or WebKit-only.
+
+Not changed, with reasons (`DEVELOPMENT_STATUS.md`): the public campaign list and the donor dashboard already had designed empty and error states; there is no "PAN missing" banner because the donor profile has no PAN field to fill in; the reports export stays a plain download link (it must follow the password re-confirmation redirect), so it has no loading toast.
+
+## 2026-11-19 — UI feedback system, Phase 3: the payment flow (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| **Never two donations for one basket.** A second press of Pay while one is under way does nothing (a guard, before React re-renders). The checkout attempt is remembered by the tab (`lib/payments/checkout-session.ts`, session storage), and an earlier attempt is checked with the server first: paid or being confirmed goes **straight to its result** (refresh, Back, a duplicated tab), still open **reopens the same order**, failed or cancelled starts afresh | The attempt lived only in memory, so a refresh or Back lost it and the next Pay made a second donation | Storage unavailable: works as before, in memory |
+| **Closing Razorpay is "Payment cancelled. Your donation wasn't made."**, information, not an error, with the details kept | It used to reset silently | — |
+| **A failed payment shows its reason and the donation reference**, with the details kept for Try again | — | No refund wording (§10) |
+| **"Don't close or refresh this page"** while Razorpay is open, and a **full-screen "Confirming your payment…"** while the server verifies | Brief | The status page still decides the outcome |
+| **Field checks when a field is left**, corrected live, linked to the input (`aria-describedby`, `aria-invalid`); on Pay with mistakes, **focus moves to the first** | Errors appeared only on submit, unlinked | — |
+| **Your details are kept for this visit** and filled in again (session storage) | "Try again keeps the entered details" | — |
+| **Offline:** the offline banner is now site-wide (`AppProviders`); Pay says so and sends nothing; the status page **asks again as soon as the connection returns**, even after its wait had run out | Brief | — |
+| **Success page:** "Download receipt" shows "Preparing receipt…" and a toast either way (with Try again); Share confirms with the "Copied" pill. **The last browser dialog (`window.prompt`) is gone** | Brief | — |
+| Doubled icons removed from the checkout's alerts (the `Alert` draws its own) | Seen in the end-to-end screenshot | — |
+
+Tests: web ✅ 504/504 (new: 10 for the payment flow, 2 for the status page, 4 for the checkout session; the success-page download test replaced by three covering loading, success, failure and no receipt, and the copy test now checks the pill). Taking out the double-submit guard, or the reconnect listener, fails its test. **End-to-end** (`e2e/payment-outcomes.spec.ts`, a stand-in for Razorpay's script, no Razorpay account or money): ✅ 10/10, success, pending, failure, cancellation and double-click, on desktop and phone. `e2e/donations.spec.ts`: 18/20; the 2 failures are pre-existing (below). Typecheck and lint ✅.
+
+Found, not changed (owner decisions, `DEVELOPMENT_STATUS.md`): a completed campaign still shows a disabled Donate button (`donations.spec.ts` › "a completed campaign offers no way to pay" fails; committed code, untouched today); the campaign page's trust strip says "80G Tax Benefit: Get tax deduction on your donation" (`campaign-trust.tsx`), a tax claim §10 forbids until the owner provides one.
+
+## 2026-11-19 — UI feedback system, Phase 2: the rules (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| **`docs/ui-feedback.md`**: the building blocks and where each lives; **which pattern, when** (the brief's table, adjusted to the owner's decisions); payments; words; timing and placement; accessibility; code examples; what is not used on this platform; the checks Phase 5 must pass | Owner's brief, Phase 2 | The reference for Phase 4 and every later screen |
+| **AGENTS.md §11 item 19**: UI feedback follows that document, and a case it does not cover goes to the owner. **Item 18** amended: a success that leaves the form on screen becomes a toast as each screen moves over; errors at a form and confirmations that replace the form keep the reveal | Permanent rules belong in AGENTS.md | — |
+| Archive is a **confirmation**, not an Undo: an archived campaign can only return as a draft (`lifecycle.ts`), so an Undo would not restore what was there. Pause ⇄ resume is the reversible case | Verified against the lifecycle | — |
+
+Baseline for Phase 5's checks (2026-11-19): 1 browser dialog (`window.prompt` in `donation-success.tsx`), 15 files with ad-hoc spinners (35 `animate-spin`). No code changed in this phase.
+
+## 2026-11-19 — UI feedback system, Phase 1: the building blocks (uncommitted)
+
+The owner approved the Phase 0 audit and its recommendations (2026-11-19): success messages become toasts while server errors keep an inline banner with reveal; no refund features or refund wording (§10); no PAN at checkout and no "80G validity" banner; no "Email again"; the kit's own toast is extended (no new library); confirmation instead of undo where the lifecycle cannot undo; the status page's polling stays as documented. Nothing is rolled out to screens yet; that is Phase 4.
+
+| Change | Where | Notes |
+|---|---|---|
+| **Toasts**: one `toast` API callable from anywhere (`success`, `error`, `warning`, `info`, `loading` → `update`, `undo`, `copied`), white card with an icon in a soft circle, title, one optional line, an action, a close button and a countdown bar; bottom right (desktop) or bottom centre (phone); three at most, newest on top; 4s / 6s / errors stay; hover or focus pauses; Esc closes; `role="alert"` for errors. A development warning flags "successfully", "!" and "Error:" | `packages/ui/src/primitives/toast.tsx` | Replaces the kit's unused context toast; `ToastProvider` (already mounted) and `useToast` keep their names |
+| **Button** `isLoading` now always disables (no double submit), takes `loadingText`, and holds its width while loading via a client-only child, so `Button` stays usable in server components | `primitives/button.tsx`, `button-width-lock.tsx` | |
+| **Spinner** (the one spinner); **skeleton variants** (`SkeletonText`, `SkeletonAvatar`, `SkeletonCard`, `SkeletonTableRow`); every skeleton appears only after 300ms and pulses by brightness, so custom fills keep their colour | `primitives/spinner.tsx`, `skeleton.tsx`, `styles/tokens.css` | Existing skeletons get the delay too |
+| **Banner** (lasting conditions, dismissal remembered), **FieldError** + `fieldErrorProps`, **ErrorBoundary** (one section), **OfflineBanner**; `StatusBadge` gains the real donation statuses (`successful` shown as "Paid", `cancelled`); layer tokens `--z-sticky/overlay/banner/toast` | `packages/ui/src/patterns/`, `ngo/status-badge.tsx` | |
+| **Error mapper** `friendlyError`: API codes, network and offline → a short title and what to do next; a 5xx never shows its text; the API's human 4xx messages are kept | `apps/web/src/lib/feedback/error-messages.ts` | |
+| **`useAsyncAction`** (loading → success or error toast with Try again; ignores a second run in flight; reads `{ ok, error }`), **`useUnsavedChangesGuard`** (tab close, and in-site links with a "Leave without saving?" dialog; not the Back button, documented), **`TopProgressBar`** | `apps/web/src/lib/feedback/`, `components/feedback/` | |
+| **`/dev/ui-states`**: every block live, for review; 404 when `APP_ENV=production`, not indexed | `app/dev/ui-states/page.tsx` | |
+
+Tests: web ✅ 486/486 (28 new: the mapper, `useAsyncAction`, toasts, Button loading, the confirmation dialog, skeletons, Banner, OfflineBanner, ErrorBoundary, the unsaved-changes guard). Typecheck and lint ✅. `/dev/ui-states` checked in Chrome at 1280 and 390px with no console errors.
+
 ## 2026-11-19 — After a save, the page goes to the message (uncommitted)
 
 | Change | Reason | Impact | Migration |
