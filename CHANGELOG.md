@@ -10,6 +10,14 @@ Newest first.
 
 ---
 
+## 2026-11-21 — Investigation: a save stuck on "Saving…" under server load (no code changed)
+
+| Finding | Evidence | Next |
+|---|---|---|
+| A server-action save can stay on "Saving…" forever while the server is busy, although it succeeded (HTTP 200, `{"ok":true}`) | Throwaway probe in the isolated copy: about half the donor profile saves stuck under staff load on Next 15.5.29, 16 of 16 fine without load; same on `23b08da` | — |
+| The browser wedges while applying the page re-rendered into the action's response, when it streams in with gaps | Responses identical in stuck and finished runs; with no re-rendered tree, 6 of 6 fine under load; streamed metadata off did not help | — |
+| Framework, not this code: Next 15.5.29 (newest 15.5, React canary 2025-08-18) | Next 16.4.6 (React canary 2026-10-02): 32 of 32 fine under the same and heavier load | Owner: upgrade to Next 16 or accept for now (`DEVELOPMENT_STATUS.md`) |
+
 ## 2026-11-20 — UI feedback system, Phase 5: the quality pass (uncommitted)
 
 | Change | Reason | Impact |
