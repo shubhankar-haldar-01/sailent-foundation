@@ -619,6 +619,17 @@
   --duration-fast: 150ms;
   --duration-base: 200ms;
   --duration-slow: 300ms;
+
+  /*
+    Layers (2026-11-19, the feedback system). Content < sticky header <
+    dropdowns and dialogs (Radix portals at 50, ordered by when they open) <
+    the offline banner and top progress bar < toasts, which must show above an
+    open dialog.
+  */
+  --z-sticky: 40;
+  --z-overlay: 50;
+  --z-banner: 80;
+  --z-toast: 100;
 }
 
 /* =============================================================================
@@ -1193,5 +1204,59 @@
 
   &:focus {
     transform: translateY(0);
+  }
+}
+
+/*
+ * Skeletons (2026-11-19, docs/ui-feedback.md).
+ *
+ * A skeleton appears only after 300ms, so a load that finishes quickly shows
+ * no flash of placeholders. It holds its space from the start (opacity, not
+ * display), so nothing shifts when it appears or when the content replaces it.
+ * The pulse dims the brightness and the appearance animates the opacity: two
+ * properties, so neither overrides the other, and the pulse works on any fill
+ * (the default `bg-muted`, or a caller's own). Reduced motion keeps the delay
+ * and drops the pulse.
+ */
+@keyframes sailent-skeleton-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sailent-skeleton-pulse {
+  50% {
+    filter: brightness(0.94);
+  }
+}
+
+/**
+ * A tap area of at least 44×44px around a smaller control (docs/design-system.md,
+ * "Touch targets ≥ 44×44px"; docs/ui-feedback.md §6), without changing how it
+ * looks: an invisible layer centred on the control. The control must be
+ * positioned (`relative`, or already `absolute`).
+ */
+@utility touch-target {
+  &::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 2.75rem);
+    height: max(100%, 2.75rem);
+    translate: -50% -50%;
+  }
+}
+
+@utility skeleton {
+  animation:
+    sailent-skeleton-appear var(--duration-fast) ease-out 300ms both,
+    sailent-skeleton-pulse 1.6s ease-in-out 450ms infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: sailent-skeleton-appear 1ms linear 300ms both;
   }
 }

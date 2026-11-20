@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { TriangleAlert, AlertCircle, Info, Loader2 } from 'lucide-react';
+import { TriangleAlert, AlertCircle, Info } from 'lucide-react';
 
 import {
   AlertDialog,
@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '../primitives/alert-dialog';
+import { Spinner } from '../primitives/spinner';
 
 export interface ConfirmationDialogProps {
   /** Controlled open state. */
@@ -181,7 +182,7 @@ export function ConfirmationDialog({
           >
             {isLoading ? (
               <>
-                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                <Spinner className="size-3.5" />
                 <span>Working…</span>
               </>
             ) : (

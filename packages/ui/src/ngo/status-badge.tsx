@@ -35,7 +35,10 @@ export type StatusKind =
   | 'pending'
   | 'processing'
   | 'captured'
+  /** A donation's status once captured (the `donations.status` value). Shown as "Paid". */
+  | 'successful'
   | 'failed'
+  | 'cancelled'
   // volunteer
   | 'applied'
   | 'under_review'
@@ -60,7 +63,9 @@ const config: Record<
   pending: { label: 'Pending', variant: 'warning', icon: Clock },
   processing: { label: 'Processing', variant: 'warning', icon: Clock },
   captured: { label: 'Successful', variant: 'success', icon: CheckCircle2 },
+  successful: { label: 'Paid', variant: 'success', icon: CheckCircle2 },
   failed: { label: 'Failed', variant: 'destructive', icon: XCircle },
+  cancelled: { label: 'Cancelled', variant: 'neutral', icon: XCircle },
 
   applied: { label: 'Applied', variant: 'neutral', icon: Clock },
   under_review: { label: 'Under review', variant: 'warning', icon: Clock },

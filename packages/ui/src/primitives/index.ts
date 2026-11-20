@@ -18,6 +18,7 @@ export * from './avatar';
 export * from './separator';
 export * from './progress';
 export * from './skeleton';
+export * from './spinner';
 export * from './alert';
 export * from './table';
 export * from './breadcrumb';

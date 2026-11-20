@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { AlertCircle, Inbox, Loader2, Lock, SearchX } from 'lucide-react';
+import { AlertCircle, Inbox, Lock, SearchX } from 'lucide-react';
 
 import { cn } from '../lib/cn';
 import { Button } from '../primitives/button';
+import { Spinner } from '../primitives/spinner';
 
 /**
  * State patterns.
@@ -66,7 +67,12 @@ export function EmptyState({
         ) : null}
       </div>
       {onClearFilters ? (
-        <Button variant="secondary" size="sm" onClick={onClearFilters}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onClearFilters}
+          className="touch-target relative"
+        >
           Clear filters
         </Button>
       ) : null}
@@ -146,7 +152,7 @@ export function LoadingState({ label = 'Loading', className }: LoadingStateProps
         className,
       )}
     >
-      <Loader2 className="text-muted-foreground size-7 animate-spin" aria-hidden="true" />
+      <Spinner className="text-muted-foreground size-7" />
       <span className="sr-only">{label}</span>
     </div>
   );

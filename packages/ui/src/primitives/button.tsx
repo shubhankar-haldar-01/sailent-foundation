@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Loader2 } from 'lucide-react';
 
 import { cn } from '../lib/cn';
+import { ButtonWidthLock } from './button-width-lock';
+import { Spinner } from './spinner';
 
 /**
  * Button.
@@ -25,6 +26,9 @@ const buttonVariants = cva(
     'focus-visible:outline-2 focus-visible:outline-offset-2',
     'disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none',
     '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4',
+    // While loading, the spinner takes the place of the button's own icon, so
+    // a button that keeps its label keeps its width exactly (docs/ui-feedback.md).
+    'aria-busy:[&>svg:not([data-slot=spinner])]:hidden',
   ],
   {
     variants: {
@@ -123,9 +127,15 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   /** Render as the child element (e.g. a Next.js `<Link>`) instead of `<button>`. */
   asChild?: boolean;
+  /**
+   * Shows the spinner and disables the button. Set it on the FIRST click, so a
+   * second click cannot submit twice.
+   */
   isLoading?: boolean;
   /** Announced to assistive tech while loading. */
   loadingLabel?: string;
+  /** Shown instead of the label while loading, e.g. "Saving…". Defaults to the label. */
+  loadingText?: React.ReactNode;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -137,6 +147,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
     asChild = false,
     isLoading = false,
     loadingLabel = 'Loading',
+    loadingText,
     disabled,
     children,
     ...props
@@ -151,18 +162,25 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
     <Comp
       ref={ref}
       className={cn(buttonVariants({ variant, size, fullWidth }), className)}
-      disabled={disabled ?? isLoading}
+      disabled={isLoading || disabled}
       aria-busy={isLoading || undefined}
       {...props}
     >
-      {isLoading ? (
-        <>
-          <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
-          <span className="sr-only">{loadingLabel}</span>
-          {children}
-        </>
-      ) : (
+      {asChild ? (
         children
+      ) : (
+        <>
+          {/* Holds the width while loading; see button-width-lock.tsx. */}
+          <ButtonWidthLock active={isLoading} />
+          {isLoading ? (
+            <>
+              <Spinner label={loadingLabel} />
+              {loadingText ?? children}
+            </>
+          ) : (
+            children
+          )}
+        </>
       )}
     </Comp>
   );
