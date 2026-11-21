@@ -29,7 +29,7 @@ export const DrawerOverlay = React.forwardRef<
   return (
     <DrawerPrimitive.Overlay
       ref={ref}
-      className={cn('fixed inset-0 z-50 bg-neutral-950/50', className)}
+      className={cn('bg-surface-inverse/50 fixed inset-0 z-50', className)}
       {...props}
     />
   );

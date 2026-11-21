@@ -60,11 +60,11 @@ export function TeamDirectory({ initialMembers }: TeamDirectoryProps) {
           <div>
             <h2
               id="our-team-heading"
-              className="text-2xl font-extrabold tracking-tight text-[#0F172A] sm:text-[28px] dark:text-white"
+              className="text-foreground text-2xl font-extrabold tracking-tight sm:text-[28px]"
             >
               Our Team
             </h2>
-            <p className="mt-1 text-xs text-slate-500 sm:text-sm dark:text-slate-400">
+            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
               A diverse and dedicated team working on the ground to support our programs and create
               meaningful change in communities.
             </p>
@@ -72,13 +72,13 @@ export function TeamDirectory({ initialMembers }: TeamDirectoryProps) {
 
           {/* Search Input */}
           <div className="relative w-full sm:w-64 sm:shrink-0">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+            <Search className="text-muted-foreground pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search team members..."
-              className="shadow-xs w-full rounded-full border border-slate-200/80 bg-white py-2.5 pl-9 pr-4 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#EB6A1F] focus:outline-none focus:ring-2 focus:ring-[#EB6A1F]/20 sm:text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+              className="shadow-xs border-border/80 bg-surface text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 w-full rounded-full border py-2.5 pl-9 pr-4 text-xs focus:outline-none focus:ring-2 sm:text-sm"
             />
           </div>
         </div>
@@ -97,12 +97,12 @@ export function TeamDirectory({ initialMembers }: TeamDirectoryProps) {
                 }}
                 className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all sm:text-sm ${
                   isActive
-                    ? 'bg-[#EB6A1F] text-white shadow-sm'
-                    : 'border border-slate-200/80 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-700'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'border-border/80 bg-surface text-foreground hover:border-border-strong border'
                 }`}
                 aria-pressed={isActive}
               >
-                <Icon className={`size-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                <Icon className={`size-4 ${isActive ? 'text-white' : 'text-muted-foreground'}`} />
                 {label}
               </button>
             );
@@ -124,7 +124,7 @@ export function TeamDirectory({ initialMembers }: TeamDirectoryProps) {
             <button
               type="button"
               onClick={() => setVisibleCount((prev) => prev + 6)}
-              className="inline-flex items-center gap-2 rounded-full bg-[#EB6A1F] px-8 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#D95F1B] hover:shadow-md sm:text-base"
+              className="bg-primary text-primary-foreground hover:bg-primary-hover inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold shadow-sm transition-all duration-200 hover:shadow-md sm:text-base"
             >
               View More Team Members
               <ArrowRight className="size-4" />
@@ -134,11 +134,9 @@ export function TeamDirectory({ initialMembers }: TeamDirectoryProps) {
 
         {/* ── Empty State ────────────────────────────────────────────────────── */}
         {filteredMembers.length === 0 && (
-          <div className="rounded-[20px] border border-dashed border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-base font-semibold text-slate-800 dark:text-slate-200">
-              No team members found
-            </p>
-            <p className="mt-1 text-xs text-slate-500 sm:text-sm dark:text-slate-400">
+          <div className="border-border bg-surface rounded-[20px] border border-dashed p-12 text-center">
+            <p className="text-foreground text-base font-semibold">No team members found</p>
+            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
               Try adjusting your search query or selecting a different department filter.
             </p>
             <button
@@ -147,7 +145,7 @@ export function TeamDirectory({ initialMembers }: TeamDirectoryProps) {
                 setActiveDepartment('all');
                 setSearchQuery('');
               }}
-              className="mt-4 rounded-full bg-slate-100 px-5 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="bg-muted text-foreground hover:bg-border mt-4 rounded-full px-5 py-2 text-xs font-semibold transition-colors"
             >
               Clear Filters
             </button>

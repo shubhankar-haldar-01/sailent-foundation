@@ -16,7 +16,7 @@ export function StoriesCta() {
       <div className="container-page">
         <div className="bg-primary-soft min-[70rem]:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] relative grid items-center gap-8 overflow-hidden rounded-[1.25rem] px-6 py-8 sm:px-12 lg:-mx-[1.125rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-3 lg:py-[1.125rem] lg:pl-[4.125rem] lg:pr-4">
           <div className="relative">
-            <TripleRays className="text-cta-glow absolute -left-9 -top-6 hidden w-9 -rotate-90 sm:block" />
+            <TripleRays className="text-primary absolute -left-9 -top-6 hidden w-9 -rotate-90 sm:block" />
             <p className="text-primary text-caption font-bold uppercase tracking-[0.04em]">
               Be part of the change
             </p>
@@ -33,6 +33,7 @@ export function StoriesCta() {
               health, livelihoods, animal welfare, disaster relief and the environment.
             </p>
             <Button
+              variant="action"
               asChild
               className="mt-6 h-12 rounded-full px-[4.75rem] text-[0.9375rem] font-bold"
             >
@@ -53,7 +54,7 @@ export function StoriesCta() {
               className="text-info-action/45 absolute -top-[7%] left-[66%] h-[49.1%] w-auto"
             />
             <FilledSprig className="text-wash-mint-ink/45 absolute -right-[2%] top-[65.3%] h-[32.7%] w-auto" />
-            <FilledSprig className="text-cta-glow/30 absolute right-[2%] top-[1%] h-[35.1%] w-auto" />
+            <FilledSprig className="text-primary/30 absolute right-[2%] top-[1%] h-[35.1%] w-auto" />
             <Framed
               url="/images/about-presence-walk.webp"
               focus="center 40%"
@@ -87,7 +88,7 @@ function Framed({
   return (
     <div
       className={cn(
-        'absolute rounded-[1.25rem] border-[5px] border-white shadow-[0_14px_30px_-14px_rgb(15_23_42/0.45)] dark:border-neutral-200',
+        'absolute rounded-[1.25rem] border-[5px] border-white shadow-elevated',
         className,
       )}
     >

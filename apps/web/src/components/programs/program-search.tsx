@@ -81,7 +81,7 @@ export function ProgramSearch({ query, className }: { query: ProgramsQuery; clas
         placeholder="Search programs..."
         aria-busy={pending || undefined}
         className={cn(
-          'bg-background border-accent-100 dark:border-border text-foreground placeholder:text-muted-foreground h-12 w-full min-w-0 rounded-full border pl-11 pr-4 text-sm outline-none',
+          'bg-background border-border dark:border-border text-foreground placeholder:text-muted-foreground h-12 w-full min-w-0 rounded-full border pl-11 pr-4 text-sm outline-none',
           'focus-visible:border-primary focus-visible:outline-primary focus-visible:outline-2 focus-visible:outline-offset-0',
         )}
       />

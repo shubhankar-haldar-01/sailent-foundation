@@ -108,51 +108,51 @@ export function EventSummaryCard({
     register: {
       label: 'Registration open',
       text: `${seatsLeft != null && seatsLeft > 0 ? `${seatsLeft} places left` : 'Places available'} · One registration reserves one seat.`,
-      containerClass: 'border-emerald-200/80 bg-[#EAF7EE]',
-      dotClass: 'bg-emerald-500',
-      labelClass: 'text-emerald-950',
-      textClass: 'text-emerald-800',
+      containerClass: 'border-success/80 bg-success-subtle',
+      dotClass: 'bg-success',
+      labelClass: 'text-success',
+      textClass: 'text-success',
     },
     full: {
       label: 'Event full',
       text: 'Every place has been taken. Places may open if someone cancels.',
-      containerClass: 'border-amber-200/80 bg-amber-50/80',
-      dotClass: 'bg-amber-500',
-      labelClass: 'text-amber-950',
-      textClass: 'text-amber-800',
+      containerClass: 'border-warning/80 bg-warning-subtle/80',
+      dotClass: 'bg-warning',
+      labelClass: 'text-warning-foreground',
+      textClass: 'text-warning-foreground',
     },
     closed: {
       label: 'Registration closed',
       text: 'Registration for this event is not open.',
-      containerClass: 'border-rose-200/80 bg-rose-50/80',
-      dotClass: 'bg-rose-500',
-      labelClass: 'text-rose-950',
-      textClass: 'text-rose-800',
+      containerClass: 'border-destructive/80 bg-destructive-subtle/80',
+      dotClass: 'bg-destructive',
+      labelClass: 'text-destructive',
+      textClass: 'text-destructive',
     },
     cancelled: {
       label: 'Cancelled',
       text: 'This event has been cancelled and will not take place.',
-      containerClass: 'border-rose-200/80 bg-rose-50/80',
-      dotClass: 'bg-rose-500',
-      labelClass: 'text-rose-950',
-      textClass: 'text-rose-800',
+      containerClass: 'border-destructive/80 bg-destructive-subtle/80',
+      dotClass: 'bg-destructive',
+      labelClass: 'text-destructive',
+      textClass: 'text-destructive',
     },
     finished: {
       label: 'Past event',
       text: 'This event has concluded. Please check other upcoming events.',
-      containerClass: 'border-slate-200 bg-slate-100/80',
-      dotClass: 'bg-slate-400',
-      labelClass: 'text-slate-800',
-      textClass: 'text-slate-600',
+      containerClass: 'border-border bg-muted/80',
+      dotClass: 'bg-muted-foreground',
+      labelClass: 'text-foreground',
+      textClass: 'text-muted-foreground',
     },
   };
   const status = STATUS[availability];
   const hasHelp = Boolean(supportEmail || (supportPhone && supportPhoneHref));
 
   return (
-    <Card className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm transition-shadow hover:shadow-md sm:p-7">
+    <Card className="border-border/80 bg-surface overflow-hidden rounded-3xl border p-6 shadow-sm transition-shadow hover:shadow-md sm:p-7">
       {/* Event Thumbnail with Category Badge in Bottom Right */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
+      <div className="border-border bg-background relative overflow-hidden rounded-2xl border">
         <MediaFrame
           media={event.cover}
           aspect="video"
@@ -161,7 +161,7 @@ export function EventSummaryCard({
         />
         {categoryName ? (
           <div className="absolute bottom-3 right-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EB6A1F] px-3.5 py-1 text-xs font-bold text-white shadow-md">
+            <span className="bg-primary text-primary-foreground inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold shadow-md">
               <Users className="size-3.5 text-white" aria-hidden="true" />
               {categoryName}
             </span>
@@ -171,41 +171,41 @@ export function EventSummaryCard({
 
       {/* Title and Short Description */}
       <div className="mt-5">
-        <h3 className="font-display text-xl font-extrabold leading-snug text-slate-900 sm:text-2xl">
+        <h3 className="font-display text-foreground text-xl font-extrabold leading-snug sm:text-2xl">
           {event.title}
         </h3>
         {event.summary ? (
-          <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{event.summary}</p>
+          <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">{event.summary}</p>
         ) : null}
       </div>
 
       {/* Details list with peach/orange rounded icon boxes */}
-      <div className="mt-6 space-y-4 border-t border-slate-100 pt-5 text-sm">
+      <div className="border-border mt-6 space-y-4 border-t pt-5 text-sm">
         {/* Date */}
         <div className="flex items-start gap-3.5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-orange-100/70 bg-orange-50 text-[#EB6A1F]">
+          <div className="border-primary/70 bg-accent text-primary flex size-10 shrink-0 items-center justify-center rounded-xl border">
             <Calendar className="size-4.5 stroke-[2]" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">
+            <p className="text-muted-foreground text-[0.6875rem] font-bold uppercase tracking-wider">
               DATE
             </p>
-            <p className="mt-0.5 text-sm font-bold text-slate-900" data-numeric="">
-              {dateFormatted} <span className="font-normal text-slate-500">({dayName})</span>
+            <p className="text-foreground mt-0.5 text-sm font-bold" data-numeric="">
+              {dateFormatted} <span className="text-muted-foreground font-normal">({dayName})</span>
             </p>
           </div>
         </div>
 
         {/* Time */}
         <div className="flex items-start gap-3.5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-orange-100/70 bg-orange-50 text-[#EB6A1F]">
+          <div className="border-primary/70 bg-accent text-primary flex size-10 shrink-0 items-center justify-center rounded-xl border">
             <Clock className="size-4.5 stroke-[2]" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">
+            <p className="text-muted-foreground text-[0.6875rem] font-bold uppercase tracking-wider">
               TIME
             </p>
-            <p className="mt-0.5 text-sm font-bold text-slate-900" data-numeric="">
+            <p className="text-foreground mt-0.5 text-sm font-bold" data-numeric="">
               {timeStr}
             </p>
           </div>
@@ -213,17 +213,17 @@ export function EventSummaryCard({
 
         {/* Location */}
         <div className="flex items-start gap-3.5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-orange-100/70 bg-orange-50 text-[#EB6A1F]">
+          <div className="border-primary/70 bg-accent text-primary flex size-10 shrink-0 items-center justify-center rounded-xl border">
             <MapPin className="size-4.5 stroke-[2]" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">
+            <p className="text-muted-foreground text-[0.6875rem] font-bold uppercase tracking-wider">
               LOCATION
             </p>
-            <p className="mt-0.5 text-sm font-bold text-slate-900">
+            <p className="text-foreground mt-0.5 text-sm font-bold">
               {venue}{' '}
               {locationSub ? (
-                <span className="font-normal text-slate-500">({locationSub})</span>
+                <span className="text-muted-foreground font-normal">({locationSub})</span>
               ) : null}
             </p>
           </div>
@@ -231,18 +231,18 @@ export function EventSummaryCard({
 
         {/* Fee / Pricing */}
         <div className="flex items-start gap-3.5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-orange-100/70 bg-orange-50 text-[#EB6A1F]">
+          <div className="border-primary/70 bg-accent text-primary flex size-10 shrink-0 items-center justify-center rounded-xl border">
             <Ticket className="size-4.5 stroke-[2]" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">
+            <p className="text-muted-foreground text-[0.6875rem] font-bold uppercase tracking-wider">
               REGISTRATION FEE
             </p>
-            <p className="mt-0.5 text-sm font-bold text-slate-900">
+            <p className="text-foreground mt-0.5 text-sm font-bold">
               {event.isPaid && event.feeAmount ? (
                 <span>
                   ₹{Math.round(event.feeAmount / 100)}{' '}
-                  <span className="text-xs font-normal text-slate-500">
+                  <span className="text-muted-foreground text-xs font-normal">
                     per person (Online payment)
                   </span>
                 </span>
@@ -256,14 +256,14 @@ export function EventSummaryCard({
         {/* Category */}
         {categoryName ? (
           <div className="flex items-start gap-3.5">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-orange-100/70 bg-orange-50 text-[#EB6A1F]">
+            <div className="border-primary/70 bg-accent text-primary flex size-10 shrink-0 items-center justify-center rounded-xl border">
               <Users className="size-4.5 stroke-[2]" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">
+              <p className="text-muted-foreground text-[0.6875rem] font-bold uppercase tracking-wider">
                 CATEGORY
               </p>
-              <p className="mt-0.5 text-sm font-bold text-slate-900">{categoryName}</p>
+              <p className="text-foreground mt-0.5 text-sm font-bold">{categoryName}</p>
             </div>
           </div>
         ) : null}
@@ -271,18 +271,18 @@ export function EventSummaryCard({
         {/* Activities / Functions */}
         {event.functions && event.functions.length > 0 ? (
           <div className="flex items-start gap-3.5">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-orange-100/70 bg-orange-50 text-[#EB6A1F]">
+            <div className="border-primary/70 bg-accent text-primary flex size-10 shrink-0 items-center justify-center rounded-xl border">
               <Sparkles className="size-4.5 stroke-[2]" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">
+              <p className="text-muted-foreground text-[0.6875rem] font-bold uppercase tracking-wider">
                 ACTIVITIES / FUNCTIONS
               </p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {event.functions.map((fn) => (
                   <span
                     key={fn}
-                    className="inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-[#EB6A1F] ring-1 ring-orange-200/80"
+                    className="bg-accent text-primary ring-primary/80 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1"
                   >
                     {fn}
                   </span>
@@ -313,33 +313,33 @@ export function EventSummaryCard({
       {/* Need Help? & Share section */}
       <div
         className={cn(
-          'mt-6 grid gap-4 border-t border-slate-100 pt-5',
+          'border-border mt-6 grid gap-4 border-t pt-5',
           hasHelp ? 'grid-cols-1 sm:grid-cols-[1.1fr_0.9fr]' : 'grid-cols-1',
         )}
       >
         {/* Need Help */}
         {hasHelp ? (
           <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">
-              <Headphones className="size-3.5 text-slate-500" aria-hidden="true" />
+            <div className="text-foreground flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider">
+              <Headphones className="text-muted-foreground size-3.5" aria-hidden="true" />
               <span>Need Help?</span>
             </div>
-            <div className="mt-1.5 space-y-1.5 text-xs text-slate-600 sm:text-[13px]">
+            <div className="text-muted-foreground mt-1.5 space-y-1.5 text-xs sm:text-[13px]">
               {supportEmail ? (
                 <a
                   href={`mailto:${supportEmail}`}
-                  className="flex items-center gap-1.5 transition-colors hover:text-[#EB6A1F]"
+                  className="hover:text-primary flex items-center gap-1.5 transition-colors"
                 >
-                  <Mail className="size-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                  <Mail className="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />
                   <span className="truncate">{supportEmail}</span>
                 </a>
               ) : null}
               {supportPhone && supportPhoneHref ? (
                 <a
                   href={supportPhoneHref}
-                  className="flex items-center gap-1.5 transition-colors hover:text-[#EB6A1F]"
+                  className="hover:text-primary flex items-center gap-1.5 transition-colors"
                 >
-                  <Phone className="size-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                  <Phone className="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />
                   <span>{supportPhone}</span>
                 </a>
               ) : null}
@@ -348,8 +348,8 @@ export function EventSummaryCard({
         ) : null}
 
         {/* Share this event */}
-        <div className={cn(hasHelp && 'sm:border-l sm:border-slate-100 sm:pl-4')}>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+        <div className={cn(hasHelp && 'sm:border-border sm:border-l sm:pl-4')}>
+          <h4 className="text-foreground text-xs font-bold uppercase tracking-wider">
             Share this event
           </h4>
           <div className="mt-2 flex items-center gap-2">
@@ -384,19 +384,17 @@ export function EventSummaryCard({
               type="button"
               onClick={handleCopy}
               aria-label="Copy Link"
-              className="shadow-xs flex size-8 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-600 transition-transform hover:scale-105 hover:border-[#EB6A1F] hover:text-[#EB6A1F]"
+              className="shadow-xs border-border bg-muted text-muted-foreground hover:border-primary hover:text-primary flex size-8 items-center justify-center rounded-full border transition-transform hover:scale-105"
             >
               {copied ? (
-                <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
+                <Check className="text-success size-3.5" aria-hidden="true" />
               ) : (
                 <Copy className="size-3.5" aria-hidden="true" />
               )}
             </button>
           </div>
           {copied ? (
-            <p className="mt-1 text-[0.625rem] font-semibold text-emerald-600">
-              Copied to clipboard!
-            </p>
+            <p className="text-success mt-1 text-[0.625rem] font-semibold">Copied to clipboard!</p>
           ) : null}
         </div>
       </div>

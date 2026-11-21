@@ -28,14 +28,14 @@ export function ProgramAboutSection({ program }: ProgramAboutSectionProps) {
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-      <Card className="rounded-[24px] border border-slate-200/80 bg-white p-6 shadow-[0_4px_25px_-4px_rgba(0,0,0,0.05)] sm:rounded-[28px] sm:p-8 lg:rounded-3xl lg:p-10">
+      <Card className="border-border/80 bg-surface rounded-[24px] border p-6 shadow-elevated sm:rounded-[28px] sm:p-8 lg:rounded-3xl lg:p-10">
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-0">
           {/* Left Column: Heading & About Text */}
-          <div className="lg:col-span-6 lg:border-r lg:border-slate-200/80 lg:pr-10 xl:pr-12">
-            <h2 className="font-display text-2xl font-black tracking-tight text-[#0A2540] sm:text-[1.75rem]">
+          <div className="lg:border-border/80 lg:col-span-6 lg:border-r lg:pr-10 xl:pr-12">
+            <h2 className="font-display text-foreground text-2xl font-black tracking-tight sm:text-[1.75rem]">
               About this program
             </h2>
-            <p className="mt-4 text-sm leading-relaxed text-[#486581] sm:mt-5 sm:text-[15px]">
+            <p className="text-muted-foreground mt-4 text-sm leading-relaxed sm:mt-5 sm:text-[15px]">
               {aboutText}
             </p>
           </div>
@@ -46,15 +46,15 @@ export function ProgramAboutSection({ program }: ProgramAboutSectionProps) {
             <div className="sm:gap-4.5 flex items-start gap-4">
               <div
                 aria-hidden="true"
-                className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#FFF0E6] text-[#EB6A1F] sm:size-12"
+                className="bg-muted text-primary flex size-11 shrink-0 items-center justify-center rounded-full sm:size-12"
               >
                 <BookOpen className="size-5 stroke-[2]" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-display text-base font-bold text-[#0A2540] sm:text-lg">
+                <h3 className="font-display text-foreground text-base font-bold sm:text-lg">
                   The challenge
                 </h3>
-                <p className="text-xs leading-relaxed text-[#486581] sm:text-[13.5px]">
+                <p className="text-muted-foreground text-xs leading-relaxed sm:text-[13.5px]">
                   {challengeText}
                 </p>
               </div>
@@ -64,15 +64,15 @@ export function ProgramAboutSection({ program }: ProgramAboutSectionProps) {
             <div className="sm:gap-4.5 flex items-start gap-4">
               <div
                 aria-hidden="true"
-                className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#EBF5FF] text-[#1E88E5] sm:size-12"
+                className="bg-info-subtle text-info flex size-11 shrink-0 items-center justify-center rounded-full sm:size-12"
               >
                 <Users className="size-5 stroke-[2]" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-display text-base font-bold text-[#0A2540] sm:text-lg">
+                <h3 className="font-display text-foreground text-base font-bold sm:text-lg">
                   Our approach
                 </h3>
-                <p className="text-xs leading-relaxed text-[#486581] sm:text-[13.5px]">
+                <p className="text-muted-foreground text-xs leading-relaxed sm:text-[13.5px]">
                   {approachText}
                 </p>
               </div>

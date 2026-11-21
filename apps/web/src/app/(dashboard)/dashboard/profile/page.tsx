@@ -56,7 +56,7 @@ export default async function ProfilePage() {
           {/* Row 1: Donor Code */}
           <div className="flex items-center justify-between gap-4 py-3.5">
             <div className="flex items-center gap-3">
-              <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+              <div className="size-9.5 bg-info-subtle text-info flex shrink-0 items-center justify-center rounded-full">
                 <FileText className="size-4.5 stroke-[2]" aria-hidden="true" />
               </div>
               <div>
@@ -72,7 +72,7 @@ export default async function ProfilePage() {
           {/* Row 2: Mobile Number */}
           <div className="flex items-center justify-between gap-4 py-3.5">
             <div className="flex items-center gap-3">
-              <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400">
+              <div className="size-9.5 bg-accent text-primary flex shrink-0 items-center justify-center rounded-full">
                 <Smartphone className="size-4.5 stroke-[2]" aria-hidden="true" />
               </div>
               <div>
@@ -91,7 +91,7 @@ export default async function ProfilePage() {
           {/* Row 3: Total Given */}
           <div className="flex items-center justify-between gap-4 py-3.5">
             <div className="flex items-center gap-3">
-              <div className="size-9.5 text-primary dark:text-primary-foreground flex shrink-0 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-950/40">
+              <div className="size-9.5 text-primary dark:text-primary-foreground bg-accent flex shrink-0 items-center justify-center rounded-full">
                 <Gift className="size-4.5 stroke-[2]" aria-hidden="true" />
               </div>
               <div>

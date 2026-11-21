@@ -29,34 +29,34 @@ import type { ImpactMetric } from '@/lib/content';
 const ICONS = {
   beneficiaries: {
     icon: PeopleSolid,
-    wash: 'bg-[#FFEDD5] text-[#C2410C] shadow-[0_4px_14px_rgba(194,65,12,0.22)]',
+    wash: 'bg-muted text-primary shadow-card',
     stroke: false,
   },
   communities: {
     icon: PinSolid,
-    wash: 'bg-[#DBEAFE] text-[#0284C7] shadow-[0_4px_14px_rgba(2,132,199,0.22)]',
+    wash: 'bg-info-subtle text-info shadow-card',
     stroke: false,
   },
   campaigns: {
     icon: Heart,
-    wash: 'bg-[#DCFCE7] text-[#15803D] shadow-[0_4px_14px_rgba(22,163,74,0.22)]',
+    wash: 'bg-success-subtle text-success shadow-card',
     stroke: true,
   },
   volunteers: {
     icon: PeopleSolid,
-    wash: 'bg-[#FFE4E6] text-[#BE123C] shadow-[0_4px_14px_rgba(190,18,60,0.22)]',
+    wash: 'bg-accent text-primary shadow-card',
     stroke: false,
   },
   years: {
     icon: Star,
-    wash: 'bg-[#FEF3C7] text-[#D97706] shadow-[0_4px_14px_rgba(217,119,6,0.22)]',
+    wash: 'bg-accent text-warning-foreground shadow-card',
     stroke: true,
   },
 } as const;
 
 const FALLBACK = {
   icon: Star,
-  wash: 'bg-[#DBEAFE] text-[#0284C7] shadow-[0_4px_14px_rgba(2,132,199,0.22)]',
+  wash: 'bg-info-subtle text-info shadow-card',
   stroke: true,
 } as const;
 
@@ -110,7 +110,7 @@ export function ImpactStats({ metrics }: { metrics: ImpactMetric[] }) {
                     <span className="min-w-0">
                       <span
                         data-numeric=""
-                        className="font-display block text-2xl font-bold tabular-nums leading-none tracking-tight text-[#0F172A] lg:text-[28px] dark:text-white"
+                        className="font-display text-foreground block text-2xl font-bold tabular-nums leading-none tracking-tight lg:text-[28px]"
                       >
                         {formatNumber(metric.value)}
                         {metric.unit ? (
@@ -119,7 +119,7 @@ export function ImpactStats({ metrics }: { metrics: ImpactMetric[] }) {
                           </span>
                         ) : null}
                       </span>
-                      <span className="text-body-sm mt-1 block font-medium leading-tight text-[#64748B] lg:whitespace-nowrap dark:text-slate-400">
+                      <span className="text-body-sm text-muted-foreground mt-1 block font-medium leading-tight lg:whitespace-nowrap">
                         {metric.label}
                       </span>
                     </span>
@@ -136,11 +136,11 @@ export function ImpactStats({ metrics }: { metrics: ImpactMetric[] }) {
                 &ldquo;
               </span>
               <div className="min-w-0">
-                <blockquote className="text-xs font-medium leading-snug text-[#1E293B] sm:text-[13px] dark:text-slate-200">
+                <blockquote className="text-foreground text-xs font-medium leading-snug sm:text-[13px]">
                   &ldquo;Together, we can create a more compassionate, equal and sustainable
                   world.&rdquo;
                 </blockquote>
-                <figcaption className="text-caption mt-1 text-[#64748B] dark:text-slate-400">
+                <figcaption className="text-caption text-muted-foreground mt-1">
                   — Sailent Foundation
                 </figcaption>
               </div>

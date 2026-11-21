@@ -96,3 +96,25 @@ Notes on the capture: the seeded data is demo copy ("Demo campaign narrative…"
 - The "mountain" campaign's text is admin content to rewrite; a Phase 4 safeguard could hide "What will your support provide?" when it repeats the story word for word.
 - Missing images in the seeded data set (story and "Who we are" tiles) — check on real data.
 - Uncommitted from before this audit: the minimal assurance strip (5 files), waiting for your approval to commit.
+
+---
+
+## Phase 2 — foundation (2026-11-21)
+
+Applied the owner's Phase 1 choice: direction 2 (logo green `#1E7B24`, Inter only), Donate orange `#EB6A1F`, success teal. Tokens in `packages/ui/src/styles/tokens.css`; roles in `AGENTS.md` §11 item 12.
+
+**Hard-coded colours** (`colour-grep.sh`; full output in `colour-grep-before.txt` and `colour-grep-after.txt`):
+
+| | Before | After |
+|---|---|---|
+| Hex values | 606 in 60 files | 91 in 12 files |
+| `rgb()` | 52 | 2 |
+| `oklch()` | 41 | 40 |
+| Tailwind palette classes | 1,327 | 3 |
+
+What remains is deliberate:
+- `lib/brand-colours.ts`: the token values for output that cannot read CSS (the event pass canvas, Razorpay's theme, `global-error.tsx`);
+- the staff ID card artwork (`identity-card-dialog.tsx`), drawn on a canvas in its own navy design;
+- payment-network marks (`payment-logos.tsx`) and the Facebook/WhatsApp share buttons, which keep their owners' colours;
+- illustration SVGs (`*/decor.tsx`) and `media-frame.tsx`'s placeholders, which already follow `--brand-hue`;
+- the print styles in `globals.css`, and code comments.

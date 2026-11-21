@@ -60,7 +60,7 @@ export function CampaignCard({
     <article
       className={cn(
         'card-interactive @container group relative flex flex-col',
-        'rounded-[22px] p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900',
+        'rounded-[22px] p-3.5 sm:p-4',
         className,
       )}
     >
@@ -221,7 +221,12 @@ export function CampaignCard({
           {/* z-10 lifts the action above the card-wide overlay link. */}
           <div className="relative z-10 mt-2.5">
             {isOpen ? (
-              <Button asChild fullWidth className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}>
+              <Button
+                asChild
+                fullWidth
+                variant="action"
+                className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}
+              >
                 <Link href={`${detailHref}#give`}>
                   Donate Now
                   <ArrowRight aria-hidden="true" className={CTA_ARROW} />

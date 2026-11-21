@@ -149,7 +149,7 @@ export default async function AdminEventsPage({
                     aria-current={isSelected ? 'page' : undefined}
                     className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
                       isSelected
-                        ? 'bg-accent-950 text-white shadow-sm'
+                        ? 'bg-surface-inverse text-white shadow-sm'
                         : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
@@ -255,11 +255,11 @@ export default async function AdminEventsPage({
                     </td>
                     <td className="px-5 py-3.5 text-xs">
                       {event.isPaid && event.feeAmount ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-300">
+                        <span className="bg-success-subtle text-success ring-success/20 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-medium ring-1 ring-inset">
                           ₹{Math.round(event.feeAmount / 100)}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <span className="bg-muted text-muted-foreground inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-medium">
                           Free
                         </span>
                       )}

@@ -392,7 +392,7 @@ export function DateTimePicker({
                   className={cn(
                     'h-8 w-8 rounded-md text-[13px] font-medium transition-colors',
                     isSelected
-                      ? 'bg-primary shadow-xs font-semibold text-white'
+                      ? 'bg-primary shadow-xs text-primary-foreground font-semibold'
                       : isToday
                         ? 'border-primary text-primary hover:bg-primary/10 border font-semibold'
                         : 'text-foreground hover:bg-muted',
@@ -472,7 +472,7 @@ export function DateTimePicker({
                   className={cn(
                     'rounded px-2.5 text-xs font-semibold transition-colors',
                     currentAmpm === 'AM'
-                      ? 'bg-primary shadow-xs text-white'
+                      ? 'bg-primary shadow-xs text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
@@ -484,7 +484,7 @@ export function DateTimePicker({
                   className={cn(
                     'rounded px-2.5 text-xs font-semibold transition-colors',
                     currentAmpm === 'PM'
-                      ? 'bg-primary shadow-xs text-white'
+                      ? 'bg-primary shadow-xs text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
                 >

@@ -104,7 +104,7 @@ export default async function StoriesPage({
                       View More Stories
                       <ArrowRight className="size-4" aria-hidden="true" />
                     </Link>
-                    <LeafFan className="text-cta-glow absolute -right-[2.125rem] -top-1.5 h-12 w-auto" />
+                    <LeafFan className="text-primary absolute -right-[2.125rem] -top-1.5 h-12 w-auto" />
                   </span>
                 </div>
               ) : null}

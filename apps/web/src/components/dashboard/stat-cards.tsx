@@ -43,7 +43,7 @@ export function StatCards({ impact }: { impact: DonorImpact }) {
       <li className="card-elevated p-4.5 flex items-center gap-4 rounded-2xl sm:p-5">
         <div
           aria-hidden="true"
-          className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
+          className="bg-warning-subtle text-warning-foreground flex size-14 shrink-0 items-center justify-center rounded-2xl"
         >
           <Heart className="size-6 fill-current stroke-none" />
         </div>

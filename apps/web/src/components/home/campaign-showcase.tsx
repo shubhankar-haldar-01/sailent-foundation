@@ -86,19 +86,19 @@ export function CampaignShowcase({
           {/* Section heading matching reference layout: centered eyebrow + dual-tone headline */}
           <div className="mx-auto mb-6 flex max-w-5xl flex-col items-center text-center sm:mb-8 md:mb-10">
             <div className="mb-2 flex items-center justify-center gap-2">
-              <span className="h-0.5 w-6 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+              <span className="bg-primary h-0.5 w-6 rounded-full" aria-hidden="true" />
               <p className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
                 Browse By Cause
               </p>
-              <span className="h-0.5 w-6 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+              <span className="bg-primary h-0.5 w-6 rounded-full" aria-hidden="true" />
             </div>
 
             <h2
               id="campaign-showcase-title"
               className="font-display mt-1 text-2xl font-black leading-[1.2] tracking-tight sm:text-3xl md:text-[2.25rem]"
             >
-              <span className="text-[#36335C] dark:text-indigo-200">Discover Causes That</span>{' '}
-              <span className="text-primary dark:text-orange-400">Inspire You.</span>
+              <span className="text-foreground">Discover Causes That</span>{' '}
+              <span className="text-primary">Inspire You.</span>
             </h2>
           </div>
 

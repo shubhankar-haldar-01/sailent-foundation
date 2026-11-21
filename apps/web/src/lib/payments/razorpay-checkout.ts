@@ -1,3 +1,5 @@
+import { BRAND_COLOURS } from '@/lib/brand-colours';
+
 /**
  * Razorpay Checkout, in the browser.
  *
@@ -136,7 +138,8 @@ export function openRazorpayCheckout(handoff: CheckoutHandoff): Promise<Checkout
         contact: handoff.donor.phone,
       },
       notes: { reference: handoff.reference ?? handoff.razorpayOrderId },
-      theme: { color: '#EB6A1F' },
+      // The checkout is the conversion step, so it takes the Donate orange.
+      theme: { color: BRAND_COLOURS.action },
       handler: (response: Record<string, string>) => {
         settle({
           kind: 'paid',

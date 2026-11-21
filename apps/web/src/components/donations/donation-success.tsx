@@ -229,7 +229,7 @@ export function DonationSuccess({
         <div className="bg-surface bg-[radial-gradient(600px_200px_at_90%_-20%,var(--success-subtle),transparent_70%),radial-gradient(480px_180px_at_-5%_120%,var(--info-subtle),transparent_70%)] px-6 pb-4 pt-5 sm:px-8">
           <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
             <div
-              className="bg-success grid size-11 shrink-0 place-items-center rounded-full text-white shadow-[0_0_0_6px_color-mix(in_oklab,var(--success)_16%,transparent),0_0_0_12px_color-mix(in_oklab,var(--success)_7%,transparent)]"
+              className="bg-success text-success-foreground grid size-11 shrink-0 place-items-center rounded-full shadow-[0_0_0_6px_color-mix(in_oklab,var(--success)_16%,transparent),0_0_0_12px_color-mix(in_oklab,var(--success)_7%,transparent)]"
               aria-hidden="true"
             >
               <Check className="size-6" strokeWidth={3} />
@@ -325,7 +325,7 @@ export function DonationSuccess({
           <Button
             asChild
             variant="subtle"
-            className="bg-info-subtle text-info-action hover:bg-info-subtle/70 sm:flex-1"
+            className="bg-accent text-accent-foreground hover:bg-accent/70 sm:flex-1"
           >
             <Link href="/campaigns">See other campaigns</Link>
           </Button>

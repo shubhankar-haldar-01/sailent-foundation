@@ -23,7 +23,7 @@ export const AlertDialogOverlay = React.forwardRef<
     <DialogPrimitive.Overlay
       ref={ref}
       className={cn(
-        'fixed inset-0 z-50 bg-neutral-950/50 backdrop-blur-[2px]',
+        'bg-surface-inverse/50 fixed inset-0 z-50 backdrop-blur-[2px]',
         'data-[state=open]:animate-in data-[state=open]:fade-in-0',
         'data-[state=closed]:animate-out data-[state=closed]:fade-out-0',
         className,

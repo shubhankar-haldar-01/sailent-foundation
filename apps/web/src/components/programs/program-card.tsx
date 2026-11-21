@@ -5,7 +5,6 @@ import { cn } from '@sailent/ui';
 
 import { MediaFrame } from '@/components/media/media-frame';
 import { ProgramIcon } from '@/components/programs/program-icon';
-import { headingExtraBold } from '@/lib/fonts';
 import type { Program } from '@/lib/mock/types';
 
 /**
@@ -43,7 +42,7 @@ export function ProgramCard({
   return (
     <article
       className={cn(
-        'card-interactive group relative flex h-full gap-4 rounded-xl p-3.5 max-sm:flex-col sm:gap-6 dark:border-slate-800 dark:bg-slate-900',
+        'card-interactive group relative flex h-full gap-4 rounded-xl p-3.5 max-sm:flex-col sm:gap-6',
         'has-[a:focus-visible]:outline-ring has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2',
         className,
       )}
@@ -68,7 +67,7 @@ export function ProgramCard({
 
         <h3
           className={cn(
-            headingExtraBold.className,
+            'font-display font-semibold',
             'text-foreground mt-2.5 text-lg leading-tight tracking-[-0.015em]',
           )}
         >
@@ -99,7 +98,7 @@ export function ProgramCard({
           </span>
           <span
             aria-hidden="true"
-            className="bg-cta/12 text-cta-glow duration-(--duration-base) group-hover:bg-primary group-hover:text-primary-foreground size-8.5 grid shrink-0 place-items-center rounded-full transition-colors"
+            className="bg-primary/12 text-primary duration-(--duration-base) group-hover:bg-primary group-hover:text-primary-foreground size-8.5 grid shrink-0 place-items-center rounded-full transition-colors"
           >
             <ArrowRight
               className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5"

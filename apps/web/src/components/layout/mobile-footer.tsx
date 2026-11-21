@@ -78,7 +78,7 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
           />
         </Link>
 
-        <p className="mt-5 max-w-[20rem] text-[13px] leading-5 text-[#555555] dark:text-slate-400">
+        <p className="text-muted-foreground mt-5 max-w-[20rem] text-[13px] leading-5">
           Empowering communities through education, healthcare, and sustainable opportunities for a
           brighter tomorrow.
         </p>
@@ -94,7 +94,7 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${siteConfig.name} on ${link.label}`}
-                    className="focus-visible:outline-ring size-9.5 dark:border-border dark:bg-surface hover:text-primary flex items-center justify-center rounded-full border border-[#E8E8E8] bg-white text-[#303030] shadow-[0_4px_10px_rgba(0,0,0,0.06)] transition-all hover:border-[#EB6A1F] focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-slate-200 dark:shadow-none dark:hover:border-orange-500 dark:hover:text-orange-400"
+                    className="focus-visible:outline-ring size-9.5 dark:border-border dark:bg-surface hover:text-primary border-border bg-surface text-foreground hover:border-primary flex items-center justify-center rounded-full border shadow-card transition-all focus-visible:outline-2 focus-visible:outline-offset-2 dark:shadow-none"
                   >
                     {Icon ? (
                       <Icon className="size-4" aria-hidden="true" />
@@ -128,17 +128,17 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
             <nav key={group.label} aria-labelledby={id} className="min-w-0">
               <h2
                 id={id}
-                className="font-display text-base font-bold leading-5 tracking-tight text-[#19013E] dark:text-white"
+                className="font-display text-foreground text-base font-bold leading-5 tracking-tight"
               >
                 {group.label}
               </h2>
-              <div aria-hidden="true" className="mt-2 h-[3px] w-[34px] rounded-full bg-[#E9A944]" />
+              <div aria-hidden="true" className="bg-primary mt-2 h-[3px] w-[34px] rounded-full" />
               <ul className="mt-1.5">
                 {group.items.map((item) => (
                   <li key={item.label}>
                     <Link
                       href={item.href}
-                      className="focus-visible:outline-ring hover:text-primary block rounded-sm py-1 text-[13px] leading-5 text-[#555555] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-slate-400 dark:hover:text-orange-400"
+                      className="focus-visible:outline-ring hover:text-primary text-muted-foreground block rounded-sm py-1 text-[13px] leading-5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
                       {item.label}
                     </Link>
@@ -161,23 +161,23 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
       */}
       <section
         aria-labelledby="mobile-footer-contact"
-        className="dark:border-border dark:bg-surface mt-7 rounded-[18px] border border-[#EDEDEB] bg-[#FFFEFD] px-5 pb-6 pt-[22px] shadow-[0_6px_18px_rgba(0,0,0,0.05)] dark:shadow-none"
+        className="dark:border-border dark:bg-surface border-border bg-background mt-7 rounded-[18px] border px-5 pb-6 pt-[22px] shadow-card dark:shadow-none"
       >
         <h2
           id="mobile-footer-contact"
-          className="font-display text-center text-base font-bold leading-5 tracking-tight text-[#19013E] dark:text-white"
+          className="font-display text-foreground text-center text-base font-bold leading-5 tracking-tight"
         >
           Contact Us
         </h2>
         <div
           aria-hidden="true"
-          className="mx-auto mt-1.5 h-[3px] w-[34px] rounded-full bg-[#E9A944]"
+          className="bg-primary mx-auto mt-1.5 h-[3px] w-[34px] rounded-full"
         />
 
-        <address className="mt-[18px] flex flex-col gap-5 text-[13px] not-italic leading-[19px] text-[#555555] dark:text-slate-400">
+        <address className="text-muted-foreground mt-[18px] flex flex-col gap-5 text-[13px] not-italic leading-[19px]">
           {addressLines.length > 0 ? (
             <div className="flex gap-[17px]">
-              <span className="flex h-[19px] w-3.5 shrink-0 items-center text-[#E9A944]">
+              <span className="text-primary flex h-[19px] w-3.5 shrink-0 items-center">
                 <PinMark className="h-3.5 w-[10px]" />
               </span>
               <span>
@@ -192,12 +192,12 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
 
           {phone ? (
             <div className="flex gap-[17px]">
-              <span className="flex h-[19px] w-3.5 shrink-0 items-center text-[#E9A944]">
+              <span className="text-primary flex h-[19px] w-3.5 shrink-0 items-center">
                 <Phone className="size-[13px] fill-current" strokeWidth={0} aria-hidden="true" />
               </span>
               <a
                 href={`tel:${phone.href}`}
-                className="focus-visible:outline-ring hover:text-primary rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:text-orange-400"
+                className="focus-visible:outline-ring hover:text-primary rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
               >
                 {phone.display}
               </a>
@@ -206,12 +206,12 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
 
           {email ? (
             <div className="flex gap-[17px]">
-              <span className="flex h-[19px] w-3.5 shrink-0 items-center text-[#E9A944]">
+              <span className="text-primary flex h-[19px] w-3.5 shrink-0 items-center">
                 <MailMark className="h-2.5 w-3.5" />
               </span>
               <a
                 href={`mailto:${email}`}
-                className="focus-visible:outline-ring hover:text-primary break-all rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:text-orange-400"
+                className="focus-visible:outline-ring hover:text-primary break-all rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
               >
                 {email}
               </a>
@@ -239,7 +239,7 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
       */}
       <div className="mt-6 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center">
         <div className="col-start-2 flex items-center gap-1.5">
-          <ScriptAccent size="sm" className="leading-tight text-[#475569] dark:text-slate-400">
+          <ScriptAccent size="sm" className="text-muted-foreground leading-tight">
             <span>People, Purpose, Possibilities</span>
           </ScriptAccent>
           <HeartDoodle className="text-primary size-6" />
@@ -256,13 +256,10 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
         12px side padding so the notice is one line at 390px, as in the design;
         narrower, it breaks before "All Rights Reserved.", never inside it.
       */}
-      <div className="dark:border-border dark:bg-surface-warm -mx-5 -mb-6 mt-6 border-t border-[#E8E8E8] bg-[#FEF8EF] px-3 pb-[15px] pt-[13px] text-center text-[13px] leading-5 text-[#666666] dark:text-slate-400">
+      <div className="dark:border-border dark:bg-surface-warm border-border bg-muted text-muted-foreground -mx-5 -mb-6 mt-6 border-t px-3 pb-[15px] pt-[13px] text-center text-[13px] leading-5">
         <p>
-          Copyright © {year}{' '}
-          <span className="font-semibold text-[#5F48A2] dark:text-violet-300">
-            {siteConfig.name}
-          </span>
-          . <span className="whitespace-nowrap">All Rights Reserved.</span>
+          Copyright © {year} <span className="text-primary font-semibold">{siteConfig.name}</span>.{' '}
+          <span className="whitespace-nowrap">All Rights Reserved.</span>
         </p>
 
         <ul className="mt-[11px] flex flex-wrap justify-center gap-x-3.5 gap-y-1">
@@ -270,7 +267,7 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="focus-visible:outline-ring hover:text-primary rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:text-orange-400"
+                className="focus-visible:outline-ring hover:text-primary rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
               >
                 {item.label}
               </Link>

@@ -25,19 +25,19 @@ function getActionConfig(target: string) {
       return {
         icon: Globe,
         className:
-          'bg-primary text-white hover:bg-primary-hover active:bg-primary-active border border-transparent shadow-xs',
+          'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active border border-transparent shadow-xs',
       };
     case 'open':
       return {
         icon: Play,
         className:
-          'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 border border-transparent shadow-xs',
+          'bg-success text-success-foreground hover:bg-success active:bg-success border border-transparent shadow-xs',
       };
     case 'active':
       return {
         icon: Flame,
         className:
-          'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 border border-transparent shadow-xs',
+          'bg-success text-success-foreground hover:bg-success active:bg-success border border-transparent shadow-xs',
       };
     case 'draft':
       return {
@@ -50,19 +50,19 @@ function getActionConfig(target: string) {
       return {
         icon: Pause,
         className:
-          'border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 hover:bg-amber-500/20 active:bg-amber-500/30 shadow-xs',
+          'border border-warning/30 bg-warning/10 text-warning-foreground hover:bg-warning/20 active:bg-warning/30 shadow-xs',
       };
     case 'completed':
       return {
         icon: CheckCircle2,
         className:
-          'border border-blue-500/30 bg-blue-500/10 text-blue-900 dark:text-blue-200 hover:bg-blue-500/20 active:bg-blue-500/30 shadow-xs',
+          'border border-info/30 bg-info/10 text-info hover:bg-info/20 active:bg-info/30 shadow-xs',
       };
     case 'cancelled':
       return {
         icon: Ban,
         className:
-          'border border-rose-500/30 bg-rose-500/10 text-rose-800 dark:text-rose-200 hover:bg-rose-500/20 active:bg-rose-500/30 shadow-xs',
+          'border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 active:bg-destructive/30 shadow-xs',
       };
     case 'archived':
     case 'delete':
@@ -155,14 +155,14 @@ export function StatusActions({
       {reasonFor ? (
         <form
           action={formAction}
-          className="shadow-xs space-y-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4"
+          className="shadow-xs border-warning/30 bg-warning/5 space-y-3 rounded-xl border p-4"
         >
           <input type="hidden" name="id" value={entityId} />
           {slug ? <input type="hidden" name="slug" value={slug} /> : null}
           <input type="hidden" name="action" value={labels[reasonFor]!.endpoint} />
 
           <div className="flex items-start gap-2.5">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <AlertTriangle className="text-warning-foreground mt-0.5 size-4 shrink-0" />
             <div className="flex-1 space-y-1">
               <label htmlFor="reason" className="text-foreground block text-xs font-semibold">
                 {labels[reasonFor]!.label.toLowerCase() === 'delete'
@@ -217,7 +217,7 @@ export function StatusActions({
         <div className="flex flex-wrap items-center gap-2">
           {options.length === 0 && !children ? (
             <div className="border-border/80 bg-muted/30 text-muted-foreground flex items-center gap-2 rounded-lg border px-3 py-2 text-xs">
-              <CheckCircle2 className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <CheckCircle2 className="text-success size-4 shrink-0" />
               <span>No further status transitions available from “{current}”.</span>
             </div>
           ) : null}

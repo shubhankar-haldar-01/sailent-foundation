@@ -21,7 +21,7 @@ export function EventsCta() {
         <div className="bg-surface-warm flex flex-col items-start gap-5 rounded-[1.25rem] px-6 py-7 sm:flex-row sm:items-center sm:gap-6 sm:px-8 lg:px-10 lg:py-8">
           <span
             aria-hidden="true"
-            className="bg-wash-coral text-cta-glow grid size-16 shrink-0 place-items-center rounded-2xl"
+            className="bg-wash-coral text-primary grid size-16 shrink-0 place-items-center rounded-2xl"
           >
             <CalendarHeart className="size-8" strokeWidth={1.75} />
           </span>

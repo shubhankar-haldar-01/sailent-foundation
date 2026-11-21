@@ -30,10 +30,10 @@ export async function SiteFooter() {
 
   return (
     // `overflow-clip`: the corner leaves sit 24px outside the footer, and unclipped they gave every page a sideways scroll.
-    <footer className="border-border bg-surface dark:border-border dark:bg-surface relative mt-auto overflow-clip border-t text-[#475569] dark:text-slate-300 print:hidden">
+    <footer className="border-border bg-surface dark:border-border dark:bg-surface text-muted-foreground relative mt-auto overflow-clip border-t print:hidden">
       {/* Decorative botanical watermark corners from approved design */}
       <div
-        className="pointer-events-none absolute -bottom-6 -left-6 select-none text-[#F4D9C4] opacity-25 dark:opacity-10"
+        className="text-muted-foreground pointer-events-none absolute -bottom-6 -left-6 select-none opacity-25 dark:opacity-10"
         aria-hidden="true"
       >
         <svg width="220" height="160" viewBox="0 0 220 160" fill="currentColor">
@@ -43,7 +43,7 @@ export async function SiteFooter() {
         </svg>
       </div>
       <div
-        className="pointer-events-none absolute -bottom-6 -right-6 select-none text-[#F4D9C4] opacity-25 dark:opacity-10"
+        className="text-muted-foreground pointer-events-none absolute -bottom-6 -right-6 select-none opacity-25 dark:opacity-10"
         aria-hidden="true"
       >
         <svg
@@ -77,7 +77,7 @@ export async function SiteFooter() {
               />
             </Link>
 
-            <p className="max-w-xs text-sm leading-relaxed text-[#475569] dark:text-slate-400">
+            <p className="text-muted-foreground max-w-xs text-sm leading-relaxed">
               Empowering communities through education, healthcare, and sustainable opportunities
               for a brighter tomorrow.
             </p>
@@ -92,7 +92,7 @@ export async function SiteFooter() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`${siteConfig.name} on ${link.label}`}
-                      className="focus-visible:outline-ring shadow-xs size-8.5 border-border bg-surface dark:border-border dark:bg-surface hover:text-primary flex items-center justify-center rounded-full border text-slate-700 transition-all hover:border-[#EB6A1F] focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-slate-300 dark:hover:border-orange-500 dark:hover:text-orange-400"
+                      className="focus-visible:outline-ring shadow-xs size-8.5 border-border bg-surface dark:border-border dark:bg-surface hover:text-primary text-foreground hover:border-primary flex items-center justify-center rounded-full border transition-all focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
                       {Icon ? (
                         <Icon className="size-4" aria-hidden="true" />
@@ -116,12 +116,12 @@ export async function SiteFooter() {
                 <nav key={group.label} aria-labelledby={id}>
                   <h2
                     id={id}
-                    className="font-display text-[15px] font-bold tracking-tight text-[#0F172A] dark:text-white"
+                    className="font-display text-foreground text-[15px] font-bold tracking-tight"
                   >
                     {group.label}
                   </h2>
                   <div
-                    className="h-0.75 mb-2 mt-1 w-6 rounded-full bg-[#EB6A1F]"
+                    className="h-0.75 bg-primary mb-2 mt-1 w-6 rounded-full"
                     aria-hidden="true"
                   />
                   <ul className="space-y-1.5 text-sm">
@@ -129,7 +129,7 @@ export async function SiteFooter() {
                       <li key={item.label}>
                         <Link
                           href={item.href}
-                          className="focus-visible:outline-ring hover:text-primary block py-0.5 text-[#475569] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-slate-400 dark:hover:text-orange-400"
+                          className="focus-visible:outline-ring hover:text-primary text-muted-foreground block py-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                         >
                           {item.label}
                         </Link>
@@ -146,18 +146,18 @@ export async function SiteFooter() {
             <div>
               <h2
                 id="footer-contact"
-                className="font-display text-[15px] font-bold tracking-tight text-[#0F172A] dark:text-white"
+                className="font-display text-foreground text-[15px] font-bold tracking-tight"
               >
                 Contact Us
               </h2>
-              <div className="h-0.75 mb-2 mt-1 w-6 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+              <div className="h-0.75 bg-primary mb-2 mt-1 w-6 rounded-full" aria-hidden="true" />
               <address
                 aria-labelledby="footer-contact"
-                className="space-y-2.5 text-sm not-italic text-[#475569] dark:text-slate-400"
+                className="text-muted-foreground space-y-2.5 text-sm not-italic"
               >
                 {addressFirst || addressSecond ? (
                   <div className="flex items-start gap-2.5">
-                    <span className="size-7.5 text-primary flex shrink-0 items-center justify-center rounded-full bg-[#FFEDD5] dark:bg-orange-950/50">
+                    <span className="size-7.5 text-primary bg-muted flex shrink-0 items-center justify-center rounded-full">
                       <MapPin className="size-3.5" aria-hidden="true" />
                     </span>
                     <span className="leading-snug">
@@ -170,12 +170,12 @@ export async function SiteFooter() {
 
                 {organisation.phoneDisplay && organisation.phoneHref ? (
                   <div className="flex items-center gap-2.5">
-                    <span className="size-7.5 text-primary flex shrink-0 items-center justify-center rounded-full bg-[#FFEDD5] dark:bg-orange-950/50">
+                    <span className="size-7.5 text-primary bg-muted flex shrink-0 items-center justify-center rounded-full">
                       <Phone className="size-3.5" aria-hidden="true" />
                     </span>
                     <a
                       href={`tel:${organisation.phoneHref}`}
-                      className="focus-visible:outline-ring hover:text-primary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:text-orange-400"
+                      className="focus-visible:outline-ring hover:text-primary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
                       {organisation.phoneDisplay}
                     </a>
@@ -184,12 +184,12 @@ export async function SiteFooter() {
 
                 {organisation.email ? (
                   <div className="flex items-center gap-2.5">
-                    <span className="size-7.5 text-primary flex shrink-0 items-center justify-center rounded-full bg-[#FFEDD5] dark:bg-orange-950/50">
+                    <span className="size-7.5 text-primary bg-muted flex shrink-0 items-center justify-center rounded-full">
                       <Mail className="size-3.5" aria-hidden="true" />
                     </span>
                     <a
                       href={`mailto:${organisation.email}`}
-                      className="focus-visible:outline-ring hover:text-primary break-words transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:text-orange-400"
+                      className="focus-visible:outline-ring hover:text-primary break-words transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
                       {organisation.email}
                     </a>
@@ -212,10 +212,7 @@ export async function SiteFooter() {
             {/* Hand-drawn People Purpose Possibilities flourish */}
             <div className="hidden flex-col items-center justify-center pl-2 xl:flex">
               <div className="flex items-start gap-2">
-                <ScriptAccent
-                  size="sm"
-                  className="leading-tight text-[#475569] dark:text-slate-400"
-                >
+                <ScriptAccent size="sm" className="text-muted-foreground leading-tight">
                   <span className="block">People</span>
                   <span className="block ps-[0.45em]">Purpose</span>
                   <span className="block ps-[0.9em]">Possibilities</span>
@@ -225,7 +222,7 @@ export async function SiteFooter() {
               <svg
                 viewBox="0 0 100 16"
                 fill="none"
-                className="mt-1 w-20 text-[#EB6A1F]"
+                className="text-primary mt-1 w-20"
                 aria-hidden="true"
               >
                 <path
@@ -240,11 +237,10 @@ export async function SiteFooter() {
         </div>
 
         {/* Bottom Sub-footer */}
-        <div className="border-border dark:border-border mt-6 flex flex-col items-center justify-between gap-3 border-t pt-3.5 text-xs text-[#64748B] sm:flex-row dark:text-slate-400">
+        <div className="border-border dark:border-border text-muted-foreground mt-6 flex flex-col items-center justify-between gap-3 border-t pt-3.5 text-xs sm:flex-row">
           <p>
-            © {year}{' '}
-            <span className="font-semibold text-[#0F172A] dark:text-white">{siteConfig.name}</span>.
-            All rights reserved.
+            © {year} <span className="text-foreground font-semibold">{siteConfig.name}</span>. All
+            rights reserved.
           </p>
 
           <ul className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -257,7 +253,7 @@ export async function SiteFooter() {
                 )}
                 <Link
                   href={item.href}
-                  className="focus-visible:outline-ring hover:text-primary rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:hover:text-orange-400"
+                  className="focus-visible:outline-ring hover:text-primary rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   {item.label}
                 </Link>

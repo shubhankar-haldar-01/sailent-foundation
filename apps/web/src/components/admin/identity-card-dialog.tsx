@@ -31,6 +31,13 @@ export interface IdentityCardData {
   companyName?: string;
 }
 
+/*
+  Colours: the identity card is printed artwork in its own approved navy
+  design, drawn on a canvas, so its hex values stay here rather than in the
+  site tokens (visual polish Phase 2, 2026-11-21: no orange in it, nothing to
+  swap). Its text is set in Inter, the site's only typeface.
+*/
+
 /**
  * Generate a deterministic numeric ID from a string if none is supplied.
  * E.g. "0000060816" matching the 10-digit ID format in the approved design.
@@ -296,7 +303,7 @@ export async function downloadIdentityCardPdf(card: IdentityCardData): Promise<v
 
   if (!logoDrawn) {
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 12px Manrope, ui-sans-serif, system-ui, sans-serif';
+    ctx.font = 'bold 12px Inter, ui-sans-serif, system-ui, sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillText('SAILENT', 24, 39);
@@ -353,12 +360,12 @@ export async function downloadIdentityCardPdf(card: IdentityCardData): Promise<v
 
   // 4. Name & Designation (vertically balanced)
   ctx.fillStyle = '#071630';
-  ctx.font = 'bold 24px Manrope, ui-sans-serif, system-ui, sans-serif';
+  ctx.font = 'bold 24px Inter, ui-sans-serif, system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(card.name || 'Austin Ortiz', 180, 312);
 
-  ctx.font = '600 11px Manrope, ui-sans-serif, system-ui, sans-serif';
+  ctx.font = '600 11px Inter, ui-sans-serif, system-ui, sans-serif';
   if ('letterSpacing' in ctx) {
     (ctx as unknown as { letterSpacing: string }).letterSpacing = '2.4px';
   }
@@ -385,7 +392,7 @@ export async function downloadIdentityCardPdf(card: IdentityCardData): Promise<v
   rows.forEach((row, i) => {
     const y = tableStartY + i * rowSpacing;
     ctx.textAlign = 'left';
-    ctx.font = 'bold 13px Manrope, ui-sans-serif, system-ui, sans-serif';
+    ctx.font = 'bold 13px Inter, ui-sans-serif, system-ui, sans-serif';
     ctx.fillStyle = '#071630';
     ctx.fillText(row.label, 42, y);
 
@@ -394,9 +401,9 @@ export async function downloadIdentityCardPdf(card: IdentityCardData): Promise<v
 
     ctx.textAlign = 'left';
     if (row.label === 'Email' && row.value.length > 24) {
-      ctx.font = '600 11.5px Manrope, ui-sans-serif, system-ui, sans-serif';
+      ctx.font = '600 11.5px Inter, ui-sans-serif, system-ui, sans-serif';
     } else {
-      ctx.font = '600 13px Manrope, ui-sans-serif, system-ui, sans-serif';
+      ctx.font = '600 13px Inter, ui-sans-serif, system-ui, sans-serif';
     }
     ctx.fillText(row.value, 122, y);
   });
@@ -757,10 +764,10 @@ export function IssueIdentityCardDialog({
           </div>
         </DialogHeader>
 
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 overflow-y-auto bg-slate-50/70 p-6 lg:flex-row lg:items-start">
+        <div className="flex flex-1 flex-col items-center justify-center gap-8 overflow-y-auto bg-muted/70 p-6 lg:flex-row lg:items-start">
           {/* Card Preview Column */}
           <div className="flex flex-col items-center">
-            <div className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="rounded-3xl border border-border bg-surface p-3 shadow-sm">
               <IdentityCardPreview card={currentCard} />
             </div>
             <p className="text-muted-foreground mt-3 text-center text-[11px]">

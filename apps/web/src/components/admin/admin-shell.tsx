@@ -191,7 +191,7 @@ export function AdminShell({
               type="button"
               aria-label="Close navigation"
               onClick={() => setIsSidebarOpen(false)}
-              className="backdrop-blur-xs absolute inset-0 bg-neutral-950/60 transition-opacity"
+              className="backdrop-blur-xs bg-surface-inverse/60 absolute inset-0 transition-opacity"
             />
 
             {/* Slide-in Drawer */}

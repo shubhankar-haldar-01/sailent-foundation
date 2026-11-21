@@ -66,7 +66,7 @@ function CampaignThumbnail({ donation }: { donation: DonorDonation }) {
   }
 
   return (
-    <div className="relative size-9 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
+    <div className="bg-muted relative size-9 shrink-0 overflow-hidden rounded-lg">
       <Image
         src={src}
         alt={donation.campaignTitle ?? 'Campaign thumbnail'}

@@ -294,13 +294,13 @@ export function UploadPanel() {
               <SelectContent position="popper" side="bottom" align="start">
                 <SelectItem value="public">
                   <span className="flex items-center gap-2">
-                    <Globe className="size-3.5 text-emerald-600" />
+                    <Globe className="text-success size-3.5" />
                     <span>Public — usable across the website</span>
                   </span>
                 </SelectItem>
                 <SelectItem value="private">
                   <span className="flex items-center gap-2">
-                    <Lock className="size-3.5 text-amber-600" />
+                    <Lock className="text-warning-foreground size-3.5" />
                     <span>Private — restricted to staff</span>
                   </span>
                 </SelectItem>
@@ -375,7 +375,7 @@ export function MediaTile({ item }: { item: AdminMedia }) {
           </span>
           <span
             className={`shadow-xs backdrop-blur-xs flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white ${
-              item.visibility === 'public' ? 'bg-emerald-600/90' : 'bg-amber-600/90'
+              item.visibility === 'public' ? 'bg-success/90' : 'bg-warning/90'
             }`}
           >
             {item.visibility === 'public' ? (
@@ -398,12 +398,12 @@ export function MediaTile({ item }: { item: AdminMedia }) {
             <button
               type="button"
               onClick={handleCopy}
-              className="text-caption shadow-xs flex cursor-pointer items-center gap-1 rounded-md bg-white/95 px-2 py-1 font-medium text-neutral-900 transition-colors hover:bg-white"
+              className="text-caption shadow-xs bg-surface/95 text-foreground hover:bg-surface flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors"
               title="Copy image link"
             >
               {copied ? (
                 <>
-                  <Check className="size-3 text-emerald-600" />
+                  <Check className="text-success size-3" />
                   <span>Copied</span>
                 </>
               ) : (
@@ -620,7 +620,7 @@ export function MediaGallery({ items, query }: { items: AdminMedia[]; query?: st
                             >
                               {copiedId === item.id ? (
                                 <>
-                                  <Check className="size-3.5 text-emerald-600" />
+                                  <Check className="text-success size-3.5" />
                                   <span>Copied</span>
                                 </>
                               ) : (
@@ -706,11 +706,7 @@ export function MediaDetailPanel({ item }: { item: AdminMediaDetail }) {
             onClick={handleCopy}
             className="shrink-0 gap-1.5"
           >
-            {copied ? (
-              <Check className="size-3.5 text-emerald-600" />
-            ) : (
-              <Copy className="size-3.5" />
-            )}
+            {copied ? <Check className="text-success size-3.5" /> : <Copy className="size-3.5" />}
             <span>{copied ? 'Copied' : 'Copy link'}</span>
           </Button>
         </div>

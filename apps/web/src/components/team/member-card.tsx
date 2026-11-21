@@ -11,9 +11,9 @@ export function MemberCard({ member }: MemberCardProps) {
     (member.photo?.seed ? `/images/${member.photo.seed}.webp` : '/images/team-priya-mehta.webp');
 
   return (
-    <article className="card-interactive group relative flex h-full flex-col overflow-hidden rounded-[20px] p-2.5 sm:p-3 dark:border-slate-800 dark:bg-slate-900">
+    <article className="card-interactive group relative flex h-full flex-col overflow-hidden rounded-[20px] p-2.5 sm:p-3">
       {/* Photograph Container with Portrait Aspect Ratio */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[14px] bg-slate-100 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] dark:bg-slate-800">
+      <div className="bg-muted relative aspect-[4/5] w-full overflow-hidden rounded-[14px] ring-1 ring-inset ring-border">
         <Image
           src={photoUrl}
           alt={member.photo?.alt || `Portrait of ${member.name}`}
@@ -27,11 +27,11 @@ export function MemberCard({ member }: MemberCardProps) {
 
       {/* Details: Centered, Clean & Balanced */}
       <div className="flex flex-1 flex-col items-center justify-center pb-0.5 pt-2.5 text-center">
-        <h3 className="w-full truncate text-[14px] font-bold tracking-tight text-slate-900 sm:text-[15px] dark:text-white">
+        <h3 className="text-foreground w-full truncate text-[14px] font-bold tracking-tight sm:text-[15px]">
           {member.name}
         </h3>
 
-        <span className="mt-1.5 inline-flex items-center rounded-full border border-orange-200/60 bg-[#FFF4EC] px-2.5 py-0.5 text-[10.5px] font-semibold text-[#EB6A1F] transition-colors group-hover:border-orange-300 group-hover:bg-orange-100/80 sm:text-[11px] dark:border-orange-900/50 dark:bg-orange-950/40 dark:text-orange-300">
+        <span className="border-primary/60 bg-muted text-primary group-hover:border-primary/30 group-hover:bg-accent/80 mt-1.5 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10.5px] font-semibold transition-colors sm:text-[11px]">
           Team
         </span>
       </div>

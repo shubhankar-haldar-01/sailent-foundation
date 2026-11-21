@@ -124,7 +124,7 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
       <div className="flex flex-row items-center gap-4 sm:items-start sm:gap-6">
         {/* Avatar circle with camera badge */}
         <div className="relative shrink-0">
-          <div className="ring-border/30 relative flex size-20 items-center justify-center overflow-hidden rounded-full bg-slate-100 ring-2 sm:size-24 dark:bg-slate-800">
+          <div className="ring-border/30 bg-muted relative flex size-20 items-center justify-center overflow-hidden rounded-full ring-2 sm:size-24">
             {currentPhoto ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -134,7 +134,7 @@ export function ProfilePhotoCard({ initialAvatarUrl, name }: ProfilePhotoCardPro
               />
             ) : (
               <User
-                className="size-12 text-slate-400 dark:text-slate-500"
+                className="text-muted-foreground size-12"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />

@@ -20,7 +20,7 @@ export default async function TeamPage() {
   const members = await getTeam();
 
   return (
-    <div className="bg-[#F8FAFC]/50 pb-20 pt-2 dark:bg-[#0A101D]">
+    <div className="bg-background/50 pb-20 pt-2">
       <PageShell>
         {/* Hero Section */}
         <TeamHero />

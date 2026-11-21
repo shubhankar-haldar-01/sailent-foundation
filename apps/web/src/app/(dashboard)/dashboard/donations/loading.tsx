@@ -1,6 +1,11 @@
 export default function DonationsLoading() {
   return (
-    <div className="animate-pulse space-y-6" aria-busy="true" aria-label="Loading donations">
+    <div
+      role="status"
+      className="animate-pulse space-y-6"
+      aria-busy="true"
+      aria-label="Loading donations"
+    >
       {/* Header skeleton */}
       <div className="space-y-2">
         <div className="bg-muted h-4 w-28 rounded" />

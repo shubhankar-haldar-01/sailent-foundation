@@ -86,7 +86,7 @@ export function CommunityCta() {
         />
         <div
           aria-hidden="true"
-          className="from-accent-950/70 via-accent-950/58 to-accent-950/50 lg:from-accent-950/10 lg:via-accent-950/52 lg:to-accent-950/08 lg:from-18% lg:to-86% absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r lg:via-50%"
+          className="from-surface-inverse/70 via-surface-inverse/58 to-surface-inverse/50 lg:from-surface-inverse/10 lg:via-surface-inverse/52 lg:to-surface-inverse/08 lg:from-18% lg:to-86% absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r lg:via-50%"
         />
       </div>
 
@@ -121,7 +121,7 @@ export function CommunityCta() {
               <Button
                 asChild
                 size="md"
-                className="text-info-action ring-info-action/25 bg-white shadow-sm ring-1 hover:bg-white/90"
+                className="text-info-action ring-info-action/25 bg-surface hover:bg-surface/90 shadow-sm ring-1"
               >
                 <Link href="/volunteer">
                   Become a Volunteer
@@ -131,7 +131,7 @@ export function CommunityCta() {
               <Button
                 asChild
                 size="md"
-                className="bg-accent-950/35 hover:bg-accent-950/55 text-white ring-1 ring-white/70"
+                className="bg-surface-inverse/35 hover:bg-surface-inverse/55 text-white ring-1 ring-white/70"
               >
                 <Link href="/donate">
                   Make a Donation

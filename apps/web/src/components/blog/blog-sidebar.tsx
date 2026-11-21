@@ -34,7 +34,7 @@ export function BlogSidebar({ latestPosts, currentQuery = '', className }: BlogS
       <section aria-label="Search blog">
         <form action="/blog" method="GET" className="relative flex items-center">
           <Search
-            className="pointer-events-none absolute left-4 size-4 text-slate-400"
+            className="text-muted-foreground pointer-events-none absolute left-4 size-4"
             aria-hidden="true"
           />
           <input
@@ -43,13 +43,13 @@ export function BlogSidebar({ latestPosts, currentQuery = '', className }: BlogS
             defaultValue={currentQuery}
             placeholder="Search articles..."
             aria-label="Search articles"
-            className="shadow-2xs h-11 w-full rounded-full border border-slate-200/90 bg-white pl-11 pr-10 text-sm text-[#102A43] transition-all placeholder:text-slate-400 focus:border-[#EB6A1F] focus:outline-none focus:ring-2 focus:ring-[#EB6A1F]/25"
+            className="shadow-2xs border-border/90 bg-surface text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/25 h-11 w-full rounded-full border pl-11 pr-10 text-sm transition-all focus:outline-none focus:ring-2"
           />
           {currentQuery ? (
             <Link
               href="/blog"
               aria-label="Clear search"
-              className="absolute right-3.5 flex size-5 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
+              className="bg-muted text-muted-foreground hover:bg-border hover:text-foreground absolute right-3.5 flex size-5 items-center justify-center rounded-full transition-colors"
             >
               <X className="size-3" aria-hidden="true" />
             </Link>
@@ -58,22 +58,19 @@ export function BlogSidebar({ latestPosts, currentQuery = '', className }: BlogS
       </section>
 
       {/* 2. Latest Articles Panel */}
-      <section
-        aria-labelledby="latest-articles-title"
-        className="card-interactive rounded-2xl p-5 dark:border-slate-800 dark:bg-slate-900"
-      >
+      <section aria-labelledby="latest-articles-title" className="card-interactive rounded-2xl p-5">
         <div className="mb-4 flex items-center gap-2">
-          <span aria-hidden="true" className="inline-block h-4 w-1 rounded-full bg-[#EB6A1F]" />
+          <span aria-hidden="true" className="bg-primary inline-block h-4 w-1 rounded-full" />
           <h3
             id="latest-articles-title"
-            className="font-display text-base font-bold text-[#102A43]"
+            className="font-display text-foreground text-base font-bold"
           >
             Latest Articles
           </h3>
         </div>
 
         {latestPosts.length === 0 ? (
-          <p className="text-xs italic text-slate-500">No articles published yet.</p>
+          <p className="text-muted-foreground text-xs italic">No articles published yet.</p>
         ) : (
           <ul className="space-y-4">
             {latestPosts.map((post) => (
@@ -82,7 +79,7 @@ export function BlogSidebar({ latestPosts, currentQuery = '', className }: BlogS
                   href={`/blog/${post.slug}`}
                   className="focus-visible:outline-ring group flex items-start gap-3.5 rounded-lg"
                 >
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-100">
+                  <div className="border-border bg-muted relative size-16 shrink-0 overflow-hidden rounded-lg border">
                     <MediaFrame
                       media={{
                         seed: `blog-${post.slug}`,
@@ -95,12 +92,12 @@ export function BlogSidebar({ latestPosts, currentQuery = '', className }: BlogS
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h4 className="font-display group-hover:text-primary line-clamp-2 text-xs font-semibold leading-snug text-[#102A43] transition-colors sm:text-sm">
+                    <h4 className="font-display group-hover:text-primary text-foreground line-clamp-2 text-xs font-semibold leading-snug transition-colors sm:text-sm">
                       {post.title}
                     </h4>
                     {post.publishedAt ? (
-                      <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-slate-600">
-                        <Calendar className="size-3 shrink-0 text-[#EB6A1F]" aria-hidden="true" />
+                      <div className="text-muted-foreground mt-1.5 flex items-center gap-1.5 text-[11px] font-medium">
+                        <Calendar className="text-primary size-3 shrink-0" aria-hidden="true" />
                         <time dateTime={post.publishedAt}>
                           {formatArticleDate(post.publishedAt)}
                         </time>
@@ -155,26 +152,26 @@ function BlogNewsletterCard() {
   return (
     <section
       aria-labelledby="subscribe-panel-title"
-      className="card-interactive relative overflow-hidden rounded-2xl p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900"
+      className="card-interactive relative overflow-hidden rounded-2xl p-5 sm:p-6"
     >
       {/* Decorative warm peach gradient corner */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-6 -top-6 size-24 rounded-full bg-gradient-to-br from-orange-200/50 to-amber-100/30 blur-lg"
+        className="from-primary/50 to-warning-subtle/30 pointer-events-none absolute -right-6 -top-6 size-24 rounded-full bg-gradient-to-br blur-lg"
       />
 
       <div className="relative">
         <div className="flex items-center gap-2">
-          <Send className="size-4 stroke-[2.2] text-[#EB6A1F]" aria-hidden="true" />
+          <Send className="text-primary size-4 stroke-[2.2]" aria-hidden="true" />
           <h3
             id="subscribe-panel-title"
-            className="font-display text-base font-bold text-[#102A43]"
+            className="font-display text-foreground text-base font-bold"
           >
             Subscribe to Our Blog
           </h3>
         </div>
 
-        <p className="mt-2 text-xs leading-relaxed text-slate-600">
+        <p className="text-muted-foreground mt-2 text-xs leading-relaxed">
           Get the latest articles, updates and inspiring stories delivered to your inbox.
         </p>
 
@@ -182,10 +179,10 @@ function BlogNewsletterCard() {
           <div
             ref={resultRef}
             role="status"
-            className="mt-4 flex items-start gap-2.5 rounded-xl bg-emerald-50 p-3 text-xs font-medium text-emerald-800"
+            className="bg-success-subtle text-success mt-4 flex items-start gap-2.5 rounded-xl p-3 text-xs font-medium"
           >
             <Check
-              className="mt-0.5 size-4 shrink-0 stroke-[2.5] text-emerald-600"
+              className="text-success mt-0.5 size-4 shrink-0 stroke-[2.5]"
               aria-hidden="true"
             />
             <span>Nearly done — check your inbox and confirm with the link we sent.</span>
@@ -195,7 +192,7 @@ function BlogNewsletterCard() {
             <Honeypot />
             <div className="relative">
               <Mail
-                className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+                className="text-muted-foreground pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2"
                 aria-hidden="true"
               />
               <input
@@ -212,7 +209,7 @@ function BlogNewsletterCard() {
                 autoComplete="email"
                 placeholder="Enter your email address"
                 aria-label="Email address"
-                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-10 pr-3 text-xs text-[#102A43] transition-all placeholder:text-slate-400 focus:border-[#EB6A1F] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#EB6A1F]/25"
+                className="border-border bg-background/60 text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-surface focus:ring-primary/25 h-10 w-full rounded-xl border pl-10 pr-3 text-xs transition-all focus:outline-none focus:ring-2"
               />
             </div>
 
@@ -226,7 +223,7 @@ function BlogNewsletterCard() {
               type="submit"
               disabled={pending}
               aria-busy={pending}
-              className="shadow-xs focus-visible:outline-ring text-primary-foreground hover:bg-primary-hover mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#EB6A1F] text-xs font-semibold transition-colors active:bg-[#B3450E] disabled:opacity-50 sm:text-sm"
+              className="shadow-xs focus-visible:outline-ring text-primary-foreground hover:bg-primary-hover bg-primary active:bg-primary-active mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 sm:text-sm"
             >
               <span>{pending ? 'Subscribing…' : 'Subscribe'}</span>
               <ArrowRight className="size-3.5" aria-hidden="true" />

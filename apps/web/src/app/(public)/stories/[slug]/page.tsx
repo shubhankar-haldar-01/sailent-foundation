@@ -29,7 +29,6 @@ import { Breadcrumbs } from '@/components/sections/breadcrumbs';
 import { storyDateLong } from '@/components/stories/featured-story';
 import { StoryCard } from '@/components/stories/story-card';
 import { getCampaign, getStories, getStory } from '@/lib/content';
-import { headingExtraBold } from '@/lib/fonts';
 import type { Campaign, Story } from '@/lib/mock/types';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { blogPostingSchema, jsonLd } from '@/lib/seo/structured-data';
@@ -85,28 +84,28 @@ function getChapterConfig(category?: string | null): {
       heading: 'The challenge',
       icon: challengeIcon,
       iconTone: 'text-primary',
-      discTone: 'bg-[#FFF0E6]',
+      discTone: 'bg-muted',
     },
     {
       key: 'intervention',
       heading: 'What we did',
       icon: interventionIcon,
-      iconTone: 'text-[#3B82F6]',
-      discTone: 'bg-[#EAF5FC]',
+      iconTone: 'text-info',
+      discTone: 'bg-info-subtle',
     },
     {
       key: 'journey',
       heading: 'The journey',
       icon: Users,
       iconTone: 'text-primary',
-      discTone: 'bg-[#FFF0E6]',
+      discTone: 'bg-muted',
     },
     {
       key: 'outcome',
       heading: 'The outcome',
       icon: TrendingUp,
-      iconTone: 'text-[#3B82F6]',
-      discTone: 'bg-[#EAF5FC]',
+      iconTone: 'text-info',
+      discTone: 'bg-info-subtle',
     },
   ];
 }
@@ -164,7 +163,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
         <div className="relative overflow-x-clip">
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute -right-24 top-10 size-80 rounded-full bg-[#FFEADA]/40 blur-3xl lg:-right-16 lg:top-12 lg:size-[26rem]"
+            className="bg-muted/40 pointer-events-none absolute -right-24 top-10 size-80 rounded-full blur-3xl lg:-right-16 lg:top-12 lg:size-[26rem]"
           />
 
           <PageShell className="relative pt-6">
@@ -182,12 +181,12 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
                 story.programSlug ? (
                   <Link
                     href={`/programs/${story.programSlug}`}
-                    className="text-primary inline-flex items-center rounded-md border border-[#FFDFC6] bg-[#FFF0E6] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:border-[#EB6A1F]/40 focus-visible:outline-2 focus-visible:outline-offset-2"
+                    className="text-primary border-border bg-muted hover:border-primary/40 inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-bold uppercase tracking-[0.12em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                   >
                     {eyebrow}
                   </Link>
                 ) : (
-                  <span className="text-primary inline-flex items-center rounded-md border border-[#FFDFC6] bg-[#FFF0E6] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.12em]">
+                  <span className="text-primary border-border bg-muted inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-bold uppercase tracking-[0.12em]">
                     {eyebrow}
                   </span>
                 )
@@ -195,38 +194,38 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
 
               <h1
                 className={cn(
-                  headingExtraBold.className,
-                  'dark:text-foreground mt-3.5 max-w-[42rem] text-3xl font-extrabold leading-[1.12] tracking-tight text-[#102A43] sm:text-4xl lg:text-[3.25rem]',
+                  'font-display font-semibold',
+                  'text-foreground mt-3.5 max-w-[42rem] text-3xl leading-[1.12] tracking-[-0.02em] sm:text-4xl lg:text-[3.25rem]',
                 )}
               >
                 {story.title}
               </h1>
 
               {story.summary ? (
-                <p className="dark:text-muted-foreground mt-3.5 max-w-[38rem] text-lg leading-relaxed text-slate-600 sm:text-xl">
+                <p className="dark:text-muted-foreground text-muted-foreground mt-3.5 max-w-[38rem] text-lg leading-relaxed sm:text-xl">
                   {story.summary}
                 </p>
               ) : null}
 
-              <p className="dark:text-muted-foreground mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-slate-600">
+              <p className="dark:text-muted-foreground text-muted-foreground mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm">
                 {story.location ? (
                   <>
                     <span className="inline-flex items-center gap-1.5">
                       <MapPin
-                        className="size-4 shrink-0 text-slate-400"
+                        className="text-muted-foreground size-4 shrink-0"
                         strokeWidth={1.8}
                         aria-hidden="true"
                       />
                       {story.location}
                     </span>
-                    <span aria-hidden="true" className="dark:text-border text-slate-300">
+                    <span aria-hidden="true" className="dark:text-border text-muted-foreground">
                       ·
                     </span>
                   </>
                 ) : null}
                 <span className="inline-flex items-center gap-1.5">
                   <CalendarDays
-                    className="size-4 shrink-0 text-slate-400"
+                    className="text-muted-foreground size-4 shrink-0"
                     strokeWidth={1.8}
                     aria-hidden="true"
                   />
@@ -234,12 +233,12 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
                 </span>
                 {minutes > 0 ? (
                   <>
-                    <span aria-hidden="true" className="dark:text-border text-slate-300">
+                    <span aria-hidden="true" className="dark:text-border text-muted-foreground">
                       ·
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <Clock
-                        className="size-4 shrink-0 text-slate-400"
+                        className="text-muted-foreground size-4 shrink-0"
                         strokeWidth={1.8}
                         aria-hidden="true"
                       />
@@ -283,7 +282,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
                         {!last ? (
                           <span
                             aria-hidden="true"
-                            className="dark:border-border absolute bottom-[-3rem] left-6 top-14 w-px border-l border-dashed border-slate-300 sm:left-[2.125rem] sm:top-16"
+                            className="dark:border-border border-border-strong absolute bottom-[-3rem] left-6 top-14 w-px border-l border-dashed sm:left-[2.125rem] sm:top-16"
                           />
                         ) : null}
                         <span
@@ -297,10 +296,10 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
                           <Icon className="size-6 sm:size-7" strokeWidth={1.8} />
                         </span>
                         <div className="min-w-0 pt-1 sm:pt-2">
-                          <h2 className="font-display dark:text-foreground text-xl font-bold leading-tight tracking-tight text-[#102A43] sm:text-2xl">
+                          <h2 className="font-display dark:text-foreground text-foreground text-xl font-bold leading-tight tracking-tight sm:text-2xl">
                             {chapter.heading}
                           </h2>
-                          <p className="dark:text-muted-foreground mt-3 text-base font-normal leading-[1.75] text-slate-600 sm:text-[1.0625rem]">
+                          <p className="dark:text-muted-foreground text-muted-foreground mt-3 text-base font-normal leading-[1.75] sm:text-[1.0625rem]">
                             {story[chapter.key]}
                           </p>
                         </div>
@@ -326,22 +325,23 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
               ) : (
                 <section
                   aria-labelledby="support-program"
-                  className="dark:border-border dark:bg-surface-warm rounded-2xl border border-[#F3E5D4] bg-[#FFFBF5] p-6 sm:p-7"
+                  className="dark:border-border dark:bg-surface-warm border-border bg-muted rounded-2xl border p-6 sm:p-7"
                 >
                   <h2
                     id="support-program"
-                    className="font-display dark:text-foreground text-2xl font-bold text-[#102A43]"
+                    className="font-display dark:text-foreground text-foreground text-2xl font-bold"
                   >
                     Support this program
                   </h2>
-                  <p className="dark:text-muted-foreground mt-3 text-[0.9375rem] leading-relaxed text-slate-600">
+                  <p className="dark:text-muted-foreground text-muted-foreground mt-3 text-[0.9375rem] leading-relaxed">
                     Fund a specific item, or give any amount.
                   </p>
                   <Button
                     asChild
                     fullWidth
                     size="lg"
-                    className="text-primary-foreground hover:bg-primary-hover mt-5 rounded-full bg-[#EB6A1F]"
+                    variant="action"
+                    className="mt-5 rounded-full"
                   >
                     <Link href="/donate">
                       Donate
@@ -353,19 +353,19 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
 
               {/* What it means: Highlighted organisation quote card */}
               {story.impact.trim() ? (
-                <figure className="shadow-xs dark:border-border dark:bg-wash-blue/15 relative overflow-hidden rounded-2xl border border-[#D9ECFB] bg-[#F0F8FF] p-6 sm:p-7">
+                <figure className="shadow-xs dark:border-border dark:bg-wash-blue/15 border-info/30 bg-info-subtle relative overflow-hidden rounded-2xl border p-6 sm:p-7">
                   <div className="flex items-start gap-3.5">
                     <span
                       aria-hidden="true"
-                      className="shrink-0 select-none font-serif text-3xl font-bold leading-none text-[#7EAEE0] sm:text-4xl"
+                      className="text-info shrink-0 select-none font-serif text-3xl font-bold leading-none sm:text-4xl"
                     >
                       “
                     </span>
                     <div className="min-w-0 flex-1">
-                      <blockquote className="dark:text-foreground text-[0.9375rem] font-medium italic leading-relaxed text-[#102A43]">
+                      <blockquote className="dark:text-foreground text-foreground text-[0.9375rem] font-medium italic leading-relaxed">
                         “{story.impact}”
                       </blockquote>
-                      <figcaption className="dark:text-muted-foreground mt-3 text-xs font-medium text-slate-600">
+                      <figcaption className="dark:text-muted-foreground text-muted-foreground mt-3 text-xs font-medium">
                         — {siteConfig.name}
                       </figcaption>
                     </div>
@@ -382,18 +382,18 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
       {moreStories.length > 0 ? (
         <section
           aria-labelledby="more-stories"
-          className="dark:bg-surface-sunken bg-[#F2F7FC] py-14 lg:py-16"
+          className="dark:bg-surface-sunken bg-info-subtle py-14 lg:py-16"
         >
           <PageShell>
             <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
               <div>
                 <h2
                   id="more-stories"
-                  className="font-display dark:text-foreground text-2xl font-bold tracking-tight text-[#102A43] sm:text-3xl"
+                  className="font-display dark:text-foreground text-foreground text-2xl font-bold tracking-tight sm:text-3xl"
                 >
                   More stories
                 </h2>
-                <p className="dark:text-muted-foreground mt-1 text-sm text-slate-600 sm:text-base">
+                <p className="dark:text-muted-foreground text-muted-foreground mt-1 text-sm sm:text-base">
                   Discover more stories of change, resilience and hope from the communities we work
                   with.
                 </p>
@@ -447,14 +447,14 @@ function RelatedCampaign({ campaign }: { campaign: Campaign }) {
   return (
     <section
       aria-labelledby="related-campaign"
-      className="shadow-xs dark:border-border dark:bg-surface-warm rounded-2xl border border-[#F3E5D4] bg-[#FFFBF5] p-6 sm:p-7"
+      className="shadow-xs dark:border-border dark:bg-surface-warm border-border bg-muted rounded-2xl border p-6 sm:p-7"
     >
-      <p className="dark:text-muted-foreground text-xs font-bold uppercase tracking-wider text-slate-500">
+      <p className="dark:text-muted-foreground text-muted-foreground text-xs font-bold uppercase tracking-wider">
         RELATED CAMPAIGN
       </p>
       <h2
         id="related-campaign"
-        className="font-display dark:text-foreground mt-2 text-xl font-bold leading-snug tracking-tight text-[#102A43]"
+        className="font-display dark:text-foreground text-foreground mt-2 text-xl font-bold leading-snug tracking-tight"
       >
         <Link
           href={href}
@@ -474,7 +474,7 @@ function RelatedCampaign({ campaign }: { campaign: Campaign }) {
       </div>
 
       {campaign.shortDescription ? (
-        <p className="dark:text-muted-foreground mt-4 text-sm leading-relaxed text-slate-600">
+        <p className="dark:text-muted-foreground text-muted-foreground mt-4 text-sm leading-relaxed">
           {campaign.shortDescription}
         </p>
       ) : null}
@@ -483,7 +483,8 @@ function RelatedCampaign({ campaign }: { campaign: Campaign }) {
         asChild
         fullWidth
         size="lg"
-        className="shadow-xs text-primary-foreground hover:bg-primary-hover mt-5 rounded-full bg-[#EB6A1F] py-3 text-sm font-semibold transition-colors"
+        variant="action"
+        className="shadow-xs mt-5 rounded-full py-3 text-sm font-semibold transition-colors"
       >
         <Link href={`${href}#give`} className="inline-flex items-center justify-center gap-1.5">
           Support this work
@@ -492,25 +493,33 @@ function RelatedCampaign({ campaign }: { campaign: Campaign }) {
       </Button>
 
       {/* The campaign's recorded figures, under the design's divider */}
-      <div className="dark:border-border/70 mt-6 border-t border-[#EADBCC] pt-5">
+      <div className="dark:border-border/70 border-border mt-6 border-t pt-5">
         <div className="relative -mt-7 mb-2 flex items-center justify-between">
-          <div className="dark:bg-border/60 h-px flex-1 bg-[#EADBCC]" />
-          <span className="dark:bg-surface-warm bg-[#FFFBF5] px-2 text-slate-400">
-            <Users className="size-3.5 text-slate-400" strokeWidth={1.8} aria-hidden="true" />
-          </span>
-          <div className="dark:bg-border/60 h-px flex-1 bg-[#EADBCC]" />
-          <span className="dark:bg-surface-warm bg-[#FFFBF5] px-2 text-slate-400">
-            <MapPin className="size-3.5 text-slate-400" strokeWidth={1.8} aria-hidden="true" />
-          </span>
-          <div className="dark:bg-border/60 h-px flex-1 bg-[#EADBCC]" />
-          <span className="dark:bg-surface-warm bg-[#FFFBF5] px-2 text-slate-400">
-            <CheckCircle2
-              className="size-3.5 text-slate-400"
+          <div className="dark:bg-border/60 bg-muted h-px flex-1" />
+          <span className="dark:bg-surface-warm bg-muted text-muted-foreground px-2">
+            <Users
+              className="text-muted-foreground size-3.5"
               strokeWidth={1.8}
               aria-hidden="true"
             />
           </span>
-          <div className="dark:bg-border/60 h-px flex-1 bg-[#EADBCC]" />
+          <div className="dark:bg-border/60 bg-muted h-px flex-1" />
+          <span className="dark:bg-surface-warm bg-muted text-muted-foreground px-2">
+            <MapPin
+              className="text-muted-foreground size-3.5"
+              strokeWidth={1.8}
+              aria-hidden="true"
+            />
+          </span>
+          <div className="dark:bg-border/60 bg-muted h-px flex-1" />
+          <span className="dark:bg-surface-warm bg-muted text-muted-foreground px-2">
+            <CheckCircle2
+              className="text-muted-foreground size-3.5"
+              strokeWidth={1.8}
+              aria-hidden="true"
+            />
+          </span>
+          <div className="dark:bg-border/60 bg-muted h-px flex-1" />
         </div>
         <dl
           className={cn(
@@ -524,12 +533,12 @@ function RelatedCampaign({ campaign }: { campaign: Campaign }) {
         >
           {figures.map((figure) => (
             <div key={figure.label} className="flex min-w-0 flex-col-reverse">
-              <dt className="dark:text-muted-foreground mt-0.5 text-[0.6875rem] font-medium text-slate-600">
+              <dt className="dark:text-muted-foreground text-muted-foreground mt-0.5 text-[0.6875rem] font-medium">
                 {figure.label}
               </dt>
               <dd
                 data-numeric=""
-                className="font-display dark:text-foreground text-base font-bold leading-tight text-[#102A43] sm:text-lg"
+                className="font-display dark:text-foreground text-foreground text-base font-bold leading-tight sm:text-lg"
               >
                 {figure.value}
               </dd>

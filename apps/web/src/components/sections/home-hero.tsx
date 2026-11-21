@@ -54,7 +54,7 @@ export function HomeHero({ metrics }: { metrics: ImpactMetric[] }) {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-full">
+              <Button asChild size="lg" variant="action" className="rounded-full">
                 <Link href="/donate">Donate Now</Link>
               </Button>
               <Button asChild size="lg" variant="secondary" className="group rounded-full">
@@ -91,7 +91,7 @@ export function HomeHero({ metrics }: { metrics: ImpactMetric[] }) {
                 just mess. */}
               <ScriptAccent
                 size="lg"
-                className="absolute bottom-4 right-4 max-w-[10rem] text-right text-white drop-shadow-[0_1px_3px_rgb(0_0_0/0.55)] sm:bottom-6 sm:right-6 sm:max-w-[13rem]"
+                className="absolute bottom-4 right-4 max-w-[10rem] text-right text-white drop-shadow-md sm:bottom-6 sm:right-6 sm:max-w-[13rem]"
               >
                 Education Empowers Communities
               </ScriptAccent>

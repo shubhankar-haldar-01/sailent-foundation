@@ -6,6 +6,8 @@
 
 import QRCode from 'qrcode';
 
+import { BRAND_COLOURS as C } from '@/lib/brand-colours';
+
 export interface DownloadPassOptions {
   passNumber: string;
   eventTitle: string;
@@ -78,10 +80,10 @@ function renderSinglePassCard(
   const cardH = 556;
 
   // Card Outer Container
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = C.surface;
   roundRect(ctx, cardX, cardY, cardW, cardH, 20);
   ctx.fill();
-  ctx.strokeStyle = '#CBD5E1';
+  ctx.strokeStyle = C.borderStrong;
   ctx.lineWidth = 2;
   ctx.stroke();
 
@@ -89,32 +91,32 @@ function renderSinglePassCard(
   if (logoImg && logoImg.naturalWidth > 0) {
     ctx.drawImage(logoImg, 40, cardY + 20, 140, 36);
   } else {
-    ctx.fillStyle = '#0F172A';
+    ctx.fillStyle = C.text;
     ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
     ctx.fillText('Sailent Foundation', 40, cardY + 44);
   }
 
   // Statutory subtitle
-  ctx.fillStyle = '#475569';
+  ctx.fillStyle = C.textMuted;
   ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
   ctx.fillText('SAILENT FOUNDATION', 196, cardY + 32);
-  ctx.fillStyle = '#64748B';
+  ctx.fillStyle = C.textSubtle;
   ctx.font = '9.5px system-ui, -apple-system, sans-serif';
   ctx.fillText('Section 12A & 80G Registered NGO', 196, cardY + 48);
 
   // Top right badge: CONFIRMED ADMISSION
   roundRect(ctx, 552, cardY + 18, 200, 32, 16);
-  ctx.fillStyle = '#ECFDF5';
+  ctx.fillStyle = C.successTint;
   ctx.fill();
-  ctx.strokeStyle = '#A7F3D0';
+  ctx.strokeStyle = C.successBorder;
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  ctx.fillStyle = '#047857';
+  ctx.fillStyle = C.success;
   ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
   ctx.fillText('✓ CONFIRMED ADMISSION', 574, cardY + 38);
 
-  ctx.fillStyle = '#475569';
+  ctx.fillStyle = C.textMuted;
   ctx.font = 'bold 9.5px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'right';
   ctx.fillText('OFFICIAL EVENT ENTRY PASS', 752, cardY + 64);
@@ -124,7 +126,7 @@ function renderSinglePassCard(
   const lineY = cardY + 80;
   ctx.save();
   ctx.setLineDash([6, 6]);
-  ctx.strokeStyle = '#CBD5E1';
+  ctx.strokeStyle = C.borderStrong;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(cardX, lineY);
@@ -133,11 +135,11 @@ function renderSinglePassCard(
   ctx.restore();
 
   // Left & Right Notches
-  ctx.fillStyle = '#F8FAFC';
+  ctx.fillStyle = C.page;
   ctx.beginPath();
   ctx.arc(cardX, lineY, 10, -Math.PI / 2, Math.PI / 2);
   ctx.fill();
-  ctx.strokeStyle = '#CBD5E1';
+  ctx.strokeStyle = C.borderStrong;
   ctx.lineWidth = 2;
   ctx.stroke();
 
@@ -150,19 +152,19 @@ function renderSinglePassCard(
   const heroY = cardY + 96;
   roundRect(ctx, 40, heroY, 720, 68, 14);
   const grad = ctx.createLinearGradient(40, heroY, 760, heroY + 68);
-  grad.addColorStop(0, '#FFF7ED');
-  grad.addColorStop(1, '#FEF3C7');
+  grad.addColorStop(0, C.brandTint);
+  grad.addColorStop(1, C.brandTint);
   ctx.fillStyle = grad;
   ctx.fill();
-  ctx.strokeStyle = '#FED7AA';
+  ctx.strokeStyle = C.brandTintStrong;
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  ctx.fillStyle = '#64748B';
+  ctx.fillStyle = C.textSubtle;
   ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
   ctx.fillText('★ UNIQUE PASS ID / ENTRY CODE', 58, heroY + 22);
 
-  ctx.fillStyle = '#EB6A1F';
+  ctx.fillStyle = C.brand;
   ctx.font = '900 22px monospace, monospace';
   ctx.fillText(item.passNumber, 58, heroY + 50);
 
@@ -170,13 +172,13 @@ function renderSinglePassCard(
   const seatPillText =
     totalPasses > 1 ? `Pass ${item.seatIndex} of ${totalPasses}` : '1 Seat Reserved';
   roundRect(ctx, 592, heroY + 18, 152, 32, 8);
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = C.surface;
   ctx.fill();
-  ctx.strokeStyle = '#FDBA74';
+  ctx.strokeStyle = C.brandTintStrong;
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  ctx.fillStyle = '#334155';
+  ctx.fillStyle = C.textStrong;
   ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(seatPillText, 668, heroY + 38);
@@ -184,7 +186,7 @@ function renderSinglePassCard(
 
   // Event Title & Function / Activity Section
   const titleY = cardY + 188;
-  ctx.fillStyle = '#EB6A1F';
+  ctx.fillStyle = C.brand;
   ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
   if (functionName) {
     ctx.fillText(`EVENT TITLE • ACTIVITY: ${functionName.toUpperCase()}`, 40, titleY);
@@ -192,7 +194,7 @@ function renderSinglePassCard(
     ctx.fillText('EVENT TITLE', 40, titleY);
   }
 
-  ctx.fillStyle = '#0F172A';
+  ctx.fillStyle = C.text;
   ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
   ctx.fillText(eventTitle, 40, titleY + 22);
 
@@ -205,20 +207,20 @@ function renderSinglePassCard(
     label: string,
     val1: string,
     val2: string,
-    val2Color = '#475569',
+    val2Color = C.textMuted,
   ) => {
     roundRect(ctx, x, y, w, h, 10);
-    ctx.fillStyle = '#F8FAFC';
+    ctx.fillStyle = C.page;
     ctx.fill();
-    ctx.strokeStyle = '#E2E8F0';
+    ctx.strokeStyle = C.border;
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    ctx.fillStyle = '#64748B';
+    ctx.fillStyle = C.textSubtle;
     ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
     ctx.fillText(label, x + 12, y + 20);
 
-    ctx.fillStyle = '#0F172A';
+    ctx.fillStyle = C.text;
     ctx.font = 'bold 12.5px system-ui, -apple-system, sans-serif';
     ctx.fillText(val1, x + 12, y + 42);
 
@@ -255,7 +257,7 @@ function renderSinglePassCard(
     '👤 Registered Attendee',
     item.fullName || 'Guest Attendee',
     attendeeSubtext,
-    '#64748B',
+    C.textSubtle,
   );
 
   // Card 4: Fee & Status
@@ -268,7 +270,7 @@ function renderSinglePassCard(
     '🛡 Admission Fee',
     feeLabel,
     isPaid ? '✓ Payment Verified (Online)' : '✓ Complimentary NGO Entry',
-    '#047857',
+    C.success,
   );
 
   // Right Column: Security Verification Box (QR + Seal + Pass ID)
@@ -277,9 +279,9 @@ function renderSinglePassCard(
   const secBoxW = 236;
   const secBoxH = 204;
   roundRect(ctx, secBoxX, secBoxY, secBoxW, secBoxH, 12);
-  ctx.fillStyle = '#F8FAFC';
+  ctx.fillStyle = C.page;
   ctx.fill();
-  ctx.strokeStyle = '#E2E8F0';
+  ctx.strokeStyle = C.border;
   ctx.lineWidth = 1;
   ctx.stroke();
 
@@ -291,14 +293,14 @@ function renderSinglePassCard(
   const qrPlateCenterX = plateX + plateW / 2;
 
   roundRect(ctx, plateX, plateY, plateW, plateH, 8);
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = C.surface;
   ctx.fill();
-  ctx.strokeStyle = '#E2E8F0';
+  ctx.strokeStyle = C.border;
   ctx.lineWidth = 1;
   ctx.stroke();
 
   // Optical corner reticle brackets
-  ctx.strokeStyle = '#EB6A1F';
+  ctx.strokeStyle = C.brand;
   ctx.lineWidth = 1.5;
   ctx.lineCap = 'round';
   const cLen = 6;
@@ -336,7 +338,7 @@ function renderSinglePassCard(
     const qrStartX = qrPlateCenterX - qrTotalDim / 2;
     const qrStartY = plateY + plateH / 2 - qrTotalDim / 2;
 
-    ctx.fillStyle = '#0F172A';
+    ctx.fillStyle = C.text;
     for (let r = 0; r < qrSize; r++) {
       for (let c = 0; c < qrSize; c++) {
         if (qrData.modules.get(r, c)) {
@@ -354,7 +356,7 @@ function renderSinglePassCard(
   }
 
   // Scan text under QR Plate
-  ctx.fillStyle = '#64748B';
+  ctx.fillStyle = C.textSubtle;
   ctx.font = 'bold 7.5px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('SCAN AT ENTRANCE', qrPlateCenterX, secBoxY + 109);
@@ -367,9 +369,9 @@ function renderSinglePassCard(
   ctx.save();
   ctx.beginPath();
   ctx.arc(sealX, sealY, sealR, 0, Math.PI * 2);
-  ctx.fillStyle = '#FFF7ED';
+  ctx.fillStyle = C.brandTint;
   ctx.fill();
-  ctx.strokeStyle = '#EB6A1F';
+  ctx.strokeStyle = C.brand;
   ctx.lineWidth = 1.5;
   ctx.setLineDash([4, 3]);
   ctx.stroke();
@@ -377,7 +379,7 @@ function renderSinglePassCard(
   ctx.beginPath();
   ctx.arc(sealX, sealY, sealR - 4.5, 0, Math.PI * 2);
   ctx.setLineDash([]);
-  ctx.strokeStyle = '#FED7AA';
+  ctx.strokeStyle = C.brandTintStrong;
   ctx.lineWidth = 1;
   ctx.stroke();
 
@@ -386,38 +388,38 @@ function renderSinglePassCard(
   ctx.moveTo(sealX - 5.5, sealY - 8);
   ctx.lineTo(sealX - 1.5, sealY - 4);
   ctx.lineTo(sealX + 6.5, sealY - 12);
-  ctx.strokeStyle = '#EB6A1F';
+  ctx.strokeStyle = C.brand;
   ctx.lineWidth = 2.2;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.stroke();
 
-  ctx.fillStyle = '#EB6A1F';
+  ctx.fillStyle = C.brand;
   ctx.font = '900 8px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('VERIFIED', sealX, sealY + 2);
 
-  ctx.fillStyle = '#334155';
+  ctx.fillStyle = C.textStrong;
   ctx.font = 'bold 6.5px system-ui, -apple-system, sans-serif';
   ctx.fillText('SAILENT PASS', sealX, sealY + 12);
   ctx.restore();
 
   // Valid Entry Badge Pill below seal
   roundRect(ctx, 656, secBoxY + 86, 80, 18, 9);
-  ctx.fillStyle = '#ECFDF5';
+  ctx.fillStyle = C.successTint;
   ctx.fill();
-  ctx.strokeStyle = '#A7F3D0';
+  ctx.strokeStyle = C.successBorder;
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  ctx.fillStyle = '#047857';
+  ctx.fillStyle = C.success;
   ctx.font = 'bold 7.5px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('✓ VALID ENTRY', sealX, secBoxY + 98);
 
   // --- Divider between Upper and Lower Tiers ---
   ctx.save();
-  ctx.strokeStyle = '#E2E8F0';
+  ctx.strokeStyle = C.border;
   ctx.lineWidth = 1;
   ctx.setLineDash([4, 4]);
   ctx.beginPath();
@@ -428,12 +430,12 @@ function renderSinglePassCard(
 
   // --- Lower Tier: the pass ID, centred between the divider (+120) and the
   // box's foot (+204); typed in at the gate if the QR cannot be read ---
-  ctx.fillStyle = '#1E293B';
+  ctx.fillStyle = C.text;
   ctx.font = 'bold 12px monospace';
   ctx.textAlign = 'center';
   ctx.fillText(item.passNumber, 642, secBoxY + 161);
 
-  ctx.fillStyle = '#94A3B8';
+  ctx.fillStyle = C.textFaint;
   ctx.font = 'bold 6.5px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('PASS ID • NON-TRANSFERABLE', 642, secBoxY + 174);
@@ -442,18 +444,18 @@ function renderSinglePassCard(
   // Important Check-In Guidelines & Entry Terms Box
   const guideY = cardY + 396;
   roundRect(ctx, 40, guideY, 720, 102, 10);
-  ctx.fillStyle = '#F8FAFC';
+  ctx.fillStyle = C.page;
   ctx.fill();
-  ctx.strokeStyle = '#E2E8F0';
+  ctx.strokeStyle = C.border;
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  ctx.fillStyle = '#0F172A';
+  ctx.fillStyle = C.text;
   ctx.font = 'bold 10.5px system-ui, -apple-system, sans-serif';
   ctx.fillText('⚠ IMPORTANT CHECK-IN GUIDELINES & ENTRY TERMS', 54, guideY + 18);
 
   ctx.font = '9.5px system-ui, -apple-system, sans-serif';
-  ctx.fillStyle = '#475569';
+  ctx.fillStyle = C.textMuted;
   ctx.fillText(
     '1. Photo ID Required: Carry valid Govt. photo ID matching attendee name.',
     54,
@@ -477,19 +479,19 @@ function renderSinglePassCard(
 
   // Footer Strip
   const footerY = cardY + 510;
-  ctx.strokeStyle = '#E2E8F0';
+  ctx.strokeStyle = C.border;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(40, footerY);
   ctx.lineTo(760, footerY);
   ctx.stroke();
 
-  ctx.fillStyle = '#64748B';
+  ctx.fillStyle = C.textSubtle;
   ctx.font = '9.5px system-ui, -apple-system, sans-serif';
   ctx.fillText(`Sailent Foundation • Support: ${supportEmail} | ${supportPhone}`, 40, footerY + 20);
 
   ctx.textAlign = 'right';
-  ctx.fillStyle = '#94A3B8';
+  ctx.fillStyle = C.textFaint;
   ctx.font = '9px system-ui, -apple-system, sans-serif';
   ctx.fillText(
     `Issued on ${issueDateStr} • Computer-generated valid entry document`,
@@ -582,7 +584,7 @@ export async function downloadPassImage(options: DownloadPassOptions): Promise<v
   ctx.scale(scale, scale);
 
   // Background canvas fill
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = C.surface;
   ctx.fillRect(0, 0, width, height);
 
   // Pre-load logo once
@@ -611,7 +613,7 @@ export async function downloadPassImage(options: DownloadPassOptions): Promise<v
       const cutY = yOffset - gap / 2;
       ctx.save();
       ctx.setLineDash([6, 6]);
-      ctx.strokeStyle = '#94A3B8';
+      ctx.strokeStyle = C.textFaint;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(30, cutY);
@@ -622,13 +624,13 @@ export async function downloadPassImage(options: DownloadPassOptions): Promise<v
       const cutBadgeW = 340;
       const cutBadgeH = 22;
       roundRect(ctx, (width - cutBadgeW) / 2, cutY - cutBadgeH / 2, cutBadgeW, cutBadgeH, 11);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = C.surface;
       ctx.fill();
-      ctx.strokeStyle = '#CBD5E1';
+      ctx.strokeStyle = C.borderStrong;
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      ctx.fillStyle = '#64748B';
+      ctx.fillStyle = C.textSubtle;
       ctx.font = 'bold 9px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('✂  TEAR / CUT ALONG LINE TO SEPARATE PASSES  ✂', width / 2, cutY + 3.5);

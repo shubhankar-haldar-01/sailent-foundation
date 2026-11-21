@@ -20,8 +20,8 @@ export function ProgramToolbar({
   return (
     <div
       className={cn(
-        'bg-surface border-accent-100 dark:border-border mt-6 flex flex-wrap items-center gap-3 rounded-2xl border p-3 sm:gap-4 lg:px-5',
-        'shadow-[0_1px_2px_rgb(16_42_67/0.04),0_8px_20px_-12px_rgb(16_42_67/0.14)]',
+        'bg-surface border-border dark:border-border mt-6 flex flex-wrap items-center gap-3 rounded-2xl border p-3 sm:gap-4 lg:px-5',
+        'shadow-sm',
       )}
     >
       <ProgramSearch query={query} className="min-w-[12rem] flex-1" />

@@ -119,7 +119,7 @@ export default async function DonationsPage({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {/* Card 1: Total Donated */}
         <div className="card-elevated flex items-center gap-3.5 rounded-2xl p-3.5 xl:p-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#EAF8F0] text-[#1E9E65] dark:bg-emerald-950/40 dark:text-emerald-400">
+          <div className="bg-success-subtle text-success flex size-11 shrink-0 items-center justify-center rounded-full">
             <Database className="size-5 stroke-[2]" />
           </div>
           <div className="min-w-0">
@@ -135,7 +135,7 @@ export default async function DonationsPage({
 
         {/* Card 2: Received */}
         <div className="card-elevated flex items-center gap-3.5 rounded-2xl p-3.5 xl:p-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-500 dark:bg-rose-950/40 dark:text-rose-400">
+          <div className="bg-destructive-subtle text-destructive flex size-11 shrink-0 items-center justify-center rounded-full">
             <Heart className="size-5 fill-current" />
           </div>
           <div className="min-w-0">
@@ -151,7 +151,7 @@ export default async function DonationsPage({
 
         {/* Card 3: Awaiting payment */}
         <div className="card-elevated flex items-center gap-3.5 rounded-2xl p-3.5 xl:p-3">
-          <div className="text-primary flex size-11 shrink-0 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-950/40 dark:text-orange-400">
+          <div className="text-primary bg-accent flex size-11 shrink-0 items-center justify-center rounded-full">
             <Clock className="size-5 stroke-[2.2]" />
           </div>
           <div className="min-w-0">

@@ -108,7 +108,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#F8FAFC] print:m-0 print:min-h-0 print:overflow-visible print:bg-white print:p-0">
+    <div className="bg-background print:bg-surface relative flex min-h-screen flex-col overflow-hidden print:m-0 print:min-h-0 print:overflow-visible print:p-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(eventSchema)} />
 
       {/* 1. Event Hero Section matching exact design */}

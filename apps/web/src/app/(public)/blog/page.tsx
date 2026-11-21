@@ -40,7 +40,7 @@ export default async function BlogPage({
   );
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC]">
+    <div className="bg-background min-h-screen">
       {/* 1. Wide editorial hero matching reference design */}
       <BlogHero />
 
@@ -84,10 +84,10 @@ export default async function BlogPage({
 
               {/* Search active notice */}
               {query ? (
-                <div className="shadow-2xs mb-6 flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3.5 text-xs text-slate-700 sm:p-4 sm:text-sm">
+                <div className="shadow-2xs border-border bg-surface text-foreground mb-6 flex items-center justify-between rounded-xl border p-3.5 text-xs sm:p-4 sm:text-sm">
                   <p>
                     Showing results for{' '}
-                    <span className="font-semibold text-[#102A43]">“{query}”</span> ({result.total}{' '}
+                    <span className="text-foreground font-semibold">“{query}”</span> ({result.total}{' '}
                     {result.total === 1 ? 'article' : 'articles'})
                   </p>
                   <Link
@@ -102,8 +102,8 @@ export default async function BlogPage({
 
               {/* Empty state */}
               {result.posts.length === 0 ? (
-                <div className="shadow-xs rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-                  <p className="text-sm text-slate-600 sm:text-base">
+                <div className="shadow-xs border-border-strong bg-surface rounded-2xl border border-dashed p-12 text-center">
+                  <p className="text-muted-foreground text-sm sm:text-base">
                     {query
                       ? `No articles match “${query}”.`
                       : params.category || params.tag
@@ -136,11 +136,11 @@ export default async function BlogPage({
               {result.totalPages > 1 ? (
                 <nav
                   aria-label="Article pages"
-                  className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-slate-200/80 pt-6 sm:mt-12 sm:flex-row"
+                  className="border-border/80 mt-10 flex flex-col items-center justify-between gap-4 border-t pt-6 sm:mt-12 sm:flex-row"
                 >
-                  <p className="text-xs font-medium text-slate-500 sm:text-sm">
-                    Page <span className="font-semibold text-slate-700">{result.page}</span> of{' '}
-                    <span className="font-semibold text-slate-700">{result.totalPages}</span>
+                  <p className="text-muted-foreground text-xs font-medium sm:text-sm">
+                    Page <span className="text-foreground font-semibold">{result.page}</span> of{' '}
+                    <span className="text-foreground font-semibold">{result.totalPages}</span>
                   </p>
                   <div className="flex items-center gap-2">
                     {result.page > 1 ? (
@@ -190,7 +190,7 @@ function chipClass(active: boolean) {
     'focus-visible:outline-ring inline-flex h-9 items-center rounded-full px-4 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 sm:text-sm',
     active
       ? 'bg-primary text-primary-foreground'
-      : 'border border-slate-200 bg-white text-slate-700 hover:border-primary hover:text-primary',
+      : 'border border-border bg-surface text-foreground hover:border-primary hover:text-primary',
   );
 }
 

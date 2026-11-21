@@ -51,7 +51,7 @@ export interface ProgramTone {
  * These are the programme cards' own colours. The campaign cards keep their
  * approved category colours (`components/home/category-icon.tsx`).
  */
-const ORANGE: ProgramTone = { disc: 'bg-cta/12', ink: 'text-cta-glow' };
+const ORANGE: ProgramTone = { disc: 'bg-primary/12', ink: 'text-primary' };
 const TONES: Record<string, ProgramTone> = {
   education: ORANGE,
   healthcare: { disc: 'bg-wash-blue', ink: 'text-wash-blue-ink' },

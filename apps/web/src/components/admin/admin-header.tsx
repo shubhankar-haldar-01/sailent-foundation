@@ -166,7 +166,7 @@ export function AdminHeader({
               {unreadCount > 0 ? (
                 <span
                   aria-hidden="true"
-                  className="bg-destructive text-caption shadow-xs absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full px-1 font-bold text-white"
+                  className="bg-destructive text-caption shadow-xs text-destructive-foreground absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full px-1 font-bold"
                 >
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>

@@ -31,7 +31,7 @@ const CAUSE_STYLES: Record<string, CauseCardStyle> = {
     cardBg: 'bg-wash-mint/50',
     badgeBg: 'bg-wash-mint',
     iconColor: 'text-wash-mint-ink-strong',
-    shadow: 'shadow-[0_12px_28px_-6px_rgba(34,197,94,0.26)]',
+    shadow: 'shadow-elevated',
     activeBorder: 'border-2 border-wash-mint-ink-strong',
     activeText: 'text-wash-mint-ink-strong',
   },
@@ -39,7 +39,7 @@ const CAUSE_STYLES: Record<string, CauseCardStyle> = {
     cardBg: 'bg-wash-amber/50',
     badgeBg: 'bg-wash-amber',
     iconColor: 'text-wash-amber-ink',
-    shadow: 'shadow-[0_12px_28px_-6px_rgba(245,158,11,0.24)]',
+    shadow: 'shadow-elevated',
     activeBorder: 'border-2 border-wash-amber-ink',
     activeText: 'text-wash-amber-ink',
   },
@@ -47,7 +47,7 @@ const CAUSE_STYLES: Record<string, CauseCardStyle> = {
     cardBg: 'bg-wash-violet/50',
     badgeBg: 'bg-wash-violet',
     iconColor: 'text-wash-violet-ink',
-    shadow: 'shadow-[0_12px_28px_-6px_rgba(139,92,246,0.24)]',
+    shadow: 'shadow-elevated',
     activeBorder: 'border-2 border-wash-violet-ink',
     activeText: 'text-wash-violet-ink',
   },
@@ -55,7 +55,7 @@ const CAUSE_STYLES: Record<string, CauseCardStyle> = {
     cardBg: 'bg-wash-blue/50',
     badgeBg: 'bg-wash-blue',
     iconColor: 'text-wash-blue-ink',
-    shadow: 'shadow-[0_12px_28px_-6px_rgba(79,70,229,0.22)]',
+    shadow: 'shadow-elevated',
     activeBorder: 'border-2 border-wash-blue-ink',
     activeText: 'text-wash-blue-ink',
   },
@@ -63,7 +63,7 @@ const CAUSE_STYLES: Record<string, CauseCardStyle> = {
     cardBg: 'bg-wash-blue/50',
     badgeBg: 'bg-wash-blue',
     iconColor: 'text-wash-blue-ink',
-    shadow: 'shadow-[0_12px_28px_-6px_rgba(2,132,199,0.24)]',
+    shadow: 'shadow-elevated',
     activeBorder: 'border-2 border-wash-blue-ink',
     activeText: 'text-wash-blue-ink',
   },
@@ -71,7 +71,7 @@ const CAUSE_STYLES: Record<string, CauseCardStyle> = {
     cardBg: 'bg-wash-mint/50',
     badgeBg: 'bg-wash-mint',
     iconColor: 'text-wash-mint-ink-strong',
-    shadow: 'shadow-[0_12px_28px_-6px_rgba(22,163,74,0.24)]',
+    shadow: 'shadow-elevated',
     activeBorder: 'border-2 border-wash-mint-ink-strong',
     activeText: 'text-wash-mint-ink-strong',
   },
@@ -79,7 +79,7 @@ const CAUSE_STYLES: Record<string, CauseCardStyle> = {
     cardBg: 'bg-wash-rose/50',
     badgeBg: 'bg-wash-rose',
     iconColor: 'text-wash-rose-ink',
-    shadow: 'shadow-[0_12px_28px_-6px_rgba(225,29,72,0.24)]',
+    shadow: 'shadow-elevated',
     activeBorder: 'border-2 border-wash-rose-ink',
     activeText: 'text-wash-rose-ink',
   },
@@ -87,7 +87,7 @@ const CAUSE_STYLES: Record<string, CauseCardStyle> = {
     cardBg: 'bg-wash-rose/50',
     badgeBg: 'bg-wash-rose',
     iconColor: 'text-wash-rose-ink',
-    shadow: 'shadow-[0_12px_28px_-6px_rgba(225,29,72,0.24)]',
+    shadow: 'shadow-elevated',
     activeBorder: 'border-2 border-wash-rose-ink',
     activeText: 'text-wash-rose-ink',
   },
@@ -95,7 +95,7 @@ const CAUSE_STYLES: Record<string, CauseCardStyle> = {
     cardBg: 'bg-wash-coral/50',
     badgeBg: 'bg-wash-coral',
     iconColor: 'text-wash-coral-ink',
-    shadow: 'shadow-[0_12px_28px_-6px_rgba(235,106,31,0.24)]',
+    shadow: 'shadow-elevated',
     activeBorder: 'border-2 border-wash-coral-ink',
     activeText: 'text-wash-coral-ink',
   },
@@ -103,17 +103,17 @@ const CAUSE_STYLES: Record<string, CauseCardStyle> = {
     cardBg: 'bg-wash-pink/50',
     badgeBg: 'bg-wash-pink',
     iconColor: 'text-wash-pink-ink',
-    shadow: 'shadow-[0_12px_28px_-6px_rgba(219,39,119,0.24)]',
+    shadow: 'shadow-elevated',
     activeBorder: 'border-2 border-wash-pink-ink',
     activeText: 'text-wash-pink-ink',
   },
 };
 
 const DEFAULT_STYLE: CauseCardStyle = {
-  cardBg: 'bg-white dark:bg-slate-800',
-  badgeBg: 'bg-slate-100 dark:bg-slate-700',
-  iconColor: 'text-slate-700 dark:text-slate-200',
-  shadow: 'shadow-[0_12px_28px_-6px_rgba(0,0,0,0.12)]',
+  cardBg: 'bg-surface',
+  badgeBg: 'bg-muted',
+  iconColor: 'text-foreground',
+  shadow: 'shadow-elevated',
   activeBorder: 'border-2 border-wash-mint-ink-strong',
   activeText: 'text-wash-mint-ink-strong',
 };
@@ -168,7 +168,7 @@ export function CauseFilters({
           style.shadow,
           isActive
             ? cn(style.activeBorder, 'shadow-lg')
-            : 'border border-white/80 dark:border-white/10 hover:border-black/5 dark:hover:border-white/20',
+            : 'border border-white/80 hover:border-black/5',
         );
 
         const content = (
@@ -189,9 +189,7 @@ export function CauseFilters({
             <span
               className={cn(
                 'inline-flex items-center justify-center gap-1 px-1 text-center text-xs leading-tight tracking-tight sm:text-[13px]',
-                isActive
-                  ? cn('font-bold', style.activeText)
-                  : 'font-semibold text-[#1E293B] dark:text-slate-200',
+                isActive ? cn('font-bold', style.activeText) : 'text-foreground font-semibold',
               )}
             >
               {tile.name}

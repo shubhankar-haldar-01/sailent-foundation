@@ -44,7 +44,7 @@ export function StayConnectedCard({ className }: { className?: string }) {
       className={cn('card-standard relative overflow-hidden rounded-2xl p-5 sm:p-6', className)}
     >
       {/* "Stay Connected" Pill Badge */}
-      <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+      <span className="bg-warning-subtle text-warning-foreground inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold">
         Stay Connected
       </span>
 
@@ -61,7 +61,7 @@ export function StayConnectedCard({ className }: { className?: string }) {
         <div
           ref={resultRef}
           role="status"
-          className="text-success mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-medium dark:bg-emerald-950/40"
+          className="text-success bg-success-subtle mt-4 flex items-center gap-2 rounded-xl p-3 text-sm font-medium"
         >
           <Check className="size-4 shrink-0 stroke-[2.5]" aria-hidden="true" />
           <span>Thank you! Check your inbox to confirm your subscription.</span>

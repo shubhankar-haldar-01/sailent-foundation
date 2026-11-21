@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Caveat, Inter, Manrope } from 'next/font/google';
+import { Inter } from 'next/font/google';
 
 import { AppProviders } from '@/providers';
 import { getOrganisation } from '@/lib/content/organisation';
@@ -18,22 +18,14 @@ import '@/styles/globals.css';
  * `display: swap` plus a metric-compatible fallback keeps text readable during
  * load on the connections our donors actually use.
  *
- * TWO TYPEFACES, EACH WITH ONE JOB:
- *   • Manrope (600, 700) — `--font-heading`: brand, headings, card and
- *                         campaign titles, and the large figures (amounts,
- *                         impact numbers). Used through `font-display` and the
- *                         heading base rule — never set per page.
- *   • Inter (400, 500, 600) — `--font-body`: everything functional — body
- *                         copy, navigation, buttons, forms, tables, metadata,
- *                         the admin.
- * Only these weights are loaded. A `font-bold` on Inter text therefore renders
- * at 600, and anything heavier than 700 on Manrope at 700 — the cap is part of
- * the system, not an accident.
+ * ONE TYPEFACE (owner, 2026-11-21, visual polish direction 2): Inter, at
+ * 400 (text), 500 (labels) and 600 (headings, buttons, figures). Only these
+ * weights are loaded, so `font-bold` renders at 600: the cap is part of the
+ * system. Headings get their slight negative tracking from the base layer
+ * (tokens.css). Manrope and the Caveat script accent were retired with this
+ * decision.
  *
- * Caveat stays as the handwritten accent over photography. It is decoration
- * ONLY: it never carries information that is not also present in real text.
- *
- * All three still need a Devanagari companion before any Hindi content ships.
+ * It still needs a Devanagari companion before any Hindi content ships.
  */
 const bodyFont = Inter({
   subsets: ['latin'],
@@ -45,21 +37,6 @@ const bodyFont = Inter({
   // same metrics come from that @font-face instead.
   adjustFontFallback: false,
   fallback: ['Inter Fallback', 'system-ui', 'sans-serif'],
-});
-
-const headingFont = Manrope({
-  subsets: ['latin'],
-  weight: ['600', '700'],
-  display: 'swap',
-  variable: '--font-heading',
-  fallback: ['system-ui', 'sans-serif'],
-});
-
-const scriptFont = Caveat({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-script-family',
-  fallback: ['cursive'],
 });
 
 export const metadata: Metadata = {
@@ -101,7 +78,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         default).
       */
       data-scroll-behavior="smooth"
-      className={`${bodyFont.variable} ${headingFont.variable} ${scriptFont.variable}`}
+      className={bodyFont.variable}
     >
       <body className="min-h-dvh antialiased">
         {/*

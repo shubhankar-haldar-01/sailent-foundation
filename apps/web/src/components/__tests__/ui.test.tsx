@@ -17,6 +17,16 @@ describe('Button', () => {
     expect(button).toHaveTextContent('Donate');
   });
 
+  it('keeps orange for Donate only: `action` is the orange, the default is the brand', () => {
+    // Colour roles, owner 2026-11-21 (AGENTS.md §11 item 12).
+    const { rerender } = render(<Button>Save</Button>);
+    expect(screen.getByRole('button')).toHaveClass('bg-primary');
+    expect(screen.getByRole('button')).not.toHaveClass('bg-action');
+    rerender(<Button variant="action">Donate</Button>);
+    expect(screen.getByRole('button')).toHaveClass('bg-action', 'text-action-foreground');
+    expect(screen.getByRole('button')).not.toHaveClass('bg-primary');
+  });
+
   it('renders all standardized variants correctly', () => {
     const { rerender } = render(<Button variant="primary">Primary</Button>);
     expect(screen.getByRole('button')).toHaveClass('bg-primary', 'text-primary-foreground');
@@ -28,7 +38,7 @@ describe('Button', () => {
     expect(screen.getByRole('button')).toHaveClass('bg-transparent');
 
     rerender(<Button variant="dark">Dark</Button>);
-    expect(screen.getByRole('button')).toHaveClass('bg-accent-950', 'text-white');
+    expect(screen.getByRole('button')).toHaveClass('bg-surface-inverse', 'text-surface-inverse-foreground');
 
     rerender(<Button variant="destructive">Destructive</Button>);
     expect(screen.getByRole('button')).toHaveClass('bg-destructive', 'text-destructive-foreground');

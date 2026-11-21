@@ -10,6 +10,7 @@ import { Panel } from '@/components/dashboard/panel';
 export default function Loading() {
   return (
     <div
+      role="status"
       aria-busy="true"
       aria-label="Loading your dashboard"
       className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18.5rem]"

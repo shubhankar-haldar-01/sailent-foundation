@@ -324,10 +324,7 @@ function AboutCard({
   return (
     <article
       aria-labelledby={id}
-      className={cn(
-        'card-interactive rounded-2xl p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900',
-        className,
-      )}
+      className={cn('card-interactive rounded-2xl p-5 sm:p-6', className)}
     >
       <div className="flex items-center gap-3">
         <span

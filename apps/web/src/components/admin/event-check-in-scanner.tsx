@@ -348,7 +348,7 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
         <div>
           <div className="flex items-center gap-2">
             <Badge variant="neutral" className="gap-1 font-mono text-xs">
-              <ShieldCheck className="size-3 text-emerald-600" />
+              <ShieldCheck className="size-3 text-success" />
               Gate Admission Active
             </Badge>
             {recentCheckIns.length > 0 && (
@@ -375,9 +375,9 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
             title={soundEnabled ? 'Mute Chimes' : 'Enable Chimes'}
           >
             {soundEnabled ? (
-              <Volume2 className="size-4 text-emerald-600" />
+              <Volume2 className="size-4 text-success" />
             ) : (
-              <VolumeX className="size-4 text-slate-400" />
+              <VolumeX className="size-4 text-muted-foreground" />
             )}
             <span className="hidden sm:inline">{soundEnabled ? 'Chime On' : 'Muted'}</span>
           </Button>
@@ -435,7 +435,7 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
 
             <CardContent className="p-4 sm:p-6">
               {/* QR Scanner Viewport */}
-              <div className="relative mx-auto flex min-h-[280px] w-full max-w-[380px] flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-300 bg-slate-950 sm:min-h-[340px]">
+              <div className="relative mx-auto flex min-h-[280px] w-full max-w-[380px] flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border-strong bg-surface-inverse sm:min-h-[340px]">
                 {/* HTML5 QR Code Mount Element */}
                 <div
                   id="qr-reader-container"
@@ -443,12 +443,12 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                 />
 
                 {!scannerActive && !cameraStarting && (
-                  <div className="flex flex-col items-center p-6 text-center text-slate-300">
-                    <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-slate-800 text-slate-400">
+                  <div className="flex flex-col items-center p-6 text-center text-surface-inverse-muted">
+                    <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-white/10 text-surface-inverse-muted">
                       <Camera className="size-7" />
                     </div>
                     <p className="text-body font-medium text-white">Camera is Inactive</p>
-                    <p className="text-caption mt-1 max-w-[260px] text-slate-400">
+                    <p className="text-caption mt-1 max-w-[260px] text-surface-inverse-muted">
                       Click below to turn on the camera for fast, contactless gate scanning.
                     </p>
                     <Button
@@ -470,12 +470,12 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                       <div className="relative size-56 sm:size-64">
                         {/* 4 Optical Corners */}
-                        <div className="border-t-3 border-l-3 absolute left-0 top-0 size-6 border-[#EB6A1F]" />
-                        <div className="border-t-3 border-r-3 absolute right-0 top-0 size-6 border-[#EB6A1F]" />
-                        <div className="border-b-3 border-l-3 absolute bottom-0 left-0 size-6 border-[#EB6A1F]" />
-                        <div className="border-b-3 border-r-3 absolute bottom-0 right-0 size-6 border-[#EB6A1F]" />
+                        <div className="border-t-3 border-l-3 absolute left-0 top-0 size-6 border-primary" />
+                        <div className="border-t-3 border-r-3 absolute right-0 top-0 size-6 border-primary" />
+                        <div className="border-b-3 border-l-3 absolute bottom-0 left-0 size-6 border-primary" />
+                        <div className="border-b-3 border-r-3 absolute bottom-0 right-0 size-6 border-primary" />
                         {/* Animated Laser Bar */}
-                        <div className="absolute inset-x-2 top-0 h-0.5 animate-pulse bg-gradient-to-r from-transparent via-[#EB6A1F] to-transparent shadow-[0_0_8px_#EB6A1F]" />
+                        <div className="absolute inset-x-2 top-0 h-0.5 animate-pulse bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_8px_var(--color-primary)]" />
                       </div>
                     </div>
                     <div className="backdrop-blur-xs pointer-events-none absolute bottom-3 z-10 rounded-full bg-black/75 px-3 py-1 text-xs font-medium text-white">
@@ -556,10 +556,10 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
           <Card
             className={`border-2 transition-all ${
               verification?.status === 'valid'
-                ? 'border-emerald-500 bg-emerald-50/30'
+                ? 'border-success bg-success-subtle/30'
                 : verification?.status === 'already_attended' ||
                     verification?.status === 'multiple_matches'
-                  ? 'border-amber-400 bg-amber-50/30'
+                  ? 'border-warning bg-warning-subtle/30'
                   : verification?.status === 'cancelled' ||
                       verification?.status === 'event_cancelled' ||
                       verification?.status === 'wrong_event'
@@ -624,13 +624,13 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                 <div className="space-y-4">
                   {/* Status Banner */}
                   {verification.status === 'valid' && verification.matchedBy === 'search' && (
-                    <div className="shadow-xs flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-100 p-4 text-amber-900">
-                      <AlertTriangle className="mt-0.5 size-6 shrink-0 text-amber-600" />
+                    <div className="shadow-xs flex items-start gap-3 rounded-xl border border-warning/30 bg-warning-subtle p-4 text-warning-foreground">
+                      <AlertTriangle className="mt-0.5 size-6 shrink-0 text-warning-foreground" />
                       <div>
-                        <p className="text-body font-bold uppercase tracking-wider text-amber-900">
+                        <p className="text-body font-bold uppercase tracking-wider text-warning-foreground">
                           FOUND BY NAME — CHECK THEIR PASS
                         </p>
-                        <p className="text-caption mt-0.5 font-medium text-amber-800">
+                        <p className="text-caption mt-0.5 font-medium text-warning-foreground">
                           {verification.message}
                         </p>
                       </div>
@@ -638,38 +638,38 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                   )}
 
                   {verification.status === 'multiple_matches' && (
-                    <div className="shadow-xs space-y-3 rounded-xl border border-amber-300 bg-amber-100 p-4 text-amber-900">
+                    <div className="shadow-xs space-y-3 rounded-xl border border-warning/30 bg-warning-subtle p-4 text-warning-foreground">
                       <div className="flex items-start gap-3">
-                        <ListFilter className="mt-0.5 size-6 shrink-0 text-amber-600" />
+                        <ListFilter className="mt-0.5 size-6 shrink-0 text-warning-foreground" />
                         <div>
-                          <p className="text-body font-bold uppercase tracking-wider text-amber-900">
+                          <p className="text-body font-bold uppercase tracking-wider text-warning-foreground">
                             SEVERAL MATCHES — CHOOSE ONE
                           </p>
-                          <p className="text-caption mt-0.5 font-medium text-amber-800">
+                          <p className="text-caption mt-0.5 font-medium text-warning-foreground">
                             {verification.message}
                           </p>
                         </div>
                       </div>
-                      <ul className="divide-y divide-amber-200 overflow-hidden rounded-lg border border-amber-200 bg-white">
+                      <ul className="divide-y divide-warning/30 overflow-hidden rounded-lg border border-warning/30 bg-surface">
                         {verification.candidates?.map((candidate) => (
                           <li key={candidate.registrationId}>
                             <button
                               type="button"
                               onClick={() => handleVerify(candidate.registrationId)}
-                              className="flex w-full items-center justify-between gap-3 p-3 text-left hover:bg-slate-50"
+                              className="flex w-full items-center justify-between gap-3 p-3 text-left hover:bg-background"
                             >
                               <span className="min-w-0">
-                                <span className="text-body-sm block truncate font-bold text-slate-900">
+                                <span className="text-body-sm block truncate font-bold text-foreground">
                                   {candidate.fullName}
                                 </span>
-                                <span className="text-caption block truncate font-mono text-slate-500">
+                                <span className="text-caption block truncate font-mono text-muted-foreground">
                                   {candidate.passNumber}
                                   {candidate.totalPasses > 1
                                     ? ` · ${candidate.attendeeNames.join(', ')}`
                                     : ''}
                                 </span>
                               </span>
-                              <span className="text-caption shrink-0 font-semibold text-slate-600">
+                              <span className="text-caption shrink-0 font-semibold text-muted-foreground">
                                 {candidate.status === 'cancelled'
                                   ? 'Cancelled'
                                   : `${candidate.admittedCount}/${candidate.totalPasses} in`}
@@ -696,13 +696,13 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                   )}
 
                   {verification.status === 'valid' && verification.matchedBy === 'pass' && (
-                    <div className="shadow-xs flex items-start gap-3 rounded-xl border border-emerald-300 bg-emerald-100 p-4 text-emerald-900">
-                      <CheckCircle2 className="mt-0.5 size-6 shrink-0 text-emerald-600" />
+                    <div className="shadow-xs flex items-start gap-3 rounded-xl border border-success/30 bg-success-subtle p-4 text-success">
+                      <CheckCircle2 className="mt-0.5 size-6 shrink-0 text-success" />
                       <div>
-                        <p className="text-body font-bold uppercase tracking-wider text-emerald-900">
+                        <p className="text-body font-bold uppercase tracking-wider text-success">
                           VALID ENTRY — READY TO ADMIT
                         </p>
-                        <p className="text-caption mt-0.5 font-medium text-emerald-800">
+                        <p className="text-caption mt-0.5 font-medium text-success">
                           {verification.message}
                         </p>
                       </div>
@@ -710,13 +710,13 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                   )}
 
                   {verification.status === 'already_attended' && (
-                    <div className="shadow-xs flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-100 p-4 text-amber-900">
-                      <AlertTriangle className="mt-0.5 size-6 shrink-0 text-amber-600" />
+                    <div className="shadow-xs flex items-start gap-3 rounded-xl border border-warning/30 bg-warning-subtle p-4 text-warning-foreground">
+                      <AlertTriangle className="mt-0.5 size-6 shrink-0 text-warning-foreground" />
                       <div>
-                        <p className="text-body font-bold uppercase tracking-wider text-amber-900">
+                        <p className="text-body font-bold uppercase tracking-wider text-warning-foreground">
                           ALREADY CHECKED IN
                         </p>
-                        <p className="text-caption mt-0.5 font-medium text-amber-800">
+                        <p className="text-caption mt-0.5 font-medium text-warning-foreground">
                           {verification.message}
                         </p>
                       </div>
@@ -738,13 +738,13 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                   )}
 
                   {verification.status === 'wrong_event' && (
-                    <div className="shadow-xs flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-100 p-4 text-amber-900">
-                      <AlertTriangle className="mt-0.5 size-6 shrink-0 text-amber-600" />
+                    <div className="shadow-xs flex items-start gap-3 rounded-xl border border-warning/30 bg-warning-subtle p-4 text-warning-foreground">
+                      <AlertTriangle className="mt-0.5 size-6 shrink-0 text-warning-foreground" />
                       <div>
-                        <p className="text-body font-bold uppercase tracking-wider text-amber-900">
+                        <p className="text-body font-bold uppercase tracking-wider text-warning-foreground">
                           WRONG EVENT
                         </p>
-                        <p className="text-caption mt-0.5 font-medium text-amber-800">
+                        <p className="text-caption mt-0.5 font-medium text-warning-foreground">
                           {verification.message}
                         </p>
                       </div>
@@ -752,13 +752,13 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                   )}
 
                   {verification.status === 'not_found' && (
-                    <div className="shadow-xs flex items-start gap-3 rounded-xl border border-slate-300 bg-slate-100 p-4 text-slate-800">
-                      <XCircle className="mt-0.5 size-6 shrink-0 text-slate-500" />
+                    <div className="shadow-xs flex items-start gap-3 rounded-xl border border-border-strong bg-muted p-4 text-foreground">
+                      <XCircle className="mt-0.5 size-6 shrink-0 text-muted-foreground" />
                       <div>
-                        <p className="text-body font-bold uppercase tracking-wider text-slate-900">
+                        <p className="text-body font-bold uppercase tracking-wider text-foreground">
                           PASS NOT FOUND
                         </p>
-                        <p className="text-caption mt-0.5 font-medium text-slate-600">
+                        <p className="text-caption mt-0.5 font-medium text-muted-foreground">
                           {verification.message}
                         </p>
                       </div>
@@ -767,11 +767,11 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
 
                   {/* Attendee Details Card */}
                   {verification.registration && (
-                    <div className="border-border/80 shadow-xs space-y-3 rounded-xl border bg-white p-4">
+                    <div className="border-border/80 shadow-xs space-y-3 rounded-xl border bg-surface p-4">
                       {/* Attendee Name & Pass Code */}
                       <div className="border-b pb-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-caption font-mono font-bold text-[#EB6A1F]">
+                          <span className="text-caption font-mono font-bold text-primary">
                             {verification.registration.matchedAttendee?.passNumber ||
                               verification.registration.basePassId}
                           </span>
@@ -788,50 +788,50 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                       </div>
 
                       {/* Info grid */}
-                      <div className="text-caption grid grid-cols-2 gap-2 text-slate-600">
+                      <div className="text-caption grid grid-cols-2 gap-2 text-muted-foreground">
                         <div className="flex items-center gap-1.5">
-                          <Phone className="size-3.5 text-slate-400" />
+                          <Phone className="size-3.5 text-muted-foreground" />
                           <span className="truncate">{verification.registration.phone}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Mail className="size-3.5 text-slate-400" />
+                          <Mail className="size-3.5 text-muted-foreground" />
                           <span className="truncate">{verification.registration.email}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Ticket className="size-3.5 text-slate-400" />
+                          <Ticket className="size-3.5 text-muted-foreground" />
                           <span>
                             Booked for {verification.registration.attendeeCount}{' '}
                             {verification.registration.attendeeCount === 1 ? 'person' : 'persons'}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Clock className="size-3.5 text-slate-400" />
+                          <Clock className="size-3.5 text-muted-foreground" />
                           <span>{formatDate(verification.registration.registeredAt)}</span>
                         </div>
                       </div>
 
                       {/* Every person on a group booking, each admitted by their own pass */}
                       {(verification.registration.allAttendees?.length ?? 0) > 1 && (
-                        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5">
-                          <p className="text-caption font-semibold text-slate-700">
+                        <div className="mt-3 rounded-lg border border-border bg-background p-2.5">
+                          <p className="text-caption font-semibold text-foreground">
                             Passes on this booking:
                           </p>
-                          <ul className="mt-1 divide-y divide-slate-200/60">
+                          <ul className="mt-1 divide-y divide-border/60">
                             {verification.registration.allAttendees!.map((pass) => (
                               <li
                                 key={pass.passNumber}
                                 className="text-caption flex items-center justify-between gap-2 py-1.5"
                               >
                                 <span className="min-w-0">
-                                  <span className="block truncate font-medium text-slate-900">
+                                  <span className="block truncate font-medium text-foreground">
                                     {pass.fullName}
                                   </span>
-                                  <span className="block font-mono text-slate-500">
+                                  <span className="block font-mono text-muted-foreground">
                                     {pass.passNumber}
                                   </span>
                                 </span>
                                 {pass.admitted ? (
-                                  <span className="flex shrink-0 items-center gap-1 font-semibold text-emerald-700">
+                                  <span className="flex shrink-0 items-center gap-1 font-semibold text-success">
                                     <CheckCircle2 className="size-3.5" />
                                     Admitted
                                   </span>
@@ -848,7 +848,7 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                                     Admit
                                   </Button>
                                 ) : (
-                                  <span className="shrink-0 text-slate-400">Not admitted</span>
+                                  <span className="shrink-0 text-muted-foreground">Not admitted</span>
                                 )}
                               </li>
                             ))}
@@ -921,7 +921,7 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                             {item.name}
                           </p>
                           {item.functionName && (
-                            <span className="text-2xs rounded bg-slate-100 px-1.5 py-0.5 font-medium text-slate-700">
+                            <span className="text-2xs rounded bg-muted px-1.5 py-0.5 font-medium text-foreground">
                               {item.functionName}
                             </span>
                           )}
@@ -930,8 +930,8 @@ export function EventCheckInScanner({ event }: EventCheckInScannerProps) {
                           {item.passNumber}
                         </p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-1.5 text-xs text-emerald-700">
-                        <CheckCircle2 className="size-4 text-emerald-600" />
+                      <div className="flex shrink-0 items-center gap-1.5 text-xs text-success">
+                        <CheckCircle2 className="size-4 text-success" />
                         <span className="font-mono text-xs font-medium">{item.time}</span>
                       </div>
                     </li>

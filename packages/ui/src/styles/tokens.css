@@ -23,68 +23,67 @@
 
 :root {
   /* ---------------------------------------------------------------------
-     BRAND INPUTS — the approved palette.
+     BRAND INPUTS (owner, 2026-11-21: visual polish, direction 2).
 
-     THREE colours, each with a job:
-       navy    identity and text        #102A43
-       blue    trust and information    #1976D2   Learn more · Explore · Read
-       orange  action                   #EB6A1F   Donate · Volunteer · Register
+     TWO colours, each with a job (`AGENTS.md` §11 item 12):
+       green   the brand      #1E7B24   links, focus, selected, active,
+                                        progress, Login, tabs, badges, admin
+       orange  action         #EB6A1F   Donate, and one primary conversion
+                                        call to action per page — nothing else
 
-     Orange is scarce on purpose. It means "do this", and a page where three
-     things are orange is a page where nothing is.
+     The green is the logo's #38A02C deepened until white text on it and it
+     as text on white both clear 4.5:1 (5.4:1). Neutrals are a plain grey.
      --------------------------------------------------------------------- */
-  --brand-hue: 250; /* blue — drives the accent scale below */
-  --brand-chroma: 0.14;
-  --neutral-hue: 250; /* cool neutrals, matching the navy */
-  --neutral-chroma: 0.008;
+  --brand-hue: 144; /* also seeds media-frame's placeholder gradients */
+
+  /* The brand scale, anchored on the approved values: 600 is the brand,
+     700 its hover, 800 its ink on a tint, 400 the dark-mode brand. */
+  --brand-50: oklch(0.975 0.018 145);
+  --brand-100: oklch(0.945 0.04 145);
+  --brand-200: oklch(0.89 0.075 145);
+  --brand-300: oklch(0.83 0.11 145);
+  /* #5CC461: the brand on dark grounds. */
+  --brand-400: oklch(0.735 0.168 144.5);
+  --brand-500: oklch(0.62 0.16 144);
+  /* #1E7B24: 5.4:1 with white, either way round. */
+  --brand-600: oklch(0.511 0.149 143.8);
+  /* #18661D: hover. */
+  --brand-700: oklch(0.448 0.13 143.8);
+  /* #155A19: ink on the brand tint. */
+  --brand-800: oklch(0.411 0.119 143.8);
+  --brand-900: oklch(0.33 0.09 145);
+  --brand-950: oklch(0.26 0.06 148);
+
+  /* LEGACY: the old blue/navy scale's names, now neutral, until the
+     hard-coded colour sweep (Phase 2, step C) replaces their few uses
+     (photo scrims, the dark button). Do not add new uses. */
+  --accent-50: var(--neutral-50);
+  --accent-100: var(--neutral-100);
+  --accent-200: var(--neutral-200);
+  --accent-300: var(--neutral-300);
+  --accent-400: var(--neutral-400);
+  --accent-500: var(--neutral-500);
+  --accent-600: var(--neutral-600);
+  --accent-700: var(--neutral-700);
+  --accent-800: var(--neutral-800);
+  --accent-850: oklch(0.24 0.03 260);
+  --accent-900: var(--neutral-900);
+  --accent-950: var(--neutral-950);
 
   /* ---------------------------------------------------------------------
-     Generated blue scale. Every value derives from the inputs above.
-     --------------------------------------------------------------------- */
-  --accent-50: oklch(0.975 0.012 var(--brand-hue));
-  --accent-100: oklch(0.945 0.03 var(--brand-hue));
-  --accent-200: oklch(0.89 0.06 var(--brand-hue));
-  --accent-300: oklch(0.81 0.095 var(--brand-hue));
-  --accent-400: oklch(0.7 0.13 var(--brand-hue));
-  --accent-500: oklch(0.61 var(--brand-chroma) var(--brand-hue));
-  /* #1976D2 — 4.60:1 with white, so it may carry button text. */
-  --accent-600: oklch(0.545 0.152 var(--brand-hue));
-  --accent-700: oklch(0.47 0.14 var(--brand-hue));
-  --accent-800: oklch(0.39 0.11 var(--brand-hue));
-  --accent-900: oklch(0.31 0.08 var(--brand-hue));
-  /* #102A43 — the navy. 14.6:1 on white. */
-  --accent-950: oklch(0.255 0.045 var(--brand-hue));
+     ORANGE — action only (owner, 2026-11-21; `AGENTS.md` §11 item 12).
 
-  /* ---------------------------------------------------------------------
-     ORANGE — action only.
+       --action          #EB6A1F  Donate and the page's one primary conversion
+                                  button. White label, 3.18:1: the owner's
+                                  recorded decision (2026-10-23, kept
+                                  2026-11-21 over #C75300 and #C2410C).
+       --action-hover    #D45914
+       --action-active   #B3450E
+       --cta-ink         #B74500  orange TEXT, where any remains (>= 4.5:1).
+       --cta-glow        #EB6A1F  orange marks with no text on them.
 
-     OWNER DECISION (2026-10-07): the brand orange is #EB6A1F. It is brighter
-     than the #BA4503 it replaces, so it is MEASURED into roles rather than
-     used for everything:
-
-       --cta         #EB6A1F  button fills, borders, active indicators, focus
-                              borders, progress — with a NAVY label (4.61:1).
-                              White on it is 3.18:1, which fails WCAG AA for
-                              button-size text; the owner chose the navy
-                              label over a darker orange.
-       --cta-hover   #F57C3A  hover fill, navy label (5.46:1)
-       --cta-active  #B3450E  a darker fill for white text; not the button's
-                              pressed state (that is #EB6A1F, navy label)
-       --cta-ink     #B74500  orange TEXT: eyebrows, active nav labels,
-                              orange links. #EB6A1F as small text is about
-                              3:1 on the off-white grounds; this shade of the
-                              same hue is at least 4.5:1 on every light
-                              surface it sits on, wash-amber included
-                              (owner decision). `text-primary` resolves to it.
-       --cta-glow    #EB6A1F  icons and decoration — anything with no text on
-                              it (3.18:1 on white clears the 3:1 for graphics)
-       --cta-light   #FFEFCC  light accent and icon washes
-       --cta-soft    #FFF7ED  very light grounds, selected rows
-
-     OWNER DECISION (2026-10-23, replacing 2026-10-21): filled orange buttons,
-     pills and badges (`--primary`) use #EB6A1F with a PURE WHITE label,
-     `--primary-foreground` #ffffff. Hover is darker #D45914 and pressed is
-     #B3450E (`AGENTS.md` §11 item 12). Orange TEXT keeps `--cta-ink`.
+     The `--cta-*` names are the older spelling of the same orange; new code
+     uses `action`.
      --------------------------------------------------------------------- */
   --cta-50: oklch(0.965 0.025 55);
   --cta-100: oklch(0.93 0.05 55);
@@ -97,39 +96,49 @@
   --cta-active: oklch(0.5337 0.155 41.74);
   --cta-ink: oklch(0.54 0.164 45.4);
   --cta-glow: var(--cta);
+  --action: var(--cta);
+  --action-foreground: #ffffff;
+  --action-hover: oklch(0.6133 0.171 43.86); /* #D45914 */
+  --action-active: oklch(0.5337 0.155 41.74); /* #B3450E */
   /* Large display text only (3.18:1 on white). */
   --cta-bright: var(--cta);
 
+  /* A plain grey (Tailwind's gray, by value), not the old blue-tinted one. */
   --neutral-0: oklch(1 0 0);
-  --neutral-50: oklch(0.985 var(--neutral-chroma) var(--neutral-hue));
-  --neutral-100: oklch(0.967 var(--neutral-chroma) var(--neutral-hue));
-  --neutral-200: oklch(0.922 var(--neutral-chroma) var(--neutral-hue));
-  --neutral-300: oklch(0.87 var(--neutral-chroma) var(--neutral-hue));
-  --neutral-400: oklch(0.708 var(--neutral-chroma) var(--neutral-hue));
-  --neutral-500: oklch(0.556 var(--neutral-chroma) var(--neutral-hue));
-  --neutral-600: oklch(0.439 var(--neutral-chroma) var(--neutral-hue));
-  --neutral-700: oklch(0.371 var(--neutral-chroma) var(--neutral-hue));
-  --neutral-800: oklch(0.269 var(--neutral-chroma) var(--neutral-hue));
-  --neutral-900: oklch(0.205 var(--neutral-chroma) var(--neutral-hue));
-  --neutral-950: oklch(0.145 var(--neutral-chroma) var(--neutral-hue));
+  --neutral-50: oklch(0.985 0.002 247.8); /* #F9FAFB */
+  --neutral-100: oklch(0.967 0.003 264.5); /* #F3F4F6 */
+  --neutral-200: oklch(0.928 0.006 264.5); /* #E5E7EB */
+  --neutral-300: oklch(0.872 0.009 258.3); /* #D1D5DB */
+  --neutral-400: oklch(0.714 0.019 261.3); /* #9CA3AF */
+  --neutral-500: oklch(0.551 0.023 264.4); /* #6B7280 */
+  --neutral-600: oklch(0.446 0.026 256.8); /* #4B5563 */
+  --neutral-700: oklch(0.373 0.031 259.7); /* #374151 */
+  --neutral-800: oklch(0.278 0.03 256.8); /* #1F2937 */
+  --neutral-900: oklch(0.21 0.032 264.7); /* #111827 */
+  --neutral-950: oklch(0.13 0.027 261.7); /* #030712 */
 
   /* ---------------------------------------------------------------------
      SEMANTIC TOKENS — what components actually reference.
      No component ever contains a raw colour value.
      --------------------------------------------------------------------- */
-  /* Default soft off-white background (#F7F9FC) for standard content sections
-     and page surfaces, creating cohesive contrast with pure white cards (--surface). */
-  --background: #f7f9fc;
-  --foreground: var(--accent-950);
-  /* The warm cream (#FDF5EC) reserved for occasional warm sections (testimonials, CTA). */
-  --surface-warm: #fdf5ec;
-  /* The subtle tint band. */
-  --surface-tint: #f0f4f8;
+  /* The page ground (#F9FAFB), a step off the white cards (--surface). */
+  --background: var(--neutral-50);
+  --foreground: var(--neutral-900);
+  /* Formerly a warm cream and a blue tint; both are the plain sunken grey
+     now (no warm surfaces, owner 2026-11-21). */
+  --surface-warm: var(--neutral-100);
+  --surface-tint: var(--neutral-100);
 
   --surface: var(--neutral-0);
-  --surface-foreground: var(--neutral-900);
+  --surface-foreground: var(--foreground);
   --surface-raised: var(--neutral-0);
   --surface-sunken: var(--neutral-100);
+
+  /* A ground that is dark in BOTH themes: photo scrims, the gate kiosk,
+     hero fallbacks behind images. Not redefined under .dark on purpose. */
+  --surface-inverse: var(--neutral-900);
+  --surface-inverse-foreground: var(--neutral-50);
+  --surface-inverse-muted: var(--neutral-300);
 
   --muted: var(--neutral-100);
   --muted-foreground: var(--neutral-600);
@@ -148,43 +157,44 @@
 
   --border: var(--neutral-200);
   --border-strong: var(--neutral-300);
-  --input: var(--neutral-200);
+  /* Control borders (inputs, chips): 4.8:1 on white, above the 3:1 that
+     WCAG 1.4.11 asks of a control's boundary. */
+  --input: var(--neutral-500);
 
   /**
-   * PRIMARY IS ORANGE, because primary means "donate".
+   * PRIMARY IS THE BRAND GREEN (owner, 2026-11-21, reversing 2026-10-23).
    *
-   * Owner decision (2026-10-23): the fill is the brand orange #EB6A1F (--cta)
-   * with pure white text (#ffffff), as on the hero's Donate Now. Hover
-   * darkens to #D45914 and pressed to #B3450E. Small orange text on light
-   * grounds still uses --primary-ink (#B74500, >= 4.5:1).
+   * Everything "primary" that is not Donate: the default button, Login, the
+   * active nav link and tab, badges, progress, selected states, the admin.
+   * Donate and the page's one conversion button use `--action` (orange).
    */
-  --primary: var(--cta);
-  /* Pure white label on the orange fill (owner decision, 2026-10-23). */
+  --primary: var(--brand-600);
   --primary-foreground: #ffffff;
-  /* Darker on hover for tactile feedback (#d45914). */
-  --primary-hover: #d45914;
-  --primary-active: #b3450e;
+  --primary-hover: var(--brand-700);
+  --primary-active: var(--brand-800);
   --primary-active-foreground: #ffffff;
-  --primary-ink: var(--cta-ink);
-  --primary-light: var(--cta-light);
-  --primary-soft: var(--cta-soft);
+  /* Brand TEXT on light grounds: the brand itself passes (5.4:1). */
+  --primary-ink: var(--brand-600);
+  --primary-light: var(--brand-100);
+  --primary-soft: var(--brand-50);
 
-  /* Blue: trust and information. 4.60:1 with white. */
-  /* A step below --accent-600: small blue links sit directly on the tinted
-     page (2026-10-08), where --accent-600 measured 4.43:1. */
-  --info-action: oklch(0.515 0.155 250);
-  --info-action-foreground: var(--neutral-0);
-  --info-action-hover: var(--accent-700);
+  /* Formerly the trust blue (links, secondary buttons). Links are the brand
+     now (§11 item 12); the name stays until Phase 3 renames the variants. */
+  --info-action: var(--brand-600);
+  --info-action-foreground: #ffffff;
+  --info-action-hover: var(--brand-700);
 
-  /* Orange for LARGE display text and decorative rules. Never small text. */
-  --accent-emphasis: var(--cta-bright);
-  --accent-rule: var(--cta-glow);
+  /* Highlighted heading words and decorative rules: the brand, not orange
+     (§11 item 12). The flourishes themselves go in Phases 3–4. */
+  --accent-emphasis: var(--brand-600);
+  --accent-rule: var(--brand-600);
 
   --secondary: var(--neutral-0);
-  --secondary-foreground: var(--accent-950);
+  --secondary-foreground: var(--foreground);
 
-  --accent: var(--accent-50);
-  --accent-foreground: var(--accent-800);
+  /* The brand tint: selected chips, active tabs, hovered menu rows. */
+  --accent: var(--brand-50);
+  --accent-foreground: var(--brand-800);
 
   /* Pastel washes behind the focus-area and stat icons. Decorative only —
      an icon sits on them, never text. */
@@ -238,9 +248,12 @@
      White text on the filled variant stays well above 4.5:1 at these values,
      so the darker step costs nothing.
      Caught by the automated axe check; see docs/phase-2.md. */
-  --success: oklch(0.47 0.13 150);
+  /* TEAL, not the brand green (owner, 2026-11-21): #0F766E, 5.5:1 on white
+     and 5.0:1 on its subtle ground. A selected brand-green state must never
+     read as success, and every success state carries an icon. */
+  --success: oklch(0.511 0.086 186.4);
   --success-foreground: oklch(0.99 0 0);
-  --success-subtle: oklch(0.96 0.03 150);
+  --success-subtle: oklch(0.965 0.025 185);
 
   --warning: oklch(0.72 0.15 75);
   --warning-foreground: oklch(0.2 0.03 75);
@@ -254,26 +267,24 @@
   --info-foreground: oklch(0.99 0 0);
   --info-subtle: oklch(0.96 0.03 250);
 
-  --ring: var(--accent-600);
+  /* One focus ring everywhere: the brand, 2px, offset 2px (base layer). */
+  --ring: var(--brand-600);
 
   /* Radius. Public defaults to `lg`. Nothing larger than 2xl —
      the pill-shaped-everything look is the template aesthetic we avoid. */
   --radius: 0.5rem;
 
   /* ---------------------------------------------------------------------
-     Consistent Global Card Shadow & Elevation System
-     Inspired by Stories of Change & Upcoming Events.
+     Elevation. Border first; neutral shadows only (no orange tint, owner
+     2026-11-21).
      --------------------------------------------------------------------- */
-  --border-card: #fbe8d8;
+  --border-card: var(--border);
   --transition-card: 200ms var(--ease-out-soft);
 
-  --shadow-card: 0 4px 12px rgba(20, 40, 60, 0.04), 0 12px 28px rgba(235, 106, 31, 0.06);
-
-  --shadow-card-hover: 0 8px 20px rgba(20, 40, 60, 0.07), 0 16px 36px rgba(235, 106, 31, 0.1);
-
-  --shadow-elevated: 0 4px 14px rgba(20, 40, 60, 0.04), 0 12px 32px rgba(20, 40, 60, 0.08);
-
-  --shadow-featured: 0 4px 12px rgba(20, 40, 60, 0.04), 0 14px 34px -8px rgba(235, 106, 31, 0.16);
+  --shadow-card: 0 1px 2px oklch(0.21 0.032 264.7 / 0.04), 0 4px 12px oklch(0.21 0.032 264.7 / 0.04);
+  --shadow-card-hover: 0 2px 4px oklch(0.21 0.032 264.7 / 0.05), 0 8px 20px oklch(0.21 0.032 264.7 / 0.08);
+  --shadow-elevated: 0 4px 14px oklch(0.21 0.032 264.7 / 0.05), 0 12px 32px oklch(0.21 0.032 264.7 / 0.08);
+  --shadow-featured: var(--shadow-elevated);
 }
 
 /* -----------------------------------------------------------------------
@@ -284,8 +295,6 @@
    in temperature between the two experiences.
    ----------------------------------------------------------------------- */
 [data-surface='admin'] {
-  --neutral-hue: 255;
-  --neutral-chroma: 0.008;
   --radius: 0.375rem;
   --background: var(--neutral-100);
   --surface: var(--neutral-0);
@@ -295,8 +304,8 @@
    the admin root, below <html>, so without this they would override the
    dark theme's and leave white panels under light text (1.09:1). */
 .dark [data-surface='admin'] {
-  --background: var(--neutral-950);
-  --surface: var(--neutral-900);
+  --background: oklch(0.158 0.007 258.4);
+  --surface: oklch(0.19 0.007 258.4);
 }
 
 /* -----------------------------------------------------------------------
@@ -306,45 +315,42 @@
    directions.
    ----------------------------------------------------------------------- */
 .dark {
-  --background: var(--neutral-950);
-  --foreground: var(--neutral-100);
+  /* Direction 2's dark: near-black page #0B0D10, card #121417. */
+  --background: oklch(0.158 0.007 258.4);
+  --foreground: var(--neutral-200);
 
-  --surface: var(--neutral-900);
-  --surface-foreground: var(--neutral-100);
-  --surface-raised: var(--neutral-800);
-  --surface-sunken: var(--neutral-950);
+  --surface: oklch(0.19 0.007 258.4);
+  --surface-foreground: var(--neutral-200);
+  --surface-raised: oklch(0.234 0.011 260.7);
+  --surface-sunken: oklch(0.158 0.007 258.4);
 
-  --muted: var(--neutral-800);
+  --muted: oklch(0.234 0.011 260.7);
   --muted-foreground: var(--neutral-400);
   /* Inverted: on a dark ground the strong variant is LIGHTER, not darker. */
   --muted-foreground-strong: var(--neutral-200);
 
-  --border: oklch(1 0 0 / 12%);
-  --border-strong: oklch(1 0 0 / 20%);
-  --input: oklch(1 0 0 / 15%);
+  --border: oklch(0.3 0.014 261.7);
+  --border-strong: oklch(0.373 0.031 259.7);
+  --input: var(--neutral-500);
 
-  /* Orange still means action in dark mode: the same #EB6A1F fill and white
-     label as the light theme (owner decision, 2026-10-23). */
-  --primary: var(--cta);
-  /* Pure white label on the orange fill (owner decision, 2026-10-23). */
-  --primary-foreground: #ffffff;
-  /* Darker on hover for tactile feedback (#d45914). */
-  --primary-hover: #d45914;
-  --primary-active: #b3450e;
-  --primary-active-foreground: #ffffff;
-  /* Orange text on a dark ground is the light end of the scale. */
-  --primary-ink: var(--cta-300);
-  --primary-light: oklch(0.34 0.07 50);
-  --primary-soft: oklch(0.28 0.04 50);
+  /* The brand lightens on dark grounds, with a near-black label. */
+  --primary: var(--brand-400);
+  --primary-foreground: oklch(0.158 0.007 258.4);
+  --primary-hover: oklch(0.788 0.145 145);
+  --primary-active: var(--brand-300);
+  --primary-active-foreground: oklch(0.158 0.007 258.4);
+  --primary-ink: var(--brand-400);
+  --primary-light: oklch(0.28 0.053 149);
+  --primary-soft: oklch(0.24 0.04 149);
 
-  --info-action: var(--accent-400);
-  --info-action-foreground: var(--neutral-950);
-  --info-action-hover: var(--accent-300);
+  --info-action: var(--brand-400);
+  --info-action-foreground: oklch(0.158 0.007 258.4);
+  --info-action-hover: oklch(0.788 0.145 145);
 
-  --accent-emphasis: var(--cta-300);
-  --accent-rule: var(--cta-glow);
-  --surface-warm: var(--neutral-900);
-  --surface-tint: var(--neutral-900);
+  --accent-emphasis: var(--brand-400);
+  --accent-rule: var(--brand-400);
+  --surface-warm: oklch(0.234 0.011 260.7);
+  --surface-tint: oklch(0.234 0.011 260.7);
 
   --wash-blue: oklch(0.32 0.04 250);
   --wash-rose: oklch(0.32 0.04 15);
@@ -367,15 +373,16 @@
      here — it exists for the light theme's text floor, not for this one. */
   --wash-mint-ink-strong: oklch(0.82 0.12 155);
 
-  --secondary: var(--neutral-800);
-  --secondary-foreground: var(--neutral-100);
+  --secondary: oklch(0.234 0.011 260.7);
+  --secondary-foreground: var(--neutral-200);
 
-  --accent: var(--neutral-800);
-  --accent-foreground: var(--accent-200);
+  --accent: oklch(0.28 0.053 149);
+  --accent-foreground: oklch(0.859 0.101 145.8);
 
-  --success: oklch(0.7 0.14 150);
-  --success-foreground: oklch(0.15 0.02 150);
-  --success-subtle: oklch(0.28 0.05 150);
+  /* #2DD4BF: teal, distinct from the brand green. */
+  --success: oklch(0.785 0.133 181.9);
+  --success-foreground: oklch(0.15 0.02 185);
+  --success-subtle: oklch(0.27 0.045 185);
 
   --warning: oklch(0.8 0.14 75);
   /* LIGHT amber, not dark: every `text-warning-foreground` in the app is
@@ -394,14 +401,14 @@
   --info-foreground: oklch(0.15 0.02 250);
   --info-subtle: oklch(0.28 0.05 250);
 
-  --ring: var(--accent-400);
+  --ring: var(--brand-400);
 
   /* Elevation tokens in dark mode */
   --border-card: oklch(1 0 0 / 12%);
   --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.35);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
   --shadow-elevated: 0 12px 32px rgba(0, 0, 0, 0.45);
-  --shadow-featured: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(235, 106, 31, 0.08);
+  --shadow-featured: 0 12px 32px rgba(0, 0, 0, 0.45);
 }
 
 /* =============================================================================
@@ -417,6 +424,9 @@
   --color-surface-foreground: var(--surface-foreground);
   --color-surface-raised: var(--surface-raised);
   --color-surface-sunken: var(--surface-sunken);
+  --color-surface-inverse: var(--surface-inverse);
+  --color-surface-inverse-foreground: var(--surface-inverse-foreground);
+  --color-surface-inverse-muted: var(--surface-inverse-muted);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted-foreground-strong: var(--muted-foreground-strong);
@@ -450,8 +460,24 @@
   --color-accent-600: var(--accent-600);
   --color-accent-700: var(--accent-700);
   --color-accent-800: var(--accent-800);
+  --color-accent-850: var(--accent-850);
   --color-accent-900: var(--accent-900);
   --color-accent-950: var(--accent-950);
+  --color-action: var(--action);
+  --color-action-foreground: var(--action-foreground);
+  --color-action-hover: var(--action-hover);
+  --color-action-active: var(--action-active);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
   --color-cta: var(--cta);
   --color-cta-bright: var(--cta-bright);
   --color-accent-rule: var(--accent-rule);
@@ -466,10 +492,9 @@
   --color-primary-light: var(--primary-light);
   --color-primary-soft: var(--primary-soft);
   /*
-    `text-primary` is orange TEXT, so it uses the legible ink rather than the
-    #EB6A1F fill. Tailwind looks up `--text-color-*` before `--color-*` for
-    text utilities only, so `bg-`, `border-`, `fill-`, `stroke-` and `ring-
-    primary` still read #EB6A1F. Icons and decoration use `text-cta-glow`.
+    `text-primary` reads `--primary-ink` (Tailwind looks up `--text-color-*`
+    before `--color-*` for text utilities only). In light mode that is the
+    brand itself; the token stays so a darker ink can be set in one place.
   */
   --text-color-primary: var(--primary-ink);
   --color-cta-glow: var(--cta-glow);
@@ -507,11 +532,13 @@
      Both stacks must carry a Devanagari companion — retrofitting Hindi onto a
      Latin-only stack later is far more expensive than choosing well now. */
   --font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display:
-    var(--font-heading), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* ONE family (owner, 2026-11-21): headings are Inter too. `font-display`
+     stays as a name so existing call sites keep working. */
+  --font-display: var(--font-sans);
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  /* Decorative only — see the note in apps/web/src/app/layout.tsx. */
-  --font-script: var(--font-script-family), ui-rounded, cursive;
+  /* The handwritten accent (Caveat) is gone with "Inter only"; the few
+     accents left render as quiet Inter captions (`ScriptAccent`). */
+  --font-script: var(--font-sans);
 
   /* Type scale — public (editorial). Clamped so a hero never overwhelms a 390px screen. */
   --text-display-lg: clamp(2.5rem, 1.8rem + 3.5vw, 3.75rem);
@@ -660,9 +687,34 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
-    /* Anchored headings must clear the sticky header — WCAG 2.2 requires that
-       focus is never obscured by sticky content. */
-    scroll-padding-top: 5rem;
+    /* A thin, quiet scrollbar where the browser lets us style it. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
+    /* The sticky header's height (64px, 72px from md), used below. */
+    --header-offset: 4rem;
+  }
+
+  @media (min-width: 48rem) {
+    html {
+      --header-offset: 4.5rem;
+    }
+  }
+
+  /* Anchored sections clear the sticky header (WCAG 2.2: focus is never
+     obscured by sticky content). A page with a second sticky bar (the
+     campaign section nav) raises `--anchor-offset` on its own wrapper. */
+  [id] {
+    scroll-margin-top: calc(var(--header-offset) + var(--anchor-offset, 0px) + 1rem);
+  }
+
+  ::selection {
+    background-color: var(--color-brand-200);
+    color: var(--color-brand-950);
+  }
+
+  .dark ::selection {
+    background-color: var(--color-brand-800);
+    color: var(--color-brand-50);
   }
 
   body {
@@ -675,8 +727,8 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* Manrope for headings: 700 for page and section titles, 600 below. A
-     weight class on the element still wins, as utilities always do. */
+  /* Headings: Inter 600 with slight negative tracking (owner, 2026-11-21).
+     A weight or tracking class on the element still wins. */
   h1,
   h2,
   h3,
@@ -690,14 +742,11 @@
 
   h1,
   h2 {
-    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
-  /* The admin reads as a tool: its small headings — panel and field-group
-     titles — are Inter. Page titles, section headings and figures keep
-     Manrope through their own classes. */
-  [data-surface='admin'] :is(h4, h5, h6) {
-    font-family: var(--font-sans);
+  h3 {
+    letter-spacing: -0.01em;
   }
 
   /* Visible focus everywhere. `outline: none` without a replacement is a
@@ -711,7 +760,8 @@
   /* Tabular figures wherever numbers align — proportional digits make
      currency and table columns jitter. */
   table,
-  [data-numeric] {
+  [data-numeric],
+  [data-amount] {
     font-variant-numeric: tabular-nums;
   }
 

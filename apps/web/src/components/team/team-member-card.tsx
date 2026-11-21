@@ -47,7 +47,7 @@ export function TeamMemberCard({
     return (
       <div
         className={cn(
-          'card-interactive group relative flex h-full flex-col overflow-hidden rounded-xl dark:border-slate-800 dark:bg-slate-900',
+          'card-interactive group relative flex h-full flex-col overflow-hidden rounded-xl',
           className,
         )}
       >

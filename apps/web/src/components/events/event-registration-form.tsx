@@ -34,7 +34,7 @@ import { useRevealResult } from '@/lib/ui/reveal-result';
 function Submit({ seatsLeft }: { seatsLeft: number | null }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="lg" fullWidth disabled={pending}>
+    <Button type="submit" size="lg" variant="action" fullWidth disabled={pending}>
       {pending ? 'Registering…' : seatsLeft === null ? 'Register' : 'Register my place'}
     </Button>
   );

@@ -110,7 +110,7 @@ export default async function SavedCampaignsPage({
                 <div className="card-interactive rounded-2xl p-4 sm:p-6">
                   <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:gap-6">
                     {/* Campaign Photo with Floating Trash Button on Mobile */}
-                    <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden rounded-2xl bg-slate-100 sm:aspect-[4/3] sm:w-60 md:w-64 lg:w-72 dark:bg-slate-800">
+                    <div className="bg-muted relative aspect-[16/10] w-full shrink-0 overflow-hidden rounded-2xl sm:aspect-[4/3] sm:w-60 md:w-64 lg:w-72">
                       <Image
                         src={imageUrl}
                         alt={campaign.title}
@@ -123,7 +123,7 @@ export default async function SavedCampaignsPage({
                         <UnsaveButton
                           campaignId={campaign.campaignId}
                           title={campaign.title}
-                          className="text-primary bg-white/95 shadow-md dark:bg-slate-900"
+                          className="text-primary bg-surface/95 shadow-md"
                         />
                       </div>
                     </div>
@@ -137,10 +137,10 @@ export default async function SavedCampaignsPage({
                             className={cn(
                               'inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold',
                               categoryName.toLowerCase().includes('women')
-                                ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-300'
+                                ? 'bg-destructive-subtle text-destructive'
                                 : categoryName.toLowerCase().includes('educat')
-                                  ? 'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-300'
-                                  : 'text-primary bg-orange-50 dark:bg-orange-950/50 dark:text-orange-300',
+                                  ? 'bg-accent text-primary'
+                                  : 'text-primary bg-accent',
                             )}
                           >
                             {categoryName}
@@ -191,10 +191,10 @@ export default async function SavedCampaignsPage({
                                 aria-valuemin={0}
                                 aria-valuemax={100}
                                 aria-label={`Progress: ${percent}%`}
-                                className="h-2 flex-1 overflow-hidden rounded-full bg-[#F0F2F5] sm:h-2.5 dark:bg-slate-800"
+                                className="bg-muted h-2 flex-1 overflow-hidden rounded-full sm:h-2.5"
                               >
                                 <div
-                                  className="h-full rounded-full bg-[#EB6A1F] transition-all duration-300"
+                                  className="bg-primary h-full rounded-full transition-all duration-300"
                                   style={{ width: `${percent}%` }}
                                 />
                               </div>
@@ -229,7 +229,7 @@ export default async function SavedCampaignsPage({
                           ) : (
                             <Link
                               href={`/campaigns/${campaign.slug}#give`}
-                              className="focus-visible:outline-ring shadow-xs text-primary-foreground inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#EB6A1F] px-6 py-2.5 text-xs font-semibold transition-all hover:bg-[#d65e1b] focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-95 sm:w-auto sm:text-sm"
+                              className="shadow-xs bg-action text-action-foreground hover:bg-action-hover active:bg-action-active inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-2.5 text-xs font-semibold transition-all focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-95 sm:w-auto sm:text-sm"
                             >
                               <span>Donate</span>
                               <ArrowRight

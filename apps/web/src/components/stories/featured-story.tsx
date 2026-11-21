@@ -27,7 +27,7 @@ export function FeaturedStory({ story }: { story: Story }) {
   const storyCategory = story.category ?? story.programName;
 
   return (
-    <article className="card-interactive relative flex flex-col overflow-hidden rounded-2xl lg:grid lg:grid-cols-[53%_47%] dark:border-slate-800 dark:bg-slate-900">
+    <article className="card-interactive relative flex flex-col overflow-hidden rounded-2xl lg:grid lg:grid-cols-[53%_47%]">
       {/* The photograph: 16:10 on top below `lg`; from `lg`, as tall as the panel beside it. */}
       <div className="relative aspect-[16/10] w-full sm:aspect-[2/1] lg:aspect-auto lg:min-h-[19.25rem]">
         <MediaFrame
@@ -39,8 +39,11 @@ export function FeaturedStory({ story }: { story: Story }) {
         />
 
         {storyCategory ? (
-          <span className="bg-primary text-primary-foreground absolute bottom-4 left-4 z-10 inline-flex h-9 items-center gap-2 rounded-full px-4 text-[0.8125rem] font-bold shadow-[0_6px_14px_-8px_rgb(16_42_67/0.6)] sm:bottom-5 sm:left-5 sm:h-[2.375rem] sm:px-5">
-            <StoryCategoryIcon category={storyCategory} className="size-[1.125rem] text-white" />
+          <span className="bg-primary text-primary-foreground absolute bottom-4 left-4 z-10 inline-flex h-9 items-center gap-2 rounded-full px-4 text-[0.8125rem] font-bold shadow-card sm:bottom-5 sm:left-5 sm:h-[2.375rem] sm:px-5">
+            <StoryCategoryIcon
+              category={storyCategory}
+              className="text-primary-foreground size-[1.125rem]"
+            />
             <span>{storyCategory}</span>
           </span>
         ) : null}
@@ -53,12 +56,12 @@ export function FeaturedStory({ story }: { story: Story }) {
         */}
         <span
           aria-hidden="true"
-          className="bg-cta/10 min-[88rem]:block absolute right-[5%] top-[19%] hidden size-[4.5rem] rounded-full"
+          className="bg-primary/10 min-[88rem]:block absolute right-[5%] top-[19%] hidden size-[4.5rem] rounded-full"
         />
-        <OutlineLeaves className="text-cta-glow/30 min-[88rem]:block absolute -bottom-[6%] right-0 hidden h-[64%] w-auto" />
+        <OutlineLeaves className="text-primary/30 min-[88rem]:block absolute -bottom-[6%] right-0 hidden h-[64%] w-auto" />
 
-        <p className="bg-cta/8 text-primary relative inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-[0.8125rem] font-semibold">
-          <Star className="fill-cta text-cta size-4" aria-hidden="true" />
+        <p className="bg-primary/8 text-primary relative inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-[0.8125rem] font-semibold">
+          <Star className="fill-primary text-primary size-4" aria-hidden="true" />
           Featured Story
         </p>
 

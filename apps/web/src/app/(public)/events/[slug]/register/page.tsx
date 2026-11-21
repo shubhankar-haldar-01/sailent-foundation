@@ -86,31 +86,34 @@ export default async function EventRegisterPage({ params }: { params: Promise<{ 
     : null;
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#F8FAFC] print:m-0 print:min-h-0 print:overflow-visible print:bg-white print:p-0">
+    <div className="bg-background print:bg-surface relative flex min-h-screen flex-col overflow-hidden print:m-0 print:min-h-0 print:overflow-visible print:p-0">
       {/* Ambient decorative soft cyan/sky glow in background matching reference */}
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[36rem] overflow-hidden print:hidden">
-        <div className="absolute -left-24 -top-24 size-[34rem] rounded-full bg-sky-100/50 blur-3xl" />
-        <div className="absolute -right-24 top-8 size-[30rem] rounded-full bg-sky-50/60 blur-3xl" />
+        <div className="bg-info-subtle/50 absolute -left-24 -top-24 size-[34rem] rounded-full blur-3xl" />
+        <div className="bg-info-subtle/60 absolute -right-24 top-8 size-[30rem] rounded-full blur-3xl" />
       </div>
 
       <h1 className="sr-only">Register for {event.title}</h1>
 
       {/* 1. Breadcrumb bar matching final design */}
       <div className="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 print:hidden">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-slate-500">
+        <nav
+          aria-label="Breadcrumb"
+          className="text-muted-foreground flex items-center gap-1.5 text-xs"
+        >
           <Link href="/" className="hover:text-primary transition-colors">
             Home
           </Link>
-          <span className="text-slate-400">&gt;</span>
+          <span className="text-muted-foreground">&gt;</span>
           <Link href="/events" className="hover:text-primary transition-colors">
             Events
           </Link>
-          <span className="text-slate-400">&gt;</span>
+          <span className="text-muted-foreground">&gt;</span>
           <Link href={`/events/${event.slug}`} className="hover:text-primary transition-colors">
             {event.title}
           </Link>
-          <span className="text-slate-400">&gt;</span>
-          <span aria-current="page" className="font-semibold text-slate-800">
+          <span className="text-muted-foreground">&gt;</span>
+          <span aria-current="page" className="text-foreground font-semibold">
             Register
           </span>
         </nav>

@@ -234,7 +234,7 @@ export default async function EventRegistrationsPage({
                                     {entry.attendees.map((att, i) => (
                                       <span
                                         key={i}
-                                        className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                        className="bg-muted text-foreground inline-flex items-center rounded px-1.5 py-0.5"
                                       >
                                         Pass {i + 1}: {att.fullName}
                                       </span>
@@ -265,7 +265,7 @@ export default async function EventRegistrationsPage({
                               <TableCell className="text-caption">
                                 {entry.isPaid && entry.paidAmount ? (
                                   <div>
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                    <span className="bg-success-subtle text-success ring-success/20 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ring-1 ring-inset">
                                       Paid ₹{Math.round(entry.paidAmount / 100)}
                                     </span>
                                     {entry.paymentId ? (

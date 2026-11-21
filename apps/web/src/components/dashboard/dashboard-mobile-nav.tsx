@@ -97,14 +97,14 @@ export function DashboardMobileNav({
                     className={cn(
                       'flex items-center gap-3.5 rounded-2xl px-4 py-3 text-sm transition-colors',
                       active
-                        ? 'bg-[#fae8dc]/70 font-bold text-[#EB6A1F] dark:bg-orange-950/40'
+                        ? 'bg-muted/70 text-primary font-bold'
                         : 'text-foreground/85 hover:bg-muted font-medium',
                     )}
                   >
                     <Icon
                       className={cn(
                         'size-5 stroke-[2]',
-                        active ? 'text-[#EB6A1F]' : 'text-muted-foreground',
+                        active ? 'text-primary' : 'text-muted-foreground',
                       )}
                       aria-hidden="true"
                     />

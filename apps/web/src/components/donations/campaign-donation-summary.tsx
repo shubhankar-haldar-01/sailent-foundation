@@ -295,6 +295,7 @@ export function CampaignDonationSummary({
         type="button"
         size="lg"
         fullWidth
+        variant="action"
         disabled={!canContinue}
         onClick={onContinue}
         className="mt-2 h-10 rounded-lg"

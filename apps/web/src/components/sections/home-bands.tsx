@@ -113,7 +113,7 @@ export function MissionBand() {
             <Button
               asChild
               size="lg"
-              className="text-primary rounded-full bg-white hover:bg-white/90"
+              className="text-primary bg-surface hover:bg-surface/90 rounded-full"
             >
               <Link href="/donate">Donate Now</Link>
             </Button>
@@ -121,7 +121,7 @@ export function MissionBand() {
               asChild
               size="lg"
               variant="secondary"
-              className="hover:bg-white/12 rounded-full border border-white/35 bg-transparent text-white"
+              className="hover:bg-surface/12 rounded-full border border-white/35 bg-transparent text-white"
             >
               <Link href="/programs">Explore Our Programs</Link>
             </Button>

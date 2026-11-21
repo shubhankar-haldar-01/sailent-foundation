@@ -62,7 +62,7 @@ function BannerBody({ online, className }: { online: boolean; className?: string
       role="status"
       className={cn(
         'z-(--z-banner) fixed inset-x-0 top-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium',
-        online ? 'bg-success text-white' : 'bg-foreground text-background',
+        online ? 'bg-success text-success-foreground' : 'bg-foreground text-background',
         className,
       )}
     >

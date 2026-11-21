@@ -185,7 +185,7 @@ export default async function AdminDashboardPage() {
                 <p className="text-body-sm text-muted-foreground font-medium">
                   Campaigns open for donations
                 </p>
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <div className="bg-success/10 text-success flex size-9 shrink-0 items-center justify-center rounded-xl">
                   <HeartHandshake className="size-4.5" aria-hidden="true" />
                 </div>
               </div>
@@ -214,7 +214,7 @@ export default async function AdminDashboardPage() {
                 <p className="text-body-sm text-muted-foreground font-medium">
                   Donors who have given
                 </p>
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <div className="bg-info/10 text-info flex size-9 shrink-0 items-center justify-center rounded-xl">
                   <Users className="size-4.5" aria-hidden="true" />
                 </div>
               </div>
@@ -241,7 +241,7 @@ export default async function AdminDashboardPage() {
                 <p className="text-body-sm text-muted-foreground font-medium">
                   Volunteer applications to review
                 </p>
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <div className="bg-warning/10 text-warning-foreground flex size-9 shrink-0 items-center justify-center rounded-xl">
                   <UserCheck className="size-4.5" aria-hidden="true" />
                 </div>
               </div>
@@ -339,7 +339,7 @@ export default async function AdminDashboardPage() {
       >
         <div className="border-border flex items-center justify-between border-b pb-3.5">
           <h2 id="attention" className="text-h4 flex items-center gap-2.5 font-semibold">
-            <AlertTriangle className="size-5 text-amber-500" aria-hidden="true" />
+            <AlertTriangle className="text-warning-foreground size-5" aria-hidden="true" />
             <span>Needs attention</span>
           </h2>
           {attention.length > 0 ? (
@@ -350,7 +350,7 @@ export default async function AdminDashboardPage() {
         </div>
 
         {attention.length === 0 ? (
-          <div className="flex items-center gap-3 py-4 text-emerald-600 dark:text-emerald-400">
+          <div className="text-success flex items-center gap-3 py-4">
             <CheckCircle2 className="size-5 shrink-0" aria-hidden="true" />
             <p className="text-body-sm font-medium">Nothing waiting.</p>
           </div>
@@ -367,7 +367,7 @@ export default async function AdminDashboardPage() {
                     className={
                       item.severity === 'destructive'
                         ? 'bg-destructive/10 text-destructive rounded-md px-2 py-0.5 text-xs font-bold tabular-nums'
-                        : 'rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-bold tabular-nums text-amber-700 dark:text-amber-400'
+                        : 'bg-warning/10 text-warning-foreground rounded-md px-2 py-0.5 text-xs font-bold tabular-nums'
                     }
                   >
                     {item.count}
@@ -515,21 +515,21 @@ export default async function AdminDashboardPage() {
                   {data.campaigns.completed > 0 ? (
                     <div
                       style={{ width: `${(data.campaigns.completed / totalCampaigns) * 100}%` }}
-                      className="bg-emerald-500 transition-all"
+                      className="bg-success transition-all"
                       title={`Completed: ${data.campaigns.completed}`}
                     />
                   ) : null}
                   {data.campaigns.draft > 0 ? (
                     <div
                       style={{ width: `${(data.campaigns.draft / totalCampaigns) * 100}%` }}
-                      className="bg-neutral-400 transition-all dark:bg-neutral-600"
+                      className="bg-muted-foreground transition-all"
                       title={`Draft: ${data.campaigns.draft}`}
                     />
                   ) : null}
                   {data.campaigns.paused > 0 ? (
                     <div
                       style={{ width: `${(data.campaigns.paused / totalCampaigns) * 100}%` }}
-                      className="bg-amber-500 transition-all"
+                      className="bg-warning transition-all"
                       title={`Paused: ${data.campaigns.paused}`}
                     />
                   ) : null}
@@ -547,7 +547,7 @@ export default async function AdminDashboardPage() {
               </div>
               <div className="border-border bg-muted/30 rounded-lg border p-2.5 text-center">
                 <p className="text-caption text-muted-foreground font-medium">Completed</p>
-                <p className="text-base font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                <p className="text-success text-base font-bold tabular-nums">
                   {data.campaigns.completed}
                 </p>
               </div>
@@ -559,7 +559,7 @@ export default async function AdminDashboardPage() {
               </div>
               <div className="border-border bg-muted/30 rounded-lg border p-2.5 text-center">
                 <p className="text-caption text-muted-foreground font-medium">Paused</p>
-                <p className="text-base font-bold tabular-nums text-amber-600 dark:text-amber-400">
+                <p className="text-warning-foreground text-base font-bold tabular-nums">
                   {data.campaigns.paused}
                 </p>
               </div>

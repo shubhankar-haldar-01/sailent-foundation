@@ -46,18 +46,17 @@ export function DashboardNav() {
           {...(current ? { 'aria-current': 'page' as const } : {})}
           className={cn(
             'text-body-sm focus-visible:outline-ring xl:pointer-coarse:min-h-11 flex min-h-11 items-center gap-3 whitespace-nowrap rounded-xl px-3.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 xl:min-h-10',
-            // The soft orange pill with orange ink: `--cta-50` under the
-            // darker `text-primary` ink clears 4.5:1, which a 10% wash of
-            // the button orange did not.
+            // The current page: brand ink on the brand tint (`--brand-50`),
+            // above 4.5:1 (colour roles, 2026-11-21).
             current
-              ? 'text-primary bg-(--cta-50) dark:bg-primary/15 font-semibold'
+              ? 'text-primary bg-(--brand-50) dark:bg-primary/15 font-semibold'
               : 'text-foreground/80 hover:bg-muted hover:text-foreground font-medium',
           )}
         >
           <Icon
             className={cn(
               'size-[1.125rem] shrink-0',
-              current ? 'text-cta-glow' : 'text-muted-foreground',
+              current ? 'text-primary' : 'text-muted-foreground',
             )}
             aria-hidden="true"
           />

@@ -51,8 +51,8 @@ const CTA_ARROW =
  *  - 4-corner rounded photograph with hover-zoom and depth gradient
  *  - Category chip and optional product badge
  *  - Three-column peach/mint statistics discs (Donors, Raised, Goal) with dividers
- *  - Brand-orange progress bar with dual percentage captions
- *  - Accessible pill-shaped CTA with navy label on brand orange (#EB6A1F)
+ *  - Brand-green progress bar with dual percentage captions
+ *  - Pill-shaped Donate CTA in the action orange (`variant="action"`)
  */
 export function CampaignCard({
   campaign,
@@ -74,7 +74,7 @@ export function CampaignCard({
     <article
       className={cn(
         'card-interactive @container group relative flex flex-col',
-        'rounded-[22px] p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900',
+        'rounded-[22px] p-3.5 sm:p-4',
         className,
       )}
     >
@@ -242,7 +242,12 @@ export function CampaignCard({
                 </Link>
               </Button>
             ) : (
-              <Button asChild fullWidth className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}>
+              <Button
+                asChild
+                fullWidth
+                variant="action"
+                className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}
+              >
                 <Link href={`${detailHref}#give`}>
                   Donate Now
                   <ArrowRight aria-hidden="true" className={CTA_ARROW} />

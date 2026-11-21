@@ -225,14 +225,14 @@ export function IndiaPresenceMap({
       <svg viewBox="0 0 366 398" className="h-auto w-full" aria-hidden="true">
         <path
           d={OUTLINE_PATH}
-          className="fill-[#E2EDF8] stroke-white stroke-[1.5] dark:fill-slate-800/80 dark:stroke-slate-700"
+          className="fill-muted stroke-white stroke-[1.5]"
           strokeLinejoin="round"
         />
         {dots.map((dot) => (
           <g key={dot.label}>
-            <circle cx={dot.x} cy={dot.y} r="12" className="fill-[#EB6A1F]/15" />
-            <circle cx={dot.x} cy={dot.y} r="6.5" className="fill-[#EB6A1F]/30" />
-            <circle cx={dot.x} cy={dot.y} r="3.5" className="fill-[#EB6A1F]" />
+            <circle cx={dot.x} cy={dot.y} r="12" className="fill-primary/15" />
+            <circle cx={dot.x} cy={dot.y} r="6.5" className="fill-primary/30" />
+            <circle cx={dot.x} cy={dot.y} r="3.5" className="fill-primary" />
           </g>
         ))}
       </svg>

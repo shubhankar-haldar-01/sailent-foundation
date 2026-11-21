@@ -22,16 +22,16 @@ export const DEFAULT_PUBLICATIONS: SpotlightItem[] = [
     name: 'The Community Post',
     renderMark: (
       <div className="flex select-none flex-col items-center justify-center text-center">
-        <span className="font-sans text-[8px] font-semibold uppercase tracking-[0.25em] text-slate-800 sm:text-[9px] dark:text-slate-300">
+        <span className="text-foreground font-sans text-[8px] font-semibold uppercase tracking-[0.25em] sm:text-[9px]">
           THE
         </span>
-        <span className="mt-0.5 font-serif text-sm font-bold uppercase tracking-tight text-[#0F172A] sm:text-base lg:text-lg dark:text-white">
+        <span className="text-foreground mt-0.5 font-serif text-sm font-bold uppercase tracking-tight sm:text-base lg:text-lg">
           COMMUNITY
         </span>
-        <span className="-mt-0.5 font-sans text-[8px] font-semibold uppercase tracking-[0.28em] text-slate-800 sm:text-[9px] dark:text-slate-300">
+        <span className="text-foreground -mt-0.5 font-sans text-[8px] font-semibold uppercase tracking-[0.28em] sm:text-[9px]">
           POST
         </span>
-        <div className="mx-auto mt-1 h-[2px] w-6 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+        <div className="bg-primary mx-auto mt-1 h-[2px] w-6 rounded-full" aria-hidden="true" />
       </div>
     ),
   },
@@ -40,12 +40,12 @@ export const DEFAULT_PUBLICATIONS: SpotlightItem[] = [
     name: 'Impact Journal',
     renderMark: (
       <div className="flex select-none flex-col items-start justify-center">
-        <span className="font-serif text-xl font-bold leading-none tracking-tight text-[#0F172A] sm:text-2xl lg:text-[26px] dark:text-white">
+        <span className="text-foreground font-serif text-xl font-bold leading-none tracking-tight sm:text-2xl lg:text-[26px]">
           Impact
         </span>
         <div className="mt-0.5 flex w-full items-center">
-          <div className="h-[2px] w-8 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
-          <span className="-mt-0.5 ml-1 font-serif text-xs italic text-slate-600 sm:text-sm lg:text-base dark:text-slate-300">
+          <div className="bg-primary h-[2px] w-8 rounded-full" aria-hidden="true" />
+          <span className="text-muted-foreground -mt-0.5 ml-1 font-serif text-xs italic sm:text-sm lg:text-base">
             Journal
           </span>
         </div>
@@ -57,13 +57,13 @@ export const DEFAULT_PUBLICATIONS: SpotlightItem[] = [
     name: 'Today India',
     renderMark: (
       <div className="flex select-none flex-col items-center justify-center text-center">
-        <span className="font-sans text-xl font-black uppercase leading-none tracking-tight text-[#EB6A1F] sm:text-2xl lg:text-3xl">
+        <span className="text-primary font-sans text-xl font-black uppercase leading-none tracking-tight sm:text-2xl lg:text-3xl">
           TODAY
         </span>
-        <div className="mt-0.5 flex items-center justify-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-600 sm:text-[10px] dark:text-slate-400">
-          <span className="h-[1px] w-3.5 bg-slate-400" aria-hidden="true" />
+        <div className="text-muted-foreground mt-0.5 flex items-center justify-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.22em] sm:text-[10px]">
+          <span className="bg-muted-foreground h-[1px] w-3.5" aria-hidden="true" />
           INDIA
-          <span className="h-[1px] w-3.5 bg-slate-400" aria-hidden="true" />
+          <span className="bg-muted-foreground h-[1px] w-3.5" aria-hidden="true" />
         </div>
       </div>
     ),
@@ -74,17 +74,17 @@ export const DEFAULT_PUBLICATIONS: SpotlightItem[] = [
     renderMark: (
       <div className="flex select-none flex-col items-center justify-center text-center">
         <div className="relative inline-block leading-none">
-          <span className="font-serif text-xl font-bold tracking-tight text-[#0F172A] sm:text-2xl lg:text-[28px] dark:text-white">
+          <span className="text-foreground font-serif text-xl font-bold tracking-tight sm:text-2xl lg:text-[28px]">
             Daily
           </span>
           {/* Radiating 3 small spark rays above the 'y' */}
           <div className="absolute -right-3 -top-2 flex items-end gap-0.5" aria-hidden="true">
-            <span className="h-1.5 w-0.5 rotate-[20deg] rounded-full bg-[#EB6A1F]" />
-            <span className="h-2 w-0.5 rotate-[45deg] rounded-full bg-[#EB6A1F]" />
-            <span className="h-1.5 w-0.5 rotate-[70deg] rounded-full bg-[#EB6A1F]" />
+            <span className="bg-primary h-1.5 w-0.5 rotate-[20deg] rounded-full" />
+            <span className="bg-primary h-2 w-0.5 rotate-[45deg] rounded-full" />
+            <span className="bg-primary h-1.5 w-0.5 rotate-[70deg] rounded-full" />
           </div>
         </div>
-        <span className="-mt-0.5 font-serif text-xl font-bold leading-none tracking-tight text-[#0F172A] sm:text-2xl lg:text-[28px] dark:text-white">
+        <span className="text-foreground -mt-0.5 font-serif text-xl font-bold leading-none tracking-tight sm:text-2xl lg:text-[28px]">
           Voice
         </span>
       </div>
@@ -95,13 +95,13 @@ export const DEFAULT_PUBLICATIONS: SpotlightItem[] = [
     name: 'The Changemakers',
     renderMark: (
       <div className="flex select-none flex-col items-center justify-center text-center">
-        <span className="font-serif text-[10px] italic leading-none text-slate-500 sm:text-xs dark:text-slate-400">
+        <span className="text-muted-foreground font-serif text-[10px] italic leading-none sm:text-xs">
           The
         </span>
-        <span className="mt-0.5 font-serif text-sm font-bold leading-tight tracking-tight text-[#0F172A] sm:text-base lg:text-lg dark:text-white">
+        <span className="text-foreground mt-0.5 font-serif text-sm font-bold leading-tight tracking-tight sm:text-base lg:text-lg">
           Changemakers
         </span>
-        <div className="mx-auto mt-1 h-[1.5px] w-14 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+        <div className="bg-primary mx-auto mt-1 h-[1.5px] w-14 rounded-full" aria-hidden="true" />
       </div>
     ),
   },
@@ -147,7 +147,7 @@ export function SpotlightSection({
       key={key}
       tabIndex={isDuplicate ? -1 : undefined}
       aria-hidden={isDuplicate ? 'true' : undefined}
-      className="card-interactive dark:bg-slate-850 group/card flex h-24 w-52 shrink-0 select-none items-center justify-center rounded-2xl border border-slate-100/90 bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-all hover:border-[#EB6A1F]/35 hover:shadow-md sm:h-28 sm:w-60 md:w-64 lg:h-28 dark:border-slate-800 dark:hover:border-slate-700"
+      className="card-interactive group/card border-border/90 bg-surface hover:border-primary/35 flex h-24 w-52 shrink-0 select-none items-center justify-center rounded-2xl border p-3 shadow-sm transition-all hover:shadow-md sm:h-28 sm:w-60 md:w-64 lg:h-28"
     >
       <div className="transition-transform duration-300 group-hover/card:scale-105 motion-reduce:scale-100">
         {item.logoUrl ? (
@@ -160,9 +160,7 @@ export function SpotlightSection({
         ) : item.renderMark ? (
           item.renderMark
         ) : (
-          <span className="font-serif text-base font-bold text-[#0F172A] dark:text-white">
-            {item.name}
-          </span>
+          <span className="text-foreground font-serif text-base font-bold">{item.name}</span>
         )}
       </div>
     </div>
@@ -199,19 +197,19 @@ export function SpotlightSection({
 
       {/* Soft sky-blue ambient glow in top-left */}
       <div
-        className="pointer-events-none absolute -left-16 -top-16 h-80 w-80 rounded-full bg-gradient-to-br from-blue-100/40 via-sky-50/20 to-transparent blur-3xl dark:from-sky-950/20"
+        className="from-info-subtle/40 via-info-subtle/20 pointer-events-none absolute -left-16 -top-16 h-80 w-80 rounded-full bg-gradient-to-br to-transparent blur-3xl"
         aria-hidden="true"
       />
 
       {/* Soft peach ambient glow in bottom-left */}
       <div
-        className="pointer-events-none absolute -bottom-20 -left-16 h-80 w-80 rounded-full bg-gradient-to-tr from-[#FEDECA]/40 via-[#FFF1E6]/25 to-transparent blur-3xl dark:from-orange-950/15"
+        className="from-muted/40 via-muted/25 pointer-events-none absolute -bottom-20 -left-16 h-80 w-80 rounded-full bg-gradient-to-tr to-transparent blur-3xl"
         aria-hidden="true"
       />
 
       {/* Soft peach ambient glow in mid-right */}
       <div
-        className="pointer-events-none absolute -right-20 top-1/4 h-80 w-80 rounded-full bg-gradient-to-bl from-[#FEDECA]/35 via-[#FFF6ED]/20 to-transparent blur-3xl dark:from-orange-950/15"
+        className="from-muted/35 via-muted/20 pointer-events-none absolute -right-20 top-1/4 h-80 w-80 rounded-full bg-gradient-to-bl to-transparent blur-3xl"
         aria-hidden="true"
       />
 
@@ -222,21 +220,21 @@ export function SpotlightSection({
         <div className="relative text-center">
           {/* Eyebrow: 3 radiating orange sunburst rays */}
           <div className="mb-1 flex items-end justify-center gap-1.5" aria-hidden="true">
-            <span className="h-2.5 w-1 -rotate-[26deg] rounded-full bg-[#EB6A1F]" />
-            <span className="h-3.5 w-1 rounded-full bg-[#EB6A1F]" />
-            <span className="h-2.5 w-1 rotate-[26deg] rounded-full bg-[#EB6A1F]" />
+            <span className="bg-primary h-2.5 w-1 -rotate-[26deg] rounded-full" />
+            <span className="bg-primary h-3.5 w-1 rounded-full" />
+            <span className="bg-primary h-2.5 w-1 rotate-[26deg] rounded-full" />
           </div>
 
           {/* Heading */}
           <h2
             id="spotlight-title"
-            className="font-display text-2xl font-bold tracking-tight text-[#0F172A] sm:text-3xl lg:text-[34px] dark:text-slate-100"
+            className="font-display text-foreground text-2xl font-bold tracking-tight sm:text-3xl lg:text-[34px]"
           >
-            <span>In The</span> <span className="text-[#EB6A1F]">Spotlight</span>
+            <span>In The</span> <span className="text-primary">Spotlight</span>
           </h2>
 
           {/* Centered horizontal accent bar under "Spotlight" */}
-          <div className="mx-auto mt-1.5 h-1 w-10 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+          <div className="bg-primary mx-auto mt-1.5 h-1 w-10 rounded-full" aria-hidden="true" />
 
           {/* Supporting text */}
           <p className="text-muted-foreground mx-auto mt-2 max-w-xl font-sans text-xs sm:text-sm md:text-[15px]">
@@ -249,14 +247,14 @@ export function SpotlightSection({
             ───────────────────────────────────────────────────────────────── */}
         <div className="relative mx-auto mt-6 w-full max-w-5xl px-3 sm:mt-8 sm:px-6">
           {/* Large White Rounded Container */}
-          <div className="border-border bg-surface dark:border-border dark:bg-surface relative w-full overflow-hidden rounded-[24px] border p-2.5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:rounded-[28px] sm:p-3.5 md:p-4 lg:rounded-[32px]">
+          <div className="border-border bg-surface dark:border-border dark:bg-surface relative w-full overflow-hidden rounded-[24px] border p-2.5 shadow-elevated sm:rounded-[28px] sm:p-3.5 md:p-4 lg:rounded-[32px]">
             {/* Soft inner edge fades for seamless ingress/egress */}
             <div
-              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-white via-white/80 to-transparent sm:w-10 dark:from-slate-900 dark:via-slate-900/80"
+              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-white via-white/80 to-transparent sm:w-10"
               aria-hidden="true"
             />
             <div
-              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-white via-white/80 to-transparent sm:w-10 dark:from-slate-900 dark:via-slate-900/80"
+              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-white via-white/80 to-transparent sm:w-10"
               aria-hidden="true"
             />
 

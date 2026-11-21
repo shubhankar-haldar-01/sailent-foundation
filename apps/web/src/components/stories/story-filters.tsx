@@ -58,7 +58,7 @@ export function StoryFilters({
                 'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
                 active
                   ? 'bg-primary border-primary text-primary-foreground font-bold'
-                  : 'bg-surface border-accent-100 dark:border-border text-foreground hover:border-primary/50 hover:text-primary',
+                  : 'bg-surface border-border dark:border-border text-foreground hover:border-primary/50 hover:text-primary',
               )}
             >
               {pill.value ? (

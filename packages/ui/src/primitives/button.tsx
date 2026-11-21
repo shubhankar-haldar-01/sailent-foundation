@@ -9,8 +9,9 @@ import { Spinner } from './spinner';
 /**
  * Button.
  *
- * Variants map to the CTA hierarchy in docs/design-system.md §5:
- *   primary   — Donate Now, and one main action per view
+ * Colour roles (owner, 2026-11-21; `AGENTS.md` §11 item 12):
+ *   action    — orange: Donate, and the page's one primary conversion button
+ *   primary   — the brand green: the default, every other main action
  *   secondary — Become a Volunteer, secondary actions
  *   ghost     — tertiary, toolbars
  *   destructive — always confirmation-gated
@@ -23,6 +24,7 @@ const buttonVariants = cva(
   [
     'inline-flex items-center justify-center gap-2.5 whitespace-nowrap cursor-pointer',
     'font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none',
+    // One focus ring for every variant: the base layer's 2px brand outline.
     'focus-visible:outline-2 focus-visible:outline-offset-2',
     'disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none',
     '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4',
@@ -34,60 +36,65 @@ const buttonVariants = cva(
     variants: {
       variant: {
         /**
-         * PRIMARY: Orange background with pure white text.
-         * The flagship CTA for Donate Now and primary conversion actions.
-         * Background is the brand orange #EB6A1F with white text — 3.18:1, below
-         * WCAG AA, by owner decision (2026-10-14; `AGENTS.md` §11).
-         * Subtle, soft, warm-toned shadow; darker orange on hover; tactile active press.
+         * PRIMARY: the brand green with its label (white in light mode, near-black
+         * in dark). The default. Darker on hover; a press settles it.
          */
         primary:
-          'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-[0_2px_8px_rgba(235,106,31,0.22)] hover:shadow-[0_4px_14px_rgba(235,106,31,0.32)] active:shadow-xs active:translate-y-px motion-reduce:transform-none focus-visible:outline-primary',
+          'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-xs active:translate-y-px motion-reduce:transform-none',
 
         /**
-         * SECONDARY: White or transparent background with blue border and blue text.
-         * For secondary actions, alternative pathways, filtering.
-         * Uses approved info-action trust blue (oklch(0.515 0.155 250), 4.60:1 contrast).
+         * ACTION: the orange #EB6A1F with a white label, for Donate and the page's
+         * one primary conversion button only. White on it is 3.18:1, below WCAG
+         * AA for text, by owner decision (2026-10-23, kept 2026-11-21).
+         */
+        action:
+          'bg-action text-action-foreground hover:bg-action-hover active:bg-action-active shadow-xs active:translate-y-px motion-reduce:transform-none',
+
+        /**
+         * SECONDARY: surface background with a brand border and brand text.
+         * For secondary actions, alternative pathways, filtering. (`info-action`
+         * is the brand since 2026-11-21; Phase 3 renames it.)
          */
         secondary:
-          'border-2 border-info-action bg-surface text-info-action hover:bg-info-action/10 active:bg-info-action/20 active:translate-y-px motion-reduce:transform-none shadow-xs focus-visible:outline-info-action',
+          'border-2 border-info-action bg-surface text-info-action hover:bg-info-action/10 active:bg-info-action/20 active:translate-y-px motion-reduce:transform-none shadow-xs',
 
         /**
          * TERTIARY / GHOST: Transparent background with navy or blue text; no unnecessary shadow.
          * For quiet actions, toolbars, icon triggers.
          */
         ghost:
-          'bg-transparent text-foreground hover:bg-muted active:bg-muted/80 active:translate-y-px motion-reduce:transform-none focus-visible:outline-ring',
+          'bg-transparent text-foreground hover:bg-muted active:bg-muted/80 active:translate-y-px motion-reduce:transform-none',
         tertiary:
-          'bg-transparent text-foreground hover:bg-muted active:bg-muted/80 active:translate-y-px motion-reduce:transform-none focus-visible:outline-ring',
+          'bg-transparent text-foreground hover:bg-muted active:bg-muted/80 active:translate-y-px motion-reduce:transform-none',
 
         /**
-         * DARK: Deep navy background (#102A43) with white text.
-         * Selected contexts only. Contrast 14.4:1 with white.
+         * DARK: near-black neutral background with white text.
+         * Selected contexts only.
          */
-        dark: 'bg-accent-950 text-white hover:bg-accent-900 active:bg-accent-850 active:translate-y-px motion-reduce:transform-none shadow-sm focus-visible:outline-accent-950 dark:bg-accent-900 dark:hover:bg-accent-850',
+        dark: 'bg-surface-inverse text-surface-inverse-foreground hover:bg-surface-inverse/90 active:bg-surface-inverse/80 active:translate-y-px motion-reduce:transform-none shadow-sm',
 
         /**
          * DESTRUCTIVE: Semantic destructive token with white text.
          * Never brand orange by default. Confirmation-gated actions.
          */
         destructive:
-          'bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/95 active:translate-y-px motion-reduce:transform-none shadow-sm focus-visible:outline-destructive',
+          'bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/95 active:translate-y-px motion-reduce:transform-none shadow-sm',
 
         /**
          * INFO: Existing trust-blue button (learn more, explore, read).
          */
-        info: 'bg-info-action text-info-action-foreground hover:bg-info-action-hover active:bg-accent-800 active:translate-y-px motion-reduce:transform-none shadow-sm focus-visible:outline-info-action',
+        info: 'bg-info-action text-info-action-foreground hover:bg-info-action-hover active:bg-primary-active active:translate-y-px motion-reduce:transform-none shadow-sm',
 
         /**
          * LINK: Inline text navigation.
          */
-        link: 'bg-transparent text-info-action underline underline-offset-4 hover:no-underline focus-visible:outline-info-action',
+        link: 'bg-transparent text-info-action underline underline-offset-4 hover:no-underline',
 
         /**
          * SUBTLE: Quiet neutral button.
          */
         subtle:
-          'bg-secondary text-secondary-foreground hover:bg-muted active:translate-y-px motion-reduce:transform-none shadow-xs focus-visible:outline-ring',
+          'bg-secondary text-secondary-foreground hover:bg-muted active:translate-y-px motion-reduce:transform-none shadow-xs',
       },
       size: {
         /**

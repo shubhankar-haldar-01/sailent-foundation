@@ -15,7 +15,7 @@ export function DashboardHero({ firstName }: { firstName: string | null }) {
         aria-hidden="true"
         viewBox="0 0 860 240"
         preserveAspectRatio="none"
-        className="fill-(--cta-100)/55 dark:fill-cta-glow/10 pointer-events-none absolute inset-0 size-full"
+        className="fill-(--brand-100)/55 dark:fill-primary/10 pointer-events-none absolute inset-0 size-full"
       >
         <path d="M520 0 C 600 40, 640 120, 760 150 C 820 165, 850 200, 860 240 L 860 0 Z" />
         <path d="M0 240 C 40 190, 120 180, 200 210 C 240 225, 270 240, 300 240 Z" />
@@ -24,7 +24,7 @@ export function DashboardHero({ firstName }: { firstName: string | null }) {
         aria-hidden="true"
         viewBox="0 0 860 240"
         preserveAspectRatio="none"
-        className="fill-(--cta-100)/35 dark:fill-cta-glow/5 pointer-events-none absolute inset-0 size-full"
+        className="fill-(--brand-100)/35 dark:fill-primary/5 pointer-events-none absolute inset-0 size-full"
       >
         <path d="M380 0 C 470 20, 500 90, 560 130 C 620 170, 700 180, 760 240 L 300 240 C 330 150, 340 60, 380 0 Z" />
       </svg>

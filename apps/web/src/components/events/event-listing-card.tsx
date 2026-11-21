@@ -65,7 +65,7 @@ export function EventListingCard({
         >
           <span
             data-numeric=""
-            className="font-display text-cta-bright text-[1.375rem] font-extrabold tabular-nums leading-none"
+            className="font-display text-primary text-[1.375rem] font-extrabold tabular-nums leading-none"
           >
             {badge.day}
           </span>
@@ -81,11 +81,11 @@ export function EventListingCard({
         </p>
 
         {event.isPaid && event.feeAmount ? (
-          <span className="bg-surface/95 backdrop-blur-xs absolute right-2.5 top-2.5 inline-flex items-center rounded-full px-2.5 py-1 text-[0.6875rem] font-bold text-emerald-800 shadow-md ring-1 ring-emerald-600/20">
+          <span className="bg-surface/95 backdrop-blur-xs text-success ring-success/20 absolute right-2.5 top-2.5 inline-flex items-center rounded-full px-2.5 py-1 text-[0.6875rem] font-bold shadow-md ring-1">
             ₹{Math.round(event.feeAmount / 100)}
           </span>
         ) : (
-          <span className="bg-surface/95 backdrop-blur-xs absolute right-2.5 top-2.5 inline-flex items-center rounded-full px-2.5 py-1 text-[0.6875rem] font-bold text-slate-700 shadow-md ring-1 ring-slate-900/10">
+          <span className="bg-surface/95 backdrop-blur-xs text-foreground ring-input/10 absolute right-2.5 top-2.5 inline-flex items-center rounded-full px-2.5 py-1 text-[0.6875rem] font-bold shadow-md ring-1">
             Free
           </span>
         )}

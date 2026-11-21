@@ -13,32 +13,32 @@ const IMPACT_PROGRAMS = [
   {
     icon: GraduationCap,
     text: 'Provide access to quality education',
-    discClass: 'bg-[#DDEEFB] text-[#0070BA] dark:bg-sky-950/70 dark:text-sky-300',
+    discClass: 'bg-accent text-info',
   },
   {
     icon: Heart,
     text: 'Support healthcare and nutrition',
-    discClass: 'bg-[#FEEAE0] text-primary dark:bg-orange-950/70 dark:text-orange-300',
+    discClass: 'bg-accent text-primary',
   },
   {
     icon: Sprout,
     text: 'Respond to natural disasters',
-    discClass: 'bg-[#E0F5E9] text-[#16A34A] dark:bg-emerald-950/70 dark:text-emerald-300',
+    discClass: 'bg-accent text-success',
   },
   {
     icon: Users,
     text: 'Empower women and youth',
-    discClass: 'bg-[#EFE4FD] text-[#8B5CF6] dark:bg-purple-950/70 dark:text-purple-300',
+    discClass: 'bg-accent text-primary',
   },
   {
     icon: Cog,
     text: 'Promote sustainable livelihoods',
-    discClass: 'bg-[#FEF5D9] text-[#D97706] dark:bg-amber-950/70 dark:text-amber-300',
+    discClass: 'bg-accent text-warning-foreground',
   },
   {
     icon: PawPrint,
     text: 'Care for animals and the environment',
-    discClass: 'bg-[#FDE7E7] text-[#E11D48] dark:bg-rose-950/70 dark:text-rose-300',
+    discClass: 'bg-accent text-primary',
   },
 ];
 
@@ -60,7 +60,7 @@ export function WhoWeAre() {
     >
       <PageShell>
         {/* Main White Rounded Card Container */}
-        <div className="border-border bg-surface dark:border-border dark:bg-surface relative mx-auto w-full rounded-[28px] border p-6 shadow-[0_12px_44px_rgba(0,0,0,0.06)] sm:rounded-[36px] sm:p-8 md:p-10 lg:p-12 dark:shadow-[0_12px_44px_rgba(0,0,0,0.4)]">
+        <div className="border-border bg-surface dark:border-border dark:bg-surface relative mx-auto w-full rounded-[28px] border p-6 shadow-elevated sm:rounded-[36px] sm:p-8 md:p-10 lg:p-12">
           <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr_1.1fr] lg:items-center lg:gap-8 xl:gap-10">
             {/* ─────────────────────────────────────────────────────────────
                 LEFT COLUMN: Who We Are
@@ -71,19 +71,19 @@ export function WhoWeAre() {
                 <span className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
                   ABOUT US
                 </span>
-                <span className="h-[2px] w-8 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+                <span className="bg-primary h-[2px] w-8 rounded-full" aria-hidden="true" />
               </div>
 
               {/* Heading */}
               <h2
                 id="who-we-are-title"
-                className="font-display text-3xl font-extrabold tracking-tight text-[#0F172A] sm:text-4xl lg:text-[38px] xl:text-[42px] dark:text-white"
+                className="font-display text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[38px] xl:text-[42px]"
               >
                 Who We <span className="text-primary">Are</span>
               </h2>
 
               {/* Description */}
-              <p className="mt-4 text-sm font-normal leading-relaxed text-slate-700 sm:text-[15px] lg:text-base dark:text-slate-200">
+              <p className="text-foreground mt-4 text-sm font-normal leading-relaxed sm:text-[15px] lg:text-base">
                 Sailent Foundation is a non-profit organization working towards a kinder, fairer and
                 more inclusive society. We collaborate with communities, volunteers and partners to
                 create sustainable change in education, healthcare, food, disaster relief,
@@ -93,7 +93,7 @@ export function WhoWeAre() {
               {/* Blue Pill Action Button */}
               <Link
                 href="/about"
-                className="mt-7 inline-flex items-center gap-2.5 rounded-full bg-[#0070BA] px-7 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:bg-[#005a96] hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0070BA] sm:text-base"
+                className="bg-primary text-primary-foreground hover:bg-primary-hover mt-7 inline-flex items-center gap-2.5 rounded-full px-7 py-3.5 text-sm font-bold shadow-md transition-all duration-200 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 sm:text-base"
               >
                 <span>Learn More About Us</span>
                 <ArrowRight className="size-4" aria-hidden="true" />
@@ -109,13 +109,13 @@ export function WhoWeAre() {
                 className="absolute -right-2 -top-4 z-10 flex items-end gap-1.5 sm:-right-3 sm:-top-5"
                 aria-hidden="true"
               >
-                <span className="h-3.5 w-1.5 -rotate-[30deg] rounded-full bg-[#EB6A1F]" />
-                <span className="h-5 w-1.5 rounded-full bg-[#EB6A1F]" />
-                <span className="h-3.5 w-1.5 rotate-[30deg] rounded-full bg-[#EB6A1F]" />
+                <span className="bg-primary h-3.5 w-1.5 -rotate-[30deg] rounded-full" />
+                <span className="bg-primary h-5 w-1.5 rounded-full" />
+                <span className="bg-primary h-3.5 w-1.5 rotate-[30deg] rounded-full" />
               </div>
 
               {/* Clean Framed Photograph */}
-              <div className="overflow-hidden rounded-2xl border border-slate-100 shadow-[0_8px_28px_rgba(0,0,0,0.07)] sm:rounded-[26px] dark:border-slate-800">
+              <div className="border-border overflow-hidden rounded-2xl border shadow-elevated sm:rounded-[26px]">
                 <MediaFrame
                   media={localMedia(
                     'community-classroom',
@@ -137,16 +137,16 @@ export function WhoWeAre() {
                 <span className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
                   OUR IMPACT
                 </span>
-                <span className="h-[2px] w-8 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+                <span className="bg-primary h-[2px] w-8 rounded-full" aria-hidden="true" />
               </div>
 
               {/* Heading */}
-              <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#0F172A] sm:text-4xl lg:text-[38px] xl:text-[42px] dark:text-white">
+              <h2 className="font-display text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[38px] xl:text-[42px]">
                 What We <span className="text-primary">Do</span>
               </h2>
 
               {/* Description */}
-              <p className="mt-4 text-sm font-normal leading-relaxed text-slate-700 sm:text-[15px] lg:text-base dark:text-slate-200">
+              <p className="text-foreground mt-4 text-sm font-normal leading-relaxed sm:text-[15px] lg:text-base">
                 We design and implement impactful programs that address real needs on the ground.
               </p>
 
@@ -166,7 +166,7 @@ export function WhoWeAre() {
                         aria-hidden="true"
                       />
                     </span>
-                    <span className="text-sm font-semibold text-slate-800 sm:text-[15px] dark:text-slate-100">
+                    <span className="text-foreground text-sm font-semibold sm:text-[15px]">
                       {item.text}
                     </span>
                   </li>
@@ -177,7 +177,7 @@ export function WhoWeAre() {
               <div className="mt-6">
                 <Link
                   href="/programs"
-                  className="group inline-flex items-center gap-2 text-sm font-bold text-[#0070BA] transition-colors hover:text-[#005a96] hover:underline sm:text-[15px]"
+                  className="text-primary hover:text-primary-hover group inline-flex items-center gap-2 text-sm font-bold transition-colors hover:underline sm:text-[15px]"
                 >
                   <span>Explore Our Programs</span>
                   <ArrowRight

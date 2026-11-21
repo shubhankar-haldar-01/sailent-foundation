@@ -547,6 +547,7 @@ export function DonationCheckout({
           <Button
             type="submit"
             size="lg"
+            variant="action"
             fullWidth
             isLoading={busy}
             loadingText={busyLabel}

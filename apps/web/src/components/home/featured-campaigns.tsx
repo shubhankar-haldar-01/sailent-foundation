@@ -112,18 +112,18 @@ export function FeaturedCampaigns({
         */}
         <div className="mx-auto mb-6 flex max-w-5xl flex-col items-center text-center sm:mb-8 md:mb-10">
           <div className="mb-2 flex items-center justify-center gap-2">
-            <span className="h-0.5 w-6 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+            <span className="bg-primary h-0.5 w-6 rounded-full" aria-hidden="true" />
             <p className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
               Featured Campaigns
             </p>
-            <span className="h-0.5 w-6 rounded-full bg-[#EB6A1F]" aria-hidden="true" />
+            <span className="bg-primary h-0.5 w-6 rounded-full" aria-hidden="true" />
           </div>
 
           <h2
             id="campaigns-title"
             className="font-display mt-1 text-2xl font-black leading-[1.2] tracking-tight sm:text-3xl md:text-[2.25rem]"
           >
-            <span className="text-[#36335C] dark:text-indigo-200">Make a Real Difference</span>
+            <span className="text-foreground">Make a Real Difference</span>
           </h2>
         </div>
 
@@ -228,7 +228,7 @@ export function FeaturedCampaigns({
             <Link
               href={viewAllHref}
               className={cn(
-                'bg-wash-mint text-wash-mint-ink-strong group inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-bold shadow-[0_12px_28px_-6px_rgba(34,197,94,0.32)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-5px_rgba(34,197,94,0.42)] hover:brightness-95 sm:text-base',
+                'bg-wash-mint text-wash-mint-ink-strong group inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-bold shadow-elevated transition-all hover:-translate-y-0.5 hover:shadow-card-hover hover:brightness-95 sm:text-base',
                 'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
               )}
             >

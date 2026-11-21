@@ -22,30 +22,30 @@ export const dynamic = 'force-dynamic';
 function getCategoryBadgeStyle(category: string | null | undefined): string {
   const cat = (category ?? '').toLowerCase();
   if (cat.includes('educat') || cat.includes('school')) {
-    return 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300';
+    return 'bg-info-subtle text-info';
   }
   if (cat.includes('disaster') || cat.includes('relief') || cat.includes('emergency')) {
-    return 'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-300';
+    return 'bg-accent text-primary';
   }
   if (cat.includes('health') || cat.includes('medical') || cat.includes('clinic')) {
-    return 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300';
+    return 'bg-success-subtle text-success';
   }
   if (cat.includes('livelihood') || cat.includes('women') || cat.includes('tailor')) {
-    return 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300';
+    return 'bg-warning-subtle text-warning-foreground';
   }
   if (cat.includes('skill') || cat.includes('training') || cat.includes('youth')) {
-    return 'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-300';
+    return 'bg-accent text-primary';
   }
   if (cat.includes('child') || cat.includes('nutrition') || cat.includes('welfare')) {
-    return 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-300';
+    return 'bg-destructive-subtle text-destructive';
   }
   if (cat.includes('water') || cat.includes('sanitat')) {
-    return 'bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-300';
+    return 'bg-info-subtle text-info';
   }
   if (cat.includes('environment') || cat.includes('forest') || cat.includes('green')) {
-    return 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300';
+    return 'bg-success-subtle text-success';
   }
-  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+  return 'bg-muted text-foreground';
 }
 
 export default async function DonationDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -109,7 +109,7 @@ export default async function DonationDetailPage({ params }: { params: Promise<{
 
         {/* Notice for failed payments */}
         {donation.status === 'failed' ? (
-          <div className="bg-destructive/10 border-destructive/20 mt-4 rounded-xl border p-3.5 text-xs text-rose-700 dark:text-rose-300">
+          <div className="bg-destructive/10 border-destructive/20 text-destructive mt-4 rounded-xl border p-3.5 text-xs">
             This payment was not completed, so nothing was charged. If your bank shows an amount
             held, they release it automatically within a few working days.
           </div>
@@ -125,7 +125,7 @@ export default async function DonationDetailPage({ params }: { params: Promise<{
           {/* Row 1: Donation reference */}
           <div className="flex items-center justify-between gap-4 py-3.5">
             <div className="flex items-center gap-3">
-              <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+              <div className="size-9.5 bg-info-subtle text-info flex shrink-0 items-center justify-center rounded-full">
                 <FileText className="size-4.5 stroke-[2]" aria-hidden="true" />
               </div>
               <span className="text-body-sm text-foreground/80 font-medium">
@@ -143,7 +143,7 @@ export default async function DonationDetailPage({ params }: { params: Promise<{
           {/* Row 2: Donation date */}
           <div className="flex items-center justify-between gap-4 py-3.5">
             <div className="flex items-center gap-3">
-              <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-orange-50 text-orange-600 dark:bg-orange-950/40 dark:text-orange-400">
+              <div className="size-9.5 bg-accent text-primary flex shrink-0 items-center justify-center rounded-full">
                 <Calendar className="size-4.5 stroke-[2]" aria-hidden="true" />
               </div>
               <span className="text-body-sm text-foreground/80 font-medium">Donation date</span>
@@ -156,7 +156,7 @@ export default async function DonationDetailPage({ params }: { params: Promise<{
           {/* Row 3: Payment confirmed */}
           <div className="flex items-center justify-between gap-4 py-3.5">
             <div className="flex items-center gap-3">
-              <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+              <div className="size-9.5 bg-success-subtle text-success flex shrink-0 items-center justify-center rounded-full">
                 <CheckCircle2 className="size-4.5 stroke-[2]" aria-hidden="true" />
               </div>
               <span className="text-body-sm text-foreground/80 font-medium">Payment confirmed</span>
@@ -170,7 +170,7 @@ export default async function DonationDetailPage({ params }: { params: Promise<{
           {donation.payment?.method ? (
             <div className="flex items-center justify-between gap-4 py-3.5">
               <div className="flex items-center gap-3">
-                <div className="size-9.5 flex shrink-0 items-center justify-center rounded-full bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400">
+                <div className="size-9.5 bg-accent text-primary flex shrink-0 items-center justify-center rounded-full">
                   <Heart className="size-4.5 stroke-[2]" aria-hidden="true" />
                 </div>
                 <span className="text-body-sm text-foreground/80 font-medium">Paid by</span>

@@ -36,7 +36,7 @@ export function ViewMoreLink({
       <Link
         href={href}
         scroll={direction !== 'down'}
-        className="bg-wash-mint text-wash-mint-ink-strong focus-visible:outline-ring duration-(--duration-base) ease-(--ease-out-soft) group/more inline-flex shrink-0 items-center gap-2 rounded-full px-7 py-3 text-sm font-bold shadow-[0_12px_28px_-6px_rgba(34,197,94,0.32)] transition-[translate,scale,box-shadow,filter] hover:shadow-[0_14px_30px_-5px_rgba(34,197,94,0.42)] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-[0.98] sm:text-base"
+        className="bg-wash-mint text-wash-mint-ink-strong focus-visible:outline-ring duration-(--duration-base) ease-(--ease-out-soft) group/more inline-flex shrink-0 items-center gap-2 rounded-full px-7 py-3 text-sm font-bold shadow-elevated transition-[translate,scale,box-shadow,filter] hover:shadow-card-hover hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-[0.98] sm:text-base"
       >
         {label}
         {/*

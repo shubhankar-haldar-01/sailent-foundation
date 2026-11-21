@@ -1,0 +1,67 @@
+# Hard-coded colours BEFORE visual polish Phase 2 (2026-11-21)
+# Source: apps/web/src and packages/ui/src (.ts/.tsx/.css), excluding tokens.css, tests and the /dev/design preview.
+hex:     606 in 60 files
+rgb():   52
+oklch(): 41
+palette: 1327  (Tailwind's raw palette, e.g. text-slate-600)
+--- by file (hex):
+60 apps/web/src/components/events/download-pass.ts
+57 apps/web/src/app/(public)/about/page.tsx
+35 apps/web/src/components/admin/identity-card-dialog.tsx
+31 apps/web/src/app/(public)/stories/[slug]/page.tsx
+24 apps/web/src/components/layout/mobile-footer.tsx
+24 apps/web/src/components/home/newsletter-section.tsx
+22 apps/web/src/components/home/spotlight-section.tsx
+19 apps/web/src/components/layout/site-footer.tsx
+19 apps/web/src/components/events/event-entry-pass.tsx
+18 apps/web/src/components/events/event-registration-flow.tsx
+17 apps/web/src/components/admin/gate-kiosk-view.tsx
+15 apps/web/src/components/home/who-we-are.tsx
+14 apps/web/src/components/events/event-summary-card.tsx
+11 apps/web/src/components/donations/payment-logos.tsx
+10 apps/web/src/components/home/impact-stats.tsx
+9 apps/web/src/components/events/event-registration-hero.tsx
+9 apps/web/src/components/blog/blog-sidebar.tsx
+8 apps/web/src/components/programs/program-about-section.tsx
+8 apps/web/src/components/home/stories-and-events.tsx
+6 apps/web/src/components/programs/program-detail-hero.tsx
+6 apps/web/src/components/admin/event-check-in-scanner.tsx
+6 apps/web/src/app/global-error.tsx
+6 apps/web/src/app/admin/gate/page.tsx
+5 apps/web/src/components/events/more-events-strip.tsx
+4 apps/web/src/components/team/team-directory.tsx
+4 apps/web/src/components/dashboard/status-pill.tsx
+4 apps/web/src/components/blog/post-card.tsx
+4 apps/web/src/components/about/india-presence-map.tsx
+3 apps/web/src/components/programs/program-campaigns-section.tsx
+3 apps/web/src/components/home/featured-campaigns.tsx
+3 apps/web/src/components/home/campaign-showcase.tsx
+3 apps/web/src/app/(dashboard)/dashboard/saved/page.tsx
+2 packages/ui/src/primitives/button.tsx
+2 apps/web/src/styles/globals.css
+2 apps/web/src/components/dashboard/dashboard-mobile-nav.tsx
+2 apps/web/src/components/campaigns/campaigns-hero.tsx
+2 apps/web/src/app/(public)/blog/page.tsx
+1 packages/ui/src/primitives/select.tsx
+1 packages/ui/src/primitives/input.tsx
+1 packages/ui/src/ngo/campaign-card.tsx
+1 packages/ui/src/lib/format.ts
+1 apps/web/src/lib/payments/razorpay-checkout.ts
+1 apps/web/src/components/team/team-hero.tsx
+1 apps/web/src/components/team/member-card.tsx
+1 apps/web/src/components/team/leadership-card.tsx
+1 apps/web/src/components/stories/story-card.tsx
+1 apps/web/src/components/stories/stories-hero.tsx
+1 apps/web/src/components/sections/breadcrumbs.tsx
+1 apps/web/src/components/programs/programs-hero.tsx
+1 apps/web/src/components/events/events-hero.tsx
+1 apps/web/src/components/dashboard/supported-campaigns.tsx
+1 apps/web/src/components/dashboard/side-cards.tsx
+1 apps/web/src/components/dashboard/receipt-card.tsx
+1 apps/web/src/components/campaigns/cause-filters.tsx
+1 apps/web/src/components/blog/blog-hero.tsx
+1 apps/web/src/components/about/about-hero.tsx
+1 apps/web/src/app/(public)/team/page.tsx
+1 apps/web/src/app/(public)/events/[slug]/register/page.tsx
+1 apps/web/src/app/(public)/events/[slug]/page.tsx
+1 apps/web/src/app/(dashboard)/dashboard/donations/page.tsx

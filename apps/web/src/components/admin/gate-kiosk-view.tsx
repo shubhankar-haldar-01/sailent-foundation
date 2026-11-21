@@ -508,31 +508,31 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
   });
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F8FAFC] font-sans text-slate-900 selection:bg-orange-500 selection:text-white">
+    <div className="flex min-h-screen flex-col bg-background font-sans text-foreground selection:bg-primary selection:text-white">
       {/* 1. Kiosk Top Bar */}
-      <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/90 bg-white/95 px-4 backdrop-blur-md sm:px-6">
+      <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-border/90 bg-surface/95 px-4 backdrop-blur-md sm:px-6">
         <div className="flex items-center gap-3">
           <Link
             href={`/admin/events/${event.id}/registrations`}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <ArrowLeft className="size-3.5" />
             <span className="hidden sm:inline">Exit Desk</span>
           </Link>
 
-          <div className="h-5 w-px bg-slate-200" />
+          <div className="h-5 w-px bg-border" />
 
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-black tracking-tight text-slate-900 sm:text-base">
+              <h1 className="text-sm font-black tracking-tight text-foreground sm:text-base">
                 {event.title}
               </h1>
-              <span className="text-2xs hidden items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700 sm:flex">
-                <span className="size-1.5 rounded-full bg-emerald-500" />
+              <span className="text-2xs hidden items-center gap-1 rounded-full border border-success/30 bg-success-subtle px-2 py-0.5 font-bold text-success sm:flex">
+                <span className="size-1.5 rounded-full bg-success" />
                 GATE DESK
               </span>
             </div>
-            <p className="text-2xs font-medium text-slate-500">
+            <p className="text-2xs font-medium text-muted-foreground">
               {formatDate(event.startDate)} {event.venueName ? `• ${event.venueName}` : ''}
             </p>
           </div>
@@ -541,15 +541,15 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
         {/* Live Gauges & Controls */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Quick Check-in Stats Pill */}
-          <div className="hidden items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 md:flex">
-            <UserCheck className="size-4 text-emerald-600" />
+          <div className="hidden items-center gap-2.5 rounded-xl border border-border bg-background px-3 py-1.5 md:flex">
+            <UserCheck className="size-4 text-success" />
             <div className="flex flex-col">
-              <span className="text-2xs font-bold text-slate-600">
+              <span className="text-2xs font-bold text-muted-foreground">
                 {attendedCount} / {totalCount} Admitted
               </span>
-              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-200">
+              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-border">
                 <div
-                  className="h-full rounded-full bg-emerald-500"
+                  className="h-full rounded-full bg-success"
                   style={{
                     width: `${Math.min(100, Math.max(percentAdmitted, totalCount > 0 ? 4 : 0))}%`,
                   }}
@@ -564,12 +564,12 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
             onClick={() => setAutoAdmit(!autoAdmit)}
             className={`shadow-2xs flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
               autoAdmit
-                ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300'
-                : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                ? 'bg-warning text-foreground ring-2 ring-warning/30'
+                : 'border border-border bg-background text-foreground hover:bg-muted'
             }`}
             title="Auto-Admit instantly admits the attendee upon scanning without extra tap"
           >
-            <Zap className={`size-3.5 ${autoAdmit ? 'fill-current' : 'text-slate-500'}`} />
+            <Zap className={`size-3.5 ${autoAdmit ? 'fill-current' : 'text-muted-foreground'}`} />
             <span className="hidden sm:inline">Auto-Admit:</span> {autoAdmit ? 'ON' : 'OFF'}
           </button>
 
@@ -579,8 +579,8 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
             onClick={() => setSoundEnabled(!soundEnabled)}
             className={`flex size-9 items-center justify-center rounded-xl border transition-colors ${
               soundEnabled
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                : 'border-slate-200 bg-slate-50 text-slate-400'
+                ? 'border-success/30 bg-success-subtle text-success'
+                : 'border-border bg-background text-muted-foreground'
             }`}
             title={soundEnabled ? 'Mute Chime Sound' : 'Enable Chime Sound'}
           >
@@ -591,7 +591,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="hidden size-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 sm:flex"
+            className="hidden size-9 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground hover:bg-muted sm:flex"
             title="Toggle Fullscreen"
           >
             {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
@@ -600,15 +600,15 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
       </header>
 
       {/* 2. Mode Navigation Tabs (BookMyShow / Eventbrite standard) */}
-      <div className="border-b border-slate-200/90 bg-white px-4 sm:px-6">
+      <div className="border-b border-border/90 bg-surface px-4 sm:px-6">
         <div className="mx-auto flex max-w-4xl items-center justify-start gap-2 pt-2">
           <button
             type="button"
             onClick={() => setActiveTab('scan')}
             className={`flex items-center gap-2 border-b-2 px-4 py-3 text-xs font-bold transition-all sm:text-sm ${
               activeTab === 'scan'
-                ? 'border-[#EB6A1F] text-[#EB6A1F]'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             <Camera className="size-4" />
@@ -620,8 +620,8 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
             onClick={() => setActiveTab('guests')}
             className={`flex items-center gap-2 border-b-2 px-4 py-3 text-xs font-bold transition-all sm:text-sm ${
               activeTab === 'guests'
-                ? 'border-[#EB6A1F] text-[#EB6A1F]'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             <ListFilter className="size-4" />
@@ -633,8 +633,8 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
             onClick={() => setActiveTab('history')}
             className={`flex items-center gap-2 border-b-2 px-4 py-3 text-xs font-bold transition-all sm:text-sm ${
               activeTab === 'history'
-                ? 'border-[#EB6A1F] text-[#EB6A1F]'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             <History className="size-4" />
@@ -651,13 +651,13 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
         {activeTab === 'scan' && (
           <div className="mx-auto w-full max-w-lg space-y-5">
             {/* Camera Viewport Card */}
-            <div className="relative overflow-hidden rounded-3xl border-2 border-slate-800 bg-slate-950 shadow-xl">
+            <div className="relative overflow-hidden rounded-3xl border-2 border-input bg-surface-inverse shadow-xl">
               {/* Camera Action Overlays */}
               <div className="absolute right-3.5 top-3.5 z-20 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={toggleCameraFacing}
-                  className="flex size-9 items-center justify-center rounded-full bg-slate-900/90 text-white shadow-md backdrop-blur-md transition-colors hover:bg-slate-800"
+                  className="flex size-9 items-center justify-center rounded-full bg-surface-inverse/90 text-white shadow-md backdrop-blur-md transition-colors hover:bg-surface-inverse"
                   title="Flip Camera (Front/Back)"
                 >
                   <FlipHorizontal className="size-4" />
@@ -667,7 +667,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                   <button
                     type="button"
                     onClick={stopCamera}
-                    className="flex items-center gap-1.5 rounded-full bg-rose-600/90 px-3 py-1.5 text-xs font-bold text-white shadow-md backdrop-blur-md hover:bg-rose-700"
+                    className="flex items-center gap-1.5 rounded-full bg-destructive/90 px-3 py-1.5 text-xs font-bold text-white shadow-md backdrop-blur-md hover:bg-destructive"
                   >
                     <CameraOff className="size-3.5" />
                     Pause
@@ -676,7 +676,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                   <button
                     type="button"
                     onClick={() => startCamera()}
-                    className="flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-md hover:bg-emerald-500"
+                    className="flex items-center gap-1.5 rounded-full bg-success px-3 py-1.5 text-xs font-bold text-success-foreground shadow-md hover:bg-success"
                   >
                     <Camera className="size-3.5" />
                     Resume
@@ -692,12 +692,12 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                 />
 
                 {!scannerActive && !cameraStarting && (
-                  <div className="flex flex-col items-center justify-center p-6 text-center text-slate-300">
-                    <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-slate-800 text-slate-400">
+                  <div className="flex flex-col items-center justify-center p-6 text-center text-surface-inverse-muted">
+                    <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-white/10 text-surface-inverse-muted">
                       <Camera className="size-7" />
                     </div>
                     <p className="text-base font-bold text-white">Camera Scanner Ready</p>
-                    <p className="mt-1 max-w-xs text-xs text-slate-400">
+                    <p className="mt-1 max-w-xs text-xs text-surface-inverse-muted">
                       {cameraError ??
                         'Tap below to activate camera, or type pass details in the box underneath.'}
                     </p>
@@ -718,7 +718,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                         variant="secondary"
                         size="sm"
                         onClick={() => setActiveTab('guests')}
-                        className="font-semibold text-slate-800"
+                        className="font-semibold text-foreground"
                       >
                         <ListFilter className="mr-1.5 size-4" />
                         Open Guest List
@@ -732,15 +732,15 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                     {/* High-tech Laser Reticle */}
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                       <div className="relative size-60 sm:size-64">
-                        <div className="absolute left-0 top-0 size-8 rounded-tl-xl border-l-4 border-t-4 border-[#EB6A1F]" />
-                        <div className="absolute right-0 top-0 size-8 rounded-tr-xl border-r-4 border-t-4 border-[#EB6A1F]" />
-                        <div className="absolute bottom-0 left-0 size-8 rounded-bl-xl border-b-4 border-l-4 border-[#EB6A1F]" />
-                        <div className="absolute bottom-0 right-0 size-8 rounded-br-xl border-b-4 border-r-4 border-[#EB6A1F]" />
-                        <div className="absolute inset-x-2 top-0 h-1 animate-pulse rounded-full bg-gradient-to-r from-transparent via-[#EB6A1F] to-transparent shadow-[0_0_12px_#EB6A1F]" />
+                        <div className="absolute left-0 top-0 size-8 rounded-tl-xl border-l-4 border-t-4 border-primary" />
+                        <div className="absolute right-0 top-0 size-8 rounded-tr-xl border-r-4 border-t-4 border-primary" />
+                        <div className="absolute bottom-0 left-0 size-8 rounded-bl-xl border-b-4 border-l-4 border-primary" />
+                        <div className="absolute bottom-0 right-0 size-8 rounded-br-xl border-b-4 border-r-4 border-primary" />
+                        <div className="absolute inset-x-2 top-0 h-1 animate-pulse rounded-full bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_12px_var(--color-primary)]" />
                       </div>
                     </div>
 
-                    <div className="pointer-events-none absolute bottom-4 z-10 rounded-full border border-slate-700/60 bg-black/80 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur-md">
+                    <div className="pointer-events-none absolute bottom-4 z-10 rounded-full border border-input/60 bg-black/80 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur-md">
                       Fit Pass QR in center
                     </div>
                   </>
@@ -756,13 +756,13 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
                   placeholder="Pass ID (SF-EVT-...), Name, or Phone..."
-                  className="shadow-xs focus:outline-hidden h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 pr-10 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#EB6A1F] focus:ring-2 focus:ring-[#EB6A1F]/20"
+                  className="shadow-xs focus:outline-hidden h-12 w-full rounded-2xl border border-border-strong bg-surface px-4 pr-10 text-sm font-medium text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 {manualCode && (
                   <button
                     type="button"
                     onClick={() => setManualCode('')}
-                    className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-700"
+                    className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground"
                   >
                     <XCircle className="size-5" />
                   </button>
@@ -783,65 +783,65 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
               <div
                 className={`rounded-3xl border-2 p-5 shadow-lg transition-all ${
                   verification.status === 'valid' || admittedHere
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-950'
+                    ? 'border-success bg-success-subtle text-success'
                     : verification.status === 'already_attended' ||
                         verification.status === 'multiple_matches'
-                      ? 'border-amber-400 bg-amber-50 text-amber-950'
-                      : 'border-rose-400 bg-rose-50 text-rose-950'
+                      ? 'border-warning bg-warning-subtle text-warning-foreground'
+                      : 'border-destructive bg-destructive-subtle text-destructive'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     {verification.status === 'valid' && verification.matchedBy === 'pass' && (
-                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1 text-xs font-black uppercase text-white">
+                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-success px-3 py-1 text-xs font-black uppercase text-success-foreground">
                         <CheckCircle2 className="size-4" />
                         VALID ENTRY • READY TO ADMIT
                       </span>
                     )}
                     {verification.status === 'valid' && verification.matchedBy === 'search' && (
-                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-amber-600 px-3 py-1 text-xs font-black uppercase text-white">
+                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-warning px-3 py-1 text-xs font-black uppercase text-white">
                         <AlertTriangle className="size-4" />
                         FOUND BY NAME • CHECK THEIR PASS
                       </span>
                     )}
                     {verification.status === 'multiple_matches' && (
-                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-amber-600 px-3 py-1 text-xs font-black uppercase text-white">
+                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-warning px-3 py-1 text-xs font-black uppercase text-white">
                         <ListFilter className="size-4" />
                         SEVERAL MATCHES • CHOOSE ONE
                       </span>
                     )}
                     {verification.status === 'event_cancelled' && (
-                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1 text-xs font-black uppercase text-white">
+                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-destructive px-3 py-1 text-xs font-black uppercase text-destructive-foreground">
                         <XCircle className="size-4" />
                         EVENT CANCELLED
                       </span>
                     )}
                     {admittedHere && (
-                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1 text-xs font-black uppercase text-white">
+                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-success px-3 py-1 text-xs font-black uppercase text-success-foreground">
                         <CheckCircle2 className="size-4" />
                         ADMITTED
                       </span>
                     )}
                     {verification.status === 'already_attended' && !admittedHere && (
-                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-amber-600 px-3 py-1 text-xs font-black uppercase text-white">
+                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-warning px-3 py-1 text-xs font-black uppercase text-white">
                         <AlertTriangle className="size-4" />
                         ALREADY ADMITTED
                       </span>
                     )}
                     {verification.status === 'cancelled' && (
-                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1 text-xs font-black uppercase text-white">
+                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-destructive px-3 py-1 text-xs font-black uppercase text-destructive-foreground">
                         <XCircle className="size-4" />
                         CANCELLED REGISTRATION
                       </span>
                     )}
                     {verification.status === 'wrong_event' && (
-                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-amber-600 px-3 py-1 text-xs font-black uppercase text-white">
+                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-warning px-3 py-1 text-xs font-black uppercase text-white">
                         <AlertTriangle className="size-4" />
                         WRONG EVENT
                       </span>
                     )}
                     {verification.status === 'not_found' && (
-                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-slate-700 px-3 py-1 text-xs font-black uppercase text-white">
+                      <span className="shadow-xs flex items-center gap-1.5 rounded-full bg-muted-foreground px-3 py-1 text-xs font-black uppercase text-white">
                         PASS NOT FOUND
                       </span>
                     )}
@@ -850,7 +850,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                   <button
                     type="button"
                     onClick={clearCurrent}
-                    className="rounded-full bg-slate-200/80 p-1 text-slate-600 hover:bg-slate-300 hover:text-slate-900"
+                    className="rounded-full bg-border/80 p-1 text-muted-foreground hover:bg-border-strong hover:text-foreground"
                   >
                     <XCircle className="size-5" />
                   </button>
@@ -860,26 +860,26 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
 
                 {/* Several bookings matched: the operator picks the right one */}
                 {verification.status === 'multiple_matches' && verification.candidates && (
-                  <ul className="shadow-xs mt-4 divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white">
+                  <ul className="shadow-xs mt-4 divide-y divide-border overflow-hidden rounded-2xl border border-border/80 bg-surface">
                     {verification.candidates.map((candidate) => (
                       <li key={candidate.registrationId}>
                         <button
                           type="button"
                           onClick={() => handleVerify(candidate.registrationId, true)}
-                          className="flex w-full items-center justify-between gap-3 p-3.5 text-left transition-colors hover:bg-slate-50"
+                          className="flex w-full items-center justify-between gap-3 p-3.5 text-left transition-colors hover:bg-background"
                         >
                           <span className="min-w-0">
-                            <span className="block truncate text-sm font-black text-slate-900">
+                            <span className="block truncate text-sm font-black text-foreground">
                               {candidate.fullName}
                             </span>
-                            <span className="block truncate font-mono text-xs text-slate-500">
+                            <span className="block truncate font-mono text-xs text-muted-foreground">
                               {candidate.passNumber}
                               {candidate.totalPasses > 1
                                 ? ` • ${candidate.attendeeNames.join(', ')}`
                                 : ''}
                             </span>
                           </span>
-                          <span className="shrink-0 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">
+                          <span className="shrink-0 rounded-lg bg-muted px-2.5 py-1 text-xs font-bold text-foreground">
                             {candidate.status === 'cancelled'
                               ? 'Cancelled'
                               : `${candidate.admittedCount}/${candidate.totalPasses} in`}
@@ -892,67 +892,67 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
 
                 {/* Attendee Details Ticket Block */}
                 {verification.registration && (
-                  <div className="shadow-xs mt-4 space-y-3 rounded-2xl border border-slate-200/80 bg-white p-4">
+                  <div className="shadow-xs mt-4 space-y-3 rounded-2xl border border-border/80 bg-surface p-4">
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="font-mono text-xs font-bold text-[#EB6A1F]">
+                        <span className="font-mono text-xs font-bold text-primary">
                           {verification.registration.matchedAttendee?.passNumber ||
                             verification.registration.basePassId}
                         </span>
-                        <h3 className="text-xl font-black tracking-tight text-slate-900">
+                        <h3 className="text-xl font-black tracking-tight text-foreground">
                           {verification.registration.matchedAttendee?.fullName ||
                             verification.registration.fullName}
                         </h3>
                       </div>
                       {verification.registration.functionName && (
-                        <span className="rounded-lg border border-orange-200 bg-orange-100 px-2.5 py-1 text-xs font-bold text-[#EB6A1F]">
+                        <span className="rounded-lg border border-primary/30 bg-accent px-2.5 py-1 text-xs font-bold text-primary">
                           {verification.registration.functionName}
                         </span>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-2 text-xs text-slate-600">
+                    <div className="grid grid-cols-2 gap-2 border-t border-border pt-2 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5 truncate">
-                        <Phone className="size-3.5 shrink-0 text-slate-400" />
+                        <Phone className="size-3.5 shrink-0 text-muted-foreground" />
                         <span className="truncate font-medium">
                           {verification.registration.phone}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 truncate">
-                        <Mail className="size-3.5 shrink-0 text-slate-400" />
+                        <Mail className="size-3.5 shrink-0 text-muted-foreground" />
                         <span className="truncate font-medium">
                           {verification.registration.email}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Ticket className="size-3.5 shrink-0 text-slate-400" />
+                        <Ticket className="size-3.5 shrink-0 text-muted-foreground" />
                         <span>{verification.registration.attendeeCount} Pass Booked</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Clock className="size-3.5 shrink-0 text-slate-400" />
+                        <Clock className="size-3.5 shrink-0 text-muted-foreground" />
                         <span>{formatDate(verification.registration.registeredAt)}</span>
                       </div>
                     </div>
 
                     {/* Every person on a group booking, each admitted by their own pass */}
                     {(verification.registration.allAttendees?.length ?? 0) > 1 && (
-                      <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50">
+                      <ul className="divide-y divide-border rounded-xl border border-border bg-background">
                         {verification.registration.allAttendees!.map((pass) => (
                           <li
                             key={pass.passNumber}
                             className="flex items-center justify-between gap-2 px-3 py-2"
                           >
                             <span className="min-w-0">
-                              <span className="block truncate text-sm font-bold text-slate-900">
+                              <span className="block truncate text-sm font-bold text-foreground">
                                 {pass.fullName}
                               </span>
-                              <span className="block font-mono text-xs text-slate-500">
+                              <span className="block font-mono text-xs text-muted-foreground">
                                 {pass.passNumber}
                               </span>
                             </span>
                             {pass.admitted ? (
-                              <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-emerald-700">
-                                <CheckCircle2 className="size-4 text-emerald-600" />
+                              <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-success">
+                                <CheckCircle2 className="size-4 text-success" />
                                 In
                               </span>
                             ) : canAdmitFrom(verification) ? (
@@ -962,13 +962,13 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                                   executeCheckIn(verification.registration!.id, pass.passNumber)
                                 }
                                 disabled={checkingInId === pass.passNumber}
-                                className="shadow-xs flex shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-black text-white transition-transform hover:bg-emerald-500 active:scale-95 disabled:opacity-50"
+                                className="shadow-xs flex shrink-0 items-center gap-1.5 rounded-xl bg-success px-3 py-1.5 text-xs font-black text-success-foreground transition-transform hover:bg-success active:scale-95 disabled:opacity-50"
                               >
                                 <Check className="size-3.5" />
                                 Admit
                               </button>
                             ) : (
-                              <span className="shrink-0 text-xs font-semibold text-slate-400">
+                              <span className="shrink-0 text-xs font-semibold text-muted-foreground">
                                 Not admitted
                               </span>
                             )}
@@ -992,7 +992,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                             disabled={
                               checkingInId === verification.registration.matchedAttendee.passNumber
                             }
-                            className="active:scale-98 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-base font-black text-white shadow-md transition-all hover:bg-emerald-500 disabled:opacity-50"
+                            className="active:scale-98 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-success text-base font-black text-success-foreground shadow-md transition-all hover:bg-success disabled:opacity-50"
                           >
                             {checkingInId ===
                             verification.registration.matchedAttendee.passNumber ? (
@@ -1011,7 +1011,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                       )}
 
                     {autoResetSeconds !== null && (
-                      <div className="text-center text-xs font-bold text-emerald-700">
+                      <div className="text-center text-xs font-bold text-success">
                         ✓ Admitted! Ready for next scan in {autoResetSeconds}s...
                       </div>
                     )}
@@ -1021,15 +1021,15 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
             )}
 
             {lookupError && !verification && (
-              <div className="shadow-xs flex items-center justify-between rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900">
+              <div className="shadow-xs flex items-center justify-between rounded-2xl border border-destructive/30 bg-destructive-subtle p-4 text-destructive">
                 <div className="flex items-center gap-2 text-xs font-semibold">
-                  <XCircle className="size-4 shrink-0 text-rose-600" />
+                  <XCircle className="size-4 shrink-0 text-destructive" />
                   <span>{lookupError}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setLookupError(null)}
-                  className="text-rose-500 hover:text-rose-900"
+                  className="text-destructive hover:text-destructive"
                 >
                   <XCircle className="size-4" />
                 </button>
@@ -1044,15 +1044,15 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
         {activeTab === 'guests' && (
           <div className="space-y-4">
             {/* Search & Filter Header */}
-            <div className="shadow-xs flex flex-col gap-3 rounded-2xl border border-slate-200/90 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="shadow-xs flex flex-col gap-3 rounded-2xl border border-border/90 bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-3.5 size-4 text-slate-400" />
+                <Search className="absolute left-3.5 top-3.5 size-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={guestSearch}
                   onChange={(e) => setGuestSearch(e.target.value)}
                   placeholder="Search guest by name, phone, email, pass ID..."
-                  className="focus:outline-hidden h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#EB6A1F] focus:bg-white"
+                  className="focus:outline-hidden h-11 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-sm font-medium text-foreground placeholder-muted-foreground focus:border-primary focus:bg-surface"
                 />
               </div>
 
@@ -1067,8 +1067,8 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                       onClick={() => setGuestFilter(filter)}
                       className={`rounded-full px-3 py-1.5 text-xs font-bold capitalize transition-colors ${
                         isActive
-                          ? 'shadow-xs bg-[#EB6A1F] text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                          ? 'shadow-xs bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground hover:bg-border hover:text-foreground'
                       }`}
                     >
                       {filter === 'all'
@@ -1084,10 +1084,10 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
 
             {/* Guest Cards List */}
             {filteredGuests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center text-slate-500">
-                <UserCheck className="mb-2 size-10 text-slate-300" />
-                <p className="text-base font-bold text-slate-800">No Guests Found</p>
-                <p className="mt-0.5 text-xs text-slate-500">
+              <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-surface p-12 text-center text-muted-foreground">
+                <UserCheck className="mb-2 size-10 text-muted-foreground" />
+                <p className="text-base font-bold text-foreground">No Guests Found</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   No registered attendees match your current search or filter.
                 </p>
               </div>
@@ -1103,39 +1103,39 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                       key={guest.id}
                       className={`p-4.5 relative flex flex-col justify-between rounded-2xl border transition-all ${
                         isAttended
-                          ? 'shadow-2xs border-emerald-200 bg-emerald-50/40'
-                          : 'shadow-xs border-slate-200/90 bg-white hover:border-slate-300'
+                          ? 'shadow-2xs border-success/30 bg-success-subtle/40'
+                          : 'shadow-xs border-border/90 bg-surface hover:border-border-strong'
                       }`}
                     >
                       <div>
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <span className="text-2xs font-mono font-bold text-[#EB6A1F]">
+                            <span className="text-2xs font-mono font-bold text-primary">
                               {passNumberFor(guest.id)}
                             </span>
-                            <h4 className="text-base font-black tracking-tight text-slate-900">
+                            <h4 className="text-base font-black tracking-tight text-foreground">
                               {guest.fullName}
                             </h4>
                           </div>
 
                           {guest.functionName && (
-                            <span className="text-2xs rounded-md bg-orange-100 px-2 py-0.5 font-bold text-[#EB6A1F]">
+                            <span className="text-2xs rounded-md bg-accent px-2 py-0.5 font-bold text-primary">
                               {guest.functionName}
                             </span>
                           )}
                         </div>
 
-                        <div className="mt-2.5 space-y-1 text-xs text-slate-500">
+                        <div className="mt-2.5 space-y-1 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1.5 truncate">
-                            <Phone className="size-3.5 shrink-0 text-slate-400" />
+                            <Phone className="size-3.5 shrink-0 text-muted-foreground" />
                             <span>{guest.phone}</span>
                           </div>
                           <div className="flex items-center gap-1.5 truncate">
-                            <Mail className="size-3.5 shrink-0 text-slate-400" />
+                            <Mail className="size-3.5 shrink-0 text-muted-foreground" />
                             <span>{guest.email}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <Ticket className="size-3.5 shrink-0 text-slate-400" />
+                            <Ticket className="size-3.5 shrink-0 text-muted-foreground" />
                             <span>
                               {guest.attendeeCount} {guest.attendeeCount === 1 ? 'Seat' : 'Seats'}
                             </span>
@@ -1145,13 +1145,13 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
 
                       {/* Check-in: one row per person, each admitted by their own pass */}
                       {isCancelled ? (
-                        <div className="mt-4 border-t border-slate-100 pt-3">
-                          <span className="text-2xs font-semibold text-rose-600">
+                        <div className="mt-4 border-t border-border pt-3">
+                          <span className="text-2xs font-semibold text-destructive">
                             Registration cancelled
                           </span>
                         </div>
                       ) : (
-                        <ul className="mt-4 space-y-2 border-t border-slate-100 pt-3">
+                        <ul className="mt-4 space-y-2 border-t border-border pt-3">
                           {passes.map((pass) => {
                             const isCheckingIn = checkingInId === pass.passNumber;
                             const admittedAt = pass.checkedInAt ?? guest.attendedAt;
@@ -1162,18 +1162,18 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                               >
                                 {passes.length > 1 && (
                                   <span className="min-w-0">
-                                    <span className="block truncate text-sm font-bold text-slate-800">
+                                    <span className="block truncate text-sm font-bold text-foreground">
                                       {pass.fullName}
                                     </span>
-                                    <span className="block font-mono text-xs text-slate-500">
+                                    <span className="block font-mono text-xs text-muted-foreground">
                                       {pass.passNumber}
                                     </span>
                                   </span>
                                 )}
 
                                 {pass.admitted ? (
-                                  <span className="flex items-center gap-1 text-xs font-bold text-emerald-700">
-                                    <CheckCircle2 className="size-4 text-emerald-600" />
+                                  <span className="flex items-center gap-1 text-xs font-bold text-success">
+                                    <CheckCircle2 className="size-4 text-success" />
                                     Admitted{' '}
                                     {admittedAt
                                       ? `(${new Date(admittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`
@@ -1182,7 +1182,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                                 ) : (
                                   <>
                                     {passes.length === 1 && (
-                                      <span className="text-2xs font-semibold text-slate-400">
+                                      <span className="text-2xs font-semibold text-muted-foreground">
                                         Pending Entry
                                       </span>
                                     )}
@@ -1190,7 +1190,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                                       type="button"
                                       onClick={() => executeCheckIn(guest.id, pass.passNumber)}
                                       disabled={isCheckingIn}
-                                      className="shadow-xs flex shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white transition-transform hover:bg-emerald-500 active:scale-95 disabled:opacity-50"
+                                      className="shadow-xs flex shrink-0 items-center gap-1.5 rounded-xl bg-success px-4 py-2 text-xs font-black text-success-foreground transition-transform hover:bg-success active:scale-95 disabled:opacity-50"
                                     >
                                       {isCheckingIn ? (
                                         <>
@@ -1224,44 +1224,44 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
         {/* ============================================================== */}
         {activeTab === 'history' && (
           <div className="space-y-4">
-            <div className="shadow-xs flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="shadow-xs flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
               <div>
-                <h3 className="text-sm font-bold text-slate-900">Admitted</h3>
-                <p className="text-xs text-slate-500">
+                <h3 className="text-sm font-bold text-foreground">Admitted</h3>
+                <p className="text-xs text-muted-foreground">
                   Everyone admitted to this event, newest first.
                 </p>
               </div>
-              <span className="shrink-0 whitespace-nowrap rounded-full bg-emerald-100 px-3 py-1 font-mono text-xs font-black text-emerald-700">
+              <span className="shrink-0 whitespace-nowrap rounded-full bg-success-subtle px-3 py-1 font-mono text-xs font-black text-success">
                 {admitted.length} Guests
               </span>
             </div>
 
             {admitted.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center text-slate-500">
-                <History className="mb-2 size-10 text-slate-300" />
-                <p className="text-base font-bold text-slate-800">No Check-Ins Yet</p>
-                <p className="mt-0.5 text-xs text-slate-500">
+              <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-surface p-12 text-center text-muted-foreground">
+                <History className="mb-2 size-10 text-muted-foreground" />
+                <p className="text-base font-bold text-foreground">No Check-Ins Yet</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   Scanned attendees and manual check-ins will appear here in real-time.
                 </p>
               </div>
             ) : (
-              <div className="shadow-xs divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              <div className="shadow-xs divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
                 {admitted.map((item) => (
                   <div key={item.key} className="flex items-center justify-between p-4">
                     <div className="min-w-0 pr-2">
                       <div className="flex items-center gap-2">
-                        <p className="truncate text-sm font-bold text-slate-900">{item.name}</p>
+                        <p className="truncate text-sm font-bold text-foreground">{item.name}</p>
                         {item.functionName && (
-                          <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-bold text-[#EB6A1F]">
+                          <span className="rounded bg-accent px-2 py-0.5 text-xs font-bold text-primary">
                             {item.functionName}
                           </span>
                         )}
                       </div>
-                      <p className="font-mono text-xs text-slate-500">{item.passNumber}</p>
+                      <p className="font-mono text-xs text-muted-foreground">{item.passNumber}</p>
                     </div>
 
-                    <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-emerald-700">
-                      <CheckCircle2 className="size-4 text-emerald-600" />
+                    <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-success">
+                      <CheckCircle2 className="size-4 text-success" />
                       <span>{admittedTimeLabel(item.admittedAt)}</span>
                     </div>
                   </div>

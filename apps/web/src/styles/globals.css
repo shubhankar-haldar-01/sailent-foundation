@@ -22,8 +22,7 @@
    Until Inter has loaded, text is drawn in Arial resized to Inter's
    proportions, so nothing moves when Inter swaps in. next/font made this
    face itself up to Next.js 15; under Next.js 16 (Turbopack builds) it no
-   longer does for Inter, though it still does for Manrope and Caveat, and
-   text was drawn in an unadjusted system font first. The values are the
+   longer does for Inter, and text was drawn in an unadjusted system font first. The values are the
    ones next/font computes for Inter (next/dist/server/font-utils), so the
    result is what Next 15 produced. layout.tsx turns next/font's own
    adjustment off for Inter and names this face, so it is the only one.
@@ -66,7 +65,7 @@
 
   body {
     background: #ffffff !important;
-    color: #102a43 !important;
+    color: #111827 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     margin: 0 !important;

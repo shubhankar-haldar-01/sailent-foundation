@@ -18,20 +18,20 @@ export function MoreEventsStrip({ events, programsBySlug = {} }: MoreEventsStrip
   return (
     <section
       aria-labelledby="more-events-heading"
-      className="w-full border-t border-slate-200/80 bg-slate-50/50 py-12 sm:py-16"
+      className="border-border/80 bg-background/50 w-full border-t py-12 sm:py-16"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2
             id="more-events-heading"
-            className="font-display text-2xl font-bold tracking-tight text-[#102A43] sm:text-3xl"
+            className="font-display text-foreground text-2xl font-bold tracking-tight sm:text-3xl"
           >
             More Events You Might Like
           </h2>
           <Link
             href="/events"
-            className="group flex items-center gap-1.5 text-sm font-semibold text-[#EB6A1F] transition-colors hover:text-[#D45914]"
+            className="text-primary hover:text-primary group flex items-center gap-1.5 text-sm font-semibold transition-colors"
           >
             <span>View all events</span>
             <ArrowRight
@@ -52,7 +52,7 @@ export function MoreEventsStrip({ events, programsBySlug = {} }: MoreEventsStrip
             return (
               <article
                 key={item.id || item.slug}
-                className="card-interactive group flex flex-col overflow-hidden rounded-2xl dark:border-slate-800 dark:bg-slate-900"
+                className="card-interactive group flex flex-col overflow-hidden rounded-2xl"
               >
                 {/* Image + Date Badge */}
                 <div className="relative aspect-[16/10] overflow-hidden">
@@ -65,20 +65,20 @@ export function MoreEventsStrip({ events, programsBySlug = {} }: MoreEventsStrip
                   {/* Date badge */}
                   <div
                     aria-hidden="true"
-                    className="backdrop-blur-xs absolute left-3 top-3 flex min-w-11 flex-col items-center rounded-lg bg-white/95 px-2 py-1 text-center shadow-md"
+                    className="backdrop-blur-xs bg-surface/95 absolute left-3 top-3 flex min-w-11 flex-col items-center rounded-lg px-2 py-1 text-center shadow-md"
                   >
                     <span
                       data-numeric=""
-                      className="font-display text-lg font-extrabold leading-none text-[#EB6A1F]"
+                      className="font-display text-primary text-lg font-extrabold leading-none"
                     >
                       {badge.day}
                     </span>
-                    <span className="mt-0.5 text-[0.625rem] font-bold uppercase leading-none tracking-wide text-slate-800">
+                    <span className="text-foreground mt-0.5 text-[0.625rem] font-bold uppercase leading-none tracking-wide">
                       {badge.month}
                     </span>
                     <span
                       data-numeric=""
-                      className="mt-0.5 text-[0.625rem] font-semibold leading-tight text-slate-500"
+                      className="text-muted-foreground mt-0.5 text-[0.625rem] font-semibold leading-tight"
                     >
                       {badge.year}
                     </span>
@@ -92,7 +92,7 @@ export function MoreEventsStrip({ events, programsBySlug = {} }: MoreEventsStrip
                     <span
                       className={cn(
                         'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[0.6875rem] font-semibold',
-                        tone.chip || 'bg-blue-50 text-blue-700',
+                        tone.chip || 'bg-info-subtle text-info',
                       )}
                     >
                       <CategoryIcon category={category} className="size-3" />
@@ -101,29 +101,35 @@ export function MoreEventsStrip({ events, programsBySlug = {} }: MoreEventsStrip
                   </div>
 
                   {/* Title */}
-                  <h3 className="font-display mt-2.5 line-clamp-2 text-base font-bold leading-snug text-slate-900 transition-colors group-hover:text-[#EB6A1F]">
+                  <h3 className="font-display text-foreground group-hover:text-primary mt-2.5 line-clamp-2 text-base font-bold leading-snug transition-colors">
                     <Link href={`/events/${item.slug}`}>{item.title}</Link>
                   </h3>
 
                   {/* Meta items */}
-                  <div className="mt-4 space-y-1.5 text-xs text-slate-500">
+                  <div className="text-muted-foreground mt-4 space-y-1.5 text-xs">
                     <div className="flex items-center gap-1.5">
-                      <MapPin className="size-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                      <MapPin
+                        className="text-muted-foreground size-3.5 shrink-0"
+                        aria-hidden="true"
+                      />
                       <span className="truncate">
                         {item.venueName || item.city || 'Venue to be confirmed'}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Clock className="size-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                      <Clock
+                        className="text-muted-foreground size-3.5 shrink-0"
+                        aria-hidden="true"
+                      />
                       <span data-numeric="">{timeRange(item.startsAt, item.endsAt)}</span>
                     </div>
                   </div>
 
                   {/* View Details Link */}
-                  <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-3">
+                  <div className="border-border mt-5 flex items-center justify-between border-t pt-3">
                     <Link
                       href={`/events/${item.slug}`}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#EB6A1F] hover:underline hover:underline-offset-4"
+                      className="text-primary inline-flex items-center gap-1 text-xs font-semibold hover:underline hover:underline-offset-4"
                     >
                       <span>View Details</span>
                       <ArrowRight className="size-3" aria-hidden="true" />

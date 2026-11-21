@@ -20,7 +20,7 @@ function StoryCard({ story }: { story: Story }) {
   return (
     <article className="card-interactive group relative flex h-full w-full flex-col rounded-[22px] p-3.5 sm:p-4">
       {/* Photograph on top: rounded with card inset */}
-      <div className="relative aspect-[16/10] overflow-hidden rounded-[16px] bg-slate-100 dark:bg-slate-800">
+      <div className="bg-muted relative aspect-[16/10] overflow-hidden rounded-[16px]">
         <MediaFrame
           media={story.cover}
           aspect="video"
@@ -31,7 +31,7 @@ function StoryCard({ story }: { story: Story }) {
       </div>
 
       <div className="flex flex-1 flex-col pt-3.5">
-        <h3 className="font-display text-base font-bold leading-snug tracking-tight text-[#0F172A] sm:text-[1.0625rem] dark:text-white">
+        <h3 className="font-display text-foreground text-base font-bold leading-snug tracking-tight sm:text-[1.0625rem]">
           <Link
             href={`/stories/${story.slug}`}
             className="focus-visible:outline-ring hover:text-primary rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -39,7 +39,7 @@ function StoryCard({ story }: { story: Story }) {
             {story.title}
           </Link>
         </h3>
-        <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-[#64748B] sm:text-[13px] dark:text-slate-400">
+        <p className="text-muted-foreground mt-2 line-clamp-3 text-xs leading-relaxed sm:text-[13px]">
           {story.summary}
         </p>
         <p className="text-primary mt-auto inline-flex items-center gap-1.5 pt-4 text-xs font-bold sm:text-[13px]">
@@ -65,22 +65,22 @@ function EventRow({ event }: { event: SailentEvent }) {
         {/* Date badge on left */}
         <p
           aria-hidden="true"
-          className="sm:size-15 flex size-14 shrink-0 flex-col items-center justify-center rounded-[16px] border border-[#FFEDD5] bg-[#FFF7ED] text-center dark:border-amber-900/40 dark:bg-amber-950/30"
+          className="sm:size-15 border-border bg-muted flex size-14 shrink-0 flex-col items-center justify-center rounded-[16px] border text-center"
         >
           <span
             data-numeric=""
-            className="block text-lg font-black tabular-nums leading-none text-[#0F172A] sm:text-xl dark:text-white"
+            className="text-foreground block text-lg font-black tabular-nums leading-none sm:text-xl"
           >
             {day}
           </span>
-          <span className="mt-1 block text-[10px] font-extrabold uppercase leading-none tracking-wider text-[#475569] sm:text-[11px] dark:text-amber-300">
+          <span className="text-muted-foreground mt-1 block text-[10px] font-extrabold uppercase leading-none tracking-wider sm:text-[11px]">
             {month}
           </span>
         </p>
 
         {/* Event info */}
         <div className="min-w-0">
-          <h3 className="font-display line-clamp-1 text-sm font-bold leading-snug tracking-tight text-[#0F172A] sm:text-[15px] dark:text-white">
+          <h3 className="font-display text-foreground line-clamp-1 text-sm font-bold leading-snug tracking-tight sm:text-[15px]">
             <Link
               href={`/events/${event.slug}`}
               className="hover:text-info-action focus-visible:outline-ring rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -88,7 +88,7 @@ function EventRow({ event }: { event: SailentEvent }) {
               {event.title}
             </Link>
           </h3>
-          <p className="mt-1 truncate text-xs text-[#64748B] sm:text-[13px] dark:text-slate-400">
+          <p className="text-muted-foreground mt-1 truncate text-xs sm:text-[13px]">
             {event.venueName ?? event.city ?? 'Venue to be confirmed'}
           </p>
           <time dateTime={event.startsAt} className="sr-only">
@@ -98,7 +98,7 @@ function EventRow({ event }: { event: SailentEvent }) {
       </div>
 
       {/* Register link on right */}
-      <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-[#2563EB] sm:text-sm dark:text-blue-400">
+      <span className="text-primary inline-flex shrink-0 items-center gap-1 text-xs font-bold sm:text-sm">
         Register
         <ArrowRight
           className="size-3.5 transition-transform duration-200 group-hover:translate-x-1"

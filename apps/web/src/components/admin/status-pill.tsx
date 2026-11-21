@@ -17,21 +17,18 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   // Live / Published / Active / Open (Emerald)
   published: {
     label: 'Published',
-    pillClass:
-      'bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60',
-    dotClass: 'bg-emerald-500',
+    pillClass: 'bg-success-subtle text-success border-success/80',
+    dotClass: 'bg-success',
   },
   active: {
     label: 'Active',
-    pillClass:
-      'bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60',
-    dotClass: 'bg-emerald-500',
+    pillClass: 'bg-success-subtle text-success border-success/80',
+    dotClass: 'bg-success',
   },
   open: {
     label: 'Open',
-    pillClass:
-      'bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60',
-    dotClass: 'bg-emerald-500',
+    pillClass: 'bg-success-subtle text-success border-success/80',
+    dotClass: 'bg-success',
   },
   // Draft / Pending / Muted
   draft: {
@@ -48,9 +45,8 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   },
   unread: {
     label: 'Unread',
-    pillClass:
-      'bg-blue-50 text-blue-700 border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/60',
-    dotClass: 'bg-blue-500',
+    pillClass: 'bg-info-subtle text-info border-info/80',
+    dotClass: 'bg-info',
   },
   read: {
     label: 'Read',
@@ -61,47 +57,40 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   // Paused / Closed / Full (Amber / Purple)
   paused: {
     label: 'Paused',
-    pillClass:
-      'bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
-    dotClass: 'bg-amber-500',
+    pillClass: 'bg-warning-subtle text-warning-foreground border-warning/80',
+    dotClass: 'bg-warning',
   },
   closed: {
     label: 'Closed',
-    pillClass:
-      'bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
-    dotClass: 'bg-amber-500',
+    pillClass: 'bg-warning-subtle text-warning-foreground border-warning/80',
+    dotClass: 'bg-warning',
   },
   full: {
     label: 'Full',
-    pillClass:
-      'bg-purple-50 text-purple-700 border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/60',
-    dotClass: 'bg-purple-500',
+    pillClass: 'bg-accent text-primary border-primary/80',
+    dotClass: 'bg-primary',
   },
   // Completed (Blue / Info)
   completed: {
     label: 'Completed',
-    pillClass:
-      'bg-blue-50 text-blue-700 border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/60',
-    dotClass: 'bg-blue-500',
+    pillClass: 'bg-info-subtle text-info border-info/80',
+    dotClass: 'bg-info',
   },
   // Cancelled / Archived / Suspended (Rose / Red)
   cancelled: {
     label: 'Cancelled',
-    pillClass:
-      'bg-rose-50 text-rose-700 border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60',
-    dotClass: 'bg-rose-500',
+    pillClass: 'bg-destructive-subtle text-destructive border-destructive/80',
+    dotClass: 'bg-destructive',
   },
   archived: {
     label: 'Deleted',
-    pillClass:
-      'bg-rose-50 text-rose-700 border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60',
-    dotClass: 'bg-rose-500',
+    pillClass: 'bg-destructive-subtle text-destructive border-destructive/80',
+    dotClass: 'bg-destructive',
   },
   suspended: {
     label: 'Suspended',
-    pillClass:
-      'bg-rose-50 text-rose-700 border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60',
-    dotClass: 'bg-rose-500',
+    pillClass: 'bg-destructive-subtle text-destructive border-destructive/80',
+    dotClass: 'bg-destructive',
   },
 };
 

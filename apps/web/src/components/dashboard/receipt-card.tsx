@@ -21,10 +21,10 @@ export function ReceiptCard({ donationId, receiptNumber, paymentStatus }: Receip
   const isReceiptReady = Boolean(receiptNumber && isPaymentSuccessful);
 
   return (
-    <div className="card-elevated dark:from-primary/10 dark:to-primary/5 dark:border-primary/20 flex flex-col justify-between gap-4 rounded-2xl bg-gradient-to-r from-[#FFF5EC] to-[#FEF0E3] p-5 sm:flex-row sm:items-center sm:p-6">
+    <div className="card-elevated dark:from-primary/10 dark:to-primary/5 dark:border-primary/20 from-muted to-muted flex flex-col justify-between gap-4 rounded-2xl bg-gradient-to-r p-5 sm:flex-row sm:items-center sm:p-6">
       {/* Left Icon + Text */}
       <div className="flex items-center gap-4">
-        <div className="dark:bg-primary/20 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl bg-orange-100/80">
+        <div className="dark:bg-primary/20 text-primary bg-accent/80 flex size-12 shrink-0 items-center justify-center rounded-2xl">
           <FileText className="size-6 stroke-[2]" aria-hidden="true" />
         </div>
         <div>

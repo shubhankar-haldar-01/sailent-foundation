@@ -25,7 +25,7 @@ export default function DashboardError({
   return (
     <div
       role="alert"
-      className="border-border/60 bg-surface rounded-2xl border px-6 py-14 text-center shadow-[0_10px_30px_-24px_rgb(15_23_42/0.35)]"
+      className="border-border/60 bg-surface rounded-2xl border px-6 py-14 text-center shadow-elevated"
     >
       <span className="bg-destructive-subtle text-destructive mx-auto grid size-12 place-items-center rounded-full">
         <CircleAlert className="size-6" aria-hidden="true" />

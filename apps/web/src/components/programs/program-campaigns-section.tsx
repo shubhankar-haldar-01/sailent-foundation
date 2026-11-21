@@ -160,16 +160,16 @@ export function ProgramCampaignsSection({ program, campaigns }: ProgramCampaigns
       {/* Section Header */}
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
-          <h2 className="font-display text-2xl font-black tracking-tight text-[#0A2540] sm:text-3xl">
+          <h2 className="font-display text-foreground text-2xl font-black tracking-tight sm:text-3xl">
             Campaigns supporting this program
           </h2>
-          <p className="mt-1.5 text-sm text-[#486581] sm:text-base">
+          <p className="text-muted-foreground mt-1.5 text-sm sm:text-base">
             Support ongoing campaigns that directly contribute to our {program.name} program.
           </p>
         </div>
         <Link
           href={`/campaigns?program=${program.slug}`}
-          className="inline-flex items-center gap-1.5 self-start text-sm font-bold text-[#EB6A1F] transition-colors hover:text-[#D45914] sm:self-auto sm:text-base"
+          className="text-primary hover:text-primary inline-flex items-center gap-1.5 self-start text-sm font-bold transition-colors sm:self-auto sm:text-base"
         >
           View all campaigns
           <ArrowRight className="size-4 stroke-[2.5]" aria-hidden="true" />

@@ -58,7 +58,7 @@ export function StoryCard({
     return (
       <article
         className={cn(
-          'card-interactive group relative flex flex-col justify-between rounded-xl p-3 sm:p-3.5 dark:border-slate-800 dark:bg-slate-900',
+          'card-interactive group relative flex flex-col justify-between rounded-xl p-3 sm:p-3.5',
           'has-[a:focus-visible]:outline-ring has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2',
           className,
         )}
@@ -73,7 +73,7 @@ export function StoryCard({
             />
           </div>
           <div className="min-w-0 flex-1 py-0.5">
-            <h3 className="font-display dark:text-foreground line-clamp-2 text-sm font-bold leading-snug tracking-[-0.01em] text-[#102A43] sm:text-[0.9375rem]">
+            <h3 className="font-display dark:text-foreground text-foreground line-clamp-2 text-sm font-bold leading-snug tracking-[-0.01em] sm:text-[0.9375rem]">
               <Link
                 href={href}
                 className="group-hover:text-primary transition-colors after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none"
@@ -82,16 +82,16 @@ export function StoryCard({
               </Link>
             </h3>
             {story.summary ? (
-              <p className="dark:text-muted-foreground mt-1.5 line-clamp-2 text-xs leading-relaxed text-slate-500">
+              <p className="dark:text-muted-foreground text-muted-foreground mt-1.5 line-clamp-2 text-xs leading-relaxed">
                 {story.summary}
               </p>
             ) : null}
           </div>
         </div>
 
-        <div className="dark:border-border/60 mt-3.5 flex items-center justify-between border-t border-slate-100 px-0.5 pt-2.5">
+        <div className="dark:border-border/60 border-border mt-3.5 flex items-center justify-between border-t px-0.5 pt-2.5">
           {date ? (
-            <span className="dark:text-muted-foreground inline-flex items-center gap-1.5 text-xs text-slate-600">
+            <span className="dark:text-muted-foreground text-muted-foreground inline-flex items-center gap-1.5 text-xs">
               <CalendarDays className="size-3.5 shrink-0" strokeWidth={1.8} aria-hidden="true" />
               <time dateTime={story.publishedAt}>{date}</time>
             </span>
@@ -117,7 +117,7 @@ export function StoryCard({
     <article
       className={cn(
         // Half and half at 1280–1439px, where two cards share the row and the text needs the room.
-        'card-interactive min-[90rem]:grid-cols-[53%_47%] group relative flex flex-col overflow-hidden rounded-2xl md:grid md:grid-cols-[53%_47%] xl:grid-cols-2 dark:border-slate-800 dark:bg-slate-900',
+        'card-interactive min-[90rem]:grid-cols-[53%_47%] group relative flex flex-col overflow-hidden rounded-2xl md:grid md:grid-cols-[53%_47%] xl:grid-cols-2',
         'has-[a:focus-visible]:outline-ring has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2',
         className,
       )}
@@ -133,7 +133,7 @@ export function StoryCard({
         {storyCategory ? (
           <span
             className={cn(
-              'bg-surface absolute left-3.5 top-3.5 z-10 inline-flex h-[2.125rem] items-center gap-2 rounded-full px-3.5 text-[0.8125rem] font-bold shadow-[0_6px_14px_-8px_rgb(16_42_67/0.5)]',
+              'bg-surface absolute left-3.5 top-3.5 z-10 inline-flex h-[2.125rem] items-center gap-2 rounded-full px-3.5 text-[0.8125rem] font-bold shadow-card',
               badgeInk(storyCategory),
             )}
           >
@@ -167,7 +167,7 @@ export function StoryCard({
           className="text-primary mt-auto inline-flex items-center gap-3 pt-5 text-[0.9375rem] font-bold"
         >
           Read Story
-          <span className="bg-cta/12 text-cta-glow duration-(--duration-base) group-hover:bg-primary group-hover:text-primary-foreground grid size-8 shrink-0 place-items-center rounded-full transition-colors">
+          <span className="bg-primary/12 text-primary duration-(--duration-base) group-hover:bg-primary group-hover:text-primary-foreground grid size-8 shrink-0 place-items-center rounded-full transition-colors">
             <ArrowRight
               className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5"
               strokeWidth={2.2}

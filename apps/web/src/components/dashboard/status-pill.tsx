@@ -12,19 +12,19 @@ import { cn } from '@sailent/ui';
 const LABELS: Record<string, { label: string; className: string }> = {
   successful: {
     label: 'Received',
-    className: 'bg-[#EAF8F0] text-[#166534] dark:bg-emerald-950/40 dark:text-emerald-300',
+    className: 'bg-success-subtle text-success',
   },
   pending: {
     label: 'Awaiting payment',
-    className: 'bg-[#FEF6EC] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-300',
+    className: 'bg-muted text-warning-foreground',
   },
   processing: {
     label: 'Processing',
-    className: 'bg-[#FEF6EC] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-300',
+    className: 'bg-muted text-warning-foreground',
   },
   failed: {
     label: 'Failed',
-    className: 'bg-[#FDF2F2] text-[#B91C1C] dark:bg-rose-950/40 dark:text-rose-300',
+    className: 'bg-destructive-subtle text-destructive',
   },
   cancelled: { label: 'Cancelled', className: 'bg-muted text-muted-foreground' },
 };

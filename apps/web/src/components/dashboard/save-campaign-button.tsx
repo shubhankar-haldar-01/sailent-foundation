@@ -31,7 +31,7 @@ function RemoveSubmit({ title, className }: { title: string; className?: string 
       title={`Remove ${title} from saved campaigns`}
       aria-label={`Remove ${title} from saved campaigns`}
       className={cn(
-        'focus-visible:outline-ring size-9.5 text-primary flex shrink-0 items-center justify-center rounded-full bg-orange-50/90 transition-all hover:scale-105 hover:bg-orange-100 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:size-10 dark:bg-orange-950/40 dark:hover:bg-orange-900/50',
+        'focus-visible:outline-ring size-9.5 text-primary bg-accent/90 hover:bg-accent flex shrink-0 items-center justify-center rounded-full transition-all hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:size-10',
         className,
       )}
     >

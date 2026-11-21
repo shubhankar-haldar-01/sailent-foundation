@@ -310,7 +310,7 @@ export function TemplateEditor({ template }: { template: AdminTemplate }) {
                   title="Rendered email"
                   sandbox=""
                   srcDoc={preview.html ?? ''}
-                  className="border-border mt-3 h-80 w-full rounded-lg border bg-white"
+                  className="border-border bg-surface mt-3 h-80 w-full rounded-lg border"
                 />
               </>
             )}

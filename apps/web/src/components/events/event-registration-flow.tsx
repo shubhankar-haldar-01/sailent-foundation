@@ -208,20 +208,26 @@ export function EventRegistrationFlow({
     state: 'cancelled' | 'finished' | 'full' | 'closed' = 'closed',
   ) => {
     const badgeConfig = {
-      cancelled: { label: 'Event Cancelled', className: 'bg-rose-50 text-rose-700 ring-rose-200' },
+      cancelled: {
+        label: 'Event Cancelled',
+        className: 'bg-destructive-subtle text-destructive ring-destructive/30',
+      },
       finished: {
         label: 'Event Concluded',
-        className: 'bg-slate-100 text-slate-700 ring-slate-200',
+        className: 'bg-muted text-foreground ring-border',
       },
-      full: { label: 'Event Full', className: 'bg-amber-50 text-amber-800 ring-amber-200' },
+      full: {
+        label: 'Event Full',
+        className: 'bg-warning-subtle text-warning-foreground ring-warning/30',
+      },
       closed: {
         label: 'Registration Closed',
-        className: 'bg-rose-50 text-rose-700 ring-rose-200',
+        className: 'bg-destructive-subtle text-destructive ring-destructive/30',
       },
     }[state];
 
     return (
-      <Card className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8">
+      <Card className="border-border/80 bg-surface rounded-3xl border p-6 shadow-sm sm:p-8">
         <div className="flex items-center gap-2">
           <span
             className={cn(
@@ -232,8 +238,8 @@ export function EventRegistrationFlow({
             {badgeConfig.label}
           </span>
         </div>
-        <h2 className="font-display mt-3 text-xl font-bold text-slate-900 sm:text-2xl">{title}</h2>
-        <p className="mt-2 text-sm leading-relaxed text-slate-600">{body}</p>
+        <h2 className="font-display text-foreground mt-3 text-xl font-bold sm:text-2xl">{title}</h2>
+        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{body}</p>
         <div className="mt-6">
           <Button asChild variant="secondary" className="rounded-full">
             <Link href="/events">Explore other events</Link>
@@ -266,25 +272,25 @@ export function EventRegistrationFlow({
     return (
       <Card
         data-pass-container
-        className="pass-outer-card print:border-none! print:bg-transparent! print:shadow-none! rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm sm:p-8 print:m-0 print:border-0 print:p-0"
+        className="pass-outer-card print:border-none! print:bg-transparent! print:shadow-none! border-success/30 bg-surface rounded-3xl border p-6 shadow-sm sm:p-8 print:m-0 print:border-0 print:p-0"
       >
         <div className="flex items-center gap-3.5 print:hidden">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 ring-4 ring-emerald-50/50">
+          <div className="bg-success-subtle text-success ring-success/50 flex size-12 shrink-0 items-center justify-center rounded-2xl ring-4">
             <CheckCircle2 className="size-6 stroke-[2.2]" />
           </div>
           <div>
-            <span className="text-caption inline-flex items-center gap-1.5 rounded-full bg-emerald-100/70 px-2.5 py-0.5 font-bold text-emerald-800">
+            <span className="text-caption bg-success-subtle/70 text-success inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-bold">
               Admission Confirmed
             </span>
-            <h2 className="font-display text-xl font-bold text-slate-900 sm:text-2xl">
+            <h2 className="font-display text-foreground text-xl font-bold sm:text-2xl">
               You are registered
             </h2>
           </div>
         </div>
 
-        <p className="mt-4 text-sm leading-relaxed text-slate-600 print:hidden">
-          We look forward to seeing you at <strong className="text-slate-900">{eventTitle}</strong>.
-          Your reservation confirmation has been registered with our team.
+        <p className="text-muted-foreground mt-4 text-sm leading-relaxed print:hidden">
+          We look forward to seeing you at <strong className="text-foreground">{eventTitle}</strong>
+          . Your reservation confirmation has been registered with our team.
         </p>
 
         <div className="mt-5 print:m-0 print:p-6">
@@ -306,12 +312,12 @@ export function EventRegistrationFlow({
           />
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-6 print:hidden">
+        <div className="border-border mt-6 flex flex-wrap items-center gap-3 border-t pt-6 print:hidden">
           <Button
             type="button"
             onClick={() => handleDownloadPass(existingPassCode)}
             disabled={isDownloading}
-            className="gap-2 rounded-full bg-[#EB6A1F] text-xs font-bold text-white shadow-sm hover:bg-[#D45914] sm:text-sm"
+            className="bg-primary text-primary-foreground hover:bg-primary-hover gap-2 rounded-full text-xs font-bold shadow-sm sm:text-sm"
           >
             {downloaded ? (
               <>
@@ -333,7 +339,7 @@ export function EventRegistrationFlow({
           {isSignedIn ? (
             <Button
               asChild
-              className="rounded-full border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 sm:text-sm"
+              className="border-border bg-surface text-foreground hover:bg-background rounded-full border text-xs font-bold sm:text-sm"
             >
               <Link href="/dashboard/events">View in Dashboard</Link>
             </Button>
@@ -381,24 +387,24 @@ export function EventRegistrationFlow({
     return (
       <Card
         data-pass-container
-        className="pass-outer-card print:border-none! print:bg-transparent! print:shadow-none! overflow-hidden rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm sm:p-8 lg:p-9 print:m-0 print:border-0 print:p-0"
+        className="pass-outer-card print:border-none! print:bg-transparent! print:shadow-none! border-success/30 bg-surface overflow-hidden rounded-3xl border p-6 shadow-sm sm:p-8 lg:p-9 print:m-0 print:border-0 print:p-0"
       >
         <div className="flex items-center gap-3.5 print:hidden">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 ring-4 ring-emerald-50/50">
+          <div className="bg-success-subtle text-success ring-success/50 flex size-12 shrink-0 items-center justify-center rounded-2xl ring-4">
             <CheckCircle2 className="size-6 stroke-[2.2]" />
           </div>
           <div>
-            <span className="text-caption inline-flex items-center gap-1.5 rounded-full bg-emerald-100/70 px-2.5 py-0.5 font-bold text-emerald-800">
+            <span className="text-caption bg-success-subtle/70 text-success inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-bold">
               Registration Successful
             </span>
-            <h2 className="font-display text-xl font-bold text-slate-900 sm:text-2xl">
+            <h2 className="font-display text-foreground text-xl font-bold sm:text-2xl">
               Registration Confirmed!
             </h2>
           </div>
         </div>
 
-        <p className="mt-3 text-sm leading-relaxed text-slate-600 print:hidden">
-          Your reservation is secured for <strong className="text-slate-900">{eventTitle}</strong>{' '}
+        <p className="text-muted-foreground mt-3 text-sm leading-relaxed print:hidden">
+          Your reservation is secured for <strong className="text-foreground">{eventTitle}</strong>{' '}
           {pass?.functionName ? (
             <span>
               (Activity: <strong>{pass.functionName}</strong>)
@@ -433,12 +439,12 @@ export function EventRegistrationFlow({
           />
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-6 print:hidden">
+        <div className="border-border mt-6 flex flex-wrap items-center gap-3 border-t pt-6 print:hidden">
           <Button
             type="button"
             onClick={() => handleDownloadPass(passNumber)}
             disabled={isDownloading}
-            className="gap-2 rounded-full bg-[#EB6A1F] text-xs font-bold text-white shadow-sm hover:bg-[#D45914] sm:text-sm"
+            className="bg-primary text-primary-foreground hover:bg-primary-hover gap-2 rounded-full text-xs font-bold shadow-sm sm:text-sm"
           >
             {downloaded ? (
               <>
@@ -466,7 +472,7 @@ export function EventRegistrationFlow({
           {isSignedIn ? (
             <Button
               asChild
-              className="rounded-full border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 sm:text-sm"
+              className="border-border bg-surface text-foreground hover:bg-background rounded-full border text-xs font-bold sm:text-sm"
             >
               <Link href="/dashboard/events">View in Dashboard</Link>
             </Button>
@@ -714,20 +720,20 @@ export function EventRegistrationFlow({
   };
 
   return (
-    <Card className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8 lg:p-9">
+    <Card className="border-border/80 bg-surface rounded-3xl border p-6 shadow-sm sm:p-8 lg:p-9">
       {/* Header with Eyebrow Badge */}
       <div className="flex items-center gap-2">
-        <span className="text-caption inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 font-bold uppercase tracking-wider text-[#EB6A1F]">
-          <Sparkles className="size-3 text-[#EB6A1F]" aria-hidden="true" />
+        <span className="text-caption bg-accent text-primary inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-bold uppercase tracking-wider">
+          <Sparkles className="text-primary size-3" aria-hidden="true" />
           Event Registration
         </span>
       </div>
 
       <div className="mt-3">
-        <h2 className="font-display text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+        <h2 className="font-display text-foreground text-2xl font-extrabold tracking-tight sm:text-3xl">
           Reserve your place
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-slate-600">
+        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
           Join us for this meaningful event and be part of a community that cares. You can book up
           to 4 passes for your family or friends with a single registration contact.
         </p>
@@ -735,39 +741,39 @@ export function EventRegistrationFlow({
 
       {/* Account Status / Helper for return donors */}
       {!isSignedIn ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200/80 bg-slate-50/70 px-4 py-3 text-xs text-slate-600 sm:text-sm">
-          <div className="flex items-center gap-2 text-slate-700">
-            <span className="size-2 rounded-full bg-emerald-500" />
+        <div className="border-border/80 bg-background/70 text-muted-foreground mt-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border px-4 py-3 text-xs sm:text-sm">
+          <div className="text-foreground flex items-center gap-2">
+            <span className="bg-success size-2 rounded-full" />
             <span>Open registration • No account required</span>
           </div>
           <div className="text-xs">
             <span>Already a donor? </span>
             <Link
               href={signInHref || `/sign-in?next=/events/${slug}`}
-              className="font-semibold text-[#EB6A1F] underline underline-offset-2 hover:text-[#D45914]"
+              className="text-primary hover:text-primary font-semibold underline underline-offset-2"
             >
               Sign in to register
             </Link>
           </div>
         </div>
       ) : (
-        <div className="mt-5 rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-4">
+        <div className="border-success/80 bg-success-subtle/60 mt-5 rounded-2xl border p-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+              <div className="bg-success-subtle text-success flex size-9 shrink-0 items-center justify-center rounded-xl">
                 <UserCheck className="size-5" aria-hidden="true" />
               </div>
               <div className="min-w-0">
-                <p className="truncate text-xs font-semibold text-emerald-900">
+                <p className="text-success truncate text-xs font-semibold">
                   Signed in as{' '}
                   <span className="font-bold">{initialProfile?.fullName || 'Verified Donor'}</span>
                 </p>
                 {initialProfile?.email ? (
-                  <p className="truncate text-xs text-emerald-700">{initialProfile.email}</p>
+                  <p className="text-success truncate text-xs">{initialProfile.email}</p>
                 ) : null}
               </div>
             </div>
-            <span className="text-caption inline-flex shrink-0 items-center rounded-full bg-emerald-100 px-2.5 py-0.5 font-bold text-emerald-800">
+            <span className="text-caption bg-success-subtle text-success inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 font-bold">
               Account Active
             </span>
           </div>
@@ -787,11 +793,11 @@ export function EventRegistrationFlow({
       <form onSubmit={handleSubmit} className="mt-6 space-y-6" noValidate>
         {/* 1. Activity / Function Selection (if event offers activities, e.g. Champaran Mahotsav: Dance, Singing, Running) */}
         {availableFunctions.length > 0 ? (
-          <div className="rounded-2xl border border-orange-200/80 bg-orange-50/40 p-4 sm:p-5">
-            <Label className="text-sm font-bold text-slate-900">
-              Select Activity / Function <span className="text-red-500">*</span>
+          <div className="border-primary/80 bg-accent/40 rounded-2xl border p-4 sm:p-5">
+            <Label className="text-foreground text-sm font-bold">
+              Select Activity / Function <span className="text-destructive">*</span>
             </Label>
-            <p className="mt-0.5 text-xs text-slate-600">
+            <p className="text-muted-foreground mt-0.5 text-xs">
               Choose the program activity or function you wish to register for.
             </p>
             <div className="mt-3 flex flex-wrap gap-2.5">
@@ -810,8 +816,8 @@ export function EventRegistrationFlow({
                     className={cn(
                       'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm',
                       isSelected
-                        ? 'bg-[#EB6A1F] text-white shadow-sm ring-2 ring-[#EB6A1F]/30'
-                        : 'border border-slate-200 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50/50',
+                        ? 'bg-primary text-primary-foreground ring-primary/30 shadow-sm ring-2'
+                        : 'border-border bg-surface text-foreground hover:border-primary/30 hover:bg-accent/50 border',
                     )}
                   >
                     {isSelected ? <Check className="size-4 stroke-[3]" /> : null}
@@ -821,23 +827,23 @@ export function EventRegistrationFlow({
               })}
             </div>
             {fieldErrors.functionName ? (
-              <p className="mt-2 text-xs text-red-600">{fieldErrors.functionName}</p>
+              <p className="text-destructive mt-2 text-xs">{fieldErrors.functionName}</p>
             ) : null}
           </div>
         ) : null}
 
         {/* 2. Number of Passes Selector (1 to 4 passes) */}
-        <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 p-4 sm:p-5">
+        <div className="border-border/90 bg-background/50 rounded-2xl border p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <Label className="text-sm font-bold text-slate-900">
-                Number of Passes <span className="text-red-500">*</span>
+              <Label className="text-foreground text-sm font-bold">
+                Number of Passes <span className="text-destructive">*</span>
               </Label>
-              <p className="mt-0.5 text-xs text-slate-600">
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 Book up to 4 passes in a single reservation.
               </p>
             </div>
-            <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white p-1">
+            <div className="border-border bg-surface flex items-center gap-1.5 rounded-xl border p-1">
               {[1, 2, 3, 4].map((count) => {
                 const isSelected = passCount === count;
                 return (
@@ -853,8 +859,8 @@ export function EventRegistrationFlow({
                     className={cn(
                       'flex size-9 items-center justify-center rounded-lg text-sm font-bold transition-all sm:size-10',
                       isSelected
-                        ? 'shadow-xs bg-[#EB6A1F] text-white'
-                        : 'text-slate-700 hover:bg-slate-100',
+                        ? 'shadow-xs bg-primary text-primary-foreground'
+                        : 'text-foreground hover:bg-muted',
                     )}
                   >
                     {count}
@@ -868,8 +874,8 @@ export function EventRegistrationFlow({
         {/* 3. Attendee Names (Individual details per pass) */}
         <div className="space-y-3.5">
           <div className="flex items-center gap-2">
-            <Users className="size-4 text-[#EB6A1F]" />
-            <h3 className="text-sm font-bold text-slate-900">
+            <Users className="text-primary size-4" />
+            <h3 className="text-foreground text-sm font-bold">
               {passCount === 1 ? 'Attendee Details' : `Attendee Names (${passCount} Passes)`}
             </h3>
           </div>
@@ -879,15 +885,15 @@ export function EventRegistrationFlow({
               <div key={idx}>
                 <Label
                   htmlFor={`attendee-name-${idx}`}
-                  className="text-xs font-semibold text-slate-700"
+                  className="text-foreground text-xs font-semibold"
                 >
                   {passCount === 1
                     ? 'Full Name'
                     : `Pass ${idx + 1} Attendee Name ${idx === 0 ? '(Primary Contact)' : ''}`}{' '}
-                  <span className="text-red-500">*</span>
+                  <span className="text-destructive">*</span>
                 </Label>
                 <div className="relative mt-1">
-                  <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                  <span className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
                     <User className="size-4" aria-hidden="true" />
                   </span>
                   <Input
@@ -915,12 +921,13 @@ export function EventRegistrationFlow({
                     }}
                     className={cn(
                       'shadow-2xs h-11 rounded-xl pl-10 text-sm transition-colors',
-                      fieldErrors.attendees?.[idx] && 'border-red-500 focus-visible:ring-red-400',
+                      fieldErrors.attendees?.[idx] &&
+                        'border-destructive focus-visible:ring-destructive',
                     )}
                   />
                 </div>
                 {fieldErrors.attendees?.[idx] ? (
-                  <p className="mt-1 text-xs text-red-600">{fieldErrors.attendees[idx]}</p>
+                  <p className="text-destructive mt-1 text-xs">{fieldErrors.attendees[idx]}</p>
                 ) : null}
               </div>
             ))}
@@ -928,19 +935,19 @@ export function EventRegistrationFlow({
         </div>
 
         {/* 4. Primary Contact Information (1 Email + 1 Phone for all passes) */}
-        <div className="space-y-4 rounded-2xl border border-slate-200/90 bg-slate-50/50 p-4 sm:p-5">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">
+        <div className="border-border/90 bg-background/50 space-y-4 rounded-2xl border p-4 sm:p-5">
+          <h3 className="text-muted-foreground text-xs font-bold uppercase tracking-wider">
             Booking Contact Information
           </h3>
 
           {/* Email Address with Send OTP & Validation */}
           <div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="reg-email" className="text-sm font-semibold text-slate-800">
-                Email Address <span className="text-red-500">*</span>
+              <Label htmlFor="reg-email" className="text-foreground text-sm font-semibold">
+                Email Address <span className="text-destructive">*</span>
               </Label>
               {isEmailVerified ? (
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600">
+                <span className="text-success inline-flex items-center gap-1 text-xs font-bold">
                   <Check className="size-3.5 stroke-[2.5]" />
                   <span>Verified</span>
                 </span>
@@ -949,7 +956,7 @@ export function EventRegistrationFlow({
 
             <div className="relative mt-1.5 flex gap-2">
               <div className="relative flex-1">
-                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <span className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
                   <Mail className="size-4.5" aria-hidden="true" />
                 </span>
                 <Input
@@ -972,9 +979,9 @@ export function EventRegistrationFlow({
                   }}
                   className={cn(
                     'shadow-2xs h-11 rounded-xl pl-10 text-sm transition-colors',
-                    fieldErrors.email && 'border-red-500 focus-visible:ring-red-400',
+                    fieldErrors.email && 'border-destructive focus-visible:ring-destructive',
                     isEmailVerified &&
-                      'border-emerald-300 bg-emerald-50/40 font-medium text-slate-800',
+                      'border-success/30 bg-success-subtle/40 text-foreground font-medium',
                   )}
                 />
               </div>
@@ -986,7 +993,7 @@ export function EventRegistrationFlow({
                   variant="secondary"
                   disabled={isSendingOtp || !email.trim()}
                   onClick={handleSendOtp}
-                  className="h-11 shrink-0 rounded-xl border border-orange-200 bg-orange-50/60 px-4 text-xs font-bold text-[#EB6A1F] hover:bg-orange-100/70"
+                  className="border-primary/30 bg-accent/60 text-primary hover:bg-accent/70 h-11 shrink-0 rounded-xl border px-4 text-xs font-bold"
                 >
                   {isSendingOtp ? 'Sending…' : isOtpSent ? 'Resend OTP' : 'Send OTP'}
                 </Button>
@@ -995,7 +1002,7 @@ export function EventRegistrationFlow({
                   type="button"
                   variant="ghost"
                   onClick={handleResetEmail}
-                  className="h-11 shrink-0 rounded-xl px-3 text-xs font-semibold text-slate-500 hover:text-slate-800"
+                  className="text-muted-foreground hover:text-foreground h-11 shrink-0 rounded-xl px-3 text-xs font-semibold"
                 >
                   Change
                 </Button>
@@ -1003,9 +1010,9 @@ export function EventRegistrationFlow({
             </div>
 
             {fieldErrors.email ? (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>
+              <p className="text-destructive mt-1 text-xs">{fieldErrors.email}</p>
             ) : (
-              <p className="text-caption mt-1 text-slate-500">
+              <p className="text-caption text-muted-foreground mt-1">
                 {isEmailVerified
                   ? 'Your email is verified. All passes will be delivered here.'
                   : 'Click "Send OTP" to receive a verification code on your email.'}
@@ -1014,19 +1021,21 @@ export function EventRegistrationFlow({
 
             {/* OTP Verification Panel */}
             {isOtpSent && !isEmailVerified ? (
-              <div className="mt-3 rounded-2xl border border-orange-200/90 bg-orange-50/40 p-4">
+              <div className="border-primary/90 bg-accent/40 mt-3 rounded-2xl border p-4">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-bold text-slate-800">
-                    Enter 6-digit Code sent to <strong className="text-slate-900">{email}</strong>
+                  <span className="text-foreground text-xs font-bold">
+                    Enter 6-digit Code sent to <strong className="text-foreground">{email}</strong>
                   </span>
                   {resendCountdown > 0 ? (
-                    <span className="text-xs text-slate-500">Resend in {resendCountdown}s</span>
+                    <span className="text-muted-foreground text-xs">
+                      Resend in {resendCountdown}s
+                    </span>
                   ) : (
                     <button
                       type="button"
                       onClick={handleSendOtp}
                       disabled={isSendingOtp}
-                      className="text-xs font-bold text-[#EB6A1F] underline underline-offset-2 hover:text-[#D45914]"
+                      className="text-primary hover:text-primary text-xs font-bold underline underline-offset-2"
                     >
                       Resend Code
                     </button>
@@ -1046,23 +1055,23 @@ export function EventRegistrationFlow({
                       setOtpCode(clean);
                       if (otpError) setOtpError(null);
                     }}
-                    className="shadow-2xs h-10 w-36 rounded-xl border-orange-200 bg-white text-center font-mono text-lg font-bold tracking-widest text-slate-900 focus-visible:ring-[#EB6A1F]"
+                    className="shadow-2xs border-primary/30 bg-surface text-foreground focus-visible:ring-primary h-10 w-36 rounded-xl text-center font-mono text-lg font-bold tracking-widest"
                   />
                   <Button
                     type="button"
                     disabled={otpCode.length !== 6 || isVerifyingOtp}
                     onClick={handleVerifyOtp}
-                    className="shadow-2xs h-10 rounded-xl bg-[#EB6A1F] px-4 text-xs font-bold text-white hover:bg-[#D45914]"
+                    className="shadow-2xs bg-primary text-primary-foreground hover:bg-primary-hover h-10 rounded-xl px-4 text-xs font-bold"
                   >
                     {isVerifyingOtp ? 'Verifying…' : 'Validate OTP'}
                   </Button>
                 </div>
 
                 {otpError ? (
-                  <p className="mt-2 text-xs font-semibold text-red-600">{otpError}</p>
+                  <p className="text-destructive mt-2 text-xs font-semibold">{otpError}</p>
                 ) : null}
                 {otpSuccessMessage ? (
-                  <p className="mt-2 text-xs font-semibold text-emerald-700">{otpSuccessMessage}</p>
+                  <p className="text-success mt-2 text-xs font-semibold">{otpSuccessMessage}</p>
                 ) : null}
               </div>
             ) : null}
@@ -1070,12 +1079,12 @@ export function EventRegistrationFlow({
 
           {/* Mobile Number */}
           <div>
-            <Label htmlFor="reg-phone" className="text-sm font-semibold text-slate-800">
-              Mobile Number <span className="text-red-500">*</span>
+            <Label htmlFor="reg-phone" className="text-foreground text-sm font-semibold">
+              Mobile Number <span className="text-destructive">*</span>
             </Label>
             <div className="relative mt-1.5 flex gap-2">
-              <div className="flex h-11 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/70 px-3 text-xs font-semibold text-slate-700 sm:text-sm">
-                <Phone className="size-3.5 text-slate-400" aria-hidden="true" />
+              <div className="border-border bg-background/70 text-foreground flex h-11 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold sm:text-sm">
+                <Phone className="text-muted-foreground size-3.5" aria-hidden="true" />
                 <span>+91</span>
               </div>
               <div className="relative flex-1">
@@ -1095,15 +1104,15 @@ export function EventRegistrationFlow({
                   }}
                   className={cn(
                     'shadow-2xs h-11 rounded-xl text-sm transition-colors',
-                    fieldErrors.phone && 'border-red-500 focus-visible:ring-red-400',
+                    fieldErrors.phone && 'border-destructive focus-visible:ring-destructive',
                   )}
                 />
               </div>
             </div>
             {fieldErrors.phone ? (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.phone}</p>
+              <p className="text-destructive mt-1 text-xs">{fieldErrors.phone}</p>
             ) : (
-              <p className="text-caption mt-1 text-slate-500">
+              <p className="text-caption text-muted-foreground mt-1">
                 For venue coordination and on-the-day entrance updates.
               </p>
             )}
@@ -1111,17 +1120,17 @@ export function EventRegistrationFlow({
         </div>
 
         {/* Security & Multi-Pass Notice */}
-        <div className="flex items-center gap-3.5 rounded-2xl border border-sky-100 bg-sky-50/60 p-4">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
+        <div className="border-info/30 bg-info-subtle/60 flex items-center gap-3.5 rounded-2xl border p-4">
+          <div className="bg-info-subtle text-info flex size-9 shrink-0 items-center justify-center rounded-xl">
             <ShieldCheck className="size-5 stroke-[2]" aria-hidden="true" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-slate-900">
+            <p className="text-foreground text-sm font-bold">
               {passCount === 1
                 ? 'Individual verified pass'
                 : `${passCount} Unique Passes Generated`}
             </p>
-            <p className="mt-0.5 text-xs text-slate-600">
+            <p className="text-muted-foreground mt-0.5 text-xs">
               {passCount === 1
                 ? 'A unique verification code will be assigned to verify authenticity at the entrance.'
                 : 'Each pass receives its own unique entry code and will be downloadable together in a single ticket sheet file.'}
@@ -1141,14 +1150,14 @@ export function EventRegistrationFlow({
                 if (fieldErrors.consent)
                   setFieldErrors((prev) => ({ ...prev, consent: undefined }));
               }}
-              className="size-4.5 mt-0.5 rounded-[4px] border-slate-300 text-[#EB6A1F] focus:ring-[#EB6A1F]"
+              className="size-4.5 border-border-strong text-primary focus:ring-primary mt-0.5 rounded-[4px]"
             />
-            <span className="text-xs leading-relaxed text-slate-600 sm:text-sm">
+            <span className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
               I agree to the{' '}
               <Link
                 href="/terms"
                 target="_blank"
-                className="font-semibold text-[#EB6A1F] underline underline-offset-2 hover:text-[#D45914]"
+                className="text-primary hover:text-primary font-semibold underline underline-offset-2"
               >
                 Terms of Use
               </Link>{' '}
@@ -1156,47 +1165,47 @@ export function EventRegistrationFlow({
               <Link
                 href="/privacy-policy"
                 target="_blank"
-                className="font-semibold text-[#EB6A1F] underline underline-offset-2 hover:text-[#D45914]"
+                className="text-primary hover:text-primary font-semibold underline underline-offset-2"
               >
                 Privacy Policy
               </Link>{' '}
-              of Sailent Foundation. <span className="text-red-500">*</span>
+              of Sailent Foundation. <span className="text-destructive">*</span>
             </span>
           </label>
           {fieldErrors.consent ? (
-            <p className="mt-1 text-xs text-red-600">{fieldErrors.consent}</p>
+            <p className="text-destructive mt-1 text-xs">{fieldErrors.consent}</p>
           ) : null}
         </div>
 
         {/* Fee & Payment breakdown */}
         {isPaid && feeAmount && feeAmount > 0 ? (
-          <div className="flex items-center justify-between rounded-2xl border border-orange-200/80 bg-orange-50/70 p-4">
+          <div className="border-primary/80 bg-accent/70 flex items-center justify-between rounded-2xl border p-4">
             <div>
-              <p className="text-caption font-bold uppercase tracking-wider text-[#EB6A1F]">
+              <p className="text-caption text-primary font-bold uppercase tracking-wider">
                 Registration Fee ({passCount} {passCount === 1 ? 'Pass' : 'Passes'})
               </p>
-              <p className="mt-0.5 text-xs text-slate-600">
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 ₹{Math.round(feeAmount / 100)} × {passCount} • Secure Razorpay payment
               </p>
             </div>
             <div className="text-right">
-              <span className="font-display text-xl font-black text-slate-900 sm:text-2xl">
+              <span className="font-display text-foreground text-xl font-black sm:text-2xl">
                 ₹{Math.round((totalPayableFee || 0) / 100)}
               </span>
-              <span className="block text-[11px] font-medium text-slate-500">
+              <span className="text-muted-foreground block text-[11px] font-medium">
                 {passCount} {passCount === 1 ? 'attendee' : 'attendees'}
               </span>
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-slate-50/70 p-3.5 px-4">
+          <div className="border-border/80 bg-background/70 flex items-center justify-between rounded-2xl border p-3.5 px-4">
             <div>
-              <p className="text-caption font-bold uppercase tracking-wider text-slate-600">
+              <p className="text-caption text-muted-foreground font-bold uppercase tracking-wider">
                 Registration Fee ({passCount} {passCount === 1 ? 'Pass' : 'Passes'})
               </p>
-              <p className="text-xs text-slate-500">Free admission for this event</p>
+              <p className="text-muted-foreground text-xs">Free admission for this event</p>
             </div>
-            <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
+            <span className="bg-success-subtle text-success ring-success/30 rounded-full px-2.5 py-0.5 text-xs font-bold ring-1">
               Free Entry
             </span>
           </div>
@@ -1208,10 +1217,10 @@ export function EventRegistrationFlow({
             type="submit"
             disabled={isSubmitting || !isEmailVerified}
             className={cn(
-              'h-12 w-full rounded-full text-base font-bold shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EB6A1F]',
+              'h-12 w-full rounded-full text-base font-bold shadow-sm transition-all',
               isEmailVerified
-                ? 'cursor-pointer bg-[#EB6A1F] text-white hover:bg-[#D45914]'
-                : 'cursor-not-allowed bg-slate-200 text-slate-400 hover:bg-slate-200',
+                ? 'bg-action text-action-foreground hover:bg-action-hover active:bg-action-active cursor-pointer'
+                : 'bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed',
             )}
           >
             {isSubmitting ? (
@@ -1232,7 +1241,7 @@ export function EventRegistrationFlow({
             )}
           </Button>
           {!isEmailVerified ? (
-            <p className="mt-2 text-center text-xs text-slate-500">
+            <p className="text-muted-foreground mt-2 text-center text-xs">
               Please send OTP to your email and validate it to activate the registration button.
             </p>
           ) : null}

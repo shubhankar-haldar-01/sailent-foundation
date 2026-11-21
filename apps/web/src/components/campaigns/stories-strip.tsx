@@ -103,7 +103,7 @@ export function StoriesStrip({
       {/* The featured story --------------------------------------------------- */}
       <article
         aria-labelledby="featured-story-title"
-        className="card-interactive @2xl:grid @2xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] mt-4 overflow-hidden rounded-2xl dark:border-slate-800 dark:bg-slate-900"
+        className="card-interactive @2xl:grid @2xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] mt-4 overflow-hidden rounded-2xl"
       >
         <div className="@lg:aspect-[2/1] @2xl:aspect-auto @2xl:min-h-72 relative aspect-[16/10]">
           <ul

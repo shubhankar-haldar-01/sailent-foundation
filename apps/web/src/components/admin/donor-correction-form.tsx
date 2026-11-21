@@ -221,7 +221,7 @@ export function DonorCorrectionForm({ donor }: { donor: CorrectableDonor }) {
         {state.fieldErrors?.taxIdNumber ? (
           <p className="text-destructive text-caption">{state.fieldErrors.taxIdNumber}</p>
         ) : isPanIncomplete ? (
-          <p className="text-caption text-amber-600 dark:text-amber-400">
+          <p className="text-caption text-warning-foreground">
             {pan.length < 5
               ? `First 5 characters must be letters (${5 - pan.length} more needed)`
               : pan.length < 9
@@ -229,7 +229,7 @@ export function DonorCorrectionForm({ donor }: { donor: CorrectableDonor }) {
                 : 'Last character must be a letter'}
           </p>
         ) : isPanValid ? (
-          <p className="text-caption font-medium text-emerald-600 dark:text-emerald-400">
+          <p className="text-caption text-success font-medium">
             ✓ Valid PAN format (5 letters, 4 numbers, 1 letter)
           </p>
         ) : (

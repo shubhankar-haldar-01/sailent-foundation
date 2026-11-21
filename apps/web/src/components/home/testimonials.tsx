@@ -76,7 +76,7 @@ export function Testimonials() {
           </p>
           <h2
             id="testimonials-title"
-            className="font-display text-h1 sm:text-display-sm text-accent-950 mt-1.5 font-bold tracking-tight dark:text-white"
+            className="font-display text-h1 sm:text-display-sm text-foreground mt-1.5 font-bold tracking-tight"
           >
             Voices of <span className="text-primary">Hope and Change</span>
           </h2>
@@ -139,7 +139,7 @@ export function Testimonials() {
                     />
                   </span>
                   <div className="flex min-w-0 flex-col justify-center">
-                    <span className="text-body-sm text-accent-950 block font-bold not-italic leading-tight dark:text-white">
+                    <span className="text-body-sm text-foreground block font-bold not-italic leading-tight">
                       {testimonial.name}
                     </span>
                     <span className="text-caption text-muted-foreground mt-0.5 block leading-tight">

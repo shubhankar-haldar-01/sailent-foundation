@@ -42,24 +42,24 @@ export default async function GateHubPage() {
   const totalAttended = events.reduce((sum, e) => sum + (e.counts?.attended || 0), 0);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F8FAFC] font-sans text-slate-900">
+    <div className="bg-background text-foreground flex min-h-screen flex-col font-sans">
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur-md sm:px-8">
+      <header className="border-border/80 bg-surface/95 sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b px-4 backdrop-blur-md sm:px-8">
         <div className="flex items-center gap-3">
           <Link
             href="/admin/events"
-            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className="border-border bg-background text-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors"
           >
             <ArrowLeft className="size-3.5" />
             <span className="hidden sm:inline">Admin Dashboard</span>
           </Link>
-          <div className="h-4 w-px bg-slate-200" />
+          <div className="bg-border h-4 w-px" />
           <div className="flex items-center gap-2">
             <span className="relative flex size-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
+              <span className="bg-success absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
+              <span className="bg-success relative inline-flex size-2.5 rounded-full" />
             </span>
-            <span className="text-sm font-bold tracking-tight text-slate-900">
+            <span className="text-foreground text-sm font-bold tracking-tight">
               Sailent Gate Operations Hub
             </span>
           </div>
@@ -68,9 +68,9 @@ export default async function GateHubPage() {
         <div className="flex items-center gap-2">
           <Badge
             variant="neutral"
-            className="text-2xs gap-1.5 border-slate-200 bg-slate-100 font-mono text-slate-700"
+            className="text-2xs border-border bg-muted text-foreground gap-1.5 font-mono"
           >
-            <ShieldCheck className="size-3.5 text-emerald-600" />
+            <ShieldCheck className="text-success size-3.5" />
             Active Session
           </Badge>
         </div>
@@ -82,14 +82,14 @@ export default async function GateHubPage() {
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-2xs rounded-full bg-orange-100 px-2.5 py-0.5 font-bold text-[#EB6A1F]">
+              <span className="text-2xs bg-accent text-primary rounded-full px-2.5 py-0.5 font-bold">
                 EVENT ENTRANCE & ADMISSION
               </span>
             </div>
-            <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+            <h1 className="text-foreground mt-2 text-2xl font-black tracking-tight sm:text-3xl">
               Gate Pass Scanner & Check-In Desk
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="text-muted-foreground mt-1 text-sm">
               Select an event to open its high-speed QR pass camera scanner, instant search, and
               live guest list.
             </p>
@@ -98,46 +98,48 @@ export default async function GateHubPage() {
 
         {/* Live Metrics Ribbon */}
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="shadow-xs rounded-2xl border border-slate-200/90 bg-white p-5">
+          <div className="shadow-xs border-border/90 bg-surface rounded-2xl border p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">Events Active</span>
-              <span className="flex size-8 items-center justify-center rounded-xl bg-orange-50 text-[#EB6A1F]">
+              <span className="text-muted-foreground text-xs font-semibold">Events Active</span>
+              <span className="bg-accent text-primary flex size-8 items-center justify-center rounded-xl">
                 <Calendar className="size-4" />
               </span>
             </div>
-            <p className="mt-2 text-2xl font-black text-slate-900">{events.length}</p>
-            <p className="text-2xs mt-0.5 text-slate-500">Live for gate check-in</p>
+            <p className="text-foreground mt-2 text-2xl font-black">{events.length}</p>
+            <p className="text-2xs text-muted-foreground mt-0.5">Live for gate check-in</p>
           </div>
 
-          <div className="shadow-xs rounded-2xl border border-slate-200/90 bg-white p-5">
+          <div className="shadow-xs border-border/90 bg-surface rounded-2xl border p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">Total Registered Guests</span>
-              <span className="flex size-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <span className="text-muted-foreground text-xs font-semibold">
+                Total Registered Guests
+              </span>
+              <span className="bg-info-subtle text-info flex size-8 items-center justify-center rounded-xl">
                 <Users className="size-4" />
               </span>
             </div>
-            <p className="mt-2 text-2xl font-black text-slate-900">{totalRegistered}</p>
-            <p className="text-2xs mt-0.5 text-slate-500">Confirmed bookings</p>
+            <p className="text-foreground mt-2 text-2xl font-black">{totalRegistered}</p>
+            <p className="text-2xs text-muted-foreground mt-0.5">Confirmed bookings</p>
           </div>
 
-          <div className="shadow-xs rounded-2xl border border-slate-200/90 bg-white p-5">
+          <div className="shadow-xs border-border/90 bg-surface rounded-2xl border p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">Total Admitted</span>
-              <span className="flex size-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+              <span className="text-muted-foreground text-xs font-semibold">Total Admitted</span>
+              <span className="bg-success-subtle text-success flex size-8 items-center justify-center rounded-xl">
                 <CheckCircle2 className="size-4" />
               </span>
             </div>
-            <p className="mt-2 text-2xl font-black text-emerald-600">{totalAttended}</p>
-            <p className="text-2xs mt-0.5 text-slate-500">Checked in at entrance</p>
+            <p className="text-success mt-2 text-2xl font-black">{totalAttended}</p>
+            <p className="text-2xs text-muted-foreground mt-0.5">Checked in at entrance</p>
           </div>
         </div>
 
         {/* Event Cards Grid */}
         {events.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500">
-            <Calendar className="mb-3 size-12 text-slate-400" />
-            <p className="text-base font-bold text-slate-800">No Events Scheduled</p>
-            <p className="mt-1 text-xs text-slate-500">
+          <div className="border-border-strong bg-surface text-muted-foreground flex flex-col items-center justify-center rounded-3xl border border-dashed p-12 text-center">
+            <Calendar className="text-muted-foreground mb-3 size-12" />
+            <p className="text-foreground text-base font-bold">No Events Scheduled</p>
+            <p className="text-muted-foreground mt-1 text-xs">
               Create an event in the admin dashboard to start accepting pass registrations and gate
               check-ins.
             </p>
@@ -155,11 +157,11 @@ export default async function GateHubPage() {
               return (
                 <div
                   key={evt.id}
-                  className="shadow-xs group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white transition-all duration-200 hover:border-[#EB6A1F]/60 hover:shadow-md"
+                  className="shadow-xs border-border/90 bg-surface hover:border-primary/60 group relative flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-200 hover:shadow-md"
                 >
                   <div>
                     {/* Event Banner / Cover */}
-                    <div className="relative h-44 w-full overflow-hidden bg-slate-100">
+                    <div className="bg-muted relative h-44 w-full overflow-hidden">
                       {evt.coverImage ? (
                         <Image
                           src={evt.coverImage}
@@ -168,20 +170,20 @@ export default async function GateHubPage() {
                           className="group-hover:scale-103 object-cover transition-transform duration-300"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 text-white">
-                          <Calendar className="size-12 text-slate-600" />
+                        <div className="from-surface-inverse to-surface-inverse flex h-full w-full items-center justify-center bg-gradient-to-br text-white">
+                          <Calendar className="text-muted-foreground size-12" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
+                      <div className="from-surface-inverse/80 via-surface-inverse/20 absolute inset-0 bg-gradient-to-t to-transparent" />
 
                       {/* Badges on cover */}
                       <div className="absolute left-3 top-3 flex items-center gap-1.5">
-                        <span className="text-2xs backdrop-blur-xs rounded-full bg-white/95 px-2.5 py-1 font-black uppercase tracking-wider text-slate-800 shadow-sm">
+                        <span className="text-2xs backdrop-blur-xs bg-surface/95 text-foreground rounded-full px-2.5 py-1 font-black uppercase tracking-wider shadow-sm">
                           {evt.registrationStatus || 'OPEN'}
                         </span>
                         {evt.status === 'published' && (
-                          <span className="text-2xs backdrop-blur-xs flex items-center gap-1 rounded-full bg-emerald-500/95 px-2.5 py-1 font-bold text-white shadow-sm">
-                            <span className="size-1.5 rounded-full bg-white" />
+                          <span className="text-2xs backdrop-blur-xs bg-success/95 flex items-center gap-1 rounded-full px-2.5 py-1 font-bold text-white shadow-sm">
+                            <span className="bg-surface size-1.5 rounded-full" />
                             Live
                           </span>
                         )}
@@ -197,17 +199,17 @@ export default async function GateHubPage() {
 
                     {/* Event Details */}
                     <div className="space-y-4 p-5">
-                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                      <div className="text-muted-foreground grid grid-cols-2 gap-2 text-xs">
                         <div className="flex items-center gap-2">
-                          <Calendar className="size-4 shrink-0 text-[#EB6A1F]" />
-                          <span className="font-medium text-slate-900">
+                          <Calendar className="text-primary size-4 shrink-0" />
+                          <span className="text-foreground font-medium">
                             {formatDate(evt.startDate)}
                           </span>
                         </div>
                         {evt.venueName && (
                           <div className="flex items-center gap-2 truncate">
-                            <MapPin className="size-4 shrink-0 text-[#EB6A1F]" />
-                            <span className="truncate font-medium text-slate-900">
+                            <MapPin className="text-primary size-4 shrink-0" />
+                            <span className="text-foreground truncate font-medium">
                               {evt.venueName}
                               {evt.city ? `, ${evt.city}` : ''}
                             </span>
@@ -216,22 +218,22 @@ export default async function GateHubPage() {
                       </div>
 
                       {/* Live Admission Progress Bar */}
-                      <div className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                      <div className="border-border bg-background/80 space-y-1.5 rounded-xl border p-3">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="font-semibold text-slate-700">Admitted Guests</span>
-                          <span className="font-mono font-bold text-slate-900">
+                          <span className="text-foreground font-semibold">Admitted Guests</span>
+                          <span className="text-foreground font-mono font-bold">
                             {checkedIn} / {total} ({percent}%)
                           </span>
                         </div>
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                        <div className="bg-border h-2 w-full overflow-hidden rounded-full">
                           <div
-                            className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+                            className="bg-success h-full rounded-full transition-all duration-300"
                             style={{
                               width: `${Math.min(100, Math.max(percent, total > 0 ? 3 : 0))}%`,
                             }}
                           />
                         </div>
-                        <div className="text-2xs flex items-center justify-between pt-0.5 text-slate-500">
+                        <div className="text-2xs text-muted-foreground flex items-center justify-between pt-0.5">
                           <span>
                             {evt.capacity !== null ? `Capacity: ${evt.capacity}` : 'Open Capacity'}
                           </span>
@@ -242,7 +244,7 @@ export default async function GateHubPage() {
                   </div>
 
                   {/* Action Footer */}
-                  <div className="border-t border-slate-100 bg-slate-50/50 p-4">
+                  <div className="border-border bg-background/50 border-t p-4">
                     <Button
                       asChild
                       variant="primary"

@@ -206,9 +206,9 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
             </CardHeader>
             <CardContent className="space-y-4 p-5 sm:p-6">
               {publishBlockers.length > 0 && event.status === 'draft' ? (
-                <div className="text-foreground space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs">
-                  <div className="flex items-center gap-2 font-semibold text-amber-900 dark:text-amber-200">
-                    <AlertCircle className="size-4 shrink-0 text-amber-600" />
+                <div className="text-foreground border-warning/30 bg-warning/10 space-y-2 rounded-lg border p-3.5 text-xs">
+                  <div className="text-warning-foreground flex items-center gap-2 font-semibold">
+                    <AlertCircle className="text-warning-foreground size-4 shrink-0" />
                     <span>Required before publishing</span>
                   </div>
                   <ul className="text-caption text-foreground/80 list-inside list-disc space-y-1 pl-1">

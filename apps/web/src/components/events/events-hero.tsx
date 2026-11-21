@@ -45,7 +45,7 @@ export function EventsHero() {
       </div>
 
       <PageShell>
-        <div className="relative overflow-hidden rounded-[24px] border border-slate-100 bg-[#12080D] shadow-[0_4px_24px_rgba(0,0,0,0.03)] sm:rounded-[32px] dark:border-slate-800">
+        <div className="border-border bg-surface-inverse relative overflow-hidden rounded-[24px] border shadow-card sm:rounded-[32px]">
           <Image
             src={HERO_BANNER}
             alt="Sailent Foundation Events — Community members, field activities and volunteer support"

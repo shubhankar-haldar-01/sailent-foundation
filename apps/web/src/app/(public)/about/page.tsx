@@ -85,29 +85,29 @@ type FocusAreaItem = {
 const focusAreas: FocusAreaItem[] = [
   {
     icon: BookOpen,
-    discBg: 'bg-[#FEEFE6] dark:bg-orange-950/60',
-    iconColor: 'text-primary dark:text-[#F97316]',
+    discBg: 'bg-muted',
+    iconColor: 'text-primary',
     title: 'Education',
     body: 'Supporting learning opportunities for brighter futures.',
   },
   {
     icon: HeartPulse,
-    discBg: 'bg-[#E0F2FE] dark:bg-sky-950/60',
-    iconColor: 'text-[#0284C7] dark:text-[#38BDF8]',
+    discBg: 'bg-info-subtle',
+    iconColor: 'text-info',
     title: 'Health',
     body: 'Working towards healthier and stronger communities.',
   },
   {
     icon: Leaf,
-    discBg: 'bg-[#DCFCE7] dark:bg-emerald-950/60',
-    iconColor: 'text-[#16A34A] dark:text-[#4ADE80]',
+    discBg: 'bg-success-subtle',
+    iconColor: 'text-success',
     title: 'Livelihoods',
     body: 'Creating opportunities for sustainable income.',
   },
   {
     icon: UsersRound,
-    discBg: 'bg-[#F3E8FF] dark:bg-purple-950/60',
-    iconColor: 'text-[#9333EA] dark:text-[#C084FC]',
+    discBg: 'bg-accent',
+    iconColor: 'text-primary',
     title: 'Community Support',
     body: 'Strengthening local communities and systems.',
   },
@@ -124,29 +124,29 @@ type ApproachItem = {
 const approach: ApproachItem[] = [
   {
     icon: Users,
-    discBg: 'bg-[#FEEFE6] dark:bg-orange-950/60',
-    iconColor: 'text-primary dark:text-[#F97316]',
+    discBg: 'bg-muted',
+    iconColor: 'text-primary',
     title: 'Work with what exists',
     body: 'We support schools, health centres and village committees instead of creating parallel systems.',
   },
   {
     icon: ChartNoAxesColumnIncreasing,
-    discBg: 'bg-[#E0F2FE] dark:bg-sky-950/60',
-    iconColor: 'text-[#0284C7] dark:text-[#38BDF8]',
+    discBg: 'bg-info-subtle',
+    iconColor: 'text-info',
     title: 'Measure the outcome',
     body: 'We look at what changes for people, not just the number of activities we conduct.',
   },
   {
     icon: FileText,
-    discBg: 'bg-[#FEEFE6] dark:bg-orange-950/60',
-    iconColor: 'text-primary dark:text-[#F97316]',
+    discBg: 'bg-muted',
+    iconColor: 'text-primary',
     title: 'Publish what works',
     body: 'We share what has not worked so others can learn from it.',
   },
   {
     icon: MapIcon,
-    discBg: 'bg-[#E0F2FE] dark:bg-sky-950/60',
-    iconColor: 'text-[#0284C7] dark:text-[#38BDF8]',
+    discBg: 'bg-info-subtle',
+    iconColor: 'text-info',
     title: 'Decide locally',
     body: 'Village committees, head teachers and local people help identify the real needs.',
   },
@@ -177,21 +177,21 @@ export default async function AboutPage() {
         <PageShell>
           <div className="mx-auto max-w-2xl text-center">
             <div className="flex items-center justify-center gap-2.5">
-              <span className="h-[1.5px] w-6 bg-[#EB6A1F]" aria-hidden="true" />
+              <span className="bg-primary h-[1.5px] w-6" aria-hidden="true" />
               <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                 WHERE WE FOCUS
               </span>
-              <span className="h-[1.5px] w-6 bg-[#EB6A1F]" aria-hidden="true" />
+              <span className="bg-primary h-[1.5px] w-6" aria-hidden="true" />
             </div>
 
             <h2
               id="focus-areas-heading"
-              className="font-display mt-2.5 text-balance text-2xl font-extrabold tracking-tight text-[#0F172A] sm:text-3xl lg:text-[38px] lg:leading-[1.15] dark:text-white"
+              className="font-display text-foreground mt-2.5 text-balance text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[38px] lg:leading-[1.15]"
             >
               Creating Change, <span className="text-primary">Together</span>
             </h2>
 
-            <p className="mt-2 text-balance text-sm text-[#64748B] sm:text-base dark:text-slate-400">
+            <p className="text-muted-foreground mt-2 text-balance text-sm sm:text-base">
               Practical support that helps communities build brighter futures.
             </p>
           </div>
@@ -200,7 +200,7 @@ export default async function AboutPage() {
             {focusAreas.map((area) => (
               <div
                 key={area.title}
-                className="card-interactive sm:p-4.5 flex flex-col rounded-[18px] p-4 dark:border-slate-800 dark:bg-slate-900"
+                className="card-interactive sm:p-4.5 flex flex-col rounded-[18px] p-4"
               >
                 <div
                   aria-hidden="true"
@@ -212,11 +212,11 @@ export default async function AboutPage() {
                   <area.icon className={cn('size-5', area.iconColor)} strokeWidth={1.8} />
                 </div>
 
-                <h3 className="font-display text-base font-bold text-[#0F172A] sm:text-lg dark:text-white">
+                <h3 className="font-display text-foreground text-base font-bold sm:text-lg">
                   {area.title}
                 </h3>
 
-                <p className="mt-1 text-xs leading-relaxed text-[#64748B] sm:text-[13.5px] dark:text-slate-400">
+                <p className="text-muted-foreground mt-1 text-xs leading-relaxed sm:text-[13.5px]">
                   {area.body}
                 </p>
               </div>
@@ -228,7 +228,7 @@ export default async function AboutPage() {
       {/* Our story ------------------------------------------------------------------ */}
       <section
         aria-labelledby="story-heading"
-        className="bg-background relative overflow-hidden border-t border-slate-200/80 py-16 sm:py-20 lg:py-24 dark:border-slate-800"
+        className="bg-background border-border/80 relative overflow-hidden border-t py-16 sm:py-20 lg:py-24"
       >
         <PageShell className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12 xl:gap-16">
           {/* The collage: one tall photograph on left, two stacked on right */}
@@ -270,17 +270,17 @@ export default async function AboutPage() {
               <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                 OUR STORY
               </span>
-              <span className="h-[1.5px] w-8 bg-[#EB6A1F]" aria-hidden="true" />
+              <span className="bg-primary h-[1.5px] w-8" aria-hidden="true" />
             </div>
 
             <h2
               id="story-heading"
-              className="font-display mt-3 text-balance text-3xl font-extrabold tracking-tight text-[#0F172A] sm:text-4xl lg:text-[44px] lg:leading-[1.15] dark:text-white"
+              className="font-display text-foreground mt-3 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.15]"
             >
               How this <span className="text-primary">started</span>
             </h2>
 
-            <div className="mt-5 space-y-4 text-[15px] leading-relaxed text-[#475569] sm:text-base sm:leading-[1.68] dark:text-slate-300">
+            <div className="text-muted-foreground mt-5 space-y-4 text-[15px] leading-relaxed sm:text-base sm:leading-[1.68]">
               <p>
                 The organization began with a simple question — why do children in these communities
                 leave school, even when a school is nearby?
@@ -300,7 +300,7 @@ export default async function AboutPage() {
             <div className="mt-8">
               <Link
                 href="/programs"
-                className="inline-flex items-center gap-2 rounded-full border-2 border-[#0070BA] px-6 py-2.5 text-sm font-semibold text-[#0070BA] transition-colors duration-200 hover:bg-[#0070BA]/5 sm:px-7 sm:py-3 sm:text-base dark:border-sky-400 dark:text-sky-400 dark:hover:bg-sky-400/10"
+                className="border-primary/30 text-primary hover:bg-primary/5 inline-flex items-center gap-2 rounded-full border-2 px-6 py-2.5 text-sm font-semibold transition-colors duration-200 sm:px-7 sm:py-3 sm:text-base"
               >
                 Explore Our Programs
                 <ArrowRight className="size-4" aria-hidden="true" />
@@ -336,7 +336,7 @@ export default async function AboutPage() {
       {/* How we work ----------------------------------------------------------------- */}
       <section
         aria-labelledby="approach-heading"
-        className="bg-background relative border-t border-slate-200/80 py-8 sm:py-10 lg:py-12 dark:border-slate-800"
+        className="bg-background border-border/80 relative border-t py-8 sm:py-10 lg:py-12"
       >
         <PageShell>
           <div className="max-w-2xl">
@@ -344,17 +344,17 @@ export default async function AboutPage() {
               <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                 OUR APPROACH
               </span>
-              <span className="h-[1.5px] w-8 bg-[#EB6A1F]" aria-hidden="true" />
+              <span className="bg-primary h-[1.5px] w-8" aria-hidden="true" />
             </div>
 
             <h2
               id="approach-heading"
-              className="font-display mt-2.5 text-balance text-2xl font-extrabold tracking-tight text-[#0F172A] sm:text-3xl lg:text-[38px] lg:leading-[1.15] dark:text-white"
+              className="font-display text-foreground mt-2.5 text-balance text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[38px] lg:leading-[1.15]"
             >
               How we <span className="text-primary">work</span>
             </h2>
 
-            <p className="mt-2.5 text-balance text-sm text-[#64748B] sm:text-base dark:text-slate-400">
+            <p className="text-muted-foreground mt-2.5 text-balance text-sm sm:text-base">
               We focus on practical solutions, working with existing institutions and the people who
               know their communities best.
             </p>
@@ -364,7 +364,7 @@ export default async function AboutPage() {
             {approach.map((item) => (
               <div
                 key={item.title}
-                className="card-interactive sm:p-4.5 flex flex-col rounded-[18px] p-4 dark:border-slate-800 dark:bg-slate-900"
+                className="card-interactive sm:p-4.5 flex flex-col rounded-[18px] p-4"
               >
                 <div
                   aria-hidden="true"
@@ -376,11 +376,11 @@ export default async function AboutPage() {
                   <item.icon className={cn('size-5', item.iconColor)} strokeWidth={1.8} />
                 </div>
 
-                <h3 className="font-display text-base font-bold text-[#0F172A] sm:text-lg dark:text-white">
+                <h3 className="font-display text-foreground text-base font-bold sm:text-lg">
                   {item.title}
                 </h3>
 
-                <p className="mt-1 text-xs leading-relaxed text-[#64748B] sm:text-[13.5px] dark:text-slate-400">
+                <p className="text-muted-foreground mt-1 text-xs leading-relaxed sm:text-[13.5px]">
                   {item.body}
                 </p>
               </div>
@@ -392,7 +392,7 @@ export default async function AboutPage() {
       {/* Where we work --------------------------------------------------------------- */}
       <section
         aria-labelledby="presence-heading"
-        className="bg-background relative overflow-hidden border-t border-slate-200/80 py-8 sm:py-10 lg:py-12 dark:border-slate-800"
+        className="bg-background border-border/80 relative overflow-hidden border-t py-8 sm:py-10 lg:py-12"
       >
         <PageShell className="grid items-center gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8 xl:gap-10">
           {/* Left Column: Copy, Stats & CTA */}
@@ -401,17 +401,17 @@ export default async function AboutPage() {
               <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                 WHERE WE WORK
               </span>
-              <span className="h-[1.5px] w-8 bg-[#EB6A1F]" aria-hidden="true" />
+              <span className="bg-primary h-[1.5px] w-8" aria-hidden="true" />
             </div>
 
             <h2
               id="presence-heading"
-              className="font-display mt-2.5 text-balance text-2xl font-extrabold tracking-tight text-[#0F172A] sm:text-3xl lg:text-[38px] lg:leading-[1.15] dark:text-white"
+              className="font-display text-foreground mt-2.5 text-balance text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[38px] lg:leading-[1.15]"
             >
               Our <span className="text-primary">presence</span>
             </h2>
 
-            <p className="mt-2.5 max-w-xl text-balance text-sm text-[#64748B] sm:text-base dark:text-slate-400">
+            <p className="text-muted-foreground mt-2.5 max-w-xl text-balance text-sm sm:text-base">
               We currently work across multiple districts in different states. We add a district
               only when an existing program is running well enough that the field team can take on
               more.
@@ -421,7 +421,7 @@ export default async function AboutPage() {
             <div className="mt-5">
               <Link
                 href="/programs"
-                className="inline-flex items-center gap-2 rounded-full border-2 border-[#0070BA] px-5 py-2 text-sm font-semibold text-[#0070BA] transition-colors duration-200 hover:bg-[#0070BA]/5 sm:px-6 sm:py-2.5 dark:border-sky-400 dark:text-sky-400 dark:hover:bg-sky-400/10"
+                className="border-primary/30 text-primary hover:bg-primary/5 inline-flex items-center gap-2 rounded-full border-2 px-5 py-2 text-sm font-semibold transition-colors duration-200 sm:px-6 sm:py-2.5"
               >
                 Explore our programs
                 <ArrowRight className="size-4" aria-hidden="true" />
@@ -432,11 +432,11 @@ export default async function AboutPage() {
           {/* Right Column: India Map with Glowing Pins & Floating Card */}
           <div className="relative mx-auto w-full max-w-[19rem] sm:max-w-[21rem] lg:max-w-[22rem]">
             <IndiaPresenceMap regions={regions} className="w-full" />
-            <div className="absolute -bottom-2 right-0 flex items-center gap-2.5 rounded-[18px] border border-amber-200/60 bg-[#FFF9F2] p-2.5 shadow-md sm:bottom-1 sm:right-1 sm:p-3 dark:border-amber-900/40 dark:bg-slate-900">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#FEE7D6] sm:size-10 dark:bg-orange-950/60">
-                <MapPin className="size-4.5 text-[#EB6A1F]" strokeWidth={2} />
+            <div className="border-warning/60 bg-muted absolute -bottom-2 right-0 flex items-center gap-2.5 rounded-[18px] border p-2.5 shadow-md sm:bottom-1 sm:right-1 sm:p-3">
+              <div className="bg-muted flex size-9 shrink-0 items-center justify-center rounded-full sm:size-10">
+                <MapPin className="size-4.5 text-primary" strokeWidth={2} />
               </div>
-              <p className="text-[11px] font-medium leading-snug text-[#475569] sm:text-xs dark:text-slate-300">
+              <p className="text-muted-foreground text-[11px] font-medium leading-snug sm:text-xs">
                 Working across
                 <br />
                 multiple regions
@@ -452,7 +452,7 @@ export default async function AboutPage() {
       {leadership.length > 0 ? (
         <section
           aria-labelledby="team-heading"
-          className="bg-background relative border-t border-slate-200/80 py-8 sm:py-10 lg:py-12 dark:border-slate-800"
+          className="bg-background border-border/80 relative border-t py-8 sm:py-10 lg:py-12"
         >
           <PageShell>
             {/* Section Header */}
@@ -462,17 +462,17 @@ export default async function AboutPage() {
                   <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                     OUR TEAM
                   </span>
-                  <span className="h-[1.5px] w-8 bg-[#EB6A1F]" aria-hidden="true" />
+                  <span className="bg-primary h-[1.5px] w-8" aria-hidden="true" />
                 </div>
 
                 <h2
                   id="team-heading"
-                  className="font-display mt-2.5 text-balance text-2xl font-extrabold tracking-tight text-[#0F172A] sm:text-3xl lg:text-[38px] lg:leading-[1.15] dark:text-white"
+                  className="font-display text-foreground mt-2.5 text-balance text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[38px] lg:leading-[1.15]"
                 >
                   Who runs <span className="text-primary">it</span>
                 </h2>
 
-                <p className="mt-2 text-balance text-sm text-[#64748B] sm:text-base dark:text-slate-400">
+                <p className="text-muted-foreground mt-2 text-balance text-sm sm:text-base">
                   A small and committed team working closely with communities, partners and support
                   institutions.
                 </p>
@@ -481,7 +481,7 @@ export default async function AboutPage() {
               <div>
                 <Link
                   href="/team"
-                  className="inline-flex items-center gap-2 rounded-full border-2 border-[#0070BA] px-5 py-2 text-sm font-semibold text-[#0070BA] transition-colors duration-200 hover:bg-[#0070BA]/5 dark:border-sky-400 dark:text-sky-400 dark:hover:bg-sky-400/10"
+                  className="border-primary/30 text-primary hover:bg-primary/5 inline-flex items-center gap-2 rounded-full border-2 px-5 py-2 text-sm font-semibold transition-colors duration-200"
                 >
                   Meet all team members
                   <ArrowRight className="size-4" aria-hidden="true" />
@@ -494,9 +494,9 @@ export default async function AboutPage() {
               {leadership.map((member) => (
                 <div
                   key={member.slug}
-                  className="card-interactive group relative flex flex-col overflow-hidden rounded-[18px] dark:border-slate-800 dark:bg-slate-900"
+                  className="card-interactive group relative flex flex-col overflow-hidden rounded-[18px]"
                 >
-                  <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                  <div className="bg-muted relative aspect-[16/9] w-full overflow-hidden">
                     <Image
                       src={
                         member.photo.url ||
@@ -516,7 +516,7 @@ export default async function AboutPage() {
                   </div>
 
                   <div className="sm:p-4.5 flex flex-1 flex-col p-4">
-                    <h3 className="font-display text-base font-bold text-[#0F172A] sm:text-lg dark:text-white">
+                    <h3 className="font-display text-foreground text-base font-bold sm:text-lg">
                       {member.name}
                     </h3>
 
@@ -525,13 +525,13 @@ export default async function AboutPage() {
                     </p>
 
                     {member.department ? (
-                      <p className="text-[11px] text-[#64748B] sm:text-xs dark:text-slate-400">
+                      <p className="text-muted-foreground text-[11px] sm:text-xs">
                         {member.department}
                       </p>
                     ) : null}
 
                     {member.bio ? (
-                      <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[#64748B] sm:text-[13px] dark:text-slate-400">
+                      <p className="text-muted-foreground mt-2 line-clamp-2 text-xs leading-relaxed sm:text-[13px]">
                         {member.bio}
                       </p>
                     ) : null}
@@ -546,7 +546,7 @@ export default async function AboutPage() {
       {/* Trust & Transparency / Check us before you give ---------------------------- */}
       <section
         aria-labelledby="verify-heading"
-        className="bg-background relative overflow-hidden border-t border-slate-200/80 py-8 sm:py-10 lg:py-12 dark:border-slate-800"
+        className="bg-background border-border/80 relative overflow-hidden border-t py-8 sm:py-10 lg:py-12"
       >
         <PageShell className="grid items-center gap-6 lg:grid-cols-12 lg:gap-8 xl:gap-10">
           {/* Left Column: Heading, description & CTAs */}
@@ -555,31 +555,31 @@ export default async function AboutPage() {
               <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                 TRUST &amp; TRANSPARENCY
               </span>
-              <span className="h-[1.5px] w-8 bg-[#EB6A1F]" aria-hidden="true" />
+              <span className="bg-primary h-[1.5px] w-8" aria-hidden="true" />
             </div>
 
             <h2
               id="verify-heading"
-              className="font-display mt-2.5 text-balance text-2xl font-extrabold tracking-tight text-[#0F172A] sm:text-3xl lg:text-[38px] lg:leading-[1.15] dark:text-white"
+              className="font-display text-foreground mt-2.5 text-balance text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[38px] lg:leading-[1.15]"
             >
               Check us before you <span className="text-primary">give</span>
             </h2>
 
-            <p className="mt-2.5 max-w-md text-balance text-sm text-[#64748B] sm:text-base dark:text-slate-400">
+            <p className="text-muted-foreground mt-2.5 max-w-md text-balance text-sm sm:text-base">
               These identifiers let you verify us independently against the public registers.
             </p>
 
             <div className="mt-5 flex flex-wrap items-center gap-3.5">
               <Link
                 href="/donate"
-                className="text-primary-foreground hover:bg-primary-hover inline-flex items-center justify-center gap-2 rounded-full bg-[#EB6A1F] px-5 py-2 text-sm font-semibold shadow-sm transition-all duration-200 hover:shadow sm:px-6 sm:py-2.5"
+                className="bg-action text-action-foreground hover:bg-action-hover active:bg-action-active inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-sm font-semibold shadow-sm transition-all duration-200 hover:shadow sm:px-6 sm:py-2.5"
               >
                 Donate Now
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center rounded-full border-2 border-[#0070BA] px-5 py-2 text-sm font-semibold text-[#0070BA] transition-colors duration-200 hover:bg-[#0070BA]/5 sm:px-6 sm:py-2.5 dark:border-sky-400 dark:text-sky-400 dark:hover:bg-sky-400/10"
+                className="border-primary/30 text-primary hover:bg-primary/5 inline-flex items-center justify-center rounded-full border-2 px-5 py-2 text-sm font-semibold transition-colors duration-200 sm:px-6 sm:py-2.5"
               >
                 Ask us anything
               </Link>
@@ -588,32 +588,32 @@ export default async function AboutPage() {
 
           {/* Right Column: Identifiers Card */}
           <div className="lg:col-span-7">
-            <div className="card-interactive p-4.5 rounded-[20px] sm:p-5 lg:p-6 dark:border-slate-800 dark:bg-slate-900">
+            <div className="card-interactive p-4.5 rounded-[20px] sm:p-5 lg:p-6">
               {registration.length > 0 ? (
-                <dl className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                <dl className="divide-border divide-y">
                   {registration.map((field) => (
                     <div
                       key={field.label}
                       className="flex items-center justify-between py-2 first:pt-0 sm:py-2.5"
                     >
-                      <dt className="text-xs font-medium text-[#475569] sm:text-sm dark:text-slate-300">
+                      <dt className="text-muted-foreground text-xs font-medium sm:text-sm">
                         {field.label}
                       </dt>
-                      <dd className="text-right text-xs font-medium text-[#0F172A] sm:text-sm dark:text-white">
+                      <dd className="text-foreground text-right text-xs font-medium sm:text-sm">
                         {field.value}
                       </dd>
                     </div>
                   ))}
                 </dl>
               ) : (
-                <p className="text-xs text-[#475569] sm:text-sm dark:text-slate-300">
+                <p className="text-muted-foreground text-xs sm:text-sm">
                   Our registration details are being added. Ask us for them in the meantime.
                 </p>
               )}
 
-              <div className="mt-3.5 flex items-center gap-2.5 rounded-xl border border-amber-200/60 bg-[#FFF7EE] px-3 py-2 sm:mt-4 sm:px-3.5 sm:py-2.5 dark:border-amber-900/40 dark:bg-amber-950/30">
-                <Info className="sm:size-4.5 size-4 shrink-0 text-[#EB6A1F]" aria-hidden="true" />
-                <p className="text-[11px] font-medium text-[#334155] sm:text-xs dark:text-slate-300">
+              <div className="border-warning/60 bg-muted mt-3.5 flex items-center gap-2.5 rounded-xl border px-3 py-2 sm:mt-4 sm:px-3.5 sm:py-2.5">
+                <Info className="sm:size-4.5 text-primary size-4 shrink-0" aria-hidden="true" />
+                <p className="text-foreground text-[11px] font-medium sm:text-xs">
                   {organisation.isDemo ? (
                     <>
                       Details shown here are for demonstration: each is a dummy value marked{' '}

@@ -18,7 +18,6 @@ import {
 import { ViewMorePrograms } from '@/components/programs/view-more-programs';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { getPrograms } from '@/lib/content';
-import { headingExtraBold } from '@/lib/fonts';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Programs',
@@ -76,18 +75,18 @@ export default async function ProgramsPage({ searchParams }: { searchParams: Sea
         <PageShell>
           {/* The listing's own introduction, as the owner's design draws it (2026-10-14). */}
           <p className="text-primary flex items-center gap-4 text-sm font-semibold uppercase leading-6 tracking-[0.24em]">
-            <span aria-hidden="true" className="bg-cta-bright h-0.5 w-11 shrink-0 rounded-full" />
+            <span aria-hidden="true" className="bg-primary h-0.5 w-11 shrink-0 rounded-full" />
             Our programs
           </p>
           <h2
             id="programs-list-title"
             className={cn(
-              headingExtraBold.className,
+              'font-display font-semibold',
               'text-foreground mt-1.5 text-[clamp(2rem,0.6rem+3.3vw,3.625rem)] leading-[1.12] tracking-[-0.025em]',
             )}
           >
             {/* Display size only: the bright orange is for large text (`--cta-bright`). */}
-            Explore <span className="text-cta-bright">our programs</span>
+            Explore <span className="text-primary">our programs</span>
           </h2>
           <p className="text-foreground/80 mt-3 max-w-[44rem] text-[1.0625rem] leading-[1.4] sm:text-lg xl:text-xl">
             Focused initiatives that create real and lasting change in communities.
@@ -129,7 +128,7 @@ export default async function ProgramsPage({ searchParams }: { searchParams: Sea
 function NoPrograms({ filtered }: { filtered: boolean }) {
   return (
     <div className="border-border bg-surface mt-7 flex flex-col items-center rounded-2xl border border-dashed px-6 py-14 text-center">
-      <span className="bg-primary/10 text-cta-glow grid size-12 place-items-center rounded-full">
+      <span className="bg-primary/10 text-primary grid size-12 place-items-center rounded-full">
         <LayoutGrid className="size-6" aria-hidden="true" />
       </span>
       <p className="font-display text-h4 mt-4 font-bold">

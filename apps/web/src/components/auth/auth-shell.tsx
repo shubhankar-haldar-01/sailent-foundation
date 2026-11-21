@@ -6,7 +6,6 @@ import { cn } from '@sailent/ui';
 import { PageShell } from '@/components/layout/page-shell';
 import { MediaFrame } from '@/components/media/media-frame';
 import { GreenSprig, LeafOutline } from '@/components/programs/decor';
-import { headingExtraBold } from '@/lib/fonts';
 import { localMedia } from '@/lib/media/public-asset';
 import { siteConfig } from '@/lib/site-config';
 
@@ -25,7 +24,7 @@ import { siteConfig } from '@/lib/site-config';
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <PageShell className="py-6 md:py-6">
-      <div className="border-border/60 bg-surface mx-auto grid max-w-[66rem] overflow-hidden rounded-[1.5rem] border shadow-[0_24px_60px_-36px_rgb(15_23_42/0.35)] lg:grid-cols-[minmax(0,1.17fr)_minmax(0,1fr)]">
+      <div className="border-border/60 bg-surface mx-auto grid max-w-[66rem] overflow-hidden rounded-[1.5rem] border shadow-elevated lg:grid-cols-[minmax(0,1.17fr)_minmax(0,1fr)]">
         <div className="px-6 py-8 sm:px-10 lg:flex lg:flex-col lg:justify-center lg:px-10 lg:py-5 xl:px-12">
           {children}
         </div>
@@ -96,7 +95,7 @@ function WelcomePanel() {
   return (
     <aside
       aria-label="Welcome to Sailent Foundation"
-      className="bg-(--cta-50) dark:bg-primary-soft @container relative hidden overflow-hidden lg:order-first lg:block lg:aspect-[770/840]"
+      className="bg-(--brand-50) dark:bg-primary-soft @container relative hidden overflow-hidden lg:order-first lg:block lg:aspect-[770/840]"
     >
       <MediaFrame
         media={photo}
@@ -114,7 +113,7 @@ function WelcomePanel() {
         aria-hidden="true"
         viewBox="0 0 770 905"
         preserveAspectRatio="none"
-        className="fill-(--cta-50) dark:fill-primary-soft pointer-events-none absolute inset-0 size-full"
+        className="fill-(--brand-50) dark:fill-primary-soft pointer-events-none absolute inset-0 size-full"
       >
         <path d="M0 0 H476 C 414 70, 370 134, 372 214 C 374 294, 332 358, 282 416 C 238 468, 168 496, 104 508 C 60 516, 26 530, 0 550 Z" />
         <path d="M0 905 V 812 C 58 794, 132 806, 190 826 C 252 848, 296 818, 330 786 C 364 756, 420 768, 462 758 C 522 742, 562 702, 620 714 C 678 726, 718 690, 770 696 V 905 Z" />
@@ -123,7 +122,7 @@ function WelcomePanel() {
         aria-hidden="true"
         viewBox="0 0 770 905"
         preserveAspectRatio="none"
-        className="fill-(--cta-100)/50 dark:fill-cta-glow/10 pointer-events-none absolute inset-0 size-full"
+        className="fill-(--brand-100)/50 dark:fill-primary/10 pointer-events-none absolute inset-0 size-full"
       >
         {/* Cream behind the top-right leaves, and a second, deeper wave at the foot. */}
         <circle cx="720" cy="74" r="104" />
@@ -134,16 +133,16 @@ function WelcomePanel() {
       <GreenSprig className="absolute -right-[3%] -top-[3%] h-[24%] w-auto rotate-[56deg]" />
       <GreenSprig className="absolute -left-[3%] top-[49%] h-[22%] w-auto rotate-[14deg] -scale-x-100" />
       <GreenSprig className="absolute bottom-0 left-[46%] h-[25%] w-auto -rotate-[8deg]" />
-      <LeafOutline className="text-cta-glow absolute bottom-[1%] left-[70%] h-[22%] w-auto rotate-[24deg]" />
+      <LeafOutline className="text-primary absolute bottom-[1%] left-[70%] h-[22%] w-auto rotate-[24deg]" />
 
       <div className="relative px-[6.6%] pt-[11%]">
         <p className="text-muted-foreground flex items-center gap-[1.6cqw] text-[clamp(1rem,3.12cqw,1.5rem)] leading-tight">
-          <span aria-hidden="true" className="bg-cta-glow h-0.5 w-[6.2cqw] rounded-full" />
+          <span aria-hidden="true" className="bg-primary h-0.5 w-[6.2cqw] rounded-full" />
           Welcome to
         </p>
         <p
           className={cn(
-            headingExtraBold.className,
+            'font-display font-semibold',
             'text-foreground mt-[1cqw] text-[clamp(2.25rem,7cqw,3.375rem)] leading-[1.04] tracking-[-0.025em]',
           )}
         >
@@ -152,11 +151,11 @@ function WelcomePanel() {
         </p>
         <p className="text-muted-foreground mt-[2.1cqw] flex items-center gap-[1cqw] text-[clamp(0.6875rem,2.34cqw,1.125rem)]">
           {first}
-          <span aria-hidden="true" className="text-cta-glow">
+          <span aria-hidden="true" className="text-primary">
             •
           </span>
           {second}
-          <span aria-hidden="true" className="text-cta-glow">
+          <span aria-hidden="true" className="text-primary">
             •
           </span>
           {third}
@@ -169,9 +168,9 @@ function WelcomePanel() {
         </p>
       </div>
 
-      <figure className="bg-primary-soft absolute bottom-[10%] left-[6.6%] w-[43%] rounded-[3.6cqw] border border-white/70 py-[3.6cqw] pl-[3.6cqw] pr-[3.1cqw] shadow-[0_18px_40px_-28px_rgb(15_23_42/0.35)] dark:border-white/10">
+      <figure className="bg-primary-soft absolute bottom-[10%] left-[6.6%] w-[43%] rounded-[3.6cqw] border border-white/70 py-[3.6cqw] pl-[3.6cqw] pr-[3.1cqw] shadow-elevated">
         <blockquote className="flex gap-[2.1cqw]">
-          <QuoteMark className="text-cta-glow mt-[0.8cqw] h-[3.6cqw] w-[4.7cqw] shrink-0" />
+          <QuoteMark className="text-primary mt-[0.8cqw] h-[3.6cqw] w-[4.7cqw] shrink-0" />
           <p className="text-foreground text-[clamp(0.9375rem,2.86cqw,1.375rem)] leading-[1.45]">
             <span className="block">Education</span>
             <span className="block">today for a</span>

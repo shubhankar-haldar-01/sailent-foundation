@@ -67,20 +67,20 @@ export function EventRegistrationHero({ event, categoryName = null }: EventRegis
   const locationSub = event.city || 'India';
 
   return (
-    <section className="relative w-full border-b border-slate-200/80 bg-gradient-to-b from-[#F0F6FB] via-[#F4F8FC] to-[#EDF4F9] py-8 sm:py-10 lg:py-14">
+    <section className="border-border/80 from-muted via-muted to-muted relative w-full border-b bg-gradient-to-b py-8 sm:py-10 lg:py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-10 xl:gap-14">
           {/* Left Column: Event Information */}
           <div className="flex flex-col justify-center lg:col-span-7">
             {/* Breadcrumb Navigation: Home > Events > [Title] */}
             <nav aria-label="Breadcrumb" className="mb-4">
-              <ol className="flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
+              <ol className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
                 <li>
                   <Link href="/" className="hover:text-primary transition-colors">
                     Home
                   </Link>
                 </li>
-                <li aria-hidden="true" className="text-slate-400">
+                <li aria-hidden="true" className="text-muted-foreground">
                   <ChevronRight className="size-3" />
                 </li>
                 <li>
@@ -88,12 +88,12 @@ export function EventRegistrationHero({ event, categoryName = null }: EventRegis
                     Events
                   </Link>
                 </li>
-                <li aria-hidden="true" className="text-slate-400">
+                <li aria-hidden="true" className="text-muted-foreground">
                   <ChevronRight className="size-3" />
                 </li>
                 <li
                   aria-current="page"
-                  className="max-w-[180px] truncate font-semibold text-slate-800 sm:max-w-xs"
+                  className="text-foreground max-w-[180px] truncate font-semibold sm:max-w-xs"
                 >
                   {event.title}
                 </li>
@@ -103,20 +103,20 @@ export function EventRegistrationHero({ event, categoryName = null }: EventRegis
             {/* Badge: Category */}
             {categoryName ? (
               <div className="mb-3 sm:mb-4">
-                <span className="inline-flex items-center rounded-full bg-[#D4F4DF] px-3.5 py-1 text-xs font-semibold tracking-wide text-[#166534]">
+                <span className="bg-success-subtle text-success inline-flex items-center rounded-full px-3.5 py-1 text-xs font-semibold tracking-wide">
                   {categoryName}
                 </span>
               </div>
             ) : null}
 
             {/* Two-Tone Headline in Same Line */}
-            <h1 className="font-display text-3xl font-extrabold tracking-tight text-[#102A43] sm:text-4xl lg:text-[44px] lg:leading-[1.15]">
+            <h1 className="font-display text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.15]">
               <span>{first}</span>
               {second ? <span className="text-primary"> {second}</span> : null}
             </h1>
 
             {/* Event Summary / Lead Paragraph */}
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+            <p className="text-muted-foreground mt-4 max-w-2xl text-sm leading-relaxed sm:text-base">
               {event.summary && event.summary.length > 25
                 ? event.summary
                 : "Join us in making our community greener and healthier for future generations. Let's plant trees and create a cleaner, safer, and more sustainable environment together."}
@@ -124,7 +124,7 @@ export function EventRegistrationHero({ event, categoryName = null }: EventRegis
 
             {/* Mobile / Tablet Image: Shown directly below summary on mobile for natural reading flow */}
             <div className="mt-6 lg:hidden">
-              <div className="relative mx-auto aspect-[16/10] w-full overflow-hidden rounded-2xl border-2 border-white bg-slate-100 shadow-md">
+              <div className="bg-muted relative mx-auto aspect-[16/10] w-full overflow-hidden rounded-2xl border-2 border-white shadow-md">
                 <MediaFrame
                   media={event.cover}
                   aspect="landscape"
@@ -136,56 +136,62 @@ export function EventRegistrationHero({ event, categoryName = null }: EventRegis
             </div>
 
             {/* Three Metadata Items in Structured Card */}
-            <div className="shadow-xs backdrop-blur-xs mt-7 rounded-2xl border border-slate-200/90 bg-white/95 p-4 sm:p-5">
-              <div className="grid grid-cols-1 gap-4 divide-y divide-slate-100 sm:grid-cols-3 sm:gap-6 sm:divide-x sm:divide-y-0">
+            <div className="shadow-xs backdrop-blur-xs border-border/90 bg-surface/95 mt-7 rounded-2xl border p-4 sm:p-5">
+              <div className="divide-border grid grid-cols-1 gap-4 divide-y sm:grid-cols-3 sm:gap-6 sm:divide-x sm:divide-y-0">
                 {/* Date */}
                 <div className="flex items-start gap-3 sm:pr-4">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-[#EB6A1F]">
+                  <div className="bg-accent text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
                     <Calendar className="size-5 stroke-[2]" aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-caption font-medium uppercase tracking-wider text-slate-500">
+                    <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
                       Date
                     </p>
-                    <p className="mt-0.5 truncate text-sm font-bold text-slate-900" data-numeric="">
+                    <p
+                      className="text-foreground mt-0.5 truncate text-sm font-bold"
+                      data-numeric=""
+                    >
                       {dateStr}
                     </p>
-                    <p className="text-xs text-slate-600">{dayName}</p>
+                    <p className="text-muted-foreground text-xs">{dayName}</p>
                   </div>
                 </div>
 
                 {/* Time */}
                 <div className="flex items-start gap-3 pt-3 sm:px-4 sm:pt-0">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-[#EB6A1F]">
+                  <div className="bg-accent text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
                     <Clock className="size-5 stroke-[2]" aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-caption font-medium uppercase tracking-wider text-slate-500">
+                    <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
                       Time
                     </p>
-                    <p className="mt-0.5 truncate text-sm font-bold text-slate-900" data-numeric="">
+                    <p
+                      className="text-foreground mt-0.5 truncate text-sm font-bold"
+                      data-numeric=""
+                    >
                       {timeStr}
                     </p>
-                    {duration ? <p className="text-xs text-slate-600">{duration}</p> : null}
+                    {duration ? <p className="text-muted-foreground text-xs">{duration}</p> : null}
                   </div>
                 </div>
 
                 {/* Location */}
                 <div className="flex items-start gap-3 pt-3 sm:pl-4 sm:pt-0">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-[#EB6A1F]">
+                  <div className="bg-accent text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
                     <MapPin className="size-5 stroke-[2]" aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-caption font-medium uppercase tracking-wider text-slate-500">
+                    <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
                       Location
                     </p>
                     <p
-                      className="mt-0.5 line-clamp-1 text-sm font-bold text-slate-900"
+                      className="text-foreground mt-0.5 line-clamp-1 text-sm font-bold"
                       title={venue}
                     >
                       {venue}
                     </p>
-                    <p className="line-clamp-1 text-xs text-slate-600" title={locationSub}>
+                    <p className="text-muted-foreground line-clamp-1 text-xs" title={locationSub}>
                       {locationSub}
                     </p>
                   </div>
@@ -199,12 +205,12 @@ export function EventRegistrationHero({ event, categoryName = null }: EventRegis
             <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
               {/* Subtle ambient decorative glow behind card */}
               <div
-                className="absolute -inset-2.5 -z-10 rounded-3xl bg-gradient-to-tr from-[#EB6A1F]/15 via-sky-400/10 to-indigo-500/10 blur-xl"
+                className="from-primary/15 via-info/10 to-info/10 absolute -inset-2.5 -z-10 rounded-3xl bg-gradient-to-tr blur-xl"
                 aria-hidden="true"
               />
 
               {/* Elevated Photo Frame without any awkward curved arc cutouts */}
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border-4 border-white bg-slate-100 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5 transition-transform duration-300 hover:scale-[1.01]">
+              <div className="bg-muted ring-input/5 relative aspect-[4/3] w-full overflow-hidden rounded-3xl border-4 border-white shadow-xl shadow-slate-900/10 ring-1 transition-transform duration-300 hover:scale-[1.01]">
                 <MediaFrame
                   media={event.cover}
                   aspect="photo"
@@ -215,8 +221,8 @@ export function EventRegistrationHero({ event, categoryName = null }: EventRegis
 
                 {/* Floating pill badge on the photo */}
                 <div className="absolute bottom-3.5 left-3.5 flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-slate-800 shadow-sm backdrop-blur-md">
-                    <span className="size-2 rounded-full bg-[#EB6A1F]" />
+                  <span className="bg-surface/95 text-foreground inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-sm backdrop-blur-md">
+                    <span className="bg-primary size-2 rounded-full" />
                     <span>{event.city || event.venueName || 'Sailent Event'}</span>
                   </span>
                 </div>

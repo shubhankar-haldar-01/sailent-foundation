@@ -8,7 +8,6 @@ import { cn } from '@sailent/ui';
 import { AuthBrand, AuthShell, OrDivider } from '@/components/auth/auth-shell';
 import { DonorSignInForm } from '@/components/dashboard/sign-in-form';
 import { currentDonor } from '@/lib/auth/donor-session';
-import { headingExtraBold } from '@/lib/fonts';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { sameSitePath } from '@/lib/security/return-path';
 
@@ -51,7 +50,7 @@ export default async function SignInPage({
       <AuthBrand />
       <h1
         className={cn(
-          headingExtraBold.className,
+          'font-display font-semibold',
           'text-foreground mt-4 text-[clamp(1.625rem,1.3rem+1vw,1.875rem)] leading-tight tracking-[-0.025em]',
         )}
       >
@@ -66,9 +65,9 @@ export default async function SignInPage({
       <OrDivider className="mt-3" />
       <Link
         href="/sign-up"
-        className="border-cta-glow/60 bg-primary-soft/60 focus-visible:outline-ring hover:bg-primary-soft hover:border-cta-glow mt-3 flex min-h-11 flex-wrap items-center justify-center gap-x-2.5 gap-y-1 rounded-xl border-[1.5px] px-4 py-2 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="border-primary/60 bg-primary-soft/60 focus-visible:outline-ring hover:bg-primary-soft hover:border-primary mt-3 flex min-h-11 flex-wrap items-center justify-center gap-x-2.5 gap-y-1 rounded-xl border-[1.5px] px-4 py-2 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
       >
-        <UserRound aria-hidden="true" className="text-cta-glow size-5 shrink-0" strokeWidth={1.8} />
+        <UserRound aria-hidden="true" className="text-primary size-5 shrink-0" strokeWidth={1.8} />
         <span className="text-foreground text-[0.9375rem]">Don&rsquo;t have an account?</span>
         <span className="text-primary text-base font-semibold">Sign Up</span>
       </Link>

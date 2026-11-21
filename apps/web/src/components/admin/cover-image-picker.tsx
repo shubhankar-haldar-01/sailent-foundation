@@ -730,7 +730,7 @@ export function CoverImagePicker({
                 >
                   <Layers className="size-3.5" />
                   <span>All Assets</span>
-                  <span className="py-0.2 rounded-full bg-white/20 px-1.5 text-[10px]">
+                  <span className="py-0.2 bg-surface/20 rounded-full px-1.5 text-[10px]">
                     {allOptions.length}
                   </span>
                 </button>
@@ -746,7 +746,7 @@ export function CoverImagePicker({
                 >
                   <Globe className="size-3.5" />
                   <span>Public</span>
-                  <span className="py-0.2 rounded-full bg-white/20 px-1.5 text-[10px]">
+                  <span className="py-0.2 bg-surface/20 rounded-full px-1.5 text-[10px]">
                     {countPublic}
                   </span>
                 </button>
@@ -762,7 +762,7 @@ export function CoverImagePicker({
                 >
                   <Lock className="size-3.5" />
                   <span>Private</span>
-                  <span className="py-0.2 rounded-full bg-white/20 px-1.5 text-[10px]">
+                  <span className="py-0.2 bg-surface/20 rounded-full px-1.5 text-[10px]">
                     {countPrivate}
                   </span>
                 </button>
@@ -912,7 +912,7 @@ export function CoverImagePicker({
                           </span>
                           <span
                             className={`shadow-xs backdrop-blur-xs flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white ${
-                              item.visibility === 'public' ? 'bg-emerald-600/90' : 'bg-amber-600/90'
+                              item.visibility === 'public' ? 'bg-success/90' : 'bg-warning/90'
                             }`}
                           >
                             {item.visibility === 'public' ? (

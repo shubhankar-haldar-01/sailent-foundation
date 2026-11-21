@@ -17,7 +17,7 @@ export function BlogHero() {
   return (
     <section
       aria-label="Blog introduction"
-      className="relative w-full overflow-hidden bg-[#F2F8FD]"
+      className="bg-info-subtle relative w-full overflow-hidden"
     >
       {/* Structured data for search engines */}
       <script

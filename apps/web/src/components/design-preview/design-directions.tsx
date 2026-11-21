@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Check, ChevronDown, Lock, Search, Share2 } from 'lucide-react';
+import { Check, ChevronDown, CircleCheck, Lock, Search, Share2, X } from 'lucide-react';
 
 import { formatCurrency } from '@sailent/ui';
 
@@ -63,6 +63,32 @@ export interface Direction {
 }
 
 const SHARED_ACTION = { action: '#EB6A1F', actionHover: '#D45914' };
+
+/**
+ * The three Donate oranges the owner chooses between (2026-11-21). The middle
+ * one is the brightest orange with #EB6A1F's hue (OKLCH 45°) whose white label
+ * still meets 4.5:1: found by lowering OKLCH lightness at the largest in-gamut
+ * chroma until the ratio passes.
+ */
+export const DONATE_ORANGES = [
+  { hex: '#EB6A1F', hover: '#D45914', name: 'Today’s orange', note: 'Below AA for its label' },
+  { hex: '#C75300', hover: '#B14900', name: 'Brightest passing', note: 'Same hue, just passes' },
+  { hex: '#C2410C', hover: '#9A3412', name: 'Deeper', note: 'Redder, passes with room' },
+] as const;
+
+/** OKLCH hue in degrees, to show that success and the brand are different hues. */
+export function hueOf(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  }) as [number, number, number];
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+  return ((Math.atan2(bb, a) * 180) / Math.PI + 360) % 360;
+}
 
 export const DIRECTIONS: Direction[] = [
   {
@@ -128,7 +154,7 @@ export const DIRECTIONS: Direction[] = [
       subtle: '#F3F4F6',
       border: '#E5E7EB',
       borderStrong: '#6B7280',
-      success: '#15803D',
+      success: '#0F766E', // teal, not the brand green: owner 2026-11-21
       danger: '#B91C1C',
     },
     dark: {
@@ -145,7 +171,7 @@ export const DIRECTIONS: Direction[] = [
       subtle: '#1B1E23',
       border: '#2A2E35',
       borderStrong: '#6B7280',
-      success: '#4ADE80',
+      success: '#2DD4BF',
       danger: '#F87171',
     },
   },
@@ -169,7 +195,7 @@ export function contrast(a: string, b: string): number {
 const PAIRS: {
   label: string;
   fg: keyof Palette | 'white';
-  bg: keyof Palette | 'darkerAction';
+  bg: keyof Palette | `#${string}`;
   need: number;
 }[] = [
   { label: 'Body text on card', fg: 'text', bg: 'surface', need: 4.5 },
@@ -177,8 +203,13 @@ const PAIRS: {
   { label: 'Link (brand) on card', fg: 'brand', bg: 'surface', need: 4.5 },
   { label: 'Label on brand button', fg: 'brandOn', bg: 'brand', need: 4.5 },
   { label: 'Selected chip text on tint', fg: 'brandInk', bg: 'brandTint', need: 4.5 },
-  { label: 'White on orange #EB6A1F (Donate)', fg: 'white', bg: 'action', need: 4.5 },
-  { label: 'White on darker orange #C2410C (option)', fg: 'white', bg: 'darkerAction', need: 4.5 },
+  ...DONATE_ORANGES.map((orange) => ({
+    label: `White on ${orange.hex} (Donate, ${orange.name.toLowerCase()})`,
+    fg: 'white' as const,
+    bg: orange.hex,
+    need: 4.5,
+  })),
+  { label: 'Success text on card', fg: 'success', bg: 'surface', need: 4.5 },
   { label: 'Input border on card (UI, 3:1)', fg: 'borderStrong', bg: 'surface', need: 3 },
 ];
 
@@ -188,7 +219,7 @@ function ContrastTable({ palette }: { palette: Palette }) {
       <tbody>
         {PAIRS.map((pair) => {
           const fg = pair.fg === 'white' ? '#FFFFFF' : palette[pair.fg];
-          const bg = pair.bg === 'darkerAction' ? '#C2410C' : palette[pair.bg];
+          const bg = pair.bg.startsWith('#') ? pair.bg : palette[pair.bg as keyof Palette];
           const ratio = contrast(fg, bg);
           const ok = ratio >= pair.need;
           return (
@@ -198,7 +229,14 @@ function ContrastTable({ palette }: { palette: Palette }) {
               <td
                 className={`py-1.5 font-medium ${ok ? 'text-(--d-success)' : 'text-(--d-danger)'}`}
               >
-                {ok ? 'Pass' : `Below ${pair.need}:1`}
+                <span className="inline-flex items-center gap-1">
+                  {ok ? (
+                    <Check className="size-3.5 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <X className="size-3.5 shrink-0" aria-hidden="true" />
+                  )}
+                  {ok ? 'Pass' : `Below ${pair.need}:1`}
+                </span>
               </td>
             </tr>
           );
@@ -536,6 +574,25 @@ function ButtonsAndInputs() {
           <span className="text-(--d-danger) block text-[13px]">Enter a full email address.</span>
         </label>
       </div>
+      <div className="space-y-2">
+        <p className="text-(--d-text) text-[14px] font-medium">Selected is not success</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="border-(--d-brand) bg-(--d-brand-tint) text-(--d-brand-ink) inline-flex h-11 items-center gap-1.5 rounded-lg border px-4 text-[15px] font-medium tabular-nums">
+            <Check className="size-4" aria-hidden="true" />
+            ₹1,000 selected
+          </span>
+          <p
+            role="status"
+            className="border-(--d-border) bg-(--d-surface) text-(--d-text) inline-flex h-11 items-center gap-2 rounded-lg border px-4 text-[15px]"
+          >
+            <CircleCheck className="text-(--d-success) size-5" aria-hidden="true" />
+            Profile saved
+          </p>
+        </div>
+        <p className="text-(--d-muted) text-[13px]">
+          Brand green marks a choice; success is teal and always has its own icon.
+        </p>
+      </div>
       <label className="border-(--d-border-strong) bg-(--d-surface) flex h-11 items-center gap-2 rounded-lg border px-3">
         <Search className="text-(--d-muted) size-4" aria-hidden="true" />
         <input
@@ -635,6 +692,7 @@ function Swatches({ palette }: { palette: Palette }) {
     ['Brand', palette.brand, 'Links, focus, selected, active, progress'],
     ['Brand tint', palette.brandTint, 'Selected chip, active tab'],
     ['Action', palette.action, 'Donate and one main CTA only'],
+    ['Success', palette.success, 'Confirmations, always with an icon'],
     ['Text', palette.text, 'Headings and body'],
     ['Muted', palette.textMuted, 'Secondary text'],
     ['Border', palette.border, 'Cards and dividers'],
@@ -716,6 +774,67 @@ function Panel({
   );
 }
 
+function DonateOrangeChooser({ direction }: { direction: Direction }) {
+  return (
+    <section className="mx-auto mb-10 max-w-[1400px] space-y-4">
+      <div className="space-y-1">
+        <h2 className="text-[22px] font-semibold tracking-[-0.01em]">Donate orange: pick one</h2>
+        <p className="text-[14px] leading-[22px] text-slate-600">
+          The same Donate button in each orange, on the chosen direction’s light and dark cards.
+          Hover a button to see its hover shade.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {DONATE_ORANGES.map((orange) => (
+          <div
+            key={orange.hex}
+            className="min-w-0 overflow-hidden rounded-2xl border border-slate-200"
+          >
+            {(['light', 'dark'] as const).map((mode) => (
+              <div
+                key={mode}
+                style={
+                  {
+                    ...vars(direction, direction[mode]),
+                    '--d-action': orange.hex,
+                    '--d-action-hover': orange.hover,
+                  } as React.CSSProperties
+                }
+                className="bg-(--d-surface) space-y-2 p-5"
+              >
+                <button
+                  type="button"
+                  className={`bg-(--d-action) hover:bg-(--d-action-hover) h-12 w-full rounded-lg text-[16px] font-semibold tabular-nums text-white active:scale-[0.98] motion-reduce:active:scale-100 ${MOTION} ${FOCUS}`}
+                >
+                  Donate ₹1,000
+                </button>
+                <p className="text-(--d-muted) text-[12px]">
+                  {mode === 'light' ? 'Light' : 'Dark'}
+                </p>
+              </div>
+            ))}
+            <div className="space-y-0.5 border-t border-slate-200 bg-white p-4 text-[14px]">
+              <p className="font-semibold text-slate-900">
+                {orange.name} <span className="font-normal text-slate-500">{orange.hex}</span>
+              </p>
+              <p className="tabular-nums text-slate-600">
+                White label {contrast('#FFFFFF', orange.hex).toFixed(2)}:1 ·{' '}
+                {contrast('#FFFFFF', orange.hex) >= 4.5 ? 'passes AA' : 'below AA (4.5:1)'}
+              </p>
+              <p className="text-slate-500">
+                {orange.note}; hover {orange.hover}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** The owner chose direction 2 (2026-11-21); direction 1 stays above for the record. */
+const CHOSEN = DIRECTIONS.find((direction) => direction.id === 'green-b')!;
+
 export function DesignDirections({ campaign, faqs }: { campaign: Campaign; faqs: CampaignFaq[] }) {
   return (
     <main className="min-h-dvh bg-white px-4 py-10 text-slate-900 sm:px-8">
@@ -724,13 +843,13 @@ export function DesignDirections({ campaign, faqs }: { campaign: Campaign; faqs:
           Visual polish · Phase 1 · proposal only
         </p>
         <h1 className="text-[32px] font-semibold leading-[40px] tracking-[-0.02em]">
-          Two design directions
+          Direction 2: logo green, Inter only
         </h1>
         <p className="text-[16px] leading-[26px] text-slate-600">
-          The same real campaign (“{campaign.title}”), in two directions. Colour and type are
-          independent: pick a column, or mix them (for example, the blue with type B). Orange is the
-          action colour in both, used only for Donate and a page’s one main conversion button.
-          Nothing here changes the live site.
+          Chosen by the owner on 2026-11-21, shown on a real campaign (“{campaign.title}”). Green
+          carries every interactive state; success is a separate teal with an icon; headings at 600
+          with slight negative letter-spacing; amounts in tabular numbers. Orange is only for Donate
+          and a page’s one main conversion button. Nothing here changes the live site.
         </p>
         <ul className="list-inside list-disc text-[14px] leading-[22px] text-slate-600">
           <li>Spacing on a 4px grid; sections 64/96px apart on desktop, 40/56px on mobile.</li>
@@ -741,17 +860,14 @@ export function DesignDirections({ campaign, faqs }: { campaign: Campaign; faqs:
           <li>Motion: 200ms ease-out for hovers, tabs and accordions; off with reduced motion.</li>
         </ul>
       </header>
+      <DonateOrangeChooser direction={CHOSEN} />
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-8 lg:grid-cols-2">
-        {DIRECTIONS.map((direction) => (
-          <section key={direction.id} className="min-w-0 space-y-4">
-            <div className="space-y-1">
-              <h2 className="text-[22px] font-semibold tracking-[-0.01em]">{direction.name}</h2>
-              <p className="text-[14px] leading-[22px] text-slate-600">{direction.summary}</p>
-            </div>
-            <Panel direction={direction} mode="light" campaign={campaign} faqs={faqs} />
-            <Panel direction={direction} mode="dark" campaign={campaign} faqs={faqs} />
-          </section>
-        ))}
+        <section className="min-w-0">
+          <Panel direction={CHOSEN} mode="light" campaign={campaign} faqs={faqs} />
+        </section>
+        <section className="min-w-0">
+          <Panel direction={CHOSEN} mode="dark" campaign={campaign} faqs={faqs} />
+        </section>
       </div>
     </main>
   );

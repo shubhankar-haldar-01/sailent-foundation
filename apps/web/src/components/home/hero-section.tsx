@@ -43,7 +43,7 @@ export function HeroSection({ metrics }: { metrics: ImpactMetric[] }) {
       </div>
 
       <PageShell>
-        <div className="relative overflow-hidden rounded-[24px] border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.03)] sm:rounded-[32px] dark:border-slate-800">
+        <div className="border-border relative overflow-hidden rounded-[24px] border shadow-card sm:rounded-[32px]">
           {/* Mobile hero banner (< 768px) */}
           <div className="relative block w-full md:hidden">
             {hasHeroMobile ? (
@@ -62,7 +62,7 @@ export function HeroSection({ metrics }: { metrics: ImpactMetric[] }) {
                 <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center sm:bottom-4 sm:right-4">
                   <Link
                     href="/donate"
-                    className="bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active sm:h-8.5 relative inline-flex h-7 items-center justify-center gap-1 rounded-full px-3 text-[11px] font-bold tracking-tight shadow-sm transition-all after:absolute after:-inset-2 after:content-[''] active:scale-95 sm:gap-1.5 sm:px-4 sm:text-xs"
+                    className="bg-action text-action-foreground hover:bg-action-hover active:bg-action-active sm:h-8.5 relative inline-flex h-7 items-center justify-center gap-1 rounded-full px-3 text-[11px] font-bold tracking-tight shadow-sm transition-all after:absolute after:-inset-2 after:content-[''] active:scale-95 sm:gap-1.5 sm:px-4 sm:text-xs"
                   >
                     <span>Donate Now</span>
                     <ArrowRight className="size-3 sm:size-3.5" aria-hidden="true" />

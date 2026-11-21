@@ -215,7 +215,7 @@ export function DonationStatus({
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             {donation?.campaignSlug ? (
-              <Button asChild>
+              <Button asChild variant="action">
                 <Link href={`/campaigns/${donation.campaignSlug}#give`}>
                   <RotateCcw className="size-4" aria-hidden="true" />
                   Try again
@@ -263,7 +263,7 @@ export function DonationStatus({
   return (
     <Narrow>
       <Card className="p-10 text-center">
-        <Spinner className="text-cta-glow mx-auto size-7" />
+        <Spinner className="text-primary mx-auto size-7" />
         <h1 className="text-h3 mt-4 font-semibold">Confirming your payment</h1>
         <p className="text-body-sm text-muted-foreground mx-auto mt-3 max-w-prose">
           We are waiting for our payment provider to confirm this with our server. It usually takes

@@ -6,7 +6,7 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-11-21 for the visual polish brief, Phases 0–1 (§2, "Visual polish"). **Earlier:** the removal of four default campaign FAQs. **Earlier:** related FAQs on every campaign. **Before that:** the upgrade to Next.js 16 (§2, "Next.js 16"), which fixes the save stuck on "Saving…". Earlier the same day: the investigation of it. **Before that:** 2026-11-20 for Phase 5 of the UI feedback system (§2, "UI feedback system — Phases 1–5 done"); earlier the same day, Phase 4. **Before that:** 2026-11-19 for the security audit (§2, "Security audit"). **Before that:** 2026-11-18 for the event pass and gate fixes and the move to Resend for email (§2, "Email through Resend" and "Event passes and gate check-in fixes"); the header table below was not re-audited and is still as of 2026-10-21. **Previously:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
+**Last updated:** 2026-11-21 for the visual polish brief, Phase 2 (§2, "Visual polish — Phase 2"). **Earlier:** Phases 0–1. **Earlier:** the removal of four default campaign FAQs. **Earlier:** related FAQs on every campaign. **Before that:** the upgrade to Next.js 16 (§2, "Next.js 16"), which fixes the save stuck on "Saving…". Earlier the same day: the investigation of it. **Before that:** 2026-11-20 for Phase 5 of the UI feedback system (§2, "UI feedback system — Phases 1–5 done"); earlier the same day, Phase 4. **Before that:** 2026-11-19 for the security audit (§2, "Security audit"). **Before that:** 2026-11-18 for the event pass and gate fixes and the move to Resend for email (§2, "Email through Resend" and "Event passes and gate check-in fixes"); the header table below was not re-audited and is still as of 2026-10-21. **Previously:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
 
 | | |
 |---|---|
@@ -458,6 +458,53 @@ The likely cause is WebKit keyboard behaviour; this was **not investigated**.
   7. ~~A save stuck on "Saving…" under server load~~: fixed by the upgrade to Next.js 16 (2026-11-21, next sections).
 - **Running e2e here** needs Chrome (`channel: 'chrome'`): Playwright's bundled Chromium and WebKit are not installed, and `e2e/global-setup.ts` launches Chromium for the image warm-up.
 
+### Visual polish — Phase 2 (foundation) — 2026-11-21 (committed locally, not pushed)
+
+- **Owner's choices applied:**
+  - direction 2: brand green `#1E7B24`, with Inter only;
+  - Donate stays `#EB6A1F` with a white label (picked over `#C75300` and `#C2410C`);
+  - success is teal `#0F766E` and always carries an icon.
+- **Tokens (`packages/ui/src/styles/tokens.css`):**
+  - `--brand-*` scale;
+  - plain grey neutrals;
+  - `primary` is the brand (so the default `Button`, Login, nav, tabs, badges and progress turn green);
+  - new `action` (orange) and `Button variant="action"`, used on every Donate and conversion button: hero, donation card, checkout pay, campaign cards, stories, sign-up, about, dashboard saved/supported, event register and pay, payment retry;
+  - `info-action` (links) aliased to the brand;
+  - `surface-inverse` for grounds that are dark in both themes;
+  - neutral shadows; dark theme from direction 2.
+  - Legacy `accent-*`/`cta-*` names have no uses left (kept as aliases).
+- **Fonts:**
+  - Inter 400/500/600 only;
+  - Manrope (including the 800 cut in `lib/fonts.ts`, deleted) and Caveat retired;
+  - `ScriptAccent` is now a quiet Inter caption.
+- **Base styles:**
+  - headings 600 with negative tracking;
+  - `::selection` in the brand tint;
+  - one focus ring (the brand, 2px, offset 2px), per-variant overrides removed from `Button`;
+  - thin scrollbar;
+  - `[id]` scroll margin below the sticky header;
+  - tabular numbers on `[data-amount]`.
+- **Hard-coded colours:**
+  - hex 606 → 91, `rgb()` 52 → 2, palette classes 1,327 → 3;
+  - what remains is listed and deliberate (`docs/design-audit/README.md`, "Phase 2"; before/after in `docs/design-audit/colour-grep-*.txt`);
+  - non-CSS outputs (event pass canvas, Razorpay theme, `global-error.tsx`) read `lib/brand-colours.ts`.
+- **Tests:**
+  - `tokens-contrast.test.ts` (31) checks the AA pairs in light and dark against `tokens.css` itself;
+  - a `Button` test checks that `action` is the orange and the default is the brand;
+  - two tests updated to the new token names (the dark button; the blog card grounds).
+- **Not done here (Phase 3–4):**
+  - button shapes and sizes;
+  - the pastel icon discs and `wash-*` tokens;
+  - heading highlight words;
+  - the home hero image, which has its headline (with orange words) baked into the photo.
+- **Validation (2026-11-21):**
+  - web unit 574/574 (twice; one earlier run had a timing flake in the kiosk camera test, which passed 3/3 alone);
+  - typecheck and lint clean; Prettier clean;
+  - isolated-copy production build OK;
+  - full e2e (desktop, mobile, 320 px): 393 passed, 61 failed, 129 skipped, 35 did not run, against the Next 16 baseline of 380 passed and 77 failed. 21 accessibility checks that failed before now pass (contrast: /donate, /contact, /faq, /volunteer, a blog post, an event, the sign-in page on all three sizes). Five were new and are fixed: (a) the dashboard skeleton's `aria-label` on a role-less div (`aria-prohibited-attr`), now `role="status"` like the kit's `LoadingState`; (b) the checkout "no tax id" check ×3, broken earlier today by the campaign FAQ default "Do I get a tax benefit on my donation?" (its answer panel is labelled by the question), now scoped to form fields; (c) one mobile test whose browser context never opened (timeout, passed on rerun). Every other failure is in the baseline list;
+  - pages checked at 390 and 1440, light and dark: orange only on Donate, no sideways scroll.
+- **Next:** Phase 3 (component polish), started 2026-11-21 at the owner's request; Phase 2 is one local commit, not pushed (owner, 2026-11-21).
+
 ### Visual polish — Phase 0 done, Phase 1 at its checkpoint — 2026-11-21
 
 - **Phase 0 (audit):** `docs/design-audit/README.md` plus the style inventories, committed as `4e10f47`. Screenshots were deleted at the owner's request; `docs/design-audit/before/` and `after/` are git-ignored.
@@ -479,6 +526,11 @@ The likely cause is WebKit keyboard behaviour; this was **not investigated**.
   - the home press/testimonials e2e passes on desktop and mobile.
 - **Owner's choice (2026-11-21):** direction 2, green `#1E7B24` with Inter only. Headings at 600 with slight negative letter-spacing; tabular numbers for amounts. Success must be visibly different from the brand green (a teal) and always carry an icon. `AGENTS.md` §11 item 12.
 - **Waiting on the owner:** the Donate orange, from three shown on `/dev/design`: `#EB6A1F` (today, 3.18:1 with white), `#C2410C` (5.18:1) and the brightest orange that passes 4.5:1.
+- **`/dev/design` after the choice (uncommitted):**
+  - it shows the chosen direction only, light and dark side by side;
+  - a "Donate orange: pick one" row has the three oranges as real buttons, with their ratios. `#C75300` is the brightest orange with `#EB6A1F`'s hue (OKLCH 45°) that passes 4.5:1, at exactly 4.50:1;
+  - success is teal (`#0F766E` light, `#2DD4BF` dark; 37–42° of hue from the brand green) with an icon on every success state, next to a selected brand chip for comparison.
+  - Tests: 11 in `design-directions.test.ts`, including the orange ratios and the hue gap. No sideways scroll at 390 or 1440 px.
 - **Next:** Phase 2 (tokens) once the orange is confirmed.
 
 ### Four default campaign FAQs removed — 2026-11-21 (committed as `2d42f97`)

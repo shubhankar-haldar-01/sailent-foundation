@@ -274,7 +274,7 @@ export function SiteHeader({
               `sm` up; on a phone beside the menu button, at the menu icon's
               size and navy (owner request). */}
             <ThemeToggle
-              className="max-sm:text-accent-900 max-sm:dark:text-foreground max-sm:size-11"
+              className="max-sm:text-foreground max-sm:dark:text-foreground max-sm:size-11"
               iconClassName="max-sm:size-7 max-sm:[stroke-width:1.75]"
             />
 
@@ -306,7 +306,7 @@ export function SiteHeader({
               aria-controls="mobile-navigation"
               className={cn(
                 'inline-flex size-11 items-center justify-center rounded-lg lg:hidden',
-                'max-sm:text-accent-900 max-sm:dark:text-foreground',
+                'max-sm:text-foreground max-sm:dark:text-foreground',
                 'hover:bg-muted transition-colors',
                 'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
               )}
@@ -432,7 +432,7 @@ export function SiteHeader({
                             'focus-visible:outline-ring focus-visible:outline-2 focus-visible:-outline-offset-2',
                             isMobileChildActive(child.href)
                               ? 'text-primary font-medium'
-                              : 'text-accent-900/80 hover:text-primary dark:text-foreground/75',
+                              : 'text-foreground/80 hover:text-primary dark:text-foreground/75',
                           )}
                         >
                           {child.label}

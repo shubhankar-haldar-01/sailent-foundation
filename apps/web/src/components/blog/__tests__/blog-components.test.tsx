@@ -71,14 +71,15 @@ describe('PostCard', () => {
     expect(screen.getByText(/Read More/i)).toBeDefined();
   });
 
-  it('renders warm cream background for featured post and white for standard post', () => {
+  it('sets a featured post on the sunken grey and a standard post on the card surface', () => {
+    // The warm cream was retired for a neutral one (visual polish, 2026-11-21).
     const { container: featuredContainer } = render(<PostCard post={samplePost} featured={true} />);
-    expect(featuredContainer.querySelector('article')?.className).toContain('bg-[#FFF9F4]');
+    expect(featuredContainer.querySelector('article')?.className).toContain('bg-muted');
 
     const { container: standardContainer } = render(
       <PostCard post={samplePost} featured={false} />,
     );
-    expect(standardContainer.querySelector('article')?.className).toContain('bg-white');
+    expect(standardContainer.querySelector('article')?.className).toContain('bg-surface');
   });
 
   it('omits reading time gracefully when not available in post metadata', () => {

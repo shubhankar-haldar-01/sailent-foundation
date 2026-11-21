@@ -27,9 +27,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(function Inp
         'bg-surface text-body flex h-11 w-full rounded-lg border px-3 py-2',
         'placeholder:text-muted-foreground',
         'duration-(--duration-fast) transition-colors',
-        // Form focus is the brand orange (owner decision, 2026-10-07): the border
-        // turns #EB6A1F and a 2px #EB6A1F ring hugs it — 3.18:1 against the
-        // white field. An error keeps its red border while focused.
+        // Form focus is the brand green (colour roles, 2026-11-21): the border
+        // and a 2px ring turn `primary`, 5.4:1 against the white field. An
+        // error keeps its red border while focused.
         'focus-visible:outline-primary focus-visible:outline-2 focus-visible:outline-offset-0',
         'disabled:cursor-not-allowed disabled:opacity-50',
         'file:text-body-sm file:border-0 file:bg-transparent file:font-medium',

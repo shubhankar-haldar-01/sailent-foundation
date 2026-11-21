@@ -10,6 +10,18 @@ Newest first.
 
 ---
 
+## 2026-11-21 — Visual polish Phase 2: green brand, Inter only, colours on tokens
+
+| Change | Reason | Impact |
+|---|---|---|
+| `primary` is the brand green `#1E7B24`; new `action` token and `Button variant="action"` (orange `#EB6A1F`) on Donate and conversion buttons only | Owner's colour roles (`AGENTS.md` §11 item 12) | Login, nav, tabs, badges, progress, links and admin turn green; Donate stays orange |
+| Plain grey neutrals; success is teal; dark theme from direction 2; neutral shadows; `surface-inverse` for always-dark grounds | Owner's Phase 1 choice | No peach borders or orange-tinted shadows |
+| Inter only (400/500/600); Manrope and Caveat retired | Owner: type B | Fewer font files; headings 600 with negative tracking |
+| One focus ring, `::selection`, thin scrollbar, anchored sections clear the sticky header | Brief, Phase 2 | Base layer in `tokens.css` |
+| Hard-coded colours mapped to tokens: hex 606 → 91, palette classes 1,327 → 3, `rgb()` 52 → 2 | Brief, Phase 2 | Dark mode and any later palette change reach every page; the remainder is listed in `docs/design-audit/README.md` |
+
+Tests: web 574/574, including the new token contrast test (light and dark) and the Button colour-role test. E2E (isolated copy, desktop/mobile/320): 393 passed, 61 failed, against 380 and 77 before. Every remaining failure was already failing; 21 accessibility checks now pass. Also fixed: the dashboard loading skeleton's role, and the checkout "no tax id" test, which the FAQ default had broken.
+
 ## 2026-11-21 — Visual polish: audit, owner decisions, two design directions
 
 | Change | Reason | Impact |

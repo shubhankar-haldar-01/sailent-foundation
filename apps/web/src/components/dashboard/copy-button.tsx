@@ -37,7 +37,7 @@ export function CopyButton({ text, label = 'Copy' }: { text: string; label?: str
       className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:outline-ring inline-flex size-7 items-center justify-center rounded-md transition-colors focus-visible:outline-2"
     >
       {copied ? (
-        <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
+        <Check className="text-success size-3.5" aria-hidden="true" />
       ) : (
         <Copy className="size-3.5 stroke-[2]" aria-hidden="true" />
       )}

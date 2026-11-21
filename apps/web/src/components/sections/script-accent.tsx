@@ -1,7 +1,10 @@
 import { cn } from '@sailent/ui';
 
 /**
- * The handwritten accent that sits over photography in the design.
+ * The short accent line that sits over photography in the design.
+ *
+ * Since 2026-11-21 ("Inter only", owner) it is a quiet Inter caption, not
+ * the Caveat script it used to be; the words and the rules below are kept.
  *
  * DECORATIVE, and treated as such:
  *   • `aria-hidden`, because a script face read aloud is noise, and because
@@ -35,10 +38,10 @@ export function ScriptAccent({
     <span
       aria-hidden="true"
       className={cn(
-        'font-script pointer-events-none select-none leading-[1.15]',
-        size === 'sm' && 'text-[1.125rem] sm:text-[1.375rem]',
-        size === 'md' && 'text-[1.375rem] sm:text-[1.75rem]',
-        size === 'lg' && 'text-[1.625rem] sm:text-[2.125rem]',
+        'pointer-events-none select-none font-medium leading-snug tracking-[-0.01em]',
+        size === 'sm' && 'text-body-sm',
+        size === 'md' && 'text-body',
+        size === 'lg' && 'text-body-lg',
         className,
       )}
     >

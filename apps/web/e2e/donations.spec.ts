@@ -197,7 +197,12 @@ test.describe('donation flow', () => {
     await (await continueButton(page)).click();
 
     await expect(page.getByLabel(/PAN/i)).toHaveCount(0);
-    await expect(page.getByLabel(/tax/i)).toHaveCount(0);
+    // Form fields only: the campaign FAQ's answer panel is labelled by its
+    // question, "Do I get a tax benefit on my donation?" (2026-11-21), and is
+    // not a field asking for a tax id.
+    for (const role of ['textbox', 'combobox', 'spinbutton'] as const) {
+      await expect(page.getByRole(role, { name: /tax|PAN/i })).toHaveCount(0);
+    }
   });
 
   test('never calls a receipt a tax certificate', async ({ page }) => {

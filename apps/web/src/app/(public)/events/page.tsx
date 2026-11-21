@@ -248,7 +248,7 @@ function resultSummary(view: EventsView, query: EventsQuery): string {
 function NoMatches({ clearHref }: { clearHref: string }) {
   return (
     <div className="border-border bg-surface mt-6 flex flex-col items-center rounded-2xl border border-dashed px-6 py-14 text-center">
-      <span className="bg-wash-coral text-cta-glow grid size-12 place-items-center rounded-full">
+      <span className="bg-wash-coral text-primary grid size-12 place-items-center rounded-full">
         <SearchX className="size-6" aria-hidden="true" />
       </span>
       <p className="font-display text-h4 mt-4 font-bold">No events match your search</p>

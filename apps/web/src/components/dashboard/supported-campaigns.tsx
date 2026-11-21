@@ -57,7 +57,7 @@ export function SupportedCampaigns({
                     className="card-interactive overflow-hidden rounded-2xl p-4"
                   >
                     {/* Campaign Cover with Heart Button top-right */}
-                    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
+                    <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
                       <MediaFrame
                         media={campaign.cover}
                         aspect="landscape"
@@ -68,7 +68,7 @@ export function SupportedCampaigns({
                         <Link
                           href={`/campaigns/${campaign.slug}`}
                           aria-label={`Save ${campaign.title}`}
-                          className="text-primary flex size-9 items-center justify-center rounded-full bg-white/95 shadow-sm transition-transform active:scale-95 dark:bg-slate-900"
+                          className="text-primary bg-surface/95 flex size-9 items-center justify-center rounded-full shadow-sm transition-transform active:scale-95"
                         >
                           <Heart className="size-4.5 stroke-[2]" />
                         </Link>
@@ -123,7 +123,7 @@ export function SupportedCampaigns({
                                   aria-valuemin={0}
                                   aria-valuemax={100}
                                   aria-label={`Funding progress for ${campaign.title}`}
-                                  className="h-2 flex-1 overflow-hidden rounded-full bg-[#F0F2F5] dark:bg-slate-800"
+                                  className="bg-muted h-2 flex-1 overflow-hidden rounded-full"
                                 >
                                   <div
                                     className="bg-primary h-full rounded-full transition-all duration-300"
@@ -157,7 +157,7 @@ export function SupportedCampaigns({
                       <div className="pt-1.5">
                         <Link
                           href={`/campaigns/${campaign.slug}#give`}
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground focus-visible:outline-ring shadow-xs flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-xs font-semibold transition-all active:scale-95"
+                          className="bg-action text-action-foreground hover:bg-action-hover active:bg-action-active shadow-xs flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-xs font-semibold transition-all active:scale-95"
                         >
                           <span>Donate</span>
                           <ArrowRight className="size-3.5 stroke-[2.2]" aria-hidden="true" />
@@ -222,7 +222,7 @@ export function SupportedCampaigns({
                     <Link
                       href={`/campaigns/${campaign.slug}`}
                       aria-label={`View ${campaign.title}`}
-                      className="border-cta-glow/70 text-primary hover:bg-(--cta-50) focus-visible:outline-ring inline-flex h-10 items-center justify-center gap-1.5 rounded-full border px-5 text-[0.9375rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 xl:h-9 xl:px-4"
+                      className="border-primary/70 text-primary hover:bg-(--brand-50) focus-visible:outline-ring inline-flex h-10 items-center justify-center gap-1.5 rounded-full border px-5 text-[0.9375rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 xl:h-9 xl:px-4"
                     >
                       View
                       <ArrowRight className="size-4" aria-hidden="true" />
