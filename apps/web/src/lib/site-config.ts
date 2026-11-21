@@ -45,7 +45,7 @@ export const siteConfig = {
 /**
  * Primary navigation.
  *
- * Seven items, one of which (Get Involved) groups its children into a menu.
+ * Seven items, one of which (Get involved) groups its children into a menu.
  * Phase 0 caps the nav at seven because beyond that it stops being navigation
  * and becomes a menu nobody reads. Blog is a plain link: the Resources menu
  * it sat in was taken off at the owner's request (2026-10-16), once FAQ had
@@ -79,7 +79,7 @@ export const primaryNav: NavEntry[] = [
   */
   { label: 'Stories', href: '/stories' },
   {
-    label: 'Get Involved',
+    label: 'Get involved',
     href: '/volunteer',
     children: [
       { label: 'Volunteer', href: '/volunteer', description: 'Give time to a program' },
@@ -87,9 +87,9 @@ export const primaryNav: NavEntry[] = [
     ],
     mobileChildren: [
       { label: 'Donate', href: '/donate' },
-      { label: 'Volunteer with Us', href: '/volunteer' },
+      { label: 'Volunteer with us', href: '/volunteer' },
       // The same destination the footer's "Partner With Us" uses.
-      { label: 'Partner with Us', href: '/contact' },
+      { label: 'Partner with us', href: '/contact' },
     ],
   },
   /*
@@ -101,7 +101,7 @@ export const primaryNav: NavEntry[] = [
 ];
 
 /** The single primary call to action. Present at every breakpoint. */
-export const primaryCta: NavItem = { label: 'Donate Now', href: '/donate' };
+export const primaryCta: NavItem = { label: 'Donate now', href: '/donate' };
 
 /**
  * Footer navigation — two short link columns, plus the contact block the
@@ -115,10 +115,10 @@ export const primaryCta: NavItem = { label: 'Donate Now', href: '/donate' };
  *   • "Careers" and "Partner With Us" — no such pages, both opened Contact;
  *   • the seven area links — campaign filters, two of them ("Food Security",
  *     "Livelihood") for areas no programme has; Programs is one link now;
- *   • "Donate" — the footer's Donate Now button stood beside it; that button
+ *   • "Donate" — the footer's Donate now button stood beside it; that button
  *     was itself taken out on 2026-10-16 (owner), so the footer has no donate
  *     action — the pages' own buttons and the phone menu's carry it;
- *   • "Your Account" — the header carries Login / Sign Up on every page.
+ *   • "Your Account" — the header carries Login / Sign up on every page.
  */
 export const footerNav: NavGroup[] = [
   {
@@ -133,10 +133,10 @@ export const footerNav: NavGroup[] = [
   {
     label: 'Information',
     items: [
-      { label: 'About Us', href: '/about' },
+      { label: 'About us', href: '/about' },
       { label: 'Volunteer', href: '/volunteer' },
       { label: 'FAQ', href: '/faq' },
-      { label: 'Contact Us', href: '/contact' },
+      { label: 'Contact us', href: '/contact' },
     ],
   },
 ];
@@ -151,9 +151,9 @@ export const footerNav: NavGroup[] = [
 export const footerCampaignsGroup: NavGroup = {
   label: 'Campaigns',
   items: [
-    { label: 'All Campaigns', href: '/campaigns' },
-    { label: 'Closed Campaigns', href: '/campaigns?status=closed' },
-    { label: 'Completed Campaigns', href: '/campaigns?status=completed' },
+    { label: 'All campaigns', href: '/campaigns' },
+    { label: 'Closed campaigns', href: '/campaigns?status=closed' },
+    { label: 'Completed campaigns', href: '/campaigns?status=completed' },
   ],
 };
 
@@ -181,7 +181,7 @@ export const footerCampaignsGroup: NavGroup = {
  * ══════════════════════════════════════════════════════════════════════════
  */
 export const legalNav: NavItem[] = [
-  { label: 'Privacy Policy', href: '/privacy-policy' },
-  { label: 'Terms of Use', href: '/terms' },
-  { label: 'Donation Policy', href: '/donation-policy' },
+  { label: 'Privacy policy', href: '/privacy-policy' },
+  { label: 'Terms of use', href: '/terms' },
+  { label: 'Donation policy', href: '/donation-policy' },
 ];

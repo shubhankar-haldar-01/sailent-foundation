@@ -1,7 +1,8 @@
-import { CalendarDays, ArrowUp, FileText, Users, type LucideIcon } from 'lucide-react';
+import { CalendarDays, ArrowUp, FileText, Users } from 'lucide-react';
 
 import { cn, formatCurrency, formatNumber } from '@sailent/ui';
 
+import { cleanStory, cleanSupportProvides } from '@/components/campaigns/campaign-copy';
 import { CampaignGallery } from '@/components/campaigns/campaign-gallery';
 import { SectionHeading } from '@/components/sections/section-heading';
 import type { Campaign } from '@/lib/mock/types';
@@ -27,7 +28,7 @@ const goalDate = new Intl.DateTimeFormat('en-IN', {
  *   Why This Campaign?              the campaign narrative, as written
  *   What Will Your Support Provide? a short summary of the products above
  *   Our Goal                        the target, the end date, the people
- *   Your Impact                     how many reached so far, and who
+ *   Your impact                     how many reached so far, and who
  *
  * A card whose field is empty is left out rather than filled with something
  * plausible (decision A14). A page that says less is better than one that says
@@ -39,7 +40,7 @@ const goalDate = new Intl.DateTimeFormat('en-IN', {
  *
  *   - the narrative is a full-width story card, its first paragraph a lead;
  *   - what support provides is a short summary pointing back to the items,
- *     which are already listed, priced, under "Choose How You Want to Help";
+ *     which are already listed, priced, under "Choose how you want to help";
  *   - the goal and the impact are figure cards side by side, the number large,
  *     the facts around it as small chips or a progress bar.
  *
@@ -54,8 +55,12 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
   const target = campaign.beneficiaryTarget;
   const reachedPercent =
     target && target > 0 ? Math.min(100, Math.round((reached / target) * 100)) : null;
-  const showGoal = campaign.goalAmount > 0;
-  const showImpact = context.length > 0 || reached > 0;
+  const story = cleanStory(campaign.story);
+  const supportProvides = cleanSupportProvides(campaign.supportProvides, story);
+  const goal = campaign.progress?.goal ?? campaign.goalAmount;
+  const raised = campaign.progress?.raised ?? campaign.amountRaised;
+  const raisedPercent = goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : null;
+  const showGoal = goal > 0 || reached > 0 || context.length > 0;
 
   const documents = campaign.documents.filter((document) => document.fileUrl);
 
@@ -63,7 +68,7 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
 
   return (
     <section id="campaign-about" aria-labelledby="about-heading" className="mt-12 scroll-mt-32">
-      <SectionHeading id="about-heading" size="md" title="About This Campaign" />
+      <SectionHeading id="about-heading" size="md" title="About this campaign" />
 
       <CampaignGallery
         images={campaign.gallery}
@@ -74,12 +79,12 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
       <div className="@container mt-4">
         <div className="@2xl:grid-cols-2 grid gap-3">
           {/* Why — the narrative, full width ---------------------------------- */}
-          {campaign.story.length > 0 ? (
-            <AboutCard id="about-why" title="Why This Campaign?" className="@2xl:col-span-2">
+          {story.length > 0 ? (
+            <AboutCard id="about-why" title="Why this campaign?" className="@2xl:col-span-2">
               {/* Held to a reading measure: lines across the full card are hard to
                   follow back to their start. */}
               <div className="max-w-[68ch] space-y-2.5">
-                {campaign.story.map((paragraph, index) => (
+                {story.map((paragraph, index) => (
                   <p
                     key={index}
                     className={
@@ -96,10 +101,10 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
           ) : null}
 
           {/* What support provides — custom narrative or product summary -------- */}
-          {campaign.supportProvides || products.length > 0 ? (
+          {supportProvides || products.length > 0 ? (
             <AboutCard
               id="about-provide"
-              title="What Will Your Support Provide?"
+              title="What will your support provide?"
               className="@2xl:col-span-2"
             >
               {/*
@@ -108,8 +113,8 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
                 summarize the products attached above.
               */}
               <p className="text-body text-muted-foreground-strong max-w-[68ch] leading-relaxed">
-                {campaign.supportProvides
-                  ? campaign.supportProvides
+                {supportProvides
+                  ? supportProvides
                   : `Your support pays for ${products.length === 1 ? 'the item' : `the ${formatNumber(products.length)} items`} listed above, at the prices shown, delivered to the people this campaign serves. Choose items, give an amount of your own, or both — an amount you choose is used where it is needed most.`}
               </p>
               {products.length > 0 ? (
@@ -124,79 +129,57 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
             </AboutCard>
           ) : null}
 
-          {/* Our goal — the target, large ----------------------------------------- */}
+          {/* Our goal — one stat block: the figures, the bar, the impact ---- */}
           {showGoal ? (
-            <AboutCard
-              id="about-goal"
-              title="Our Goal"
-              className={showImpact ? null : '@2xl:col-span-2'}
-            >
-              <p className="text-muted-foreground text-body-sm">To raise</p>
-              <p
-                data-numeric=""
-                className="text-h2 text-foreground font-bold tabular-nums leading-tight tracking-tight"
-              >
-                {formatCurrency(campaign.goalAmount)}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {campaign.endsAt ? (
-                  <Chip icon={CalendarDays}>by {goalDate.format(new Date(campaign.endsAt))}</Chip>
+            <AboutCard id="about-goal" title="Our goal" className="@2xl:col-span-2">
+              <dl className="@lg:grid-cols-4 grid grid-cols-2 gap-x-4 gap-y-3">
+                {goal > 0 ? <Stat label="Goal" value={formatCurrency(goal)} /> : null}
+                {goal > 0 ? <Stat label="Raised" value={formatCurrency(raised)} /> : null}
+                {campaign.donorCount > 0 ? (
+                  <Stat label="Donors" value={formatNumber(campaign.donorCount)} />
                 ) : null}
-                {target ? <Chip icon={Users}>{formatNumber(target)} people in need</Chip> : null}
-              </div>
-            </AboutCard>
-          ) : null}
-
-          {/* Your impact — reached so far ----------------------------------------- */}
-          {showImpact ? (
-            <AboutCard
-              id="about-impact"
-              title="Your Impact"
-              className={showGoal ? null : '@2xl:col-span-2'}
-            >
-              {reached > 0 ? (
+                {reached > 0 ? (
+                  <Stat
+                    label={target ? `People helped of ${formatNumber(target)}` : 'People helped'}
+                    value={formatNumber(reached)}
+                  />
+                ) : null}
+              </dl>
+              {raisedPercent !== null ? (
                 <>
-                  <p className="text-muted-foreground text-body-sm">Reached so far</p>
-                  <p className="leading-tight">
+                  <div
+                    role="img"
+                    aria-label={`${raisedPercent}% of the ${formatCurrency(goal)} goal raised`}
+                    className="bg-muted mt-4 h-2 overflow-hidden rounded-full"
+                  >
                     <span
-                      data-numeric=""
-                      className="text-h2 text-foreground font-semibold tabular-nums"
-                    >
-                      {formatNumber(reached)}
-                    </span>{' '}
-                    <span className="text-body text-foreground font-semibold">people</span>
+                      aria-hidden="true"
+                      className="bg-primary block h-full rounded-full"
+                      style={{ width: `${Math.max(raisedPercent, raised > 0 ? 2 : 0)}%` }}
+                    />
+                  </div>
+                  <p
+                    data-numeric=""
+                    className="text-caption text-muted-foreground mt-1.5 flex flex-wrap justify-between gap-x-3"
+                  >
+                    <span>{raisedPercent}% raised</span>
+                    {campaign.endsAt ? (
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarDays className="size-3.5" aria-hidden="true" />
+                        by {goalDate.format(new Date(campaign.endsAt))}
+                      </span>
+                    ) : null}
                   </p>
-                  {reachedPercent !== null && target ? (
-                    <>
-                      <div
-                        role="img"
-                        aria-label={`${formatNumber(reached)} of ${formatNumber(target)} people reached`}
-                        className="bg-muted mt-3 h-2 overflow-hidden rounded-full"
-                      >
-                        <span
-                          aria-hidden="true"
-                          className="bg-primary block h-full rounded-full"
-                          style={{ width: `${Math.max(reachedPercent, 2)}%` }}
-                        />
-                      </div>
-                      <p
-                        data-numeric=""
-                        aria-hidden="true"
-                        className="text-caption text-muted-foreground mt-1.5"
-                      >
-                        {reachedPercent}% of {formatNumber(target)} people
-                      </p>
-                    </>
-                  ) : null}
                 </>
               ) : null}
+              {reachedPercent === null && target && reached === 0 ? (
+                <p className="text-body-sm text-muted-foreground mt-3 inline-flex items-center gap-1.5">
+                  <Users className="size-4" aria-hidden="true" />
+                  {formatNumber(target)} people in need
+                </p>
+              ) : null}
               {context ? (
-                <p
-                  className={cn(
-                    'text-body text-muted-foreground-strong leading-relaxed',
-                    reached > 0 ? 'mt-3' : null,
-                  )}
-                >
+                <p className="text-body text-muted-foreground-strong mt-4 max-w-[68ch] leading-relaxed">
                   {context}
                 </p>
               ) : null}
@@ -222,7 +205,7 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
       */}
       {documents.length > 0 ? (
         <section aria-labelledby="campaign-documents" className="mt-6">
-          <h3 id="campaign-documents" className="text-h4 font-bold">
+          <h3 id="campaign-documents" className="text-h4 font-semibold">
             Documents
           </h3>
           <ul className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -267,8 +250,8 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
  */
 export function hasAboutContent(campaign: Campaign): boolean {
   return (
-    campaign.story.length > 0 ||
-    Boolean(campaign.supportProvides?.trim()) ||
+    cleanStory(campaign.story).length > 0 ||
+    Boolean(cleanSupportProvides(campaign.supportProvides, cleanStory(campaign.story))) ||
     Boolean(campaign.videoUrl?.trim()) ||
     campaign.products.some((product) => product.status !== 'inactive') ||
     campaign.goalAmount > 0 ||
@@ -306,12 +289,14 @@ function AboutCard({
   );
 }
 
-/** A small fact beside a figure: an icon and a few words, on a pale chip. */
-function Chip({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+/** One figure in the goal block: the label over its value. */
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <span className="border-border/70 bg-surface text-body-sm text-foreground inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-semibold">
-      <Icon className="text-muted-foreground size-4" aria-hidden="true" />
-      <span data-numeric="">{children}</span>
-    </span>
+    <div className="min-w-0">
+      <dt className="text-caption text-muted-foreground">{label}</dt>
+      <dd data-numeric="" className="text-h4 text-foreground mt-0.5 font-semibold tabular-nums">
+        {value}
+      </dd>
+    </div>
   );
 }

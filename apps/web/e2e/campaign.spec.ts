@@ -32,7 +32,7 @@ test.describe('campaign page', () => {
       'aria-current',
       'true',
     );
-    await expect(page.getByRole('heading', { name: 'Choose How You Want to Help' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Choose how you want to help' })).toBeVisible();
   });
 
   /**
@@ -44,11 +44,11 @@ test.describe('campaign page', () => {
     await page.goto(CAMPAIGN);
 
     const order = [
-      'Choose How You Want to Help',
-      'Other Ways to Support',
+      'Choose how you want to help',
+      'Other ways to support',
       'About This Campaign',
-      'Stories from the Ground',
-      'Recent Supporters',
+      'Stories from the ground',
+      'Recent supporters',
       'FAQs',
     ];
 
@@ -66,7 +66,7 @@ test.describe('campaign page', () => {
     // Below `lg` the donation card is in the page itself, straight after the
     // ways of giving and before the story.
     if ((page.viewportSize()?.width ?? 1280) < 1024) {
-      const card = page.getByRole('heading', { name: 'Your Donation' }).filter({ visible: true });
+      const card = page.getByRole('heading', { name: 'Your donation' }).filter({ visible: true });
       const cardTop = (await card.boundingBox())!.y;
       expect(cardTop).toBeGreaterThan(tops[1]!);
       expect(cardTop).toBeLessThan(tops[2]!);
@@ -74,10 +74,10 @@ test.describe('campaign page', () => {
   });
 
   /**
-   * "Other Ways to Support": any amount, typed, beside the products. It writes
+   * "Other ways to support": any amount, typed, beside the products. It writes
    * the same amount the card's presets do, so the two always agree.
    */
-  test('takes any amount in Other Ways to Support, and totals it with the products', async ({
+  test('takes any amount in Other ways to support, and totals it with the products', async ({
     page,
   }) => {
     await page.goto(CAMPAIGN);
@@ -88,10 +88,10 @@ test.describe('campaign page', () => {
     await field.fill('750');
 
     // No preset is that amount, so none is pressed; the card shows the ₹750.
-    const presets = page.getByRole('group', { name: 'Add an Amount' }).filter({ visible: true });
+    const presets = page.getByRole('group', { name: 'Add an amount' }).filter({ visible: true });
     await expect(presets.first().getByRole('button', { pressed: true })).toHaveCount(0);
     await expect(
-      page.getByRole('button', { name: 'Donate ₹750' }).filter({ visible: true }),
+      page.getByRole('button', { name: 'Donate ₹750', exact: true }).filter({ visible: true }),
     ).toBeEnabled();
 
     // And a product on top: one donation, both together.
@@ -118,9 +118,11 @@ test.describe('campaign page', () => {
   });
 
   /**
-   * Below `lg` nothing is fixed to the screen. The donation card is part of
-   * the page and scrolls away with it, so it never covers the content — or the
-   * control that has focus — and there is no bar to open first.
+   * Below `lg` the donation card is part of the page and scrolls away with
+   * it, so it never covers the content — or the control that has focus — and
+   * there is no bar to open first. The one thing fixed to the screen is the
+   * phone's Donate bar (owner, 2026-11-21, visual polish Phase 4), and it is
+   * hidden whenever the card is in view, so it never covers the card either.
    */
   test('keeps the donation card in the page on a phone, not fixed over it', async ({ page }) => {
     test.skip((page.viewportSize()?.width ?? 1280) >= 1024, 'below lg only');
@@ -128,7 +130,7 @@ test.describe('campaign page', () => {
     await page.goto(CAMPAIGN);
     await page.waitForLoadState('networkidle');
 
-    const card = page.getByRole('heading', { name: 'Your Donation' }).filter({ visible: true });
+    const card = page.getByRole('heading', { name: 'Your donation' }).filter({ visible: true });
     const donate = page
       .getByRole('button', { name: /^Donate( ₹[\d,.]+)?$/ })
       .filter({ visible: true });
@@ -136,14 +138,18 @@ test.describe('campaign page', () => {
     await expect(card).toBeInViewport();
     await expect(donate).toBeVisible();
 
-    // Nothing in the page is pinned to the viewport.
+    // Nothing in the page is pinned to the viewport but the Donate bar, and
+    // that is hidden while the card is on screen.
     const pinned = await page.evaluate(
       () =>
         [...document.querySelectorAll('main *')].filter(
-          (element) => getComputedStyle(element).position === 'fixed',
+          (element) =>
+            getComputedStyle(element).position === 'fixed' &&
+            !element.closest('[data-testid="mobile-donate-bar"]'),
         ).length,
     );
-    expect(pinned, 'no element in the page is position: fixed').toBe(0);
+    expect(pinned, 'no element but the Donate bar is position: fixed').toBe(0);
+    await expect(page.getByTestId('mobile-donate-bar')).toBeHidden();
 
     // Further down, the card has scrolled away like the rest of the page.
     await page.getByRole('heading', { name: 'FAQs', exact: true }).scrollIntoViewIfNeeded();
@@ -166,7 +172,7 @@ test.describe('campaign page', () => {
     test.skip((page.viewportSize()?.width ?? 1280) < 1024, 'the rail exists only at lg and up');
 
     await page.goto(CAMPAIGN);
-    const title = page.getByRole('heading', { name: 'Your Donation' }).locator('visible=true');
+    const title = page.getByRole('heading', { name: 'Your donation' }).locator('visible=true');
     const donate = page
       .getByRole('button', { name: /^Donate( ₹[\d,.]+)?$/ })
       .locator('visible=true');
@@ -180,7 +186,7 @@ test.describe('campaign page', () => {
     await expect(assurances).toBeInViewport({ ratio: 1 });
 
     // Mid-page: the whole card is still on screen.
-    await page.getByRole('heading', { name: 'Stories from the Ground' }).scrollIntoViewIfNeeded();
+    await page.getByRole('heading', { name: 'Stories from the ground' }).scrollIntoViewIfNeeded();
     await expect(title).toBeInViewport({ ratio: 1 });
     await expect(donate).toBeInViewport({ ratio: 1 });
     await expect(assurances).toBeInViewport({ ratio: 1 });
@@ -192,7 +198,7 @@ test.describe('campaign page', () => {
   /**
    * The two ways to give.
    *
-   * The approved design shows "One-Time Donation" selected with the products
+   * The approved design shows "One-time donation" selected with the products
    * still on screen and already in the basket — so the control cannot be a
    * filter that hides one panel. It is a JUMP: pressing a segment moves to that
    * way of giving and puts the cursor in it.
@@ -207,30 +213,30 @@ test.describe('campaign page', () => {
 
     // The toggle lives in the donation card — beside the page on a desktop,
     // in it below `lg` — and is there without opening anything.
-    await expect(page.getByRole('radio', { name: 'One-Time Donation' })).toHaveAttribute(
+    await expect(page.getByRole('radio', { name: 'One-time donation' })).toHaveAttribute(
       'aria-checked',
       'true',
     );
 
     // NEITHER way of giving is hidden by the selection: the products stay on
     // the page and the card's amount presets stay in the card.
-    const presets = page.getByRole('group', { name: 'Add an Amount' }).filter({ visible: true });
+    const presets = page.getByRole('group', { name: 'Add an amount' }).filter({ visible: true });
     const firstPreset = presets.first().getByRole('button').first();
-    await expect(page.getByRole('heading', { name: 'Choose How You Want to Help' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Choose how you want to help' })).toBeVisible();
     await expect(presets.first()).toBeVisible();
 
-    await page.getByRole('radio', { name: 'Support with Products' }).click();
-    await expect(page.getByRole('radio', { name: 'Support with Products' })).toHaveAttribute(
+    await page.getByRole('radio', { name: 'Support with products' }).click();
+    await expect(page.getByRole('radio', { name: 'Support with products' })).toHaveAttribute(
       'aria-checked',
       'true',
     );
-    await expect(page.getByRole('heading', { name: 'Choose How You Want to Help' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Choose how you want to help' })).toBeVisible();
 
     await expect(firstPreset).toBeVisible();
 
-    // And back: "One-Time Donation" moves to the amount field in Other Ways to
+    // And back: "One-time donation" moves to the amount field in Other Ways to
     // Support and puts the cursor in it.
-    await page.getByRole('radio', { name: 'One-Time Donation' }).click();
+    await page.getByRole('radio', { name: 'One-time donation' }).click();
     await expect(page.getByLabel('Custom donation amount in rupees')).toBeFocused();
   });
 
@@ -257,7 +263,7 @@ test.describe('campaign page', () => {
     // already chosen on arrival — in the side column on a desktop, in the
     // page on a phone.
     const preset = page
-      .getByRole('group', { name: 'Add an Amount' })
+      .getByRole('group', { name: 'Add an amount' })
       .filter({ visible: true })
       .first()
       .getByRole('button', { name: '₹500', exact: true });
@@ -283,13 +289,13 @@ test.describe('campaign page', () => {
   test('starts with the smallest amount already chosen', async ({ page }) => {
     await page.goto(CAMPAIGN);
 
-    const presets = page.getByRole('group', { name: 'Add an Amount' }).filter({ visible: true });
+    const presets = page.getByRole('group', { name: 'Add an amount' }).filter({ visible: true });
     await expect(presets.first().getByRole('button').first()).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     await expect(
-      page.getByRole('button', { name: 'Donate ₹500' }).filter({ visible: true }),
+      page.getByRole('button', { name: 'Donate ₹500', exact: true }).filter({ visible: true }),
     ).toBeEnabled();
   });
 
@@ -297,7 +303,7 @@ test.describe('campaign page', () => {
    * A campaign with nothing to pick from has the SAME page as one with products
    * (owner, 2026-10-16): the donation card beside it, the smallest amount
    * already chosen, and the amount panel where the product grid would be —
-   * carrying the `#give` anchor every "Donate Now" on the site points at.
+   * carrying the `#give` anchor every "Donate now" on the site points at.
    * (Whether the browser scrolls to that anchor is not asserted: with a
    * `loading.tsx` on this route, a hash landing is not reliable on any campaign.)
    */
@@ -306,9 +312,9 @@ test.describe('campaign page', () => {
     await page.waitForLoadState('networkidle');
 
     // No products, so no grid and no way-of-giving switch — only the amount,
-    // and that panel is what every "Donate Now" link on the site (`#give`) names.
-    await expect(page.getByRole('heading', { name: 'Choose How You Want to Help' })).toHaveCount(0);
-    await expect(page.getByRole('radio', { name: 'Support with Products' })).toHaveCount(0);
+    // and that panel is what every "Donate now" link on the site (`#give`) names.
+    await expect(page.getByRole('heading', { name: 'Choose how you want to help' })).toHaveCount(0);
+    await expect(page.getByRole('radio', { name: 'Support with products' })).toHaveCount(0);
     await expect(
       page.locator('#give').getByRole('heading', { name: 'Choose an amount', exact: true }),
     ).toBeVisible();
@@ -319,10 +325,10 @@ test.describe('campaign page', () => {
 
     // The same card, open on "Donate ₹500" — not a progress card with a link to /donate.
     await expect(
-      page.getByRole('heading', { name: 'Your Donation' }).filter({ visible: true }),
+      page.getByRole('heading', { name: 'Your donation' }).filter({ visible: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole('button', { name: 'Donate ₹500' }).filter({ visible: true }),
+      page.getByRole('button', { name: 'Donate ₹500', exact: true }).filter({ visible: true }),
     ).toBeEnabled();
     await expect(page.getByRole('heading', { name: 'Support This Campaign' })).toHaveCount(0);
   });
@@ -360,7 +366,7 @@ test.describe('campaign page', () => {
       page.getByText(text).filter({ visible: true }).first();
 
     await expect(visible(/Selected Items/)).toBeVisible();
-    await expect(visible('Total Amount')).toBeVisible();
+    await expect(visible('Total amount')).toBeVisible();
     // Two of the first product, whatever it costs — the line's own stepper
     // in the summary must say so.
     const line = page
@@ -395,7 +401,7 @@ test.describe('campaign page', () => {
     await page.goto(CAMPAIGN);
     await page.waitForLoadState('networkidle');
 
-    const generous = page.getByRole('radio', { name: 'Most Generous' });
+    const generous = page.getByRole('radio', { name: 'Most generous' });
     await expect(generous).toBeVisible();
     await generous.click();
     await expect(generous).toHaveAttribute('aria-checked', 'true');
@@ -407,7 +413,7 @@ test.describe('campaign page', () => {
       the test failed reporting a school kit's price — which looks like a
       sorting bug and is a locator that was never looking at the right list.
     */
-    const donorList = page.getByRole('region', { name: 'Recent Supporters' }).getByRole('listitem');
+    const donorList = page.getByRole('region', { name: 'Recent supporters' }).getByRole('listitem');
     await expect(donorList.first()).toContainText('1,500');
   });
 
@@ -446,5 +452,44 @@ test.describe('campaign page', () => {
         nodes: violation.nodes.length,
       })),
     ).toEqual([]);
+  });
+});
+
+/**
+ * The phone's Donate bar (visual polish Phase 4, 2026-11-21): it shows while
+ * the in-page donation card is off screen, steps aside whenever any of the
+ * card is in view (so it never covers it), and its one action brings the card
+ * back. Below `lg` only.
+ */
+test.describe('phone Donate bar', () => {
+  test('shows only while the card is out of view, and brings the card back', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 1280) >= 1024, 'below lg only');
+    await page.goto(CAMPAIGN);
+
+    const bar = page.getByTestId('mobile-donate-bar');
+    const card = page.getByRole('heading', { name: 'Your donation' }).filter({ visible: true });
+
+    // On arrival the card is further down the page: the bar offers the way to it.
+    await expect(bar).toBeVisible();
+    await expect(
+      bar.getByRole('button', { name: /^Go to the donation card: Donate/ }),
+    ).toBeVisible();
+
+    // With the card on screen, the bar is gone — it never sits over the card.
+    await card.scrollIntoViewIfNeeded();
+    await expect(bar).toBeHidden();
+
+    // Back at the top, then the bar's button brings the card into view.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(bar).toBeVisible();
+    await bar.getByRole('button', { name: /^Go to the donation card: Donate/ }).click();
+    await expect(card).toBeInViewport();
+    await expect(bar).toBeHidden();
+  });
+
+  test('is not on a desktop', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 1280) < 1024, 'desktop only');
+    await page.goto(CAMPAIGN);
+    await expect(page.getByTestId('mobile-donate-bar')).toBeHidden();
   });
 });

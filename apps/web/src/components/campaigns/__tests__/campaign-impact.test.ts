@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { repeatsPeopleReached } from '../campaign-impact';
 
 /**
- * "The Difference Your Support Can Make" must not repeat the people-reached
- * count that "Your Impact" already shows.
+ * "The difference your support can make" must not repeat the people-reached
+ * count that "Your impact" already shows.
  */
 describe('repeatsPeopleReached', () => {
   it('drops a people figure equal to the reached count', () => {

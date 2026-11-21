@@ -14,6 +14,7 @@ import { CampaignClosedCard } from '@/components/donations/campaign-closed-card'
 import { CampaignProductCard } from '@/components/donations/campaign-product-card';
 import { DonationCheckout } from '@/components/donations/donation-checkout';
 import { donationColumns } from '@/components/donations/donation-layout';
+import { MobileDonateBar } from '@/components/donations/mobile-donate-bar';
 import { StickyRail } from '@/components/donations/sticky-rail';
 import { SectionHeading } from '@/components/sections/section-heading';
 import type { Campaign } from '@/lib/mock/types';
@@ -94,9 +95,9 @@ export interface DonationBuilderProps {
    */
   assurances?: React.ReactNode;
   /**
-   * The custom-amount panel under the products ("Other Ways to Support").
+   * The custom-amount panel under the products ("Other ways to support").
    *
-   * On by default. Under products it is "Other Ways to Support" — any amount,
+   * On by default. Under products it is "Other ways to support" — any amount,
    * typed, beside the card's presets and writing to the same amount; without
    * products it is the only field in the main column. Off only where a page has
    * nowhere for it.
@@ -145,7 +146,7 @@ export function DonationBuilder({
    * ══════════════════════════════════════════════════════════════════════════
    * IT DOES NOT HIDE EITHER PANEL, AND THAT IS THE DESIGN.
    *
-   * The approved layout shows "One-Time Donation" selected with the product
+   * The approved layout shows "One-time donation" selected with the product
    * grid still on screen and products already in the basket — so the control
    * cannot be a filter. It is a JUMP: pressing a segment scrolls to that way of
    * giving and puts the cursor in it.
@@ -162,6 +163,8 @@ export function DonationBuilder({
   // page itself — so the first amount preset in each copy gets its own ref.
   const railAmountRef = React.useRef<HTMLButtonElement>(null);
   const inlineAmountRef = React.useRef<HTMLButtonElement>(null);
+  // The in-page card below `lg`, watched by the phone's Donate bar.
+  const inlineCardRef = React.useRef<HTMLDivElement>(null);
 
   const chooseMode = (next: 'amount' | 'products') => {
     setMode(next);
@@ -392,7 +395,7 @@ export function DonationBuilder({
             <SectionHeading
               id="choose-products"
               size="md"
-              title="Choose How You Want to Help"
+              title="Choose how you want to help"
               lead="Select the items you want to support. Your contribution will help us provide immediate relief to those in need."
             />
 
@@ -412,7 +415,7 @@ export function DonationBuilder({
                     onQuantityChange={(next: number) => setQuantity(product.id, next)}
                     disabled={isPaused || isClosed}
                     /*
-                      "Most Needed" marks cards explicitly flagged as `isMostNeeded`.
+                      "Most needed" marks cards explicitly flagged as `isMostNeeded`.
                       If none are explicitly flagged, it defaults to the first product (index === 0).
                     */
                     featured={
@@ -432,7 +435,7 @@ export function DonationBuilder({
         {showCustomAmountSection && campaign.products.length === 0 && !closedState ? (
           /*
             WITHOUT PRODUCTS, THIS IS THE PAGE'S DONATE ANCHOR. The cards'
-            "Donate Now", the programme pages and the section links all point
+            "Donate now", the programme pages and the section links all point
             at `#give` — the product grid when there is one, this panel when
             there is not — so a campaign with nothing to pick from still lands
             on the ask. It also takes the grid's place as where the page
@@ -442,19 +445,16 @@ export function DonationBuilder({
             id={campaign.products.length === 0 ? 'give' : undefined}
             ref={campaign.products.length === 0 ? productsRef : undefined}
             aria-labelledby="custom-amount"
-            className="bg-surface-warm border-wash-amber mt-6 scroll-mt-32 rounded-xl border p-4 first:mt-0 md:p-5"
+            className="card-standard mt-6 scroll-mt-32 rounded-xl p-4 first:mt-0 md:p-5"
           >
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex min-w-0 flex-1 items-start gap-3">
-                <span
-                  aria-hidden="true"
-                  className="bg-wash-amber text-wash-amber-ink grid size-10 shrink-0 place-items-center rounded-full"
-                >
+                <span aria-hidden="true" className="text-muted-foreground mt-0.5 shrink-0">
                   <Gift className="size-5" />
                 </span>
                 <div className="min-w-0">
-                  <h2 id="custom-amount" className="text-body font-bold">
-                    {campaign.products.length > 0 ? 'Other Ways to Support' : 'Choose an amount'}
+                  <h2 id="custom-amount" className="text-body font-semibold">
+                    {campaign.products.length > 0 ? 'Other ways to support' : 'Choose an amount'}
                   </h2>
                   <p className="text-body-sm text-muted-foreground mt-0.5">
                     {campaign.products.length > 0
@@ -493,11 +493,18 @@ export function DonationBuilder({
             BELOW `lg`, THE CARD IS PART OF THE PAGE.
 
             Straight after the ways of giving, in reading order, and it scrolls
-            away like everything else. A bar fixed to the foot of a phone screen
-            covered the content and the focused control under it, and hid the
-            basket behind a tap.
+            away like everything else. Once it has scrolled out of view the
+            phone's Donate bar (`MobileDonateBar`) offers the way back to it;
+            the bar steps aside whenever any of the card is on screen, so it
+            never covers the card or a field being typed in (the reason an
+            always-on bar was removed before).
           */
-          <div className="mt-6 lg:hidden">{renderSummary(inlineAmountRef)}</div>
+          <>
+            <div ref={inlineCardRef} className="mt-6 lg:hidden">
+              {renderSummary(inlineAmountRef)}
+            </div>
+            <MobileDonateBar target={inlineCardRef} focusTarget={inlineAmountRef} total={total} />
+          </>
         ) : null}
 
         {children}

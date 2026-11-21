@@ -24,7 +24,7 @@ export function CampaignFaqs({ faqs }: { faqs: Campaign['faqs'] }) {
         size="md"
         title="FAQs"
         lead="Find answers to common questions about this campaign."
-        viewAll={{ href: '/faq', label: 'View All FAQs' }}
+        viewAll={{ href: '/faq', label: 'View all FAQs' }}
       />
 
       <Accordion type="single" collapsible variant="list" className="mt-4">

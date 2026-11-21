@@ -77,7 +77,7 @@ export function CampaignDonationSummary({
   productLines: { product: CampaignProduct; quantity: number }[];
   customPaise: number;
   onCustomAmountChange: (value: string) => void;
-  /** The first preset, so the builder can focus it when "One-Time Donation" is chosen. */
+  /** The first preset, so the builder can focus it when "One-time donation" is chosen. */
   amountRef?: React.Ref<HTMLButtonElement>;
   customDisabled?: boolean;
   total: number;
@@ -98,7 +98,7 @@ export function CampaignDonationSummary({
   presetAmounts?: readonly number[] | number[];
   /**
    * The assurances (80G, secure payments, trusted), shown as a panel at the
-   * foot of the card, under the payment methods and Share Campaign.
+   * foot of the card, under the payment methods and Share campaign.
    */
   assurances?: React.ReactNode;
   className?: string;
@@ -111,7 +111,7 @@ export function CampaignDonationSummary({
 
   return (
     <Card className={cn('rounded-xl px-4 py-3 shadow-sm', className)}>
-      <h2 className="text-body-lg font-bold leading-tight">Your Donation</h2>
+      <h2 className="text-body-lg font-bold leading-tight">Your donation</h2>
 
       {/*
         THE TWO WAYS TO GIVE.
@@ -121,7 +121,7 @@ export function CampaignDonationSummary({
         independent switches, one of which is always on.
 
         IT JUMPS TO A WAY OF GIVING; IT DOES NOT HIDE ONE. The approved design
-        shows "One-Time Donation" selected with the products still on screen and
+        shows "One-time donation" selected with the products still on screen and
         already in the basket, so the control cannot be a filter — pressing a
         segment scrolls to that input and puts the cursor in it.
 
@@ -137,8 +137,8 @@ export function CampaignDonationSummary({
         >
           {(
             [
-              ['amount', 'One-Time Donation'],
-              ['products', 'Support with Products'],
+              ['amount', 'One-time donation'],
+              ['products', 'Support with products'],
             ] as const
           ).map(([value, label]) => (
             <button
@@ -148,7 +148,7 @@ export function CampaignDonationSummary({
               aria-checked={mode === value}
               onClick={() => onModeChange(value)}
               className={cn(
-                // `text-nowrap` with a tight tracking: "Support with Products"
+                // `text-nowrap` with a tight tracking: "Support with products"
                 // wrapped to two lines and made the control twice as tall as
                 // the design's single row. Below 360px it may wrap: the card is
                 // in the page there, and a label that cannot wrap pushed the
@@ -190,7 +190,7 @@ export function CampaignDonationSummary({
                 onClick={onClearAll}
                 className="text-caption text-muted-foreground hover:text-foreground focus-visible:outline-ring rounded-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
               >
-                Clear All
+                Clear all
               </button>
             ) : null}
           </div>
@@ -233,7 +233,7 @@ export function CampaignDonationSummary({
       <div className="border-border mt-2 border-t pt-2">
         <div className="flex items-baseline justify-between gap-3">
           <p id={amountLabelId} className="text-body-sm font-semibold">
-            Add an Amount
+            Add an amount
           </p>
           <span data-numeric="" className="text-body-sm font-semibold tabular-nums">
             {formatCurrency(customPaise)}
@@ -281,7 +281,7 @@ export function CampaignDonationSummary({
 
       {/* Total ---------------------------------------------------------- */}
       <div className="border-border mt-2 flex items-baseline justify-between gap-3 border-t pt-2">
-        <span className="text-body font-bold">Total Amount</span>
+        <span className="text-body font-bold">Total amount</span>
         <span
           data-numeric=""
           className="text-h3 text-foreground font-semibold tabular-nums leading-tight"
@@ -445,7 +445,7 @@ export function CampaignProgressBlock({
 
   return (
     <div className={className}>
-      <p className="text-body-sm font-semibold">Campaign Progress</p>
+      <p className="text-body-sm font-semibold">Campaign progress</p>
 
       <div className="mt-0.5 flex items-end justify-between gap-3">
         <p
@@ -484,7 +484,7 @@ export function CampaignProgressBlock({
             />
           </div>
           <div className="text-caption text-muted-foreground mt-1.5 flex items-baseline justify-between gap-3">
-            <span data-numeric="">{percent}% Complete</span>
+            <span data-numeric="">{percent}% complete</span>
             <span data-numeric="">Goal {formatCurrency(goal)}</span>
           </div>
         </>
@@ -493,13 +493,13 @@ export function CampaignProgressBlock({
   );
 }
 
-/** "Secure & Safe Payment" and the accepted methods, set in type. */
+/** "Secure & safe payment" and the accepted methods, set in type. */
 export function PaymentAssurance() {
   return (
     <>
       <p className="text-body-sm text-foreground/85 mt-2 flex items-center justify-center gap-1.5 font-medium">
         <Lock className="text-foreground size-4 fill-current" aria-hidden="true" />
-        Secure &amp; Safe Payment
+        Secure &amp; safe payment
       </p>
       <PaymentLogos className="mt-1.5" />
     </>
@@ -507,7 +507,7 @@ export function PaymentAssurance() {
 }
 
 /**
- * Share Campaign — an outlined pill under the payment methods.
+ * Share campaign — an outlined pill under the payment methods.
  *
  * Uses the platform share sheet where there is one, which on a phone is the
  * only share anybody wants — it offers WhatsApp, which is how this link will
@@ -544,7 +544,7 @@ export function ShareButton() {
       className="border-border bg-surface text-body-sm hover:bg-muted focus-visible:outline-ring inline-flex h-9 items-center gap-2 rounded-full border px-5 font-bold shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
     >
       <Share2 className="size-4" aria-hidden="true" />
-      Share Campaign
+      Share campaign
     </button>
   );
 }

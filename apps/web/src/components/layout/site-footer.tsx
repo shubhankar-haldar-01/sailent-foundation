@@ -13,13 +13,13 @@ import { SOCIAL_ICONS } from './social-icons';
  *
  * A clean column grid on the page surface: the brand column (logo, mission
  * line, a quiet tagline, social links), the two link columns (`footerNav`:
- * Explore, Information), Contact Us, and the legal row. Neutral headings with
+ * Explore, Information), Contact us, and the legal row. Neutral headings with
  * no bars, muted links that turn brand on hover, plain contact icons, 40px
  * neutral social circles. The botanical corners, the handwritten tagline and
  * the coloured icon badges are gone.
  *
  * Kept from `AGENTS.md` §11 item 13: the columns and links, the legal row, and
- * no "Donate Now" button (owner, 2026-10-16).
+ * no "Donate now" button (owner, 2026-10-16).
  */
 export async function SiteFooter() {
   const year = new Date().getFullYear();
@@ -44,6 +44,9 @@ export async function SiteFooter() {
                 alt="Sailent Foundation"
                 width={1743}
                 height={453}
+                // Shown at most ~220px wide: without `sizes` the browser fetched the
+                // 3840px rendition (44 KB) of the 1743px PNG (visual polish Phase 5).
+                sizes="220px"
                 className="h-[43.2px] w-auto object-contain md:h-[50.4px]"
               />
             </Link>
@@ -106,11 +109,11 @@ export async function SiteFooter() {
             })}
           </div>
 
-          {/* Column 5: Contact Us + Script Accent */}
+          {/* Column 5: Contact us + Script Accent */}
           <div className="lg:col-span-4">
             <div>
               <h2 id="footer-contact" className="text-foreground mb-3 text-sm font-semibold">
-                Contact Us
+                Contact us
               </h2>
               <address
                 aria-labelledby="footer-contact"

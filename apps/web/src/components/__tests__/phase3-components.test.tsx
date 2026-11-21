@@ -70,7 +70,7 @@ describe('Campaign card (simplified, AGENTS.md §11 item 2)', () => {
       expect(screen.getByText(term, { selector: 'dt' })).toBeInTheDocument();
     }
     expect(screen.getByRole('img', { name: /% of the ₹[\d,]+ goal raised/ })).toBeInTheDocument();
-    const donate = screen.getByRole('link', { name: /Donate Now/ });
+    const donate = screen.getByRole('link', { name: /Donate now/ });
     expect(donate).toHaveAttribute('href', `/campaigns/${campaign.slug}#give`);
     expect(donate).not.toHaveClass('bg-action');
   });

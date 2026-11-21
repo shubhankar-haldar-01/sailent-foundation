@@ -27,7 +27,7 @@ import { SectionHeading } from '@/components/sections/section-heading';
  *
  * Two figures the page already states elsewhere are left out here: the
  * fundraising target (the donation card and "Our Goal") and the number of
- * people reached ("Your Impact"), including an impact note that only repeats
+ * people reached ("Your impact"), including an impact note that only repeats
  * that count.
  *
  * Under the cards, what one gift does, from the campaign's own prices — the
@@ -59,7 +59,7 @@ export function CampaignImpact({ campaign }: { campaign: Campaign }) {
       <SectionHeading
         id="impact-heading"
         size="md"
-        title="The Difference Your Support Can Make"
+        title="The difference your support can make"
         lead="Your contribution can create real and lasting change for the people this campaign serves."
       />
 
@@ -138,17 +138,17 @@ export function CampaignImpact({ campaign }: { campaign: Campaign }) {
 }
 
 const CARD_TONES = [
-  { card: 'bg-wash-blue/50', icon: 'text-wash-blue-ink' },
-  { card: 'bg-wash-mint/50', icon: 'text-wash-mint-ink-strong' },
-  { card: 'bg-wash-amber/50', icon: 'text-wash-amber-ink' },
-  { card: 'bg-wash-rose/50', icon: 'text-wash-rose-ink' },
+  { card: 'bg-accent/50', icon: 'text-primary' },
+  { card: 'bg-accent/50', icon: 'text-primary' },
+  { card: 'bg-accent/50', icon: 'text-primary' },
+  { card: 'bg-accent/50', icon: 'text-primary' },
 ] as const;
 
 const PEOPLE = /people|child|famil|student|patient|women|girl|boy|beneficiar|learner|member/;
 
 /**
  * An impact note that is only the people-reached count again — a people label
- * carrying the same number "Your Impact" already shows.
+ * carrying the same number "Your impact" already shows.
  */
 export function repeatsPeopleReached(
   note: { label: string; value: number },

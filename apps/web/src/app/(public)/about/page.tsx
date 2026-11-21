@@ -108,7 +108,7 @@ const focusAreas: FocusAreaItem[] = [
     icon: UsersRound,
     discBg: 'bg-accent',
     iconColor: 'text-primary',
-    title: 'Community Support',
+    title: 'Community support',
     body: 'Strengthening local communities and systems.',
   },
 ];
@@ -186,7 +186,7 @@ export default async function AboutPage() {
               id="focus-areas-heading"
               className="font-display text-foreground mt-2.5 text-balance text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[38px] lg:leading-[1.15]"
             >
-              Creating Change, Together
+              Creating change, together
             </h2>
 
             <p className="text-muted-foreground mt-2 text-balance text-sm sm:text-base">
@@ -299,7 +299,7 @@ export default async function AboutPage() {
                 href="/programs"
                 className="border-primary/30 text-primary hover:bg-primary/5 inline-flex items-center gap-2 rounded-full border-2 px-6 py-2.5 text-sm font-semibold transition-colors duration-200 sm:px-7 sm:py-3 sm:text-base"
               >
-                Explore Our Programs
+                Explore our programs
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
@@ -316,14 +316,14 @@ export default async function AboutPage() {
           <div className="grid gap-5 md:grid-cols-2">
             <Statement
               icon={Target}
-              tone="bg-wash-rose text-wash-rose-ink"
-              title="Our Mission"
+              tone="bg-accent text-primary"
+              title="Our mission"
               body="To remove the practical, local obstacles that keep people out of schools, clinics and paid work — by strengthening the institutions already serving them."
             />
             <Statement
               icon={Eye}
-              tone="bg-wash-blue text-wash-blue-ink"
-              title="Our Vision"
+              tone="bg-accent text-primary"
+              title="Our vision"
               body="Districts where a family’s income does not decide whether a child finishes school, whether an illness is treated, or whether a woman earns."
             />
           </div>
@@ -567,7 +567,7 @@ export default async function AboutPage() {
                 href="/donate"
                 className="bg-action text-action-foreground hover:bg-action-hover active:bg-action-active inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-sm font-semibold shadow-sm transition-all duration-200 hover:shadow sm:px-6 sm:py-2.5"
               >
-                Donate Now
+                Donate now
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
               <Link

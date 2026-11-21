@@ -78,7 +78,7 @@ export function CampaignProductCard({
 
         {featured && !isFulfilled ? (
           <span className="bg-surface/95 text-foreground shadow-xs absolute left-1.5 top-1.5 inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium">
-            Most Needed
+            Most needed
           </span>
         ) : null}
 

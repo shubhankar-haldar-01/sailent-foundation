@@ -107,13 +107,13 @@ test.describe('journey: homepage → campaign', () => {
       figure that decides whether somebody buys that item. Both counts are
       asserted, not just the percentage: 1% of 500 and 1% of 5 are very
       different asks, and a bare percentage hides which one this is. The
-      donation card adds the campaign's own "46% Complete" against its goal.
+      donation card adds the campaign's own "46% complete" against its goal.
     */
     await expect(page.getByText(/^[\d,]+ \/ [\d,]+ Donated$/).first()).toBeVisible();
     await expect(page.getByText(/^\d+%$/).first()).toBeVisible();
     await expect(
       page
-        .getByText(/^\d+% Complete$/)
+        .getByText(/^\d+% complete$/)
         .filter({ visible: true })
         .first(),
     ).toBeVisible();
@@ -138,7 +138,7 @@ test.describe('featured campaigns rail', () => {
     expect(await pause.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
 
     // …until it is reached from the keyboard, as the stop before "View All".
-    await page.getByRole('link', { name: 'View All Campaigns' }).focus();
+    await page.getByRole('link', { name: 'View all campaigns' }).focus();
     // Safari's Tab skips buttons and links unless the user turns that on;
     // Option+Tab always reaches them, so that is the keyboard path tested there.
     await page.keyboard.press(browserName === 'webkit' ? 'Alt+Shift+Tab' : 'Shift+Tab');
@@ -189,13 +189,13 @@ test.describe('homepage campaigns grid', () => {
     // The featured band is still there; the focus-area strip under the hero
     // was removed at the client's request.
     await expect(page.getByRole('heading', { name: /What we work on/i })).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: 'Make a Real Difference' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Make a real difference' })).toBeVisible();
     await expect(page.getByRole('list', { name: /Featured campaigns/i })).toBeVisible();
 
     // Two rows of four at most, and it comes before "Who we are".
     expect(await grid(page).getByRole('listitem').count()).toBeLessThanOrEqual(8);
     const gridBox = await grid(page).boundingBox();
-    const aboutBox = await page.getByRole('heading', { name: 'Who We Are' }).boundingBox();
+    const aboutBox = await page.getByRole('heading', { name: 'Who we are' }).boundingBox();
     expect(gridBox?.y ?? Infinity).toBeLessThan(aboutBox?.y ?? -Infinity);
   });
 
@@ -233,7 +233,7 @@ test.describe('homepage campaigns grid', () => {
     // The band above keeps its own selection.
     await expect(featured).toHaveCount(featuredBefore);
 
-    const more = page.getByRole('link', { name: /View More Women Empowerment Campaigns/ });
+    const more = page.getByRole('link', { name: /View more Women Empowerment campaigns/ });
     await expect(more).toHaveAttribute('href', '/campaigns?category=women-empowerment');
   });
 });
@@ -263,7 +263,7 @@ test.describe('campaign listing', () => {
     await cause(page, /Healthcare/).click();
     await page.waitForURL(/q=school&category=healthcare/);
     await expect(page.getByText('No campaigns found')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'View All Campaigns' })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'View all campaigns' })).toHaveAttribute(
       'href',
       '/campaigns',
     );
@@ -277,7 +277,7 @@ test.describe('campaign listing', () => {
       await expect(card.getByRole('term').filter({ hasText: term })).toBeVisible();
     }
     await expect(card.getByRole('img', { name: /% of the ₹[\d,]+ goal raised/ })).toBeVisible();
-    await expect(card.getByRole('link', { name: /Donate Now/ })).toHaveAttribute(
+    await expect(card.getByRole('link', { name: /Donate now/ })).toHaveAttribute(
       'href',
       /^\/campaigns\/[a-z0-9-]+#give$/,
     );
@@ -286,7 +286,7 @@ test.describe('campaign listing', () => {
   test('the status menu offers closed campaigns, and filters to them', async ({ page }) => {
     await page.goto('/campaigns');
     const menu = page.getByRole('combobox', { name: 'Show campaigns' });
-    await expect(menu).toContainText('Active Campaigns');
+    await expect(menu).toContainText('Active campaigns');
 
     // The menu is a client component: a click that lands before hydration
     // opens nothing, so open it once hydrated — every assertion below stands.
@@ -295,15 +295,15 @@ test.describe('campaign listing', () => {
       await expect(page.getByRole('option').first()).toBeVisible({ timeout: 1_000 });
     }).toPass();
     await expect(page.getByRole('option')).toHaveText([
-      /Active Campaigns/,
-      /Closed Campaigns/,
-      /Completed Campaigns/,
-      /All Campaigns/,
+      /Active campaigns/,
+      /Closed campaigns/,
+      /Completed campaigns/,
+      /All campaigns/,
     ]);
-    await page.getByRole('option', { name: /Closed Campaigns/ }).click();
+    await page.getByRole('option', { name: /Closed campaigns/ }).click();
 
     await page.waitForURL(/\/campaigns\?status=closed$/);
-    await expect(menu).toContainText('Closed Campaigns');
+    await expect(menu).toContainText('Closed campaigns');
   });
 
   test('every card says which state it is in, in every view', async ({ page }) => {
@@ -539,16 +539,16 @@ test.describe('journey: campaign → donation UI', () => {
       in-page "Donate now" anchor to follow — the ask is the first section
       rather than a builder somebody has to scroll down to find.
     */
-    await expect(page.getByRole('heading', { name: 'Choose How You Want to Help' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Choose how you want to help' })).toBeVisible();
     await settle(page);
 
-    // Add one School Kit and confirm the summary reflects it.
+    // Add one School kit and confirm the summary reflects it.
     await page
-      .getByRole('button', { name: /Add one School Kit/i })
+      .getByRole('button', { name: /Add one School kit/i })
       .first()
       .click();
 
-    // One School Kit at ₹900 — the line total appears on whichever summary
+    // One School kit at ₹900 — the line total appears on whichever summary
     // surface this viewport shows.
     await expectAmountVisible(page, '₹900');
   });
@@ -558,11 +558,11 @@ test.describe('journey: campaign → donation UI', () => {
     await settle(page);
 
     await page
-      .getByRole('button', { name: /Add one School Kit/i })
+      .getByRole('button', { name: /Add one School kit/i })
       .first()
       .click();
     await page
-      .getByRole('button', { name: /Add one School Kit/i })
+      .getByRole('button', { name: /Add one School kit/i })
       .first()
       .click();
     /*
@@ -574,7 +574,7 @@ test.describe('journey: campaign → donation UI', () => {
     */
     await expect(
       page
-        .getByRole('group', { name: 'Add an Amount' })
+        .getByRole('group', { name: 'Add an amount' })
         .filter({ visible: true })
         .first()
         .getByRole('button', { name: '₹500', exact: true }),
@@ -595,7 +595,7 @@ test.describe('journey: campaign → donation UI', () => {
       off first — in the side column on a desktop, in the page on a phone.
     */
     await page
-      .getByRole('group', { name: 'Add an Amount' })
+      .getByRole('group', { name: 'Add an amount' })
       .filter({ visible: true })
       .first()
       .getByRole('button', { name: '₹500', exact: true })
@@ -744,11 +744,11 @@ test.describe('programs listing', () => {
     await expect(grid(page).first()).toContainText('Education');
   });
 
-  test('"View More Programs" adds the rest below, then goes away', async ({ page }) => {
+  test('"View more programs" adds the rest below, then goes away', async ({ page }) => {
     await page.goto('/programs');
     // Six at a time; the seed has more than six, so the button is there.
     await expect(grid(page)).toHaveCount(6);
-    const more = page.getByRole('link', { name: 'View More Programs' });
+    const more = page.getByRole('link', { name: 'View more programs' });
 
     await more.click();
     await page.waitForURL(/\/programs\?page=2$/);

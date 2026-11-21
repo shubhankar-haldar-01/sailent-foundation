@@ -40,9 +40,11 @@ describe('DonationCheckout', () => {
     expect(screen.getByText('Clean Water for Rural Communities')).toBeInTheDocument();
     expect(screen.getByText('₹4,500')).toBeInTheDocument();
 
-    // Elevated card styling
-    const summaryCard = container.querySelector('.card-elevated');
+    // The summary is a standard, border-first card (visual polish Phase 4:
+    // elevation is for overlays only).
+    const summaryCard = container.querySelector('.card-standard');
     expect(summaryCard).toBeInTheDocument();
+    expect(container.querySelector('.card-elevated')).toBeNull();
   });
 
   it('renders item breakdown for products and custom donation', () => {

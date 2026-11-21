@@ -32,7 +32,7 @@ const CTA_ARROW =
  *
  * SIMPLIFIED (owner, 2026-11-21; `AGENTS.md` §11 item 2): the whole card is the
  * link; one programme tag; the figures as a plain row (Raised, Goal, Donors);
- * the progress bar in the brand; and one quiet "Donate Now" (a brand outline,
+ * the progress bar in the brand; and one quiet "Donate now" (a brand outline,
  * not the orange — orange is for the page's own Donate). No coloured discs.
  * A small status pill: always when the campaign is not active, and on every
  * card where the listing asks for it (`showStatus`).
@@ -173,7 +173,7 @@ export function CampaignCard({
               </div>
               <p className="text-muted-foreground mt-1 flex items-baseline justify-between gap-3 text-[0.8125rem]">
                 <span data-numeric="">
-                  <span className="text-foreground font-semibold">{percent}%</span> Complete
+                  <span className="text-foreground font-semibold">{percent}%</span> complete
                 </span>
                 <span data-numeric="">
                   {percent >= 100 ? 'Goal reached' : `${100 - percent}% to go`}
@@ -193,7 +193,7 @@ export function CampaignCard({
                 className={cn('h-10', CTA_MOTION)}
               >
                 <Link href={`${detailHref}#give`}>
-                  Donate Now
+                  Donate now
                   <ArrowRight aria-hidden="true" className={CTA_ARROW} />
                 </Link>
               </Button>
@@ -206,7 +206,7 @@ export function CampaignCard({
                 className={cn('h-10', CTA_MOTION)}
               >
                 <Link href={detailHref}>
-                  {campaign.status === 'completed' ? 'See What Happened' : 'View Campaign'}
+                  {campaign.status === 'completed' ? 'See what happened' : 'View campaign'}
                   <ArrowRight aria-hidden="true" className={CTA_ARROW} />
                 </Link>
               </Button>

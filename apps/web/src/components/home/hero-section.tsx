@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-import { formatNumber } from '@sailent/ui';
+import { Button, formatNumber } from '@sailent/ui';
 
 import { MediaFrame } from '@/components/media/media-frame';
 import { PageShell } from '@/components/layout/page-shell';
@@ -22,57 +22,51 @@ const hasHeroDesktop = publicAssetExists(HERO_PHOTO_DESKTOP);
 const hasHeroMobile = publicAssetExists(HERO_PHOTO_MOBILE);
 
 /**
- * Homepage hero banner.
+ * Homepage hero: the photograph beside one clear message and one main action
+ * (visual polish Phase 4, owner 2026-11-21).
  *
- * Uses dedicated, art-directed creatives with a live, accessible HTML composition:
- * - Desktop: Children in classroom on left, dark navy wash seamlessly blending to the right
- *   with high-contrast headline, supportive copy, and prominent brand-orange "Donate Now" CTA.
- * - Mobile: Responsive stacked composition ensuring full text legibility and thumb-friendly CTAs.
+ * ══════════════════════════════════════════════════════════════════════════
+ * THE HEADLINE IS LIVE TEXT NOW.
+ *
+ * The supplied banners have the headline drawn into the picture (orange
+ * words on a navy wash), so it could not follow the type, the colours, dark
+ * mode or a translation. There is no clean version of the photograph, so the
+ * frame CROPS to the photograph's side of the banner (`object-left` in a
+ * narrower frame) and the words are set beside it in Inter: the headline, one
+ * supporting line, and one orange "Donate now" — the page's single primary
+ * call to action (§11 item 12). On a phone the photograph sits above them.
+ * ══════════════════════════════════════════════════════════════════════════
  */
 export function HeroSection({ metrics }: { metrics: ImpactMetric[] }) {
   // Live aggregate "beneficiaries reached" metric for social proof.
   const reached = metrics.find((metric) => metric.id === 'beneficiaries');
+  const photo = hasHeroDesktop ? HERO_PHOTO_DESKTOP : hasHeroMobile ? HERO_PHOTO_MOBILE : null;
 
   return (
     <section aria-labelledby="hero-title" className="relative pt-4 sm:pt-6">
-      {/* Screen-reader and SEO accessible semantic content */}
-      <div className="sr-only">
-        <h1 id="hero-title">Sailent Foundation — Every Child Deserves a Brighter Future</h1>
-        <p>Together, we can create safer spaces to learn, grow, and thrive.</p>
-        <Link href="/donate">Donate Now</Link>
-      </div>
-
       <PageShell>
-        <div className="border-border relative overflow-hidden rounded-[24px] border shadow-card sm:rounded-[32px]">
-          {/* Mobile hero banner (< 768px) */}
-          <div className="relative block w-full md:hidden">
-            {hasHeroMobile ? (
-              <div className="relative w-full">
-                <Image
-                  src={HERO_PHOTO_MOBILE}
-                  alt="Every Child Deserves a Brighter Future — Sailent Foundation"
-                  width={1671}
-                  height={941}
-                  priority
-                  sizes="(max-width: 768px) 100vw, 768px"
-                  className="h-auto w-full object-cover"
-                />
-
-                {/* Compact, balanced CTA on mobile that fits harmoniously in the banner layout */}
-                <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center sm:bottom-4 sm:right-4">
-                  <Link
-                    href="/donate"
-                    className="bg-action text-action-foreground hover:bg-action-hover active:bg-action-active sm:h-8.5 relative inline-flex h-7 items-center justify-center gap-1 rounded-full px-3 text-[11px] font-bold tracking-tight shadow-sm transition-all after:absolute after:-inset-2 after:content-[''] active:scale-95 sm:gap-1.5 sm:px-4 sm:text-xs"
-                  >
-                    <span>Donate Now</span>
-                    <ArrowRight className="size-3 sm:size-3.5" aria-hidden="true" />
-                  </Link>
-                </div>
-              </div>
+        <div className="border-border bg-surface grid overflow-hidden rounded-2xl border md:grid-cols-2">
+          {/* The photograph, cropped to its own side of the banner. */}
+          {/*
+            4:3 at every width: the banner is about 2.2:1 with its baked
+            headline in the right third, so a 4:3 frame cropped from the left
+            shows only the photograph.
+          */}
+          <div className="relative aspect-[4/3]">
+            {photo ? (
+              <Image
+                src={photo}
+                alt=""
+                fill
+                priority
+                fetchPriority="high"
+                sizes="(max-width: 767px) 100vw, 50vw"
+                className="object-cover object-left"
+              />
             ) : (
               <MediaFrame
-                media={{ seed: 'home-hero-mobile', alt: 'Every Child Deserves a Brighter Future' }}
-                aspect="wide"
+                media={{ seed: 'home-hero', alt: '' }}
+                aspect="photo"
                 rounded={false}
                 priority
                 className="size-full [&>svg]:size-full"
@@ -80,33 +74,27 @@ export function HeroSection({ metrics }: { metrics: ImpactMetric[] }) {
             )}
           </div>
 
-          {/* Desktop hero banner (>= 768px) */}
-          <div className="relative hidden w-full md:block">
-            {hasHeroDesktop ? (
-              <Link
-                href="/donate"
-                aria-label="Every Child Deserves a Brighter Future — Donate Now"
-                className="focus-visible:outline-primary group relative block w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2"
-              >
-                <Image
-                  src={HERO_PHOTO_DESKTOP}
-                  alt="Every Child Deserves a Brighter Future — Sailent Foundation"
-                  width={1671}
-                  height={752}
-                  priority
-                  sizes="(max-width: 1280px) 100vw, 1280px"
-                  className="h-auto w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.01]"
-                />
-              </Link>
-            ) : (
-              <MediaFrame
-                media={{ seed: 'home-hero-desktop', alt: 'Every Child Deserves a Brighter Future' }}
-                aspect="wide"
-                rounded={false}
-                priority
-                className="size-full [&>svg]:size-full"
-              />
-            )}
+          <div className="flex flex-col justify-center gap-5 p-6 sm:p-8 lg:p-12">
+            <p className="text-overline tracking-(--text-overline--letter-spacing) text-primary font-semibold uppercase">
+              Sailent Foundation
+            </p>
+            <h1
+              id="hero-title"
+              className="text-display-hero tracking-(--text-display-hero--letter-spacing) text-foreground text-balance font-semibold"
+            >
+              Every child deserves a brighter future
+            </h1>
+            <p className="text-body-lg text-muted-foreground max-w-md leading-relaxed">
+              Together, we can create safer spaces to learn, grow and thrive.
+            </p>
+            <div>
+              <Button asChild variant="action" size="lg">
+                <Link href="/donate">
+                  Donate now
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </PageShell>
@@ -114,7 +102,7 @@ export function HeroSection({ metrics }: { metrics: ImpactMetric[] }) {
       {/* Live Impact Ticker Bar */}
       {reached ? (
         <aside
-          aria-label="Impact Summary"
+          aria-label="Impact summary"
           className="border-border bg-surface shadow-xs relative z-10 mt-4 border-y py-2.5 sm:mt-6 sm:py-3"
         >
           <PageShell>

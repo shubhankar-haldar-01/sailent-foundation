@@ -111,7 +111,7 @@ export function MissionBand() {
                 its own background, so the roles invert: white becomes the
                 filled action and the outline sits on the panel. */}
             <Button asChild size="lg" className="text-primary bg-surface hover:bg-surface/90">
-              <Link href="/donate">Donate Now</Link>
+              <Link href="/donate">Donate now</Link>
             </Button>
             <Button
               asChild

@@ -38,7 +38,7 @@ export function StoriesCta() {
               className="mt-6 h-12 px-[4.75rem] text-[0.9375rem] font-bold"
             >
               <Link href="/donate">
-                Donate Now
+                Donate now
                 <ArrowRight aria-hidden="true" />
               </Link>
             </Button>
@@ -53,7 +53,7 @@ export function StoriesCta() {
               flip
               className="text-info-action/45 absolute -top-[7%] left-[66%] h-[49.1%] w-auto"
             />
-            <FilledSprig className="text-wash-mint-ink/45 absolute -right-[2%] top-[65.3%] h-[32.7%] w-auto" />
+            <FilledSprig className="text-primary/45 absolute -right-[2%] top-[65.3%] h-[32.7%] w-auto" />
             <FilledSprig className="text-primary/30 absolute right-[2%] top-[1%] h-[35.1%] w-auto" />
             <Framed
               url="/images/about-presence-walk.webp"

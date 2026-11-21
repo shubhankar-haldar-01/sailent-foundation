@@ -31,7 +31,7 @@ const DONATE_CTA = /^(Donate( ₹[\d,.]+)?|Proceed to Donate|Continue)$/;
 
 async function openBuilder(page: Page) {
   await page.goto(CAMPAIGN);
-  const add = page.getByRole('button', { name: /Add one School Kit/i }).first();
+  const add = page.getByRole('button', { name: /Add one School kit/i }).first();
   await add.scrollIntoViewIfNeeded();
   await expect(add).toBeVisible();
   return add;
@@ -86,7 +86,7 @@ test.describe('donation flow', () => {
     // arrival, so it is already there.
     await expect(
       page
-        .getByRole('group', { name: 'Add an Amount' })
+        .getByRole('group', { name: 'Add an amount' })
         .filter({ visible: true })
         .first()
         .getByRole('button', { name: '₹500', exact: true }),
@@ -124,7 +124,7 @@ test.describe('donation flow', () => {
     await expect(cont).toBeEnabled();
 
     await page
-      .getByRole('group', { name: 'Add an Amount' })
+      .getByRole('group', { name: 'Add an amount' })
       .filter({ visible: true })
       .first()
       .getByRole('button', { name: '₹500', exact: true })
@@ -146,13 +146,13 @@ test.describe('donation flow', () => {
 
   test('a quantity cannot go below zero', async ({ page }) => {
     await page.goto(CAMPAIGN);
-    const remove = page.getByRole('button', { name: /Remove one School Kit/i }).first();
+    const remove = page.getByRole('button', { name: /Remove one School kit/i }).first();
     await remove.scrollIntoViewIfNeeded();
 
     // Disabled at zero rather than hidden, so nothing shifts under the pointer.
     await expect(remove).toBeDisabled();
 
-    const add = page.getByRole('button', { name: /Add one School Kit/i }).first();
+    const add = page.getByRole('button', { name: /Add one School kit/i }).first();
     await add.click();
     await expect(remove).toBeEnabled();
     await remove.click();

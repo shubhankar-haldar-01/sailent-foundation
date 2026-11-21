@@ -36,7 +36,7 @@ const WAYS = [
 ] as const;
 
 /**
- * "Sign Up", told straight (owner decision, 2026-10-08).
+ * "Sign up", told straight (owner decision, 2026-10-08).
  *
  * ══════════════════════════════════════════════════════════════════════════
  * THERE IS NO SEPARATE SIGN-UP, AND THIS PAGE SAYS SO. An account is opened by
@@ -60,7 +60,7 @@ export default async function SignUpPage() {
           'text-foreground mt-4 text-[clamp(1.625rem,1.3rem+1vw,1.875rem)] leading-tight tracking-[-0.025em]',
         )}
       >
-        Create Your Account
+        Create your account
       </h1>
       <p className="text-muted-foreground mt-1 max-w-[28rem] text-[0.875rem] leading-relaxed">
         Your account starts with a donation or a volunteer application — there is no separate
@@ -89,12 +89,12 @@ export default async function SignUpPage() {
       <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
         <Button asChild size="lg" variant="action" className="h-11 text-base">
           <Link href="/donate">
-            Donate Now
+            Donate now
             <ArrowRight aria-hidden="true" />
           </Link>
         </Button>
         <Button asChild variant="secondary" size="lg" className="h-11 text-base">
-          <Link href="/volunteer">Volunteer with Us</Link>
+          <Link href="/volunteer">Volunteer with us</Link>
         </Button>
       </div>
 

@@ -91,13 +91,13 @@ export function StoriesStrip({
       <SectionHeading
         id="stories-heading"
         size="md"
-        title="Stories from the Ground"
+        title="Stories from the ground"
         lead={
           fromElsewhere
             ? 'This campaign has not shared a story yet. These come from our other work.'
             : 'Real stories from the people and communities we are supporting.'
         }
-        viewAll={{ href: '/stories', label: 'View All Stories' }}
+        viewAll={{ href: '/stories', label: 'View all stories' }}
       />
 
       {/* The featured story --------------------------------------------------- */}
@@ -125,8 +125,10 @@ export function StoriesStrip({
                   href={`/stories/${item.slug}`}
                   className="focus-visible:outline-ring relative block h-full focus-visible:outline-2 focus-visible:-outline-offset-4"
                 >
+                  {/* Decorative here: the link is named by the title below, and
+                      the same words as the image's alt were read twice. */}
                   <MediaFrame
-                    media={item.cover}
+                    media={{ ...item.cover, alt: '' }}
                     aspect="wide"
                     rounded={false}
                     className="aspect-auto h-full"
@@ -180,7 +182,7 @@ export function StoriesStrip({
               </span>
             ) : null}
             {story.programName ? (
-              <span className="text-caption bg-wash-mint text-wash-mint-ink-strong rounded-md px-2.5 py-1 font-semibold">
+              <span className="text-caption bg-accent text-primary rounded-md px-2.5 py-1 font-semibold">
                 {story.programName}
               </span>
             ) : null}
@@ -198,7 +200,7 @@ export function StoriesStrip({
 
           <div className="mt-3 flex gap-2.5">
             <Quote
-              className="text-wash-gold-ink/70 mt-0.5 size-5 shrink-0 -scale-x-100"
+              className="text-primary/70 mt-0.5 size-5 shrink-0 -scale-x-100"
               aria-hidden="true"
             />
             <p className="text-body text-muted-foreground-strong line-clamp-4 leading-relaxed">
@@ -214,7 +216,7 @@ export function StoriesStrip({
             href={`/stories/${story.slug}`}
             className="border-border bg-surface text-body-sm hover:border-foreground/30 hover:bg-muted/60 focus-visible:outline-ring mt-5 inline-flex h-10 items-center gap-2 self-start rounded-lg border px-4 font-semibold shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
           >
-            Read Full Story
+            Read full story
             <span className="sr-only">: {story.title}</span>
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
@@ -238,7 +240,7 @@ export function StoriesStrip({
                   className={cn(
                     'focus-visible:outline-ring flex w-full items-center gap-3 rounded-xl border p-2.5 text-left shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
                     isActive
-                      ? 'border-success bg-wash-mint/40 ring-success/15 ring-2'
+                      ? 'border-success bg-accent/40 ring-success/15 ring-2'
                       : 'border-border/70 bg-surface hover:border-foreground/25',
                   )}
                 >

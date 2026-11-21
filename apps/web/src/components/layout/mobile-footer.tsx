@@ -13,10 +13,10 @@ import { SOCIAL_ICONS_GLYPH } from './social-icons';
  *
  * Kept from the owner's 2026-10-16 design (`AGENTS.md` §11 item 13): the
  * brand, mission and social links centred; Explore and Information side by
- * side and always open (no accordions); Contact Us; Back to top; the
- * copyright and legal links centred; no "Donate Now" button.
+ * side and always open (no accordions); Contact us; Back to top; the
+ * copyright and legal links centred; no "Donate now" button.
  *
- * Changed: neutral headings with no bars, Contact Us without the card, a
+ * Changed: neutral headings with no bars, Contact us without the card, a
  * quiet one-line tagline instead of the handwritten script, a plain
  * copyright row on a hairline, 40px neutral social circles.
  */
@@ -69,6 +69,9 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
             alt="Sailent Foundation"
             width={1743}
             height={453}
+            // Shown at most ~220px wide: without `sizes` the browser fetched the
+            // 3840px rendition (44 KB) of the 1743px PNG (visual polish Phase 5).
+            sizes="220px"
             className="h-[39.6px] w-auto object-contain sm:h-[43.2px]"
           />
         </Link>
@@ -133,7 +136,7 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
 
       <section aria-labelledby="mobile-footer-contact" className="border-border mt-7 border-t pt-6">
         <h2 id="mobile-footer-contact" className="text-foreground text-sm font-semibold leading-5">
-          Contact Us
+          Contact us
         </h2>
 
         <address className="text-muted-foreground mt-3 flex flex-col gap-3 text-sm not-italic leading-5">
@@ -209,7 +212,7 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
         <p>
           Copyright © {year}{' '}
           <span className="text-foreground font-semibold">{siteConfig.name}</span>.{' '}
-          <span className="whitespace-nowrap">All Rights Reserved.</span>
+          <span className="whitespace-nowrap">All rights reserved.</span>
         </p>
 
         <ul className="mt-[11px] flex flex-wrap justify-center gap-x-3.5 gap-y-1">

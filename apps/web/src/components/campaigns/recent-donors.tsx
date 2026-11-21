@@ -45,13 +45,7 @@ export interface CampaignDonor {
  * WCAG 1.4.3, which is the kind axe catches and nobody else does. The discs
  * still read as five different colours; only the two letters changed.
  */
-const AVATAR_TONES = [
-  'bg-wash-violet',
-  'bg-wash-amber',
-  'bg-wash-mint',
-  'bg-wash-pink',
-  'bg-wash-blue',
-] as const;
+const AVATAR_TONES = ['bg-accent', 'bg-accent', 'bg-accent', 'bg-accent', 'bg-accent'] as const;
 
 /** Up to two letters, from whatever the server chose to call this donor. */
 function initialsOf(name: string): string {
@@ -107,7 +101,7 @@ export function RecentDonors({ donors }: { donors: CampaignDonor[] }) {
       {(
         [
           ['recent', 'Recent'],
-          ['generous', 'Most Generous'],
+          ['generous', 'Most generous'],
         ] as const
       ).map(([value, label]) => (
         <button
@@ -119,7 +113,7 @@ export function RecentDonors({ donors }: { donors: CampaignDonor[] }) {
           className={cn(
             'text-caption focus-visible:outline-ring min-h-8 rounded-md px-3 font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
             view === value
-              ? 'bg-wash-mint text-wash-mint-ink-strong'
+              ? 'bg-accent text-primary'
               : 'text-muted-foreground hover:text-foreground',
           )}
         >
@@ -138,7 +132,7 @@ export function RecentDonors({ donors }: { donors: CampaignDonor[] }) {
       <SectionHeading
         id="donors-heading"
         size="md"
-        title="Recent Supporters"
+        title="Recent supporters"
         lead="People who recently supported this campaign."
         action={sortControl}
       />

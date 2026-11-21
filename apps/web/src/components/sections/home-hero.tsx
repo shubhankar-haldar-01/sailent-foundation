@@ -55,7 +55,7 @@ export function HomeHero({ metrics }: { metrics: ImpactMetric[] }) {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg" variant="action" className="">
-                <Link href="/donate">Donate Now</Link>
+                <Link href="/donate">Donate now</Link>
               </Button>
               <Button asChild size="lg" variant="secondary" className="group">
                 <Link href="/programs">

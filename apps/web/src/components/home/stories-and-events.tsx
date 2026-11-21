@@ -43,7 +43,7 @@ function StoryCard({ story }: { story: Story }) {
           {story.summary}
         </p>
         <p className="text-primary mt-auto inline-flex items-center gap-1.5 pt-4 text-xs font-bold sm:text-[13px]">
-          Read Story
+          Read story
           <ArrowRight
             className="size-3.5 transition-transform duration-200 group-hover:translate-x-1"
             aria-hidden="true"
@@ -131,8 +131,8 @@ export function StoriesAndEvents({
             <div className="flex flex-col lg:col-span-8">
               <SectionHead
                 id="stories-title"
-                title="Stories of Change"
-                viewAll={{ href: '/stories', label: 'View All Stories' }}
+                title="Stories of change"
+                viewAll={{ href: '/stories', label: 'View all stories' }}
               />
               <ul className="mt-6 grid flex-1 gap-4 sm:grid-cols-3">
                 {stories.map((story) => (
@@ -148,8 +148,8 @@ export function StoriesAndEvents({
             <div className="flex flex-col lg:col-span-4">
               <SectionHead
                 id="events-title"
-                title="Upcoming Events"
-                viewAll={{ href: '/events', label: 'View All Events' }}
+                title="Upcoming events"
+                viewAll={{ href: '/events', label: 'View all events' }}
               />
               <ul className="mt-6 space-y-3.5">
                 {events.map((event) => (

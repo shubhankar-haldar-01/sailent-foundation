@@ -1,6 +1,6 @@
 import { CalendarDays, MapPin, Users } from 'lucide-react';
 
-import { StatusBadge, cn, formatNumber } from '@sailent/ui';
+import { CampaignProgress, StatusBadge, formatNumber } from '@sailent/ui';
 
 import { MediaFrame } from '@/components/media/media-frame';
 import type { Campaign } from '@/lib/mock/types';
@@ -47,6 +47,8 @@ const deadlineDate = new Intl.DateTimeFormat('en-IN', {
  */
 export function CampaignHero({ campaign }: { campaign: Campaign }) {
   const deadline = campaign.status === 'active' ? deadlineFact(campaign) : null;
+  const goal = campaign.progress?.goal ?? campaign.goalAmount;
+  const raised = campaign.progress?.raised ?? campaign.amountRaised;
 
   // "Ranchi, Jharkhand" is set as the design sets it: the place on the first
   // line and the state under it, so it matches the value-over-label rhythm of
@@ -74,11 +76,7 @@ export function CampaignHero({ campaign }: { campaign: Campaign }) {
       />
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        {/*
-          `-ink-strong`, not `-ink`. The ordinary mint ink on the mint wash
-          measures 4.31:1 against a 4.5:1 floor for 13px text — the kind of
-          near-miss that passes an eye and fails WCAG 1.4.3.
-        */}
+        {/* The programme tag: the kit's brand badge (24px pill). */}
         <span className="bg-accent text-accent-foreground inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium">
           {campaign.category}
         </span>
@@ -92,10 +90,7 @@ export function CampaignHero({ campaign }: { campaign: Campaign }) {
         {campaign.status !== 'active' ? <StatusBadge status={campaign.status} /> : null}
       </div>
 
-      <h1
-        id="campaign-title"
-        className="text-h1 mt-3 text-balance font-bold leading-tight tracking-tight"
-      >
+      <h1 id="campaign-title" className="text-h1 mt-3 text-balance font-semibold leading-tight">
         {campaign.title}
       </h1>
 
@@ -103,11 +98,25 @@ export function CampaignHero({ campaign }: { campaign: Campaign }) {
         {campaign.shortDescription}
       </p>
 
-      <ul className="mt-5 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 xl:gap-x-0">
+      {/*
+        RAISED VS GOAL, ON A PHONE AND TABLET ONLY (visual polish Phase 4).
+        From `lg` the sticky donation card beside the photograph already
+        shows it; below `lg` that card comes after the products, so the hero
+        carries the progress itself.
+      */}
+      {goal > 0 ? (
+        <CampaignProgress
+          raised={raised}
+          goal={goal}
+          donorCount={campaign.donorCount}
+          className="mt-4 max-w-xl lg:hidden"
+        />
+      ) : null}
+
+      <ul className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 xl:gap-x-0">
         {place ? (
           <Fact
             icon={MapPin}
-            tone="bg-wash-mint text-wash-mint-ink-strong"
             value={region.length > 0 ? `${place},` : place}
             label={region.length > 0 ? region.join(', ') : 'Location'}
           />
@@ -116,19 +125,13 @@ export function CampaignHero({ campaign }: { campaign: Campaign }) {
         {campaign.beneficiaryTarget ? (
           <Fact
             icon={Users}
-            tone="bg-wash-blue text-wash-blue-ink"
             value={`${formatNumber(campaign.beneficiaryTarget)}+`}
             label="People in need"
           />
         ) : null}
 
         {deadline ? (
-          <Fact
-            icon={CalendarDays}
-            tone="bg-wash-mint text-wash-mint-ink-strong"
-            value={deadline.value}
-            label={deadline.label}
-          />
+          <Fact icon={CalendarDays} value={deadline.value} label={deadline.label} />
         ) : null}
       </ul>
     </section>
@@ -157,7 +160,8 @@ function deadlineFact(campaign: Campaign): { value: string; label: string } | nu
 }
 
 /**
- * One fact: a tinted disc, then the value over its label.
+ * One fact: a muted icon, then the value over its label (no tinted disc,
+ * visual polish Phase 4).
  *
  * The value is the bolder line — the number is what somebody scanning the row
  * is looking for. The rule between facts is a border on every fact but the
@@ -167,25 +171,18 @@ function deadlineFact(campaign: Campaign): { value: string; label: string } | nu
  */
 function Fact({
   icon: Icon,
-  tone,
   value,
   label,
 }: {
   icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
-  tone: string;
   value: string;
   label: string;
 }) {
   return (
     <li className="xl:border-border flex items-center gap-3 xl:pr-8 xl:[&:not(:first-child)]:border-l xl:[&:not(:first-child)]:pl-8">
-      <span
-        aria-hidden="true"
-        className={cn('grid size-11 shrink-0 place-items-center rounded-full', tone)}
-      >
-        <Icon className="size-5" aria-hidden={true} />
-      </span>
+      <Icon className="text-muted-foreground size-5 shrink-0" aria-hidden={true} />
       <span className="min-w-0">
-        <span data-numeric="" className="text-body-sm block font-bold">
+        <span data-numeric="" className="text-body-sm block font-semibold">
           {value}
         </span>
         <span className="text-caption text-muted-foreground block">{label}</span>

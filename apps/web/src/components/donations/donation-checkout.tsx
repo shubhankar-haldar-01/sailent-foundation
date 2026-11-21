@@ -571,7 +571,7 @@ export function DonationCheckout({
         </form>
       </Card>
 
-      <Card variant="elevated" className="space-y-5 p-6 lg:sticky lg:top-24">
+      <Card className="space-y-5 p-6 lg:sticky lg:top-24">
         <div>
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-h4 font-semibold">Your donation</h2>
@@ -605,7 +605,7 @@ export function DonationCheckout({
 
         <div>
           <span className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
-            Total to Pay
+            Total to pay
           </span>
           <p data-numeric="" className="font-display text-h2 font-bold tabular-nums">
             {formatCurrency(selection.displayTotal)}
