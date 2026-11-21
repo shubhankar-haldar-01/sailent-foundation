@@ -6,7 +6,7 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-11-21 for the upgrade to Next.js 16 (§2, "Next.js 16"), which fixes the save stuck on "Saving…". Earlier the same day: the investigation of it. **Before that:** 2026-11-20 for Phase 5 of the UI feedback system (§2, "UI feedback system — Phases 1–5 done"); earlier the same day, Phase 4. **Before that:** 2026-11-19 for the security audit (§2, "Security audit"). **Before that:** 2026-11-18 for the event pass and gate fixes and the move to Resend for email (§2, "Email through Resend" and "Event passes and gate check-in fixes"); the header table below was not re-audited and is still as of 2026-10-21. **Previously:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
+**Last updated:** 2026-11-21 for related FAQs on every campaign (§2). **Before that:** the upgrade to Next.js 16 (§2, "Next.js 16"), which fixes the save stuck on "Saving…". Earlier the same day: the investigation of it. **Before that:** 2026-11-20 for Phase 5 of the UI feedback system (§2, "UI feedback system — Phases 1–5 done"); earlier the same day, Phase 4. **Before that:** 2026-11-19 for the security audit (§2, "Security audit"). **Before that:** 2026-11-18 for the event pass and gate fixes and the move to Resend for email (§2, "Email through Resend" and "Event passes and gate check-in fixes"); the header table below was not re-audited and is still as of 2026-10-21. **Previously:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
 
 | | |
 |---|---|
@@ -458,7 +458,13 @@ The likely cause is WebKit keyboard behaviour; this was **not investigated**.
   7. ~~A save stuck on "Saving…" under server load~~: fixed by the upgrade to Next.js 16 (2026-11-21, next sections).
 - **Running e2e here** needs Chrome (`channel: 'chrome'`): Playwright's bundled Chromium and WebKit are not installed, and `e2e/global-setup.ts` launches Chromium for the image warm-up.
 
-### Next.js 16 — upgraded 2026-11-21 (local, uncommitted at the time of writing)
+### Related FAQs on every campaign — 2026-11-21 (local, uncommitted)
+
+- **What:** the campaign page shows the campaign's own FAQs, then related defaults built from its record each render: what it pays for, where it works and who it helps, how much is still needed and until when (`apps/web/src/components/campaigns/campaign-default-faqs.ts`; `AGENTS.md` §11 item 21). Owner's choices: built live (not stored rows), these three topics, no receipt/payment/80G default.
+- **Validation:** web 530/530 (5 new); typecheck, lint, Prettier clean; in the isolated copy (Next 16 build) the FAQ section was checked on `school-kits-jharkhand` (active) and `tailoring-training-centre` (completed) at 390 and 1280; `campaign.spec`/`donations.spec` show only the 4 known campaign-page failures with unchanged axe counts.
+- **Note:** the nine seeded campaigns still carry their two generic stored FAQs ("How is the money spent?", "Will I get a receipt?"); the first suppresses the "what it pays for" default. Editing or removing them is an admin content task.
+
+### Next.js 16 — upgraded 2026-11-21 (committed as `a6a701b`)
 
 - **Why:** a save stuck on "Saving…" under server load (next section); the owner chose the upgrade. **Now:** `next` 16.4.6 (React canary bundled by Next), `@types/react(-dom)` 19.3, `@next/eslint-plugin-next` 16.4.6. API, worker and database untouched.
 - **Changes the upgrade needed:** the 13 `revalidateTag(tag)` calls in `lib/admin/actions.ts` became `updateTag(tag)` (Next 16's read-your-writes form for server actions, the same "editor sees it at once" behaviour); `src/middleware.ts` became `src/proxy.ts` (`export function proxy`; always Node, so the `runtime` setting went; its test is `src/__tests__/proxy.test.ts`); `<html data-scroll-behavior="smooth">` keeps page changes jumping to the top at once (checked: 3000 px down → 0 on the next frame).

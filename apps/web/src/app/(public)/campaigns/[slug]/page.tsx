@@ -5,6 +5,7 @@ import { PageShell } from '@/components/layout/page-shell';
 import { Breadcrumbs } from '@/components/sections/breadcrumbs';
 import { DonationBuilder } from '@/components/donations/donation-builder';
 import { CampaignAbout, hasAboutContent } from '@/components/campaigns/campaign-about';
+import { campaignFaqsWithDefaults } from '@/components/campaigns/campaign-default-faqs';
 import { CampaignFaqs } from '@/components/campaigns/campaign-faqs';
 import { CampaignHero } from '@/components/campaigns/campaign-hero';
 import {
@@ -109,6 +110,8 @@ export default async function CampaignDetailPage({
   ).slice(0, 4);
 
   const hasProducts = campaign.products.length > 0;
+  // Its own FAQs, then related defaults built from its record (campaign-default-faqs.ts).
+  const faqs = campaignFaqsWithDefaults(campaign);
 
   // Only sections that will actually render get a link.
   const sections: CampaignSectionLink[] = [
@@ -122,7 +125,7 @@ export default async function CampaignDetailPage({
         : []),
     ...(hasAboutContent(campaign) ? [{ id: 'campaign-about', label: 'About' }] : []),
     ...(stories.length > 0 ? [{ id: 'campaign-stories', label: 'Stories' }] : []),
-    ...(campaign.faqs.length > 0 ? [{ id: 'campaign-faqs', label: 'FAQs' }] : []),
+    ...(faqs.length > 0 ? [{ id: 'campaign-faqs', label: 'FAQs' }] : []),
   ];
 
   const lead = (
@@ -137,7 +140,7 @@ export default async function CampaignDetailPage({
       <CampaignAbout campaign={campaign} />
       <StoriesStrip stories={stories} fromElsewhere={storiesFromElsewhere} />
       <RecentDonors donors={donors} />
-      <CampaignFaqs faqs={campaign.faqs} />
+      <CampaignFaqs faqs={faqs} />
     </>
   );
 

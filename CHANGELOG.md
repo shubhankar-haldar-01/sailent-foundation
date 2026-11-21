@@ -10,7 +10,15 @@ Newest first.
 
 ---
 
-## 2026-11-21 — Next.js 16 (fixes the save stuck on "Saving…") (uncommitted)
+## 2026-11-21 — Related FAQs on every campaign (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| Every campaign page shows its own FAQs, then up to three **related defaults built from its record** (`campaign-default-faqs.ts`): what it pays for, where it works and who it helps, how much is still needed and until when | Owner: campaigns made in admin had no FAQs and the seeded ones shared two generic questions | Facts only, live (a price or end date change shows at once); a default is dropped when an admin FAQ covers its topic; `AGENTS.md` §11 item 21 |
+
+Tests: 5 new unit tests (web 530/530). Isolated copy: the FAQ section on an active and a completed campaign at 390 and 1280; `campaign.spec` and `donations.spec` unchanged (the 4 known campaign-page failures, same axe counts).
+
+## 2026-11-21 — Next.js 16 (fixes the save stuck on "Saving…")
 
 | Change | Reason | Impact |
 |---|---|---|

@@ -231,6 +231,8 @@ Production database actions require **explicit human approval** for that specifi
 
 20. **A campaign not taking donations, and the 80G tile (owner, 2026-11-19, built 2026-11-20).** A campaign that has ended (completed, archived, or active but past its end date) or is paused shows `CampaignClosedCard` where the donation card would be: "This campaign has ended" or "Donations are paused for now", **See open campaigns**, and its progress. No amount chips, no Donate button, and no reason for a pause that the record does not hold. The trust strip's 80G tile reads **"Tax relief (80G)"** / "Relief is claimed through Form 10BE, issued after our annual Form 10BD filing." (`campaign-trust.tsx`); not "tax deduction on your donation" or any other promise of relief.
 
+21. **Every campaign shows related FAQs (owner, 2026-11-21).** Built each time the page renders from the campaign's own record (`components/campaigns/campaign-default-faqs.ts`), after the FAQs written in admin: what it pays for (its products and prices, or its own description), where it works and who it helps (location, programme, its beneficiary text and target), and how much is still needed and until when (live raised/goal, end date, or ended/paused). Answers use only the campaign's own facts; a question whose facts are missing is left out, and a default is dropped when an admin FAQ already covers its topic. No receipt, payment or 80G default (the owner left those out). Do not store these as FAQ rows: stored copies go stale when the campaign changes.
+
 ## 12. Working process (mandatory)
 
 1. **Inspect before changing:** the implementation, its tests, its callers, and the shared helpers.
