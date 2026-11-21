@@ -10,7 +10,15 @@ Newest first.
 
 ---
 
-## 2026-11-21 — Related FAQs on every campaign (uncommitted)
+## 2026-11-21 — General FAQs on every campaign, modelled on a peer's list (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| After each campaign's own and campaign-specific FAQs, six general ones: what Sailent Foundation is, giving every month, how a donation is shown to be used well, the causes you can support, tax relief, other ways to help | Owner gave a peer's FAQ list as the model | Rewritten to records only: one-time gifts, the approved Form 10BE line, live programmes and causes, real pages. Left out: "most trusted", "100% transparent", "verified NGOs", monthly pitch, "80G certification", partnerships (`AGENTS.md` §10, §11 item 21) |
+
+Tests: 4 new unit tests (web 534/534), including a check that none of the left-out claims appears. Isolated copy: all ten FAQs on `school-kits-jharkhand`; `campaign.spec` unchanged (4 known failures).
+
+## 2026-11-21 — Related FAQs on every campaign
 
 | Change | Reason | Impact |
 |---|---|---|

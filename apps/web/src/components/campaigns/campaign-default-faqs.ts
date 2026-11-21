@@ -50,7 +50,20 @@ type CampaignFacts = Pick<
   | 'status'
   | 'donation'
   | 'faqs'
+  | 'updates'
+  | 'documents'
 >;
+
+/**
+ * About the organisation as a whole, for the general questions (owner,
+ * 2026-11-21, modelled on a peer's FAQ list). Records only: the name from
+ * Admin → Settings, the live programmes and the causes of public campaigns.
+ */
+export interface SiteFacts {
+  organisationName: string;
+  programmes: string[];
+  causes: string[];
+}
 
 /** Words that show an admin question already covers a default's topic. */
 const TOPIC_WORDS = {
@@ -60,6 +73,14 @@ const TOPIC_WORDS = {
   whereWho: /\bwhere\b(?!.*\bmoney\b)|\b(who\s+(does|do|will|is|are)|beneficiar\w*|locations?)\b/i,
   progress:
     /\b(goal|raised|target|deadline|until\s+when|end\s+date|ends?|closes?|progress|how\s+much\b.*\b(need|left|remain))/i,
+  about: /\b(what\s+is|who\s+(are|is))\s+(you|us|the\s+foundation|sailent)|\babout\s+(you|us)\b/i,
+  monthly: /\b(monthly|every\s+month|recurring|regular(ly)?|subscri\w*|automatic)\b/i,
+  usedWell:
+    /\b(used\s+(well|properly|right)|transparen\w*|reports?|accountab\w*|how\s+do\s+i\s+know)\b/i,
+  causes: /\b(causes?|what\s+(else\s+)?can\s+i\s+support|other\s+campaigns)\b/i,
+  tax: /\b(tax|80g|10be|deduct\w*|exempt\w*)\b/i,
+  otherWays:
+    /\b(volunteer\w*|other\s+ways|how\s+else|besides\s+donating|apart\s+from\s+donating)\b/i,
 } as const;
 
 const endDate = new Intl.DateTimeFormat('en-IN', {
@@ -171,8 +192,73 @@ function progress(campaign: CampaignFacts): CampaignFaq | null {
   };
 }
 
-/** The campaign's own FAQs, followed by the default ones its own do not already cover. */
-export function campaignFaqsWithDefaults(campaign: CampaignFacts): CampaignFaq[] {
+/*
+  THE GENERAL QUESTIONS, in the order of the peer list the owner gave
+  (2026-11-21), each rewritten to what this site can stand behind. Left out
+  on purpose (AGENTS.md §10): "most trusted", "100% transparent", "verified
+  NGOs", a monthly-giving pitch (gifts are one-time), "every donation comes
+  with an 80G certification" (only the Form 10BE line may be said), and NGO
+  or corporate partnerships (no such programme).
+*/
+
+function about(site: SiteFacts): CampaignFaq {
+  const programmes = site.programmes.length
+    ? ` Its programmes are ${list(site.programmes)}, and campaigns like this one raise the funds for their work.`
+    : ' Campaigns like this one raise the funds for its work.';
+  return {
+    question: `What is ${site.organisationName}?`,
+    answer: `${site.organisationName} is an Indian NGO.${programmes}`,
+  };
+}
+
+function monthly(): CampaignFaq {
+  return {
+    question: 'Can I give every month?',
+    answer:
+      'Each donation is a single, one-time gift; there are no monthly or automatic payments. You can give again whenever you like.',
+  };
+}
+
+function usedWell(campaign: CampaignFacts): CampaignFaq {
+  const published = [
+    'how much has been raised so far',
+    ...(campaign.updates.length > 0 ? ['the progress updates we publish for this campaign'] : []),
+    ...(campaign.documents.length > 0 ? ['the documents attached to it'] : []),
+  ];
+  return {
+    question: 'How do I know my donation is used well?',
+    answer: `This page shows ${list(published)}. You also receive a receipt by email for every donation.`,
+  };
+}
+
+function causes(site: SiteFacts): CampaignFaq | null {
+  if (site.causes.length === 0) return null;
+  return {
+    question: 'What causes can I support?',
+    answer: `${list(site.causes)}. Every open campaign is listed on the Campaigns page.`,
+  };
+}
+
+function tax(): CampaignFaq {
+  return {
+    question: 'Do I get a tax benefit on my donation?',
+    answer: 'Relief is claimed through Form 10BE, issued after our annual Form 10BD filing.',
+  };
+}
+
+function otherWays(): CampaignFaq {
+  return {
+    question: 'Besides donating, how else can I help?',
+    answer:
+      'You can volunteer with us, share this campaign with people who may want to help, or come to one of our events. The Volunteer and Events pages have the details.',
+  };
+}
+
+/**
+ * The campaign's own FAQs, then the defaults its own do not already cover:
+ * first about this campaign, then (when `site` is given) the general ones.
+ */
+export function campaignFaqsWithDefaults(campaign: CampaignFacts, site?: SiteFacts): CampaignFaq[] {
   const own = campaign.faqs;
   const covered = (topic: RegExp) => own.some((faq) => topic.test(faq.question));
 
@@ -180,6 +266,16 @@ export function campaignFaqsWithDefaults(campaign: CampaignFacts): CampaignFaq[]
     covered(TOPIC_WORDS.paysFor) ? null : paysFor(campaign),
     covered(TOPIC_WORDS.whereWho) ? null : whereWho(campaign),
     covered(TOPIC_WORDS.progress) ? null : progress(campaign),
+    ...(site
+      ? [
+          covered(TOPIC_WORDS.about) ? null : about(site),
+          covered(TOPIC_WORDS.monthly) ? null : monthly(),
+          covered(TOPIC_WORDS.usedWell) ? null : usedWell(campaign),
+          covered(TOPIC_WORDS.causes) ? null : causes(site),
+          covered(TOPIC_WORDS.tax) ? null : tax(),
+          covered(TOPIC_WORDS.otherWays) ? null : otherWays(),
+        ]
+      : []),
   ];
   return [...own, ...defaults.filter((faq): faq is CampaignFaq => faq !== null)];
 }

@@ -458,7 +458,12 @@ The likely cause is WebKit keyboard behaviour; this was **not investigated**.
   7. ~~A save stuck on "Saving…" under server load~~: fixed by the upgrade to Next.js 16 (2026-11-21, next sections).
 - **Running e2e here** needs Chrome (`channel: 'chrome'`): Playwright's bundled Chromium and WebKit are not installed, and `e2e/global-setup.ts` launches Chromium for the image warm-up.
 
-### Related FAQs on every campaign — 2026-11-21 (local, uncommitted)
+### General FAQs on every campaign — 2026-11-21 (local, uncommitted)
+
+- **What:** six general questions now follow each campaign's own and campaign-specific FAQs, modelled on a peer's list the owner gave and rewritten to records only (`campaign-default-faqs.ts`, `AGENTS.md` §11 item 21). The peer's unprovable or forbidden claims were named to the owner and left out.
+- **Validation:** web 534/534 (4 new, one asserting none of the left-out claims appears); typecheck and lint clean; isolated copy: all ten FAQs on `school-kits-jharkhand`; `campaign.spec` shows only its 4 known failures.
+
+### Related FAQs on every campaign — 2026-11-21 (committed as `1a2d49f`)
 
 - **What:** the campaign page shows the campaign's own FAQs, then related defaults built from its record each render: what it pays for, where it works and who it helps, how much is still needed and until when (`apps/web/src/components/campaigns/campaign-default-faqs.ts`; `AGENTS.md` §11 item 21). Owner's choices: built live (not stored rows), these three topics, no receipt/payment/80G default.
 - **Validation:** web 530/530 (5 new); typecheck, lint, Prettier clean; in the isolated copy (Next 16 build) the FAQ section was checked on `school-kits-jharkhand` (active) and `tailoring-training-centre` (completed) at 390 and 1280; `campaign.spec`/`donations.spec` show only the 4 known campaign-page failures with unchanged axe counts.

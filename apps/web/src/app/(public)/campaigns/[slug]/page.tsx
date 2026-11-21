@@ -17,7 +17,15 @@ import { CampaignAssurances } from '@/components/campaigns/campaign-trust';
 import { RecentDonors } from '@/components/campaigns/recent-donors';
 import { StoriesStrip } from '@/components/campaigns/stories-strip';
 import { buildMetadata } from '@/lib/seo/metadata';
-import { getCampaign, getCampaignDonors, getCampaigns, getStories } from '@/lib/content';
+import {
+  getCampaign,
+  getCampaignDonors,
+  getCampaignFilters,
+  getCampaigns,
+  getPrograms,
+  getStories,
+} from '@/lib/content';
+import { getOrganisationRecords } from '@/lib/content/organisation';
 
 export async function generateMetadata({
   params,
@@ -71,7 +79,7 @@ export default async function CampaignDetailPage({
   const campaign = await getCampaign((await params).slug);
   if (!campaign) notFound();
 
-  const [allStories, siblings, donors] = await Promise.all([
+  const [allStories, siblings, donors, organisation, programmes, filters] = await Promise.all([
     getStories(),
     /*
       The programme's other campaigns, so the stories strip can prefer that
@@ -83,6 +91,10 @@ export default async function CampaignDetailPage({
     */
     campaign.programSlug ? getCampaigns({ programSlug: campaign.programSlug }) : [],
     getCampaignDonors(campaign.slug, { limit: 5 }),
+    // For the general FAQs (campaign-default-faqs.ts): records only.
+    getOrganisationRecords(),
+    getPrograms(),
+    getCampaignFilters().catch(() => ({ categories: [], locations: [] })),
   ]);
 
   /*
@@ -111,7 +123,11 @@ export default async function CampaignDetailPage({
 
   const hasProducts = campaign.products.length > 0;
   // Its own FAQs, then related defaults built from its record (campaign-default-faqs.ts).
-  const faqs = campaignFaqsWithDefaults(campaign);
+  const faqs = campaignFaqsWithDefaults(campaign, {
+    organisationName: organisation.name,
+    programmes: programmes.map((programme) => programme.name),
+    causes: filters.categories,
+  });
 
   // Only sections that will actually render get a link.
   const sections: CampaignSectionLink[] = [

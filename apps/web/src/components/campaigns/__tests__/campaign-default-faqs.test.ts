@@ -111,4 +111,85 @@ describe('campaignFaqsWithDefaults', () => {
       `What does a donation to ${BASE.title} pay for?`,
     ]);
   });
+
+  describe('the general questions (modelled on a peer list, owner 2026-11-21)', () => {
+    const SITE = {
+      organisationName: 'Sailent Foundation',
+      programmes: ['Education', 'Healthcare'],
+      causes: ['Education', 'Animal Welfare'],
+    };
+    const withSite = (overrides: Partial<Campaign> = {}) =>
+      campaignFaqsWithDefaults({ ...BASE, faqs: [], ...overrides }, SITE);
+
+    it('follow the campaign’s own three, in the peer list’s order', () => {
+      expect(
+        withSite()
+          .map((faq) => faq.question)
+          .slice(3),
+      ).toEqual([
+        'What is Sailent Foundation?',
+        'Can I give every month?',
+        'How do I know my donation is used well?',
+        'What causes can I support?',
+        'Do I get a tax benefit on my donation?',
+        'Besides donating, how else can I help?',
+      ]);
+    });
+
+    it('say only what the site can stand behind', () => {
+      const text = withSite()
+        .map((faq) => `${faq.question} ${faq.answer}`)
+        .join(' ');
+      expect(text).toContain(
+        'Relief is claimed through Form 10BE, issued after our annual Form 10BD filing.',
+      );
+      expect(text).toContain('one-time gift; there are no monthly or automatic payments');
+      expect(text).toContain(
+        'Sailent Foundation is an Indian NGO. Its programmes are Education and Healthcare',
+      );
+      expect(text).toContain('Education and Animal Welfare.');
+      for (const claim of [
+        /trusted/i,
+        /100%/,
+        /verified/i,
+        /80G certif/i,
+        /refund/i,
+        /partner/i,
+        /deduction/i,
+      ]) {
+        expect(text).not.toMatch(claim);
+      }
+    });
+
+    it('name progress updates and documents only when the campaign has them', () => {
+      const none = withSite({ updates: [], documents: [] }).find((faq) =>
+        /used well/.test(faq.question),
+      )!;
+      expect(none.answer).toBe(
+        'This page shows how much has been raised so far. You also receive a receipt by email for every donation.',
+      );
+      const some = withSite({
+        updates: [{ id: 'u', title: 't', body: 'b', publishedAt: '2026-11-01' }],
+      }).find((faq) => /used well/.test(faq.question))!;
+      expect(some.answer).toContain('the progress updates we publish for this campaign');
+    });
+
+    it('give way to the campaign’s own FAQ on the same topic, and leave out causes when there are none', () => {
+      const faqs = campaignFaqsWithDefaults(
+        {
+          ...BASE,
+          faqs: [
+            {
+              question: 'Is my donation eligible for tax deduction under Section 80G?',
+              answer: 'x',
+            },
+          ],
+        },
+        { ...SITE, causes: [] },
+      );
+      const questions = faqs.map((faq) => faq.question);
+      expect(questions).not.toContain('Do I get a tax benefit on my donation?');
+      expect(questions).not.toContain('What causes can I support?');
+    });
+  });
 });
