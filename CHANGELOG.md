@@ -10,7 +10,18 @@ Newest first.
 
 ---
 
-## 2026-11-21 — Four default campaign FAQs removed (uncommitted)
+## 2026-11-21 — Visual polish: audit, owner decisions, two design directions
+
+| Change | Reason | Impact |
+|---|---|---|
+| Visual audit report and style inventories (`docs/design-audit/`, `4e10f47`) | Phase 0 of the visual polish brief | 34 font sizes, 606 hard-coded colours, orange used for every role, invented press and quotes, all recorded |
+| Press marks and testimonial quotes hidden on the home page (`lib/content/hidden-sections.ts`) | Owner: they are invented (`AGENTS.md` §10) | Components kept, to be switched back on with real, consented quotes; `AGENTS.md` §11 items 3 and 6 |
+| `AGENTS.md` §11 item 12 reversed: orange only for Donate and one primary conversion CTA per page | Owner | Owner chose direction 2: logo green `#1E7B24`, Inter only, success a distinct teal with an icon. Donate orange to be picked from three. Applied in Phase 2; nothing changes visually until then |
+| `/dev/design`: two directions (logo blue with Manrope headings; logo green with Inter only), light and dark, with contrast checks | Phase 1: the owner chooses before any token changes | Development only (404 in production); no change to live pages |
+
+Tests: web 538/538; isolated copy: no sideways scroll on `/dev/design` at 320–1440 px; the home e2e asserts the press and testimonial sections are gone.
+
+## 2026-11-21 — Four default campaign FAQs removed
 
 | Change | Reason | Impact |
 |---|---|---|

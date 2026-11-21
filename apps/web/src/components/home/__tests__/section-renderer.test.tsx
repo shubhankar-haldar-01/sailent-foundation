@@ -20,6 +20,17 @@ import type { PageSection } from '@sailent/validation';
  * ══════════════════════════════════════════════════════════════════════════
  */
 
+// The testimonials rail is switched off until it has real, consented quotes
+// (owner, 2026-11-21; lib/content/hidden-sections.ts). The switch is mocked so
+// both states are tested: re-enabling it must still render the section.
+const flags = vi.hoisted(() => ({ testimonials: false }));
+vi.mock('@/lib/content/hidden-sections', () => ({
+  SHOW_PRESS_MENTIONS: false,
+  get SHOW_TESTIMONIALS() {
+    return flags.testimonials;
+  },
+}));
+
 // The real sections fetch and render a great deal; the subject here is the
 // renderer's dispatch and ordering, so each is replaced by a marker.
 vi.mock('@/components/home/hero-section', () => ({
@@ -97,7 +108,8 @@ describe('the composed homepage', () => {
     ]);
   });
 
-  it('renders every approved section type', () => {
+  it('renders every approved section type (testimonials switched on)', () => {
+    flags.testimonials = true;
     const all = [
       'hero',
       'campaigns',
@@ -109,7 +121,17 @@ describe('the composed homepage', () => {
       'partners',
       'newsletter',
     ];
-    expect(renderOrder(all.map((type) => ({ type })))).toEqual(all);
+    try {
+      expect(renderOrder(all.map((type) => ({ type })))).toEqual(all);
+    } finally {
+      flags.testimonials = false;
+    }
+  });
+
+  it('leaves out the testimonials rail while it is switched off, even when stored', () => {
+    expect(
+      renderOrder([{ type: 'hero' }, { type: 'testimonials' }, { type: 'community' }]),
+    ).toEqual(['hero', 'community']);
   });
 
   it('IGNORES an unknown type instead of crashing the page', () => {

@@ -6,7 +6,7 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-11-21 for the removal of four default campaign FAQs (§2). **Earlier:** related FAQs on every campaign. **Before that:** the upgrade to Next.js 16 (§2, "Next.js 16"), which fixes the save stuck on "Saving…". Earlier the same day: the investigation of it. **Before that:** 2026-11-20 for Phase 5 of the UI feedback system (§2, "UI feedback system — Phases 1–5 done"); earlier the same day, Phase 4. **Before that:** 2026-11-19 for the security audit (§2, "Security audit"). **Before that:** 2026-11-18 for the event pass and gate fixes and the move to Resend for email (§2, "Email through Resend" and "Event passes and gate check-in fixes"); the header table below was not re-audited and is still as of 2026-10-21. **Previously:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
+**Last updated:** 2026-11-21 for the visual polish brief, Phases 0–1 (§2, "Visual polish"). **Earlier:** the removal of four default campaign FAQs. **Earlier:** related FAQs on every campaign. **Before that:** the upgrade to Next.js 16 (§2, "Next.js 16"), which fixes the save stuck on "Saving…". Earlier the same day: the investigation of it. **Before that:** 2026-11-20 for Phase 5 of the UI feedback system (§2, "UI feedback system — Phases 1–5 done"); earlier the same day, Phase 4. **Before that:** 2026-11-19 for the security audit (§2, "Security audit"). **Before that:** 2026-11-18 for the event pass and gate fixes and the move to Resend for email (§2, "Email through Resend" and "Event passes and gate check-in fixes"); the header table below was not re-audited and is still as of 2026-10-21. **Previously:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
 
 | | |
 |---|---|
@@ -458,7 +458,30 @@ The likely cause is WebKit keyboard behaviour; this was **not investigated**.
   7. ~~A save stuck on "Saving…" under server load~~: fixed by the upgrade to Next.js 16 (2026-11-21, next sections).
 - **Running e2e here** needs Chrome (`channel: 'chrome'`): Playwright's bundled Chromium and WebKit are not installed, and `e2e/global-setup.ts` launches Chromium for the image warm-up.
 
-### Four default campaign FAQs removed — 2026-11-21 (local, uncommitted)
+### Visual polish — Phase 0 done, Phase 1 at its checkpoint — 2026-11-21
+
+- **Phase 0 (audit):** `docs/design-audit/README.md` plus the style inventories, committed as `4e10f47`. Screenshots were deleted at the owner's request; `docs/design-audit/before/` and `after/` are git-ignored.
+- **Owner decisions (2026-11-21), recorded in `AGENTS.md` §11:**
+  - item 12 reversed: orange is for Donate and a page's single primary conversion CTA; everything else uses the brand colour. Until the Phase 2 tokens ship, the old implementation stays.
+  - items 3 and 6: the press marks ("In the spotlight") and the testimonial quotes are hidden from the home page (`lib/content/hidden-sections.ts`), because they are invented. The components stay, to be switched back on with real, consented quotes.
+  - item 2: campaign cards to be simplified (in Phase 3).
+- **Phase 1:** `/dev/design` (404 in production) shows two directions on a real campaign, in light and dark:
+  - **1:** logo blue `#0063BF` with type A (Manrope headings on a clean scale).
+  - **2:** logo green `#1E7B24` with type B (Inter only).
+  - Each shows header, campaign hero, donation card, section, FAQ, home sample, campaign card, buttons and inputs, type scale, swatches, a WCAG contrast table and footer.
+  - Files: `app/dev/design/page.tsx` and `components/design-preview/design-directions.tsx`; tests in `__tests__/design-directions.test.ts` check that every text and control pair meets AA.
+- **Home e2e:** `journeys.spec.ts` asserts that the press and testimonial sections and their names are absent. `section-renderer.test.tsx` tests both states of the testimonials switch.
+- **Validation (2026-11-21):**
+  - web unit 538/538;
+  - typecheck and lint clean;
+  - isolated-copy production build OK;
+  - `/dev/design`: no sideways scroll at 320, 390, 768, 1024 or 1440 px, light and dark;
+  - the home press/testimonials e2e passes on desktop and mobile.
+- **Owner's choice (2026-11-21):** direction 2, green `#1E7B24` with Inter only. Headings at 600 with slight negative letter-spacing; tabular numbers for amounts. Success must be visibly different from the brand green (a teal) and always carry an icon. `AGENTS.md` §11 item 12.
+- **Waiting on the owner:** the Donate orange, from three shown on `/dev/design`: `#EB6A1F` (today, 3.18:1 with white), `#C2410C` (5.18:1) and the brightest orange that passes 4.5:1.
+- **Next:** Phase 2 (tokens) once the orange is confirmed.
+
+### Four default campaign FAQs removed — 2026-11-21 (committed as `2d42f97`)
 
 - **What:** at the owner's request, the campaign FAQ defaults no longer include "Can I give every month?" or the three campaign-specific questions (what it pays for, where it works and who it helps, how much is still needed and until when). Five general defaults remain (`campaign-default-faqs.ts`, `AGENTS.md` §11 item 21).
 - **Validation:** web 530/530 (default-FAQ tests rewritten, one checking the removed questions stay out); typecheck and lint clean.

@@ -8,6 +8,7 @@ import { NewsletterSection } from '@/components/home/newsletter-section';
 import { PartnersSection } from '@/components/home/partners-section';
 import { StoriesAndEvents } from '@/components/home/stories-and-events';
 import { Testimonials } from '@/components/home/testimonials';
+import { SHOW_TESTIMONIALS } from '@/lib/content/hidden-sections';
 import { WhoWeAre } from '@/components/home/who-we-are';
 import type { Campaign, SailentEvent, Story } from '@/lib/mock/types';
 import type { ImpactMetric } from '@/lib/content';
@@ -86,7 +87,8 @@ export function renderSection(section: PageSection, data: SectionData, key: stri
       );
 
     case 'testimonials':
-      return <Testimonials key={key} />;
+      // Hidden until real (lib/content/hidden-sections.ts, owner 2026-11-21).
+      return SHOW_TESTIMONIALS ? <Testimonials key={key} /> : null;
 
     case 'community':
       return <CommunityCta key={key} />;

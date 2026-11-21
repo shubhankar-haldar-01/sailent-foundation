@@ -151,24 +151,24 @@ test.describe('featured campaigns rail', () => {
 });
 
 /**
- * The testimonials move on their own too, with the same obligation: their
- * arrows were removed at the client's request, so the keyboard pause is what
- * keeps the band stoppable (WCAG 2.2.2).
+ * NO UNCONFIRMED PRESS OR QUOTES ON THE HOMEPAGE (owner, 2026-11-21).
+ *
+ * "In the spotlight" showed press marks and "Voices of hope and change" showed
+ * named quotes, none of them records (AGENTS.md §10, §12). Both are hidden
+ * (`lib/content/hidden-sections.ts`) until real, consented content exists.
+ * When the testimonials rail returns, so does its test: no arrows, and a
+ * keyboard pause that keeps it stoppable (WCAG 2.2.2) — see this file's git
+ * history before 2026-11-21.
  */
-test.describe('testimonials rail', () => {
-  test('has no arrows, and keyboard users can pause it', async ({ page }) => {
+test.describe('homepage press and testimonials', () => {
+  test('are not shown while they are not records', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('list', { name: 'Testimonials, scrollable' })).toBeVisible();
-    await expect(page.getByRole('button', { name: /(Previous|Next) testimonials/ })).toHaveCount(0);
-
-    const pause = page.getByRole('button', { name: 'Pause testimonials' });
-    await expect(pause).toHaveCount(1);
-    expect(await pause.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
-
-    await pause.focus();
-    expect(await pause.evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(40);
-    await page.keyboard.press('Enter');
-    await expect(page.getByRole('button', { name: 'Play testimonials' })).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: /In the spotlight/i })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /Voices of hope and change/i })).toHaveCount(0);
+    await expect(page.getByRole('list', { name: 'Testimonials, scrollable' })).toHaveCount(0);
+    for (const mark of ['Impact Journal', 'Anjali Sharma', 'Rohit Verma']) {
+      await expect(page.getByText(mark)).toHaveCount(0);
+    }
   });
 });
 

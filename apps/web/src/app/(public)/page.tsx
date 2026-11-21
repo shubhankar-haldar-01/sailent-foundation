@@ -11,6 +11,7 @@ import { StoriesAndEvents } from '@/components/home/stories-and-events';
 import { Testimonials } from '@/components/home/testimonials';
 import { WhoWeAre } from '@/components/home/who-we-are';
 import { ComposedSections } from '@/components/home/section-renderer';
+import { SHOW_PRESS_MENTIONS, SHOW_TESTIMONIALS } from '@/lib/content/hidden-sections';
 import { buildMetadata } from '@/lib/seo/metadata';
 import {
   getComposedPage,
@@ -139,8 +140,9 @@ export default async function HomePage() {
       />
       <WhoWeAre />
       <StoriesAndEvents stories={stories.slice(0, 3)} events={events.slice(0, 3)} />
-      <SpotlightSection />
-      <Testimonials />
+      {/* Hidden until real (lib/content/hidden-sections.ts, owner 2026-11-21). */}
+      {SHOW_PRESS_MENTIONS ? <SpotlightSection /> : null}
+      {SHOW_TESTIMONIALS ? <Testimonials /> : null}
       <PartnersSection />
       <NewsletterSection />
     </>
