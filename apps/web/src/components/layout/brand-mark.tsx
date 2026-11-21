@@ -39,7 +39,12 @@ export function BrandLockup({
         alt="Sailent Foundation"
         width={1743}
         height={453}
-        priority={priority}
+        // Shown at most ~220px wide: without `sizes` the browser fetched the
+        // 3840px rendition (44 KB) of the 1743px PNG (visual polish Phase 5).
+        sizes="220px"
+        // Eager but not high priority: the page's own hero image is the
+        // largest paint, and a high-priority logo competed with it.
+        loading={priority ? 'eager' : undefined}
         className="h-9 w-auto object-contain sm:h-[39.6px] md:h-[43.2px]"
       />
     </span>

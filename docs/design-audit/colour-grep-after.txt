@@ -1,6 +1,6 @@
-# Hard-coded colours AFTER visual polish Phase 2 (2026-11-21). Same script and scope as colour-grep-before.txt.
-# What remains is kept on purpose (see docs/design-audit/README.md, 'Phase 2'): brand-colours.ts (canvas/Razorpay/global-error), the ID card artwork, payment and share-network marks, illustration SVGs (decor.tsx), media-frame's brand-hue placeholders, globals.css print styles, and code comments.
-hex:     91 in 12 files
+# Hard-coded colours AFTER visual polish (Phase 5 re-check, 2026-11-21). Same script and scope as colour-grep-before.txt.
+# What remains is kept on purpose (docs/design-audit/README.md, 'Phase 2'; docs/design-system.md §3).
+hex:     77 in 10 files
 rgb():   2
 oklch(): 40
 palette: 3  (Tailwind's raw palette, e.g. text-slate-600)
@@ -8,12 +8,10 @@ palette: 3  (Tailwind's raw palette, e.g. text-slate-600)
 35 apps/web/src/components/admin/identity-card-dialog.tsx
 20 apps/web/src/lib/brand-colours.ts
 11 apps/web/src/components/donations/payment-logos.tsx
-9 apps/web/src/components/layout/mobile-footer.tsx
 2 apps/web/src/styles/globals.css
 2 apps/web/src/components/events/event-summary-card.tsx
 1 packages/ui/src/primitives/button.tsx
 1 packages/ui/src/lib/format.ts
 1 apps/web/src/components/sections/breadcrumbs.tsx
-1 apps/web/src/components/layout/site-footer.tsx
 1 apps/web/src/components/events/event-registration-hero.tsx
 1 apps/web/src/components/dashboard/side-cards.tsx

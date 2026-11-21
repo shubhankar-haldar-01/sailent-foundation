@@ -1,0 +1,732 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Badge > variant brand 1`] = `
+<span
+  class="inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-xs font-medium [&_svg]:size-3 [&_svg]:shrink-0 bg-accent text-accent-foreground"
+>
+  Tag
+</span>
+`;
+
+exports[`Badge > variant destructive 1`] = `
+<span
+  class="inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-xs font-medium [&_svg]:size-3 [&_svg]:shrink-0 bg-destructive-subtle text-destructive"
+>
+  Tag
+</span>
+`;
+
+exports[`Badge > variant info 1`] = `
+<span
+  class="inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-xs font-medium [&_svg]:size-3 [&_svg]:shrink-0 bg-info-subtle text-info"
+>
+  Tag
+</span>
+`;
+
+exports[`Badge > variant neutral 1`] = `
+<span
+  class="inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-xs font-medium [&_svg]:size-3 [&_svg]:shrink-0 bg-muted text-muted-foreground"
+>
+  Tag
+</span>
+`;
+
+exports[`Badge > variant outline 1`] = `
+<span
+  class="inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-xs font-medium [&_svg]:size-3 [&_svg]:shrink-0 border border-border-strong text-foreground"
+>
+  Tag
+</span>
+`;
+
+exports[`Badge > variant success 1`] = `
+<span
+  class="inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-xs font-medium [&_svg]:size-3 [&_svg]:shrink-0 bg-success-subtle text-success"
+>
+  Tag
+</span>
+`;
+
+exports[`Badge > variant warning 1`] = `
+<span
+  class="inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-xs font-medium [&_svg]:size-3 [&_svg]:shrink-0 bg-warning-subtle text-warning-foreground"
+>
+  Tag
+</span>
+`;
+
+exports[`Button > disabled and loading 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-xs active:scale-[0.98] motion-reduce:active:scale-100 h-11 rounded-lg px-5 text-sm sm:text-[0.9375rem]"
+    disabled=""
+  >
+    <span
+      hidden=""
+    />
+    Disabled
+  </button>
+  <button
+    aria-busy="true"
+    class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-xs active:scale-[0.98] motion-reduce:active:scale-100 h-11 rounded-lg px-5 text-sm sm:text-[0.9375rem]"
+    disabled=""
+  >
+    <span
+      hidden=""
+    />
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-loader-circle size-4 shrink-0 animate-spin motion-reduce:animate-none"
+      data-slot="spinner"
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M21 12a9 9 0 1 1-6.219-8.56"
+      />
+    </svg>
+    <span
+      class="sr-only"
+    >
+      Loading
+    </span>
+    Saving…
+  </button>
+</div>
+`;
+
+exports[`Button > size icon 1`] = `
+<button
+  aria-label="Label"
+  class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-xs active:scale-[0.98] motion-reduce:active:scale-100 size-11 rounded-lg"
+>
+  <span
+    hidden=""
+  />
+  Label
+</button>
+`;
+
+exports[`Button > size lg 1`] = `
+<button
+  aria-label="Label"
+  class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-xs active:scale-[0.98] motion-reduce:active:scale-100 h-12 rounded-lg px-6 text-base"
+>
+  <span
+    hidden=""
+  />
+  Label
+</button>
+`;
+
+exports[`Button > size md 1`] = `
+<button
+  aria-label="Label"
+  class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-xs active:scale-[0.98] motion-reduce:active:scale-100 h-11 rounded-lg px-5 text-sm sm:text-[0.9375rem]"
+>
+  <span
+    hidden=""
+  />
+  Label
+</button>
+`;
+
+exports[`Button > size sm 1`] = `
+<button
+  aria-label="Label"
+  class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-xs active:scale-[0.98] motion-reduce:active:scale-100 pointer-coarse:relative pointer-coarse:touch-target h-9 rounded-lg px-3.5 text-sm"
+>
+  <span
+    hidden=""
+  />
+  Label
+</button>
+`;
+
+exports[`Button > variant action 1`] = `
+<button
+  class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden bg-action text-action-foreground hover:bg-action-hover active:bg-action-active shadow-xs active:scale-[0.98] motion-reduce:active:scale-100 h-11 rounded-lg px-5 text-sm sm:text-[0.9375rem]"
+>
+  <span
+    hidden=""
+  />
+  Label
+</button>
+`;
+
+exports[`Button > variant destructive 1`] = `
+<button
+  class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80 shadow-xs active:scale-[0.98] motion-reduce:active:scale-100 h-11 rounded-lg px-5 text-sm sm:text-[0.9375rem]"
+>
+  <span
+    hidden=""
+  />
+  Label
+</button>
+`;
+
+exports[`Button > variant ghost 1`] = `
+<button
+  class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden bg-transparent text-foreground hover:bg-muted active:bg-muted/80 active:scale-[0.98] motion-reduce:active:scale-100 h-11 rounded-lg px-5 text-sm sm:text-[0.9375rem]"
+>
+  <span
+    hidden=""
+  />
+  Label
+</button>
+`;
+
+exports[`Button > variant link 1`] = `
+<button
+  class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden bg-transparent text-primary underline-offset-4 hover:underline h-11 rounded-lg px-5 text-sm sm:text-[0.9375rem]"
+>
+  <span
+    hidden=""
+  />
+  Label
+</button>
+`;
+
+exports[`Button > variant outline 1`] = `
+<button
+  class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden border border-border-strong bg-surface text-foreground hover:border-input hover:bg-muted active:bg-muted/80 active:scale-[0.98] motion-reduce:active:scale-100 h-11 rounded-lg px-5 text-sm sm:text-[0.9375rem]"
+>
+  <span
+    hidden=""
+  />
+  Label
+</button>
+`;
+
+exports[`Button > variant primary 1`] = `
+<button
+  class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-xs active:scale-[0.98] motion-reduce:active:scale-100 h-11 rounded-lg px-5 text-sm sm:text-[0.9375rem]"
+>
+  <span
+    hidden=""
+  />
+  Label
+</button>
+`;
+
+exports[`Button > variant secondary 1`] = `
+<button
+  class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden border border-primary/60 bg-surface text-primary hover:border-primary hover:bg-accent active:bg-accent/80 active:scale-[0.98] motion-reduce:active:scale-100 h-11 rounded-lg px-5 text-sm sm:text-[0.9375rem]"
+>
+  <span
+    hidden=""
+  />
+  Label
+</button>
+`;
+
+exports[`Campaign figures > CampaignCard (open) 1`] = `
+<article
+  class="card-interactive @container group relative flex flex-col rounded-2xl p-3 sm:p-3.5"
+>
+  <div
+    class="relative"
+  >
+    <div
+      class="relative overflow-hidden rounded-xl"
+    >
+      <div
+        class="bg-muted relative overflow-hidden hover-zoom aspect-[16/10] group-hover:scale-[1.03] motion-reduce:scale-100"
+        data-media-placeholder="campaign-school-kits"
+      >
+        <svg
+          aria-label="Children with new school bags outside a government primary school"
+          class="size-full"
+          preserveAspectRatio="xMidYMid slice"
+          role="img"
+          viewBox="0 0 400 300"
+        >
+          <defs>
+            <lineargradient
+              id="sky-campaign-school-kits"
+              x1="0"
+              x2="0.2"
+              y1="0"
+              y2="1"
+            >
+              <stop
+                offset="0%"
+                stop-color="oklch(0.93 0.05 calc(var(--brand-hue) + 75))"
+              />
+              <stop
+                offset="55%"
+                stop-color="oklch(0.84 0.06 calc(var(--brand-hue) + 35))"
+              />
+              <stop
+                offset="100%"
+                stop-color="oklch(0.7 0.08 calc(var(--brand-hue) + 35))"
+              />
+            </lineargradient>
+            <radialgradient
+              cx="0.5"
+              cy="0.4"
+              id="glow-campaign-school-kits"
+              r="0.7"
+            >
+              <stop
+                offset="0%"
+                stop-color="oklch(0.95 0.06 calc(var(--brand-hue) + 75))"
+              />
+              <stop
+                offset="100%"
+                stop-color="oklch(0.72 0.07 calc(var(--brand-hue) + 35))"
+              />
+            </radialgradient>
+          </defs>
+          <rect
+            fill="url(#sky-campaign-school-kits)"
+            height="300"
+            width="400"
+          />
+          <circle
+            cx="205"
+            cy="59"
+            fill="oklch(0.97 0.05 calc(var(--brand-hue) + 35))"
+            opacity="0.75"
+            r="29"
+          />
+          <path
+            d="M0 177 Q90 128 180 167 T400 151 V300 H0 Z"
+            fill="oklch(0.62 0.05 calc(var(--brand-hue) + 35))"
+            opacity="0.55"
+          />
+          <path
+            d="M0 211 Q120 185 230 207 T400 193 V300 H0 Z"
+            fill="oklch(0.48 0.06 calc(var(--brand-hue) + 35))"
+          />
+          <g
+            fill="oklch(0.42 0.06 calc(var(--brand-hue) + 35))"
+          >
+            <rect
+              height="20.5"
+              width="4"
+              x="29"
+              y="173"
+            />
+            <circle
+              cx="31"
+              cy="158.7"
+              r="18.04"
+            />
+          </g>
+          <g
+            fill="oklch(0.42 0.06 calc(var(--brand-hue) + 35))"
+          >
+            <rect
+              height="16"
+              width="4"
+              x="126"
+              y="173"
+            />
+            <circle
+              cx="128"
+              cy="161.4"
+              r="14.08"
+            />
+          </g>
+          <g
+            fill="oklch(0.42 0.06 calc(var(--brand-hue) + 35))"
+          >
+            <rect
+              height="21.5"
+              width="4"
+              x="205"
+              y="173"
+            />
+            <circle
+              cx="207"
+              cy="158.1"
+              r="18.92"
+            />
+          </g>
+          <g
+            fill="oklch(0.42 0.06 calc(var(--brand-hue) + 35))"
+          >
+            <rect
+              height="17"
+              width="4"
+              x="302"
+              y="173"
+            />
+            <circle
+              cx="304"
+              cy="160.8"
+              r="14.96"
+            />
+          </g>
+          <g
+            fill="oklch(0.34 0.05 calc(var(--brand-hue) + 35))"
+            transform="translate(75 244) scale(0.85)"
+          >
+            <circle
+              cx="0"
+              cy="-30"
+              r="8"
+            />
+            <path
+              d="M-11 12 Q0 -22 11 12 Z"
+            />
+          </g>
+          <g
+            fill="oklch(0.34 0.05 calc(var(--brand-hue) + 35))"
+            transform="translate(132 253) scale(1.15)"
+          >
+            <circle
+              cx="0"
+              cy="-30"
+              r="8"
+            />
+            <path
+              d="M-11 12 Q0 -22 11 12 Z"
+            />
+          </g>
+          <g
+            fill="oklch(0.34 0.05 calc(var(--brand-hue) + 35))"
+            transform="translate(189 240) scale(0.95)"
+          >
+            <circle
+              cx="0"
+              cy="-30"
+              r="8"
+            />
+            <path
+              d="M-11 12 Q0 -22 11 12 Z"
+            />
+          </g>
+          <g
+            fill="oklch(0.34 0.05 calc(var(--brand-hue) + 35))"
+            transform="translate(246 249) scale(1.25)"
+          >
+            <circle
+              cx="0"
+              cy="-30"
+              r="8"
+            />
+            <path
+              d="M-11 12 Q0 -22 11 12 Z"
+            />
+          </g>
+          <g
+            fill="oklch(0.34 0.05 calc(var(--brand-hue) + 35))"
+            transform="translate(281 258) scale(1.05)"
+          >
+            <circle
+              cx="0"
+              cy="-30"
+              r="8"
+            />
+            <path
+              d="M-11 12 Q0 -22 11 12 Z"
+            />
+          </g>
+        </svg>
+      </div>
+    </div>
+    <span
+      class="bg-surface/95 text-foreground shadow-xs absolute bottom-2.5 left-2.5 inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs font-medium"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-book text-muted-foreground size-3"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"
+        />
+      </svg>
+      Education
+    </span>
+  </div>
+  <div
+    class="flex flex-1 flex-col px-1 pb-1 pt-2.5"
+  >
+    <h3
+      class="font-display text-wrap text-[1.0625rem] font-semibold leading-snug [&>a]:line-clamp-2"
+    >
+      <a
+        class="group-hover:text-primary rounded-sm transition-colors after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
+        href="/campaigns/school-kits-jharkhand"
+      >
+        School kits for 500 children in Ranchi district
+      </a>
+    </h3>
+    <div
+      class="mt-auto pt-2"
+    >
+      <dl
+        class="grid grid-cols-3 gap-2"
+      >
+        <div
+          class="min-w-0"
+        >
+          <dt
+            class="text-muted-foreground text-xs leading-tight"
+          >
+            Raised
+          </dt>
+          <dd
+            class="text-foreground mt-0.5 truncate text-sm font-semibold tabular-nums leading-snug"
+            data-numeric=""
+          >
+            ₹3,18,600
+          </dd>
+        </div>
+        <div
+          class="min-w-0"
+        >
+          <dt
+            class="text-muted-foreground text-xs leading-tight"
+          >
+            Goal
+          </dt>
+          <dd
+            class="text-foreground mt-0.5 truncate text-sm font-semibold tabular-nums leading-snug"
+            data-numeric=""
+          >
+            ₹4,50,000
+          </dd>
+        </div>
+        <div
+          class="min-w-0"
+        >
+          <dt
+            class="text-muted-foreground text-xs leading-tight"
+          >
+            Donors
+          </dt>
+          <dd
+            class="text-foreground mt-0.5 truncate text-sm font-semibold tabular-nums leading-snug"
+            data-numeric=""
+          >
+            247
+          </dd>
+        </div>
+      </dl>
+      <div
+        aria-label="71% of the ₹4,50,000 goal raised"
+        class="bg-muted mt-2.5 h-2 overflow-hidden rounded-full"
+        role="img"
+      >
+        <span
+          aria-hidden="true"
+          class="fill-in bg-primary block h-full rounded-full"
+          style="width: 71%;"
+        />
+      </div>
+      <p
+        class="text-muted-foreground mt-1 flex items-baseline justify-between gap-3 text-[0.8125rem]"
+      >
+        <span
+          data-numeric=""
+        >
+          <span
+            class="text-foreground font-semibold"
+          >
+            71
+            %
+          </span>
+           complete
+        </span>
+        <span
+          data-numeric=""
+        >
+          29% to go
+        </span>
+      </p>
+      <div
+        class="relative z-10 mt-2.5"
+      >
+        <a
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer font-sans font-semibold duration-200 ease-out motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 aria-busy:[&>svg:not([data-slot=spinner])]:hidden border border-primary/60 bg-surface text-primary hover:border-primary hover:bg-accent active:bg-accent/80 motion-reduce:active:scale-100 pointer-coarse:relative pointer-coarse:touch-target rounded-lg px-3.5 text-sm w-full h-10 group/cta duration-(--duration-base) ease-(--ease-out-soft) transition-[translate,scale,box-shadow,background-color] active:scale-[0.98]"
+          href="/campaigns/school-kits-jharkhand#give"
+        >
+          Donate now
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-arrow-right duration-(--duration-base) ease-(--ease-out-soft) transition-[translate] motion-safe:group-hover/cta:translate-x-1"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M5 12h14"
+            />
+            <path
+              d="m12 5 7 7-7 7"
+            />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</article>
+`;
+
+exports[`Campaign figures > CampaignProgress 1`] = `
+<div
+  class="space-y-2"
+>
+  <div
+    aria-label="45% of the ₹10,00,000 goal raised"
+    aria-valuemax="100"
+    aria-valuemin="0"
+    aria-valuenow="45"
+    aria-valuetext="45%"
+    class="bg-muted relative w-full overflow-hidden rounded-full h-2"
+    data-max="100"
+    data-state="loading"
+    data-value="45"
+    role="progressbar"
+  >
+    <div
+      class="ease-(--ease-out-soft) h-full w-full flex-1 rounded-full transition-transform duration-500 motion-reduce:transition-none bg-primary"
+      data-max="100"
+      data-state="loading"
+      data-value="45"
+      style="transform: translateX(-55%);"
+    />
+  </div>
+  <div
+    class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1"
+  >
+    <p
+      class="text-body-sm"
+    >
+      <span
+        class="text-foreground font-semibold"
+        data-numeric=""
+      >
+        ₹4,50,250
+      </span>
+      <span
+        class="text-muted-foreground"
+      >
+         raised of 
+        ₹10,00,000
+      </span>
+    </p>
+    <span
+      class="text-body-sm text-muted-foreground font-medium"
+      data-numeric=""
+    >
+      45
+      %
+    </span>
+  </div>
+  <p
+    class="text-caption text-muted-foreground flex flex-wrap items-center gap-x-2"
+  >
+    <span
+      data-numeric=""
+    >
+      321
+       supporters
+    </span>
+    <span
+      aria-hidden="true"
+    >
+      ·
+    </span>
+    <span
+      data-numeric=""
+    >
+      12 days left
+    </span>
+  </p>
+</div>
+`;
+
+exports[`Input > default, error, valid, prefixed and disabled 1`] = `
+<div>
+  <input
+    aria-label="Default"
+    class="flex h-11 bg-surface text-body w-full rounded-lg border px-3 py-2 placeholder:text-muted-foreground duration-(--duration-fast) transition-[border-color,box-shadow,outline-color] hover:border-foreground/40 focus-visible:outline-2 focus-visible:outline-offset-0 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:border-input border-input focus-visible:border-primary focus-visible:outline-primary file:text-body-sm file:border-0 file:bg-transparent file:font-medium"
+    type="text"
+  />
+  <input
+    aria-invalid="true"
+    aria-label="Error"
+    class="flex h-11 bg-surface text-body w-full rounded-lg border px-3 py-2 placeholder:text-muted-foreground duration-(--duration-fast) transition-[border-color,box-shadow,outline-color] focus-visible:outline-2 focus-visible:outline-offset-0 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:border-input border-destructive hover:border-destructive focus-visible:outline-destructive file:text-body-sm file:border-0 file:bg-transparent file:font-medium"
+    type="text"
+  />
+  <div
+    class="relative w-full"
+  >
+    <input
+      aria-label="Valid"
+      class="flex h-11 bg-surface text-body w-full rounded-lg border px-3 py-2 placeholder:text-muted-foreground duration-(--duration-fast) transition-[border-color,box-shadow,outline-color] focus-visible:outline-2 focus-visible:outline-offset-0 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:border-input border-success hover:border-success focus-visible:outline-success file:text-body-sm file:border-0 file:bg-transparent file:font-medium pr-10"
+      type="text"
+    />
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-circle-check text-success pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2"
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+      />
+      <path
+        d="m9 12 2 2 4-4"
+      />
+    </svg>
+  </div>
+  <div
+    class="relative w-full"
+  >
+    <span
+      aria-hidden="true"
+      class="text-muted-foreground text-body pointer-events-none absolute inset-y-0 left-3 flex items-center"
+    >
+      ₹
+    </span>
+    <input
+      aria-label="Amount"
+      class="flex h-11 bg-surface text-body w-full rounded-lg border px-3 py-2 placeholder:text-muted-foreground duration-(--duration-fast) transition-[border-color,box-shadow,outline-color] hover:border-foreground/40 focus-visible:outline-2 focus-visible:outline-offset-0 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:border-input border-input focus-visible:border-primary focus-visible:outline-primary file:text-body-sm file:border-0 file:bg-transparent file:font-medium pl-8"
+      type="text"
+    />
+  </div>
+  <input
+    aria-label="Disabled"
+    class="flex h-11 bg-surface text-body w-full rounded-lg border px-3 py-2 placeholder:text-muted-foreground duration-(--duration-fast) transition-[border-color,box-shadow,outline-color] hover:border-foreground/40 focus-visible:outline-2 focus-visible:outline-offset-0 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:border-input border-input focus-visible:border-primary focus-visible:outline-primary file:text-body-sm file:border-0 file:bg-transparent file:font-medium"
+    disabled=""
+    type="text"
+  />
+</div>
+`;

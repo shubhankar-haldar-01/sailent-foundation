@@ -6,7 +6,7 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-11-21 for the visual polish brief, Phase 3 (§2, "Visual polish — Phase 3"). **Earlier:** Phase 2 (committed locally as `3bcb8c2`), Phases 0–1. **Earlier:** the removal of four default campaign FAQs. **Earlier:** related FAQs on every campaign. **Before that:** the upgrade to Next.js 16 (§2, "Next.js 16"), which fixes the save stuck on "Saving…". Earlier the same day: the investigation of it. **Before that:** 2026-11-20 for Phase 5 of the UI feedback system (§2, "UI feedback system — Phases 1–5 done"); earlier the same day, Phase 4. **Before that:** 2026-11-19 for the security audit (§2, "Security audit"). **Before that:** 2026-11-18 for the event pass and gate fixes and the move to Resend for email (§2, "Email through Resend" and "Event passes and gate check-in fixes"); the header table below was not re-audited and is still as of 2026-10-21. **Previously:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
+**Last updated:** 2026-11-21 for the visual polish brief, Phase 5 (§2). **Earlier:** Phase 4 batches A–C. **Earlier:** Phase 3 (`23ef449`) and Phase 2 (`3bcb8c2`), both local, not pushed; Phases 0–1. **Earlier:** the removal of four default campaign FAQs. **Earlier:** related FAQs on every campaign. **Before that:** the upgrade to Next.js 16 (§2, "Next.js 16"), which fixes the save stuck on "Saving…". Earlier the same day: the investigation of it. **Before that:** 2026-11-20 for Phase 5 of the UI feedback system (§2, "UI feedback system — Phases 1–5 done"); earlier the same day, Phase 4. **Before that:** 2026-11-19 for the security audit (§2, "Security audit"). **Before that:** 2026-11-18 for the event pass and gate fixes and the move to Resend for email (§2, "Email through Resend" and "Event passes and gate check-in fixes"); the header table below was not re-audited and is still as of 2026-10-21. **Previously:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
 
 | | |
 |---|---|
@@ -458,7 +458,79 @@ The likely cause is WebKit keyboard behaviour; this was **not investigated**.
   7. ~~A save stuck on "Saving…" under server load~~: fixed by the upgrade to Next.js 16 (2026-11-21, next sections).
 - **Running e2e here** needs Chrome (`channel: 'chrome'`): Playwright's bundled Chromium and WebKit are not installed, and `e2e/global-setup.ts` launches Chromium for the image warm-up.
 
-### Visual polish — Phase 3 (components) — 2026-11-21 (committed locally, not pushed)
+### Visual polish — Phase 5 (quality bar) — 2026-11-21 (committed 2026-11-21)
+
+- **Acceptance:** see the table in `docs/design-audit/README.md` ("Phase 5").
+- **Lighthouse 12.8.2** (mobile, applied throttling, production build in the isolated copy):
+
+  | Page | Performance | Accessibility | Best practices | SEO | CLS |
+  |---|---|---|---|---|---|
+  | Home | 95 | 96 | 100 | 100 | 0 |
+  | Campaign | 97 | 96 | 100 | 100 | 0 |
+  | Donate | 97 | 100 | 100 | 100 | 0 |
+
+  - The accessibility points lost are the Donate orange (owner's exception).
+  - The default simulated throttling under-reports against a same-machine server: every script finishes before the first paint, so all are counted. Applied throttling is the faithful measure here; it should be re-run against the deployed site.
+- **Fixed:**
+  - homepage LCP not recorded (the featured rail's smooth-scroll snapping);
+  - logos at 3840px;
+  - hero fetch priority;
+  - admin dashboard sideways scroll at 360px;
+  - redundant alt text.
+- **Added:**
+  - 22 snapshot tests (`components/__tests__/key-components.snapshot.test.tsx`);
+  - `docs/design-system.md` rewritten;
+  - 174 after screenshots in `docs/design-audit/after/` (git-ignored).
+- **Validation (2026-11-21):** web 611/611; typecheck, lint, Prettier clean; e2e (desktop, mobile, 320 px) 409 passed, 51 failed, identical to the Phase 4 run: no new failure (the remaining ones predate the visual polish work, plus the desktop home axe check on the Donate orange).
+- **Next:** the owner's review; then commits and the push, each with approval. The visual polish brief is complete with Phase 5.
+
+### Visual polish — Phase 4, batches B and C — 2026-11-21 (committed 2026-11-21)
+
+- **Owner (2026-11-21):** "complete phase 4". Batches B and C done straight after A, without a stop between them; batch A was not committed first, since no commit was approved.
+- **Built:**
+  - home hero with live text;
+  - home trust section (records only);
+  - one brand tone for every cause; cause tiles neutral;
+  - washes on listings, stories, events and the dashboard mapped to the brand tint;
+  - sentence case on public pages, the dashboard and admin (an automated map reviewed by hand; exclusions: cause names, campaign titles, the event pass, the ID card artwork, hidden press marks, the unused focus-area strip and home bands);
+  - articles at 680px / 18px;
+  - dashboard greeting and stat discs.
+  - `AGENTS.md` §11: item 1 (colours only) and new item 23.
+- **Not changed, for the owner:**
+  1. The event pass prints **"Section 12A & 80G Registered NGO"** as fixed text, not from the records (`components/events/event-entry-pass.tsx`). Under §10 this should come from Settings or go; left as is because the pass is its own artwork.
+  2. The page banners (blog, stories, programmes, about, team, events) have their headlines **baked into the images**, like the old home hero; the events banner is approved (§11 item 14). Replacing them needs clean photographs.
+  3. Admin layouts are unchanged beyond tokens, components and copy (brief: function first).
+- **Validation (2026-11-21):** web 589/589; typecheck, lint, Prettier clean; isolated copy: production build OK; full e2e (desktop, mobile, 320 px) 409 passed, 51 failed. The only failures not seen before are the desktop home page's two axe checks: the new live hero "Donate now" is white on the Donate orange (3.17:1, the owner's exception; before, the desktop hero was an image with no orange button). Pages checked at 390 and 1440, light and dark (home, campaigns, a story, blog, sign-in, dashboard, admin): no sideways scroll.
+- **Next:** the owner reviews Phase 4 (A, B, C). Then commits (owner's approval), the push, and Phase 5.
+
+### Visual polish — Phase 4, batch A (donation journey) — 2026-11-21 (committed 2026-11-21)
+
+- **Owner's answers (2026-11-21):**
+  - Phase 3 committed first (`23ef449`, local);
+  - Phase 4 in three batches (A: donation journey; B: home, listings, stories, blog, events; C: about, contact, FAQ, legal, auth, dashboard, admin);
+  - the home trust section shows only recorded facts;
+  - the home hero becomes live text over the photograph (both in batch B).
+- **Built (batch A):**
+  - campaign hero (plain facts; progress below `lg`);
+  - the phone Donate bar (`mobile-donate-bar.tsx`), shown only while the in-page card is out of view, which pads the page foot below `lg`;
+  - "Our goal" as one stat block;
+  - placeholder and duplicate text guard (`campaign-copy.ts`);
+  - sentence case on the journey, and "Donate now" site-wide;
+  - checkout summary card border-first;
+  - custom-amount panel neutral.
+  - `AGENTS.md` §11 item 22 records the campaign page; item 2 says "Donate now".
+- **Tests changed (copy, not intent):**
+  - e2e strings to sentence case;
+  - `campaign.spec` "keeps the donation card in the page on a phone" now allows only the Donate bar as a fixed element and asserts it is hidden while the card is in view;
+  - three "Donate ₹…" locators made exact, because the bar's name contains the same words;
+  - `donation-checkout.test` expects the standard card.
+- **New tests:**
+  - unit (8): the guard, the goal block's recorded-only figures, the bar's show/hide and focus;
+  - e2e (2): the phone bar (desktop has none).
+- **Validation (2026-11-21):** web 589/589; typecheck, lint, Prettier clean; isolated copy: production build OK; full e2e (desktop, mobile, 320 px) 411 passed, 49 failed (Phase 3: 406/52), no failure that was not already failing; the campaign page's only axe findings are white on the Donate orange (3.17:1, the owner's exception), now including the phone bar's button; screens at 390 and 1440, light and dark: no sideways scroll.
+- **Next:** the owner reviews batch A; commit with approval; then batch B.
+
+### Visual polish — Phase 3 (components) — 2026-11-21 (committed and pushed 2026-11-21)
 
 - **Owner's answers (2026-11-21):**
   - 8px buttons, inputs and chips;
@@ -507,7 +579,7 @@ The likely cause is WebKit keyboard behaviour; this was **not investigated**.
     - the remaining contrast failures are white on the Donate orange (3.17:1, the owner's exception); one 4.48:1 node on the home rails was not reproducible (mid-animation).
 - **Next:** the owner reviews Phase 3. Then a commit, and the push of `3bcb8c2` plus Phase 3, each with approval. Then Phase 4.
 
-### Visual polish — Phase 2 (foundation) — 2026-11-21 (committed locally, not pushed)
+### Visual polish — Phase 2 (foundation) — 2026-11-21 (committed and pushed 2026-11-21)
 
 - **Owner's choices applied:**
   - direction 2: brand green `#1E7B24`, with Inter only;
@@ -1013,7 +1085,7 @@ Statuses: COMPLETE · PARTIALLY COMPLETE · IN PROGRESS · NOT STARTED · BLOCKE
 | Programmes | PARTIALLY COMPLETE | Rollups `campaign_count`, `total_raised` and `beneficiaries_reached` are never written, yet the public listing reads `campaignCount`. |
 | Campaigns | COMPLETE | Lifecycle, FAQs, gallery, products, preview, admin-controlled featuring, and the optional end-date deadline (`dd64d41`). Public experience cleanup (open/closed filter, Other Ways to Support, in-page mobile card, own stories) implemented, **uncommitted** (§1, item 7). |
 | Products / campaign products | COMPLETE | |
-| One-time donations + Razorpay | COMPLETE IN CODE / NOT VERIFIED LIVE | Phase 11 added reconciliation and expiry, checkout retry, idempotency, per-client limits, currency/order checks (committed locally, not pushed). Tested with a mocked client only; never run against live or sandbox Razorpay. Missing: total cap, receipt PDF. Local behaviour without keys: `DEPLOYMENT.md` §6. |
+| One-time donations + Razorpay | COMPLETE IN CODE / NOT VERIFIED LIVE | Phase 11 added reconciliation and expiry, checkout retry, idempotency, per-client limits, currency/order checks (committed and pushed 2026-11-21). Tested with a mocked client only; never run against live or sandbox Razorpay. Missing: total cap, receipt PDF. Local behaviour without keys: `DEPLOYMENT.md` §6. |
 | Receipts | PARTIALLY COMPLETE | No PDF; 80G eligibility null; the registration number is snapshotted from settings since Phase 13. |
 | Donor accounts | COMPLETE | PAN encrypted and masked; verified email change (Phase 12). |
 | Staff authentication | COMPLETE | Email + password; invitations and password reset (Phase 13). Staff 2FA not required (owner decision). |

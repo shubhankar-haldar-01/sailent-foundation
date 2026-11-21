@@ -52,7 +52,7 @@ const CTA_ARROW =
  *  - Category chip and optional product badge
  *  - Three-column peach/mint statistics discs (Donors, Raised, Goal) with dividers
  *  - Brand-green progress bar with dual percentage captions
- *  - Pill-shaped Donate CTA in the action orange (`variant="action"`)
+ *  - A quiet "Donate now" in the brand outline (`variant="secondary"`); orange is for the page's own Donate
  */
 export function CampaignCard({
   campaign,
@@ -245,7 +245,7 @@ export function CampaignCard({
               <Button
                 asChild
                 fullWidth
-                variant="action"
+                variant="secondary"
                 className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}
               >
                 <Link href={`${detailHref}#give`}>

@@ -65,6 +65,9 @@ export function DashboardMobileHeader({
               alt="Sailent Foundation"
               width={1743}
               height={453}
+              // Shown at most ~220px wide: without `sizes` the browser fetched the
+              // 3840px rendition (44 KB) of the 1743px PNG (visual polish Phase 5).
+              sizes="220px"
               priority
               className="h-8 w-auto object-contain sm:h-9"
             />

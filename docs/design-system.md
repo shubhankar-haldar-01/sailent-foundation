@@ -1,7 +1,8 @@
 # Design System — Sailent Foundation
 
-**Phase:** 0 · **Date:** 19 September 2026
-**Status:** Direction and token architecture. **Colours are placeholders** pending the real brand palette (decision A11, open question 1).
+**First written:** Phase 0, 19 September 2026. **Rewritten for the built system:** visual polish brief, Phases 1–5, 21 November 2026 (sections 2–5 and 8). Sections 1, 6, 7, 9–11 are the original rules and still apply.
+
+**Source of truth:** `packages/ui/src/styles/tokens.css` (tokens, theme, base styles and utilities) and `packages/ui/src/primitives` (components). Live reference: `/dev/ui-states` (every component in every state, light and dark) and `/dev/design` (the chosen direction). Owner decisions behind it: `AGENTS.md` §11 items 2, 7, 10, 12, 13, 22, 23.
 
 ---
 
@@ -48,178 +49,131 @@ Gradient heroes · glassmorphism · everything-rounded card grids · scroll-trig
 
 ## 2. Typography
 
-### Families
+### Family
 
-| Role | Choice | Reason |
+**Inter only** (owner, 2026-11-21), self-hosted through `next/font` (`apps/web/src/app/layout.tsx`): subset `latin`, `display: swap`, weights **400** (text), **500** (labels), **600** (headings, buttons, figures). Nothing heavier is loaded, so `font-bold` renders at 600. A metric-matched "Inter Fallback" `@font-face` (`apps/web/src/styles/globals.css`) keeps text from moving when Inter arrives (CLS 0). Manrope and the Caveat script accent are retired. A Devanagari companion is still needed before Hindi content.
+
+### Scale (theme tokens, `--text-*`)
+
+| Token | Size | Use |
 |---|---|---|
-| Display & headings | A humanist serif or a high-contrast grotesque — **candidates for review** | Editorial authority; distinguishes Sailent from the default geometric-sans look |
-| Body & UI | A neutral humanist sans (Inter, Public Sans or similar) | Legibility at small sizes, wide weight range, good Devanagari companion for future i18n |
-| Numerals | Body family with `font-variant-numeric: tabular-nums` | **Mandatory in tables, progress figures and currency** — proportional digits make aligned numbers jitter |
-
-Both families must include a Devanagari-compatible companion. Retrofitting Hindi onto a Latin-only stack is far more expensive than choosing well now.
-
-### Scale
-
-A 1.25 modular scale on the public site; a compressed 1.15 in admin.
-
-| Token | Public | Admin | Use |
-|---|---|---|---|
-| `display-lg` | 60/1.05 | — | Hero |
-| `display` | 48/1.1 | 30/1.2 | Page title |
-| `h1` | 38/1.15 | 24/1.25 | Section heading |
-| `h2` | 30/1.2 | 20/1.3 | Subsection |
-| `h3` | 24/1.3 | 17/1.4 | Card title |
-| `h4` | 20/1.4 | 15/1.4 | Label heading |
-| `body-lg` | 18/1.65 | 15/1.5 | Lead paragraph |
-| `body` | 16/1.65 | 14/1.5 | Default |
-| `body-sm` | 14/1.6 | 13/1.45 | Secondary |
-| `caption` | 13/1.5 | 12/1.4 | Metadata |
-| `overline` | 12/1.4, +0.08em, uppercase | 11/1.3 | Eyebrow labels |
-
-Display sizes clamp fluidly between breakpoints so a hero never overwhelms a 390px screen.
+| `text-display-hero` | clamp 32–50px | Home hero headline |
+| `text-display` | clamp 32–48px | Rare display headings |
+| `text-h1` | clamp 28–38px | Page titles |
+| `text-h2` | clamp 24–30px | Section titles inside a page |
+| `text-section` | clamp 22–26px | Homepage band titles |
+| `text-h3` / `text-h4` | 24 / 20px | Card and block titles |
+| `text-body-lg` | 18px / 1.65 | Leads; article body (blog posts, stories) |
+| `text-body` | 16px / 1.65 | Default text |
+| `text-body-sm` | 14px | Secondary text, dense UI |
+| `text-caption` | 13px | Meta, helper text |
+| `text-overline` | 12px, 600, +0.08em, uppercase | Eyebrow labels, in the brand colour |
 
 ### Rules
 
-- **Measure: 60–75 characters** for body text. Long-form content is capped at `max-width: 68ch`, regardless of container width. This single rule does more for readability than any other.
-- Line height rises as size falls — 1.05 for display, 1.65 for body.
-- Two weights per family in normal use (400/600 body, 500/700 display). More weights is decoration.
-- Never centre more than three lines of text.
-- Headings never rely on colour alone for hierarchy.
-
----
+- Headings are 600 with slight negative tracking (h1/h2 −0.02em, h3 −0.01em, from the base layer).
+- **Sentence case** for all fixed copy — headings, labels, buttons, navigation. Titles and text entered in admin are shown as written.
+- **Tabular numbers** for every amount, count and table column (`tabular-nums`, or `[data-numeric]` / `[data-amount]`).
+- No highlighted words in headings, no decorative rules beside them.
+- Long-form reading: a 680px column (`prose-measure`) with 18px body text on a 1.75 line height.
 
 ## 3. Colour
 
-### Token architecture
+### Roles (owner, 2026-11-21; `AGENTS.md` §11 item 12)
 
-OKLCH throughout, because it is perceptually uniform: a lightness step produces the same visual step at every hue, so a generated scale stays even and contrast ratios behave predictably. Hex does not do this.
-
-The brand is a small number of variables:
-
-```css
-:root {
-  /* ─ Brand inputs — replace when the real palette arrives ─ */
-  --brand-hue: 152;          /* placeholder */
-  --brand-chroma: 0.11;
-  --neutral-hue: 60;         /* warm neutrals, public */
-  --neutral-chroma: 0.006;
-
-  /* ─ Generated scales ─ */
-  --accent-50 … --accent-950;
-  --neutral-0 … --neutral-1000;
-
-  /* ─ Semantic tokens: what components actually reference ─ */
-  --color-bg;            --color-surface;       --color-surface-raised;
-  --color-border;        --color-border-strong;
-  --color-fg;            --color-fg-muted;      --color-fg-subtle;
-  --color-accent;        --color-accent-fg;     --color-accent-hover;
-  --color-success; --color-warning; --color-danger; --color-info;
-  --color-focus-ring;
-}
-```
-
-**Components reference semantic tokens only.** No component contains a raw colour value. When the real palette arrives, the change is the four brand inputs at the top — not a refactor.
-
-Admin overrides `--neutral-hue` to a cool value and nothing else. That single variable is the entire difference in temperature between the two experiences.
-
-### Accent placeholder
-
-A deep, slightly desaturated green is the placeholder: it reads as growth and trust without the saturated "eco-brand" look, holds contrast well against white, and is distinct from the red/orange most Indian NGO sites default to. **It is a placeholder and is labelled as one everywhere it appears.**
-
-> **Phase 1 correction.** `--primary` maps to accent step **700**, not 600.
-> White text on step 600 measures ~4.0:1, which fails AA for normal text — and
-> the first casualty was the Donate button. Caught by an automated axe contrast
-> check; fixed with a one-line token change and no component edits, which is the
-> token architecture working as intended. See `phase-1.md` §3.2.
+| Role | Token | Light | Dark | Used for |
+|---|---|---|---|---|
+| **Brand** | `primary` (`--brand-600`) | `#1E7B24` | `#5CC461` | Default buttons, links, active nav and tabs, selected chips, badges, progress bars, focus ring, the admin |
+| Brand tint | `accent` / `accent-foreground` | brand-50 / brand-800 | dark green / light green | Selected backgrounds, tags, icon discs |
+| **Action** | `action` | `#EB6A1F` | same | **Donate and the page's one primary conversion button only.** White label at 3.18:1, the owner's recorded exception |
+| Text | `foreground` / `muted-foreground` | `#111827` / `#4B5563` | `#E5E7EB` / `#9CA3AF` | Body and secondary text |
+| Surfaces | `background` / `surface` / `muted` | `#F9FAFB` / white / `#F3F4F6` | `#0B0D10` / `#121417` / `#1B1E23` | Page, cards, sunken areas |
+| Always dark | `surface-inverse` | `#111827` | same | Photo scrims, camera viewfinders |
+| Borders | `border` / `border-strong` / `input` | `#E5E7EB` / `#D1D5DB` / `#6B7280` | — | Card hairlines / hover / control borders (≥ 3:1) |
+| **Success** | `success` | `#0F766E` (teal) | `#2DD4BF` | Confirmations, **always with an icon**; never the brand green |
+| Warning / destructive / info | `warning`, `destructive`, `info` (+ `-subtle`) | — | — | Status only, always with an icon and a word |
 
 ### Rules
 
-- One accent. Status colours (success, warning, danger, info) are semantic only and never decorative.
-- **Colour never carries meaning alone.** Every status pairs a colour with an icon and a label — required for accessibility and for the 8% of men with colour vision deficiency, who are well represented among donors.
-- Progress bars use the accent, with the percentage always present as text.
-- Body text on background: **minimum 7:1** (AAA) even though AA requires 4.5:1. The public site is read on cheap phones in bright daylight; the extra headroom is free.
-- Dark mode ships for admin. The public site is light-first; a dark variant is optional and must not compromise photography.
-
----
+- Every colour in code is a token. A hard-coded hex is allowed only where CSS cannot reach: canvas drawings and Razorpay's theme read `apps/web/src/lib/brand-colours.ts`; payment-network and share-network marks keep their owners' colours; the staff ID card is its own printed artwork. The grep is in `docs/design-audit/colour-grep-*.txt`.
+- One accent hue per page: causes and programmes all use the brand (their icons tell them apart); the old pastel `wash-*` tokens remain only for campaign status visuals and legacy artwork.
+- Selected is not success: a selected chip is brand border + brand tint + a check; success is teal with its own icon.
+- Contrast: `apps/web/src/components/__tests__/tokens-contrast.test.ts` checks the AA pairs in light and dark against `tokens.css` itself.
 
 ## 4. Spacing, radius, elevation
 
-### Spacing — 4px base
+### Spacing
 
-`0.5(2) · 1(4) · 1.5(6) · 2(8) · 3(12) · 4(16) · 5(20) · 6(24) · 8(32) · 10(40) · 12(48) · 16(64) · 20(80) · 24(96) · 32(128)`
-
-Section rhythm: **96–128px** public, **16–24px** admin. That difference alone reads as two products.
+A 4px grid (Tailwind's scale). Page sections use `section-y` (64/96px); content sits in `container-page` (max 1440px) or `prose-measure` (680px).
 
 ### Radius
-`sm 4 · md 6 · lg 8 · xl 12 · 2xl 16 · full`
 
-Public defaults to `lg`; admin to `md`. **Nothing larger than `2xl`** — the pill-shaped-everything look is exactly the template aesthetic being avoided.
+| Element | Radius |
+|---|---|
+| Buttons, inputs, selects, chips, small panels | 8px (`rounded-lg`) — owner, 2026-11-21 |
+| Small cards, images | 12px (`rounded-xl`) |
+| Large cards | 16px (`rounded-2xl`) |
+| Tags, badges, status pills, avatars, social circles | full (pills only for these) |
 
 ### Elevation
-`none` · `sm` (1px border + faint shadow, resting cards) · `md` (dropdowns, popovers) · `lg` (modals, drawers) · `focus` (a 2px ring at 2px offset).
 
-**Cards at rest have a border, not a shadow.** A grid of shadowed cards is the single strongest signal of a template.
+**Border first.** Cards have a hairline and no shadow at rest (`card-standard`). Only a card that *is* a link or button lifts 2px with a soft shadow on hover (`card-interactive`). `card-featured` is a stronger border, not a shadow. `card-elevated` and `shadow-elevated` are for overlays (menus, dialogs, popovers). Shadows are neutral, never tinted. Never put a card inside a card.
 
----
-
-## 5. Core components
-
-Built on shadcn/ui primitives, restyled to the tokens above. shadcn is a starting point, not the finished look.
+## 5. Core components (`@sailent/ui`)
 
 ### Buttons
 
-| Variant | Use | Appearance |
+| Variant | Look | Use |
 |---|---|---|
-| `primary` | **Donate Now** and one main action per view | Filled accent, white text |
-| `secondary` | Become a Volunteer, secondary actions | Outline, accent text |
-| `ghost` | Tertiary, toolbars | Text only, background on hover |
-| `destructive` | Delete, void, suspend | Danger fill, always confirmation-gated |
-| `link` | Inline navigation | Underlined text |
+| `action` | Orange fill, white label | Donate; a page's single conversion button (paid registration, pay) |
+| `primary` (default) | Brand fill | Every other main action |
+| `secondary` | Brand outline | Second actions, filters, "Donate now" on campaign cards |
+| `outline` | Neutral outline | Quiet actions: Login, Cancel, Back |
+| `ghost` | No fill until hover | Toolbars, icon triggers |
+| `destructive` | Red fill | Always behind `ConfirmationDialog` |
+| `link` | Brand text | Inline navigation |
 
-Sizes `sm 32 · md 40 · lg 48 · xl 56` (public hero CTA).
-Minimum touch target **44×44px** on all touch devices, achieved with padding rather than by reducing text.
-Loading state shows a spinner **and keeps the label**, with the width locked so the layout does not shift. A button whose text vanishes into a spinner leaves the user unsure what they clicked.
-Disabled buttons always have a visible reason nearby — never a dead control with no explanation.
+Sizes: `sm` 36px (44px hit area on touch, via `touch-target`), `md` 44px, `lg` 48px, `icon` 44×44 (needs `aria-label`). States: hover darkens; press scales to 0.98 (off with reduced motion); one focus ring (2px brand, 2px offset); `disabled`; `isLoading` keeps the label and width and shows the shared spinner.
 
 ### Inputs, selects, textareas
 
-- Labels are **always visible above the field**. Placeholder-as-label fails the moment the user starts typing, and fails screen readers entirely.
-- Helper text below, error replacing helper text with an icon.
-- Error state: red border, an icon, and specific text — *"Enter a 10-digit mobile number"*, never *"Invalid input"*.
-- Required fields marked with an asterisk plus a legend; optional fields marked "(optional)" where that is clearer.
-- 44px minimum height on touch.
-- Errors appear on blur, not on every keystroke. Correction is validated live so the user sees the moment they are right.
-- Numeric inputs use `inputmode="numeric"`; phone uses `type="tel"`; amounts show the ₹ prefix inside the field.
+44px, 8px corners, `input` border (4.8:1). Hover darkens the border; focus is the brand border and ring; **error** (`hasError`) is a red border and ring with `aria-invalid` and a `FieldError` message under the field; **valid** (`isValid`) is a teal border with a check; `disabled` is muted. `prefix="₹"` draws a fixed lead-in for amount fields. A visible `<Label>` always; placeholders are never labels.
 
-### Cards
+### Amount chips
 
-Border-defined, `lg` radius, `sm` elevation on hover only for interactive cards. Optional media, header, body, footer. Interactive cards get the whole surface as the hit area, with an inner button that stops propagation.
+Brand border, brand tint and a check when selected; a border change on hover; tabular numbers; 8px corners.
+
+### Cards and the campaign card
+
+See §4 for elevation. The campaign card (`apps/web/src/components/campaigns/campaign-card.tsx`, §11 item 2): the whole card is the link; one programme tag; Raised / Goal / Donors as a plain row; a brand progress bar; one quiet "Donate now" to `#give`; a neutral status pill.
 
 ### Badges
 
-`neutral · success · warning · danger · info · accent`. Always icon plus text. Campaign statuses, payment states, volunteer states.
+One size: 24px pill, 12px medium text, 12px icon. Variants `neutral`, `brand`, `success`, `warning`, `destructive`, `info`, `outline`. Status always carries an icon and a word.
 
-### Tabs, tables, modals, drawers
+### Tabs and the campaign section nav
 
-- **Tabs** — underline style, keyboard-navigable with arrow keys, state in the URL so a tab is linkable.
-- **Tables** (admin) — sticky header, zebra off by default (borders are enough), **tabular numerals**, sortable headers with a clear indicator, row selection, sticky first column when scrolling horizontally. On mobile, tables become stacked cards; a table forced into 390px is unreadable.
-- **Modals** — focus trapped, Escape closes, backdrop click closes non-destructive dialogs only, focus returns to the trigger, `aria-labelledby` and `aria-describedby` set. Never for a long form — that is a page or a drawer.
-- **Drawers** — side (admin filters, detail panes) or bottom (mobile donation summary). Bottom sheets support drag-to-dismiss with a visible grabber.
+A 2px brand underline and brand text on the current tab; a neutral underline on hover; arrow keys (Radix). The campaign page's section nav is sticky under the header and tracks the section in view.
 
-### Alerts and toasts
+### Accordion (FAQ)
 
-Alerts are inline and persistent. Toasts are transient, top-right on desktop and bottom on mobile, 5s auto-dismiss (errors persist until dismissed), stacking to a maximum of three, and announced via `aria-live`.
-
-**Never a toast for a payment outcome.** Payment results get a page (`/donate/status/[reference]`), because a donor who misses a 5-second toast has no way to recover the information.
+`variant="list"`: one bordered card, hairline dividers between rows, a chevron that turns, 250ms open and close (`accordion-motion`, off with reduced motion).
 
 ### Progress
 
-- Bar with the percentage as text beside it, plus absolute figures.
-- `role="progressbar"` with `aria-valuenow`, `valuemin`, `valuemax`.
-- Over 100% renders honestly as over-subscribed rather than clamping to full.
-- **No count-up animation on scroll** — decorative, distracting, and it makes a real number feel like a sales device.
+8px track, brand fill (teal when a goal is reached), raised vs goal and the percentage in tabular numbers, a 500ms ease to its value.
 
----
+### Header and footer
+
+Header: white bar, the active link in the brand with a 2px underline, a quiet outline "Login / Sign up", a translucent blurred bar once the page scrolls; it condenses but never hides. Footer (§11 item 13): neutral headings without bars, muted links that turn brand on hover, plain contact icons, 40px neutral social circles, a quiet tagline, the legal row; no Donate button.
+
+### The phone Donate bar
+
+`apps/web/src/components/donations/mobile-donate-bar.tsx` (§11 item 22): below `lg`, fixed to the foot of the screen **only while the campaign page's in-page donation card is out of view**; its button brings the card back. It never covers the card.
+
+### Feedback
+
+Toasts, banners, skeletons, empty and error states and confirmation dialogs follow `docs/ui-feedback.md`.
 
 ## 6. Domain components
 
@@ -291,28 +245,15 @@ Proportional to the action. A saved field gets a quiet inline confirmation; a co
 
 ## 8. Motion
 
-| Token | Duration | Curve | Use |
-|---|---|---|---|
-| `instant` | 100ms | ease-out | Hover, focus |
-| `fast` | 150ms | ease-out | Toggles, tabs |
-| `base` | 200ms | ease-in-out | Dropdowns, accordions |
-| `slow` | 300ms | ease-in-out | Modals, drawers |
-| `deliberate` | 400ms | custom ease | Page transitions (public only) |
+| What | Duration | Easing |
+|---|---|---|
+| Hover, colour and border changes | 150–200ms | `--ease-out-soft` |
+| Button press | instant scale to 0.98 | — |
+| Accordion open/close, tab underline | 250ms | `--ease-out-soft` |
+| Progress fill | 500ms | `--ease-out-soft` |
+| Card lift (clickable cards only) | 200ms, 2px | `--ease-out-soft` |
 
-Rules: motion communicates a state change or spatial relationship, never decorates. Nothing animates on scroll except lazy-loaded images fading in. No parallax. No counter animations.
-
-```css
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-```
-
-This is not optional. Vestibular disorders are real and common, and the setting exists to be honoured.
-
----
+Everything respects `prefers-reduced-motion` (the base layer cuts animations and transitions; components drop their transforms). No entrance animation sits above or just below the fold: it delays the largest paint, and on the homepage's rail a smooth-scrolling snap container stopped Chrome recording it at all (Phase 5). The homepage rails autoplay, with a keyboard-only pause control (§11 item 3).
 
 ## 9. Responsive behaviour
 

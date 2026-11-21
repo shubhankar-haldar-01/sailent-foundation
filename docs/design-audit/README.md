@@ -118,3 +118,21 @@ What remains is deliberate:
 - payment-network marks (`payment-logos.tsx`) and the Facebook/WhatsApp share buttons, which keep their owners' colours;
 - illustration SVGs (`*/decor.tsx`) and `media-frame.tsx`'s placeholders, which already follow `--brand-hue`;
 - the print styles in `globals.css`, and code comments.
+
+---
+
+## Phase 5 — quality bar and acceptance (2026-11-21)
+
+| Criterion | Result |
+|---|---|
+| After screenshots, every route × 360 / 768 / 1440 × light / dark | 174 in `after/` (29 routes; git-ignored like `before/`). No route scrolls sideways at any width after one fix (the admin dashboard at 360px). |
+| Colours, sizes, radii and shadows from tokens; no stray hex | `colour-grep-after.txt`: hex 606 → 77 (in 10 files, every one listed as deliberate in "Phase 2" above), palette classes 1,327 → 3. |
+| Only Donate uses the action colour | Every `variant="action"` / `bg-action` is a Donate or the page's one conversion button (hero, campaign card's donation card, checkout pay, phone Donate bar, paid-event register and pay, payment retry, story and about Donate links, dashboard saved/supported Donate). Active nav, tabs and selected chips are brand. |
+| Sentence case, no placeholder or duplicate text | Fixed copy in sentence case across public, dashboard and admin; admin-entered text shown as written. Placeholder and duplicate campaign text hidden (`campaign-copy.ts`). Exceptions: the event pass and ID card artwork, cause names. |
+| Hover, active and focus-visible on every interactive element | Kit components carry all three; one focus ring (2px brand, offset 2px) from the base layer; shown in `/dev/ui-states`. |
+| WCAG 2.2 AA contrast, light and dark | `tokens-contrast.test.ts` (31 checks) passes. The one exception is white on the Donate orange `#EB6A1F` (3.18:1), the owner's recorded decision; axe reports only that. |
+| Lighthouse ≥ 90, mobile: home, campaign, donate | Performance **95 / 97 / 97**, Accessibility **96 / 96 / 100** (the 4 points: the Donate orange), Best practices 100, SEO 100; **CLS 0** on all three; LCP 2.2–2.3 s. Lighthouse 12.8.2, mobile, applied ("devtools") throttling, against the production build in the isolated copy. |
+| Tests pass; snapshot tests for key components | Web 611/611 (22 snapshots: Button variants and sizes, Badge, Input states, CampaignProgress, CampaignCard); typecheck and lint clean; e2e in `DEVELOPMENT_STATUS.md`. |
+| `docs/design-system.md` | Rewritten for the built system: colour roles, type scale, spacing, radius, elevation, motion and component usage. |
+
+**Performance fixes made in Phase 5:** the homepage reported no Largest Contentful Paint at all (performance 0) because the featured rail combined `scroll-behavior: smooth` with mandatory scroll snapping; removed (the autoplay scrolls smoothly by itself), with its card entrance animation. Logos were fetched at 3840px (44 KB) for lack of `sizes`; now ~220px. Hero images now request `fetchpriority=high` (Next 16's `priority` no longer sets it) and the header logo no longer competes at high priority.

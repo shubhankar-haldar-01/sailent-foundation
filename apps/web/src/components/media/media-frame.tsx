@@ -141,7 +141,9 @@ export function MediaFrame({
           sizes={sizes}
           className={fit === 'contain' ? 'object-contain' : 'object-cover'}
           {...(focus ? { style: { objectPosition: focus } } : {})}
-          {...(priority ? { priority: true } : {})}
+          // Next 16's `priority` preloads but no longer marks the request
+          // high priority; the largest paint needs both (Lighthouse).
+          {...(priority ? { priority: true, fetchPriority: 'high' as const } : {})}
         />
       ) : (
         /*

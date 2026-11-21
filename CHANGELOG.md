@@ -10,6 +10,45 @@ Newest first.
 
 ---
 
+## 2026-11-21 — Visual polish Phase 5: quality bar
+
+| Change | Reason | Impact |
+|---|---|---|
+| Featured rail: no `scroll-smooth` and no card entrance animation | Chrome recorded no Largest Contentful Paint on the homepage (Lighthouse performance 0) | Home performance 95 |
+| Logos with `sizes="220px"`; hero images `fetchpriority=high`; header logo not high priority | Logos downloaded at 3840px; the hero competed for bandwidth | Campaign page performance 84 → 97 |
+| Admin dashboard grid columns `min-w-0` | Sideways scroll at 360px | — |
+| Story cards in the campaign strip: decorative image alt | Lighthouse "redundant alt" | — |
+| Snapshot tests for the key components (22) | Brief, Phase 5 | Unintended visual changes fail review |
+| `docs/design-system.md` rewritten; acceptance table in `docs/design-audit/README.md` | Brief, Phase 5 | — |
+
+Lighthouse (mobile): home 95/96/100/100, campaign 97/96/100/100, donate 97/100/100/100 (performance/accessibility/best practices/SEO), CLS 0. Web 611/611. e2e (desktop, mobile, 320 px) 409 passed, 51 failed, identical to the Phase 4 run: no new failure (the remaining ones predate the visual polish work, plus the desktop home axe check on the Donate orange).
+
+## 2026-11-21 — Visual polish Phase 4, batches B and C: the rest of the site
+
+| Change | Reason | Impact |
+|---|---|---|
+| Home hero: photograph cropped to its own side + live-text headline, one line, one orange "Donate now" | Owner's choice; brief | The baked-in orange headline is gone from view; text follows tokens and dark mode |
+| "Why give here" trust section on home, from Admin → Settings records only | Owner: recorded facts only (`AGENTS.md` §10) | Registration / 80G / 12A items appear only when set |
+| One brand tone for every cause; cause tiles neutral with a brand selected state; mint/pastel washes on listings, stories, events and dashboard mapped to the brand tint | Brief (no colour discs); §11 item 1 colours only | One accent hue per page |
+| Sentence case across public pages, dashboard and admin (fixed copy only) | Brief, Phase 4 | e2e and unit test strings updated to match |
+| Articles: 680px column, 18px body; story timeline and quote card neutral | Brief, Phase 4 | Blog posts and stories |
+| Impact strip, dashboard stat discs and "Your impact" card on neutral/brand tokens; greeting without the highlighted name | Brief, Phase 4 | — |
+
+Tests: web 589/589; e2e 409 passed, 51 failed; the two new ones are the desktop home axe checks on the hero's orange Donate button (owner's 3.17:1 exception).
+
+## 2026-11-21 — Visual polish Phase 4, batch A: the donation journey
+
+| Change | Reason | Impact |
+|---|---|---|
+| Campaign hero: plain facts with muted icons (no discs); raised vs goal in the hero below `lg` | Brief, Phase 4 | Phones see the progress before the products |
+| Phone Donate bar, shown only while the in-page donation card is off screen; its button brings the card back | Brief, Phase 4 (sticky Donate on mobile) | Never covers the card or a focused field (`AGENTS.md` §11 item 22) |
+| "Our goal" is one stat block: goal, raised, donors, people helped, with the brand bar | Brief, Phase 4 | Replaces the "Our goal" and "Your impact" cards; only recorded figures |
+| Placeholder and duplicate campaign text hidden (admin form labels; support text repeating the story) | Brief, Phase 4 (the "mountain" bug) | `components/campaigns/campaign-copy.ts` |
+| Sentence case on the campaign page, donation card, checkout and "Donate now" site-wide | Brief, Phase 4 | e2e text updated to match |
+| Checkout summary is a standard border-first card; the custom-amount panel is neutral | Brief, Phase 4 | — |
+
+Tests: web 589/589 (8 new); e2e 411 passed, 49 failed (Phase 3: 406/52), none new; 2 new e2e for the phone bar.
+
 ## 2026-11-21 — Visual polish Phase 3: component polish
 
 | Change | Reason | Impact |
@@ -97,7 +136,7 @@ Tests: web 525/525, validation 317/317, typecheck and lint 15/15. Full e2e in an
 | The browser wedges while applying the page re-rendered into the action's response, when it streams in with gaps | Responses identical in stuck and finished runs; with no re-rendered tree, 6 of 6 fine under load; streamed metadata off did not help | — |
 | Framework, not this code: Next 15.5.29 (newest 15.5, React canary 2025-08-18) | Next 16.4.6 (React canary 2026-10-02): 32 of 32 fine under the same and heavier load | Owner: upgrade to Next 16 or accept for now (`DEVELOPMENT_STATUS.md`) |
 
-## 2026-11-20 — UI feedback system, Phase 5: the quality pass (uncommitted)
+## 2026-11-20 — UI feedback system, Phase 5: the quality pass
 
 | Change | Reason | Impact |
 |---|---|---|
@@ -111,7 +150,7 @@ Tests: web 525/525, validation 317/317, typecheck and lint 15/15. Full e2e in an
 
 Checks (2026-11-20): web ✅ 525/525, validation ✅ 317/317, `pnpm typecheck` ✅ (15/15 tasks), `pnpm lint` ✅ (15/15), Prettier ✅ on every changed file. axe (WCAG 2.0–2.2 A/AA) on the states page, an ended and an open campaign and the 404 page at 360, 768 and 1280: no sideways scroll, no layout shift (CLS 0), and the only finding is white on the brand orange (owner decision, §5.6). Bundle: the largest First Load JS increase over HEAD is +5 kB gzipped (campaign, donation and two admin editor pages); the shared bundle is unchanged at 103 kB. End-to-end (isolated copy): the admin list empty, an admin save toast, the editor's leave dialog and the donor profile toast checked at 360, 768 and 1280 in a throwaway spec (all pass); the ten-spec run's failures all predate this work (`DEVELOPMENT_STATUS.md`).
 
-## 2026-11-20 — UI feedback system, Phase 4: the screens (uncommitted)
+## 2026-11-20 — UI feedback system, Phase 4: the screens
 
 | Change | Reason | Impact |
 |---|---|---|
@@ -133,7 +172,7 @@ Tests: web ✅ 521/521 (new: 5 for a campaign not taking donations, 10 for the p
 
 Not changed, with reasons (`DEVELOPMENT_STATUS.md`): the public campaign list and the donor dashboard already had designed empty and error states; there is no "PAN missing" banner because the donor profile has no PAN field to fill in; the reports export stays a plain download link (it must follow the password re-confirmation redirect), so it has no loading toast.
 
-## 2026-11-19 — UI feedback system, Phase 3: the payment flow (uncommitted)
+## 2026-11-19 — UI feedback system, Phase 3: the payment flow
 
 | Change | Reason | Impact |
 |---|---|---|
@@ -151,7 +190,7 @@ Tests: web ✅ 504/504 (new: 10 for the payment flow, 2 for the status page, 4 f
 
 Found, not changed (owner decisions, `DEVELOPMENT_STATUS.md`): a completed campaign still shows a disabled Donate button (`donations.spec.ts` › "a completed campaign offers no way to pay" fails; committed code, untouched today); the campaign page's trust strip says "80G Tax Benefit: Get tax deduction on your donation" (`campaign-trust.tsx`), a tax claim §10 forbids until the owner provides one.
 
-## 2026-11-19 — UI feedback system, Phase 2: the rules (uncommitted)
+## 2026-11-19 — UI feedback system, Phase 2: the rules
 
 | Change | Reason | Impact |
 |---|---|---|
@@ -161,7 +200,7 @@ Found, not changed (owner decisions, `DEVELOPMENT_STATUS.md`): a completed campa
 
 Baseline for Phase 5's checks (2026-11-19): 1 browser dialog (`window.prompt` in `donation-success.tsx`), 15 files with ad-hoc spinners (35 `animate-spin`). No code changed in this phase.
 
-## 2026-11-19 — UI feedback system, Phase 1: the building blocks (uncommitted)
+## 2026-11-19 — UI feedback system, Phase 1: the building blocks
 
 The owner approved the Phase 0 audit and its recommendations (2026-11-19): success messages become toasts while server errors keep an inline banner with reveal; no refund features or refund wording (§10); no PAN at checkout and no "80G validity" banner; no "Email again"; the kit's own toast is extended (no new library); confirmation instead of undo where the lifecycle cannot undo; the status page's polling stays as documented. Nothing is rolled out to screens yet; that is Phase 4.
 
@@ -177,7 +216,7 @@ The owner approved the Phase 0 audit and its recommendations (2026-11-19): succe
 
 Tests: web ✅ 486/486 (28 new: the mapper, `useAsyncAction`, toasts, Button loading, the confirmation dialog, skeletons, Banner, OfflineBanner, ErrorBoundary, the unsaved-changes guard). Typecheck and lint ✅. `/dev/ui-states` checked in Chrome at 1280 and 390px with no console errors.
 
-## 2026-11-19 — After a save, the page goes to the message (uncommitted)
+## 2026-11-19 — After a save, the page goes to the message
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -186,7 +225,7 @@ Tests: web ✅ 486/486 (28 new: the mapper, `useAsyncAction`, toasts, Button loa
 
 Tests: web ✅ 458/458 (5 new: no reveal on page load; scroll and focus after acting; focus without scrolling when already in view; instant scroll for reduced motion; `FormStatus` reveals "Saved." and errors on every save, including a repeated result. Taking the hook out of `FormStatus` fails it). Checked in Chrome: saving Admin → Settings from 2,318px down the page brought "Saved." into view, focused. Typecheck and lint ✅.
 
-## 2026-11-19 — Admin settings: no password re-confirmation (uncommitted)
+## 2026-11-19 — Admin settings: no password re-confirmation
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -196,7 +235,7 @@ Tests: web ✅ 458/458 (5 new: no reveal on page load; scroll and focus after ac
 
 Tests: API settings, RBAC and CMS ✅ 91/91; web ✅ 453/453; database ✅ 180/180; typecheck and lint 12/12.
 
-## 2026-11-19 — Donation receipt PDF: the owner's design (uncommitted)
+## 2026-11-19 — Donation receipt PDF: the owner's design
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -206,7 +245,7 @@ Tests: API settings, RBAC and CMS ✅ 91/91; web ✅ 453/453; database ✅ 180/1
 
 Tests: documents ✅ 17/17 (masking, only-entered registrations, no contacts or payment id on the public copy, no non-record claims, QR only with a URL, pagination, determinism); worker ✅ 91/91 (the emailed copy holds the masked email and the payment id, never the raw email); API donations and config ✅ 82/82 (the download holds no email or phone; `APP_PUBLIC_URL` refused in production when http or localhost); web ✅ 453/453; validation ✅ 317/317; config ✅ 49/49. Typecheck and lint 15/15; `pnpm check:deploy` 46/46. The QR decodes to the donation's page from a 100 dpi render (html5-qrcode, the gate's own decoder); the real local receipt `SFL-2026-003176` downloaded through the site.
 
-## 2026-11-19 — Donation success page: the owner's design (uncommitted)
+## 2026-11-19 — Donation success page: the owner's design
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -219,7 +258,7 @@ Tests: documents ✅ 17/17 (masking, only-entered registrations, no contacts or 
 
 Tests: web ✅ 453/453 (8 new); API donations ✅ 62/62 (2 new; leaking the payment id into the PDF fails one), and the full API run 978 passed, 9 skipped with 3 cross-suite races (`public-api`, `media`, `rbac`), each passing alone; worker ✅ 91/91; documents ✅ 5/5; validation ✅ 317/317. Typecheck and lint 15/15, Prettier clean. Checked against the real local donation `DON-TX7B7Z8D` at 390, 768, 1024 and 1440px (no horizontal overflow, no page errors), and the PDF downloaded through the BFF with its filename.
 
-## 2026-11-19 — Donation receipt email and PDF receipt (uncommitted)
+## 2026-11-19 — Donation receipt email and PDF receipt
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -231,7 +270,7 @@ Tests: web ✅ 453/453 (8 new); API donations ✅ 62/62 (2 new; leaking the paym
 
 Tests: worker ✅ 113/113 (38 new: 5 for the processor, 7 for the email body, 5 for the PDF, 17 for amounts in words, 4 for `isCustomised`); `notifications.spec.ts` ✅ 32/32, with every template's content hash identical before and after a run. Going back to the version rule fails the "does not repeat the shipped wording" test. Typecheck, lint and Prettier clean. The email was checked at 640 and 390px, and the PDF for one page and for 30 lines (3 pages).
 
-## 2026-11-19 — Security audit: fixes (uncommitted)
+## 2026-11-19 — Security audit: fixes
 
 From a full application security audit. Each fix has a regression test that fails when the fix is taken out (checked for every row).
 
@@ -249,7 +288,7 @@ Found and **not changed** (owner decisions, listed in `DEVELOPMENT_STATUS.md` §
 
 Tests: API ✅ 979 passed, 9 skipped (one cross-suite race in `public-api.spec.ts` passed on re-run); web ✅ 445/445; worker ✅ 75/75; validation ✅ 300/300; config ✅ 49/49; database ✅ 180/180. Typecheck and lint 13/13; production build passes on Next.js 15.5.29.
 
-## 2026-11-19 — Registration email: passes only in the PDF (uncommitted)
+## 2026-11-19 — Registration email: passes only in the PDF
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -257,7 +296,7 @@ Tests: API ✅ 979 passed, 9 skipped (one cross-suite race in `public-api.spec.t
 
 Tests: worker suite 75/75. Covered: the section is absent when the PDF is attached, it is present only when the PDF fails (forced in a test), and turning the section on again fails 3 tests. One real email was sent through Resend and accepted.
 
-## 2026-11-19 — Registration email: PDF passes and a professional layout (uncommitted)
+## 2026-11-19 — Registration email: PDF passes and a professional layout
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -269,7 +308,7 @@ Left out of the PDF on purpose: "Section 12A & 80G Registered NGO" (AGENTS.md §
 
 Tests: 4 for the PDF (pages, size, identical bytes when regenerated, unsupported characters, long titles), 6 for the email body (section order, free booking, uneven amount, contacts, escaping, administrator's note), 1 for the layout logo, and 3 for the confirmation against the local database (logo, QR and PDF attachments; payment summary; edited template). Breaking the PDF attachment or the template rule fails them. Checked: the email for the local booking at 640 and 390px; both PDF pages rendered; the gate kiosk read a QR code cut from the PDF; one real email with the PDF sent through Resend and accepted. Worker suite 72/72.
 
-## 2026-11-19 — Registration email: entry passes and payment (uncommitted)
+## 2026-11-19 — Registration email: entry passes and payment
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -280,7 +319,7 @@ The pass numbers come from `passesOf`, the same function the gate checks with, a
 
 Tests: 3 for attachments (including the request the real SDK sends) and 2 for the email against the local database: a paid group booking (both passes, QR images byte-identical to the pass numbers, ₹ amount, reference, date) and a free booking (pass, no payment). Leaving the details out fails both. Checked: the email built for the local booking at 640 and 390px; the gate kiosk read the QR image taken from the email; one real email sent through Resend and accepted. Worker suite 60/60.
 
-## 2026-11-18 — Gate desk: Auto-Admit result and the Admitted list (uncommitted)
+## 2026-11-18 — Gate desk: Auto-Admit result and the Admitted list
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -290,7 +329,7 @@ Tests: 3 for attachments (including the request the real SDK sends) and 2 for th
 
 Tests: 3 for the list, 3 for the repeat guard, 4 for the kiosk (fresh admission shows ADMITTED; an earlier admission still shows ALREADY ADMITTED; a held pass is looked up once while a different pass still is; the Admitted tab on load). Breaking each fix fails its test. Checked in Chrome with the local data, read-only: the tab showed 2 on load; with Auto-Admit on, a pass held up for 8 seconds made one lookup; no records changed. Web suite 428/428.
 
-## 2026-11-18 — Gate desk: leaving the scanner no longer crashes (uncommitted)
+## 2026-11-18 — Gate desk: leaving the scanner no longer crashes
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -299,13 +338,13 @@ Tests: 3 for the list, 3 for the repeat guard, 4 for the kiosk (fresh admission 
 
 Tests: 4 for the helper (against a scanner that throws like html5-qrcode), and 2 for the kiosk: leaving while the camera stops must not throw, and must stop once; leaving while it starts must switch it off. Putting back the old cleanup fails the first with the user's exact error; removing the switch-off fails the second. Checked in Chrome: Exit Desk with the camera running and while it was starting, both landing on the attendee list with no error and the camera off. Web suite 418/418.
 
-## 2026-11-18 — Event pass: barcode removed (uncommitted)
+## 2026-11-18 — Event pass: barcode removed
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | **The decorative barcode is removed from the event pass**: from the on-screen pass (`components/events/event-entry-pass.tsx`) and from the downloaded image (`download-pass.ts`). The pass ID stays under the QR code, slightly larger, captioned "Pass ID • Non-Transferable" (it said "Security Scan Code", which would now name nothing) | Owner's request. It was not a real barcode symbology, so nothing could scan it; the QR code is what the gate reads | Layout otherwise unchanged. Checked before and after at 390, 768, 1024 and 1440px and in the downloaded image: no overflow; the pass is about 31–34px shorter below 1024px, and the same height above | — |
 
-## 2026-11-18 — Phone testing over https (uncommitted)
+## 2026-11-18 — Phone testing over https
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -314,7 +353,7 @@ Tests: 4 for the helper (against a scanner that throws like html5-qrcode), and 2
 
 Checked: the certificate covers `localhost`, `127.0.0.1` and the current network address, and verifies against the local authority. Pages load over strict https. In phone-sized Chrome with a simulated camera showing a QR pass, signing in worked and the gate read the pass (secure page, no errors), both when the certificate is trusted and when the warning is tapped through.
 
-## 2026-11-18 — Gate scanner camera fixed (uncommitted)
+## 2026-11-18 — Gate scanner camera fixed
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -324,7 +363,7 @@ Checked: the certificate covers `localhost`, `127.0.0.1` and the current network
 
 Tests: 4 for the messages, 2 for the scanner policy (including that `next.config` sends it only on the scanner routes, after the site-wide header), 2 for the kiosk (the camera area is visible when the camera starts — it fails with the old behaviour — and the refusal message). Web suite 411/411.
 
-## 2026-11-18 — Email through Resend (uncommitted)
+## 2026-11-18 — Email through Resend
 
 Owner's decision: Resend replaces Brevo as the email provider. The sending code, the startup checks and the deploy templates changed; what each email says and when it is sent did not, except where noted.
 
@@ -342,13 +381,13 @@ Tests: 21 for the mail module and layout (`email.spec.ts`, including the real SD
 
 Not done, and left for the owner: an acknowledgement email to people who use the contact form, and a payment-failure email. Both would be new behaviour; see `DEVELOPMENT_STATUS.md`.
 
-## 2026-11-18 — Admin date and time picker: every minute (uncommitted)
+## 2026-11-18 — Admin date and time picker: every minute
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | The minute menu in `components/admin/date-time-picker.tsx` lists 00–59, not 00, 05 … 55 | A time such as 10:59 could not be chosen, and a saved time such as 10:07 showed "00" in the minute menu while the header read 10:07 | Event start, end and registration-close times can be set to any minute. Tests: 3 new in `date-time-picker.test.tsx` (each fails against the old list); checked in a browser at 390px | — |
 
-## 2026-11-18 — Event passes and gate check-in: defects fixed (uncommitted)
+## 2026-11-18 — Event passes and gate check-in: defects fixed
 
 The event pass and gate scanner feature (itself uncommitted) was tested against the real API and local database. These defects were found and fixed:
 
@@ -412,7 +451,7 @@ Tests: 7 new API integration tests (`events.spec.ts` "gate passes" and the payme
 | Committed although it had no entry here: the blog redesign (`components/blog/blog-hero.tsx`, `blog-sidebar.tsx`, the post card, `blog-hero-banner-v2.webp`; 2026-10-14 to 16); About's Our Team photographs; the programmes hero photograph (2026-10-17); on `/events`, the panoramic `events-hero-elder.webp` banner in place of the 17 October banner, with the "Want to get involved?" panel and "Past events" taken off the page (2026-10-17); the registration page `/events/[slug]/register` and one seat per registration in the API, form and action (2026-10-17/18); and the four old commits' work — the payments list, donation detail and receipts, the profile photo (`0024`), the admin donations table, the homepage spotlight section and hero banners, and the button and card primitives | Recorded so the history matches the code | `AGENTS.md` §10 and §11 item 14 now describe these; open questions are in `DEVELOPMENT_STATUS.md` §5 and §9 | — |
 | Tests: in `e2e/phase-9.spec.ts` the `/team` directory test is replaced by "About's Our Team is the public team directory" (the section, its heading and a member card on `/about`; `/team` answers 404). In `e2e/journeys.spec.ts`, "journey: homepage → events" now expects the panoramic banner's h1 "Events"; it still expected the 17 October headline, which the page no longer has | The `/team` pages are retired (owner); the page's h1 changed with its banner | — | — |
 
-## 2026-10-17 — Events page redesigned to the owner's reference (uncommitted)
+## 2026-10-17 — Events page redesigned to the owner's reference
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -420,68 +459,68 @@ Tests: 7 new API integration tests (`events.spec.ts` "gate passes" and the payme
 | `apps/api` `content.service.ts` `listEvents`: the public list now also returns `registrationDeadline` (already public on the detail endpoint); `test/events.spec.ts` gains "lists the registration deadline publicly, and never the joining link" | The cards need the cut-off to apply the shared rule — an event can be open and past its deadline | Additive; no schema change; `meetingUrl` still withheld | — |
 | Tests: `components/events/__tests__/events-query.test.ts` (24); `e2e/events.spec.ts` (paging without repeats, month alone and with search, lifting either filter, each card state, no-match — each project writes and removes its own eight events, publishing one through the admin page so the cached list is revalidated); `e2e/journeys.spec.ts` "an event shows its details…" expects the new headline | `AGENTS.md` §7 | — | — |
 
-## 2026-10-17 — Donor dashboard (phone): the welcome banner above the "My Account" card (uncommitted)
+## 2026-10-17 — Donor dashboard (phone): the welcome banner above the "My Account" card
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `components/dashboard/my-account-nav-card.tsx`: new `MyAccountNavSlot`, the layout's phone-only slot for the card, which renders nothing on `/dashboard`. `app/(dashboard)/layout.tsx` uses it in place of the inline `<div className="mb-5 lg:hidden"><MyAccountNavCard /></div>`. `app/(dashboard)/dashboard/page.tsx` renders `<MyAccountNavCard className="lg:hidden" />` straight after `<DashboardHero>` | Owner, with a screenshot of the phone dashboard (card above banner): "kindly replace the position the section" | On a phone or tablet the dashboard home reads: welcome banner, My Account card, then the stat cards (20px apart, as before). Changed in the markup, not with CSS `order`, so screen-reader and Tab order match the screen. The other dashboard pages are unchanged — they hide their own headings below `lg`, so the card is still first there. Desktop unchanged (the card is `lg:hidden`; the sidebar is the desktop navigation) | — |
 
-## 2026-10-16 — Mobile footer: the copyright row becomes a centred band (uncommitted)
+## 2026-10-16 — Mobile footer: the copyright row becomes a centred band
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `components/layout/mobile-footer.tsx`: the bottom row (left-aligned "© 2026 Sailent Foundation." with Back to top beside it, then the legal links with orange "|" separators) replaced by a full-width band — `-mx-5 -mb-6`, a 1px `#E8E8E8` top rule, `#FEF8EF` fill (`surface-warm` in dark mode), `px-3 pt-[13px] pb-[15px]` — with "Copyright © {year} **Sailent Foundation**. All Rights Reserved." centred (13px/20px `#666666`, the name semibold `#5F48A2`, "All Rights Reserved." kept unbroken) and the three legal links centred under it, 14px apart, no separators. Back to top moved to the right of the "People, Purpose, Possibilities" line, in a three-column grid that keeps the script centred; 36px below 360px, 44px above | Owner, with screenshots of the current row and a reference band (the message repeated last time's "contact us" wording; both images are the copyright row) | Measured at the reference's scale (≈1.67×): rule, line rows (49 vs 49, 100 vs 101 comp px) and band height (80 vs 81 px) match. One line at 390px; at 375 and below the notice breaks before "All Rights Reserved.". Kept ours: the three legal links in our order (the reference has two), the year from the server. The purple is the reference's, as the headings' `#19013E` and the amber bars are; contrast 6.8:1 (name) and 5.4:1 (text) on the band | — |
 
-## 2026-10-16 — Mobile footer: Contact Us as a card, and the link columns re-scaled (uncommitted)
+## 2026-10-16 — Mobile footer: Contact Us as a card, and the link columns re-scaled
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `components/layout/mobile-footer.tsx`: Contact Us becomes a card — 18px radius, 1px `#EDEDEB` border, `#FFFEFD` fill, `0 6px 18px rgb(0 0 0 / 5%)` shadow, `px-5 pt-[22px] pb-6` — with an `h2` "Contact Us" (16px bold `#19013E`) and a 34×3px `#E9A944` bar, both centred; the address, phone and email rows each with a solid `#E9A944` mark in a 14px column (a pin and an envelope drawn locally; the icon set's handset, filled), the text 13px on 19px lines in `#555555`, 20px between rows. The peach circle badges are gone. The three duplicated placeholder branches are folded into `addressLines` / `phone` / `email` values (same placeholders). `Mail` and `MapPin` imports dropped | Owner, with the reference card: "i want the same design for the contact us like that second image" | Measured at the reference's scale, the card's heading, bar, rows, text start and padding match within 2 comp px. Kept ours: the heading "Contact Us" (the reference says "Get In Touch"), the real details, no "Address:" prefix, and a handset rather than the reference's WhatsApp mark, since the row is a `tel:` link | — |
 | Same file, Explore and Information **re-scaled**: 16px headings (were 18), 34×3px bars (were 40×4), 13px links on a 28px rhythm (were 15 on 33), equal columns 40px apart (were 3fr/2fr with a 360px switch) | Correction. The earlier entry sized them assuming the owner's image was 1.41× a phone; the owner's screenshots are all ≈1.67× (the same reference bar, 56×5 comp px, appears in both images), so they were about 18% too large | Re-measured against the owner's Explore/Information image: heading height, bar, link pitch and the second column's offset (324 comp px) match within 1–3 comp px | — |
 
-## 2026-10-16 — Footer: "Donate Now" button removed, desktop and phone (uncommitted)
+## 2026-10-16 — Footer: "Donate Now" button removed, desktop and phone
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `components/layout/site-footer.tsx` and `components/layout/mobile-footer.tsx`: the orange "Donate Now" button under Contact Us removed, with the `Button`, `Heart` and `ChevronRight` imports it alone used; header comments updated. `lib/site-config.ts`: the `footerNav` note about the removed "Donate" link no longer says the button sits beside it. `AGENTS.md` §11 item 13: no Donate Now button in the footer | Owner: "remove donate now button from the footer" | The footer ends Contact Us with the email, then the script flourish (phone) or the flourish column (desktop). The site's donate actions are the pages' own buttons (17 on the homepage at desktop width, 15 at 390) and the phone menu's Donate Now; the desktop header bar has none. One white-on-`#EB6A1F` axe `color-contrast` node fewer on every page | — |
 
-## 2026-10-16 — Mobile footer: brand, mission and social links centred to the owner's comp (uncommitted)
+## 2026-10-16 — Mobile footer: brand, mission and social links centred to the owner's comp
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `components/layout/mobile-footer.tsx`: the brand block is centred — the lockup (mark, name, tagline; unchanged) in the middle, the mission line centred at 13px on 20px lines in `#555555`, max 20rem, and the social links centred as 38px white circles with a 1px `#E8E8E8` border, a soft `0 4px 10px rgb(0 0 0 / 6%)` shadow and `#303030` marks 16px (dark mode: surface fill, border token, `slate-200` marks, no shadow). Spacing set from the comp: lockup → text 20px, text → buttons 16px, buttons 10px apart. `components/layout/social-icons.tsx`: new `FacebookGlyph` and `LinkedInGlyph` — the project's own "f" and "in" cut-outs, filled, view box trimmed to the glyph — and a `SOCIAL_ICONS_GLYPH` map (bare f / in, solid YouTube, Instagram outline). The desktop footer keeps `SOCIAL_ICONS` | Owner, with a screenshot of the current mobile footer and a reference: "the second image content you can see in center i want exact like that" | Measured at the comp's scale (≈1.67× a 390px phone, the same as the owner's own screenshot): text glyph height and line pitch, button diameter, button pitch and icon extent match within 1 comp px; lockup → text 48 vs 49, text → buttons 51 vs 51. Kept ours, not the comp's: the logo and name, the mission wording and its sentence case (the comp sets its line in Title Case), and the four networks the organisation has (Facebook, Instagram, LinkedIn, YouTube — the comp shows Twitter instead of YouTube). The comp's cream grid background is not adopted | — |
 
-## 2026-10-16 — Mobile footer: Explore and Information redesigned to the owner's comp (uncommitted)
+## 2026-10-16 — Mobile footer: Explore and Information redesigned to the owner's comp
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `components/layout/mobile-footer.tsx`: the two collapsible `<details>` groups replaced by two always-open columns side by side, each a `nav` named by its `h2` — bold 18px display heading in `#19013E`, a 40×4px rounded `#E9A944` bar, then the links at 15px in `#555555` on a 33px rhythm (each link a 33px-tall target). The first column is the wider (3fr/2fr), as the design draws it; below 360px the two are equal so "Information" fits. Dark mode: white heading, `slate-400` links. Colours and sizes sampled from the owner's image (550px wide ≈ 1.41× a 390px phone). `ChevronDown` import dropped. `AGENTS.md` §11 item 13 records the layout | Owner, with an image of the two columns: "in mobile view of my footer use this design for explore and information" | The links are unchanged (Programs, Campaigns, Stories, Events / About Us, Volunteer, FAQ, Contact Us — §11 item 13): the comp's own labels ("Explore Campaign", "Monthly Campaign", "Blogs", "Privacy Policy"…) are its content, not ours. Desktop footer untouched. The "Contact Us" heading under the columns keeps its earlier style | — |
 
-## 2026-10-16 — Header: the Resources dropdown replaced by a plain "Blog" link (uncommitted)
+## 2026-10-16 — Header: the Resources dropdown replaced by a plain "Blog" link
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `lib/site-config.ts` `primaryNav`: the "Resources" group (desktop dropdown with Blog; phone group with Stories and Blog) replaced by a top-level `{ label: 'Blog', href: '/blog' }`; the nav's header comment updated. `components/layout/site-header.tsx`: a comment that cited the phone group's Stories row brought up to date (no code change). `AGENTS.md` §11 item 5 now says no Resources dropdown | Owner, with a screenshot of the one-item dropdown: "remove the resources dropdown and only keep the single blog page button" | The header reads Home, About, Programs, Campaigns, Stories, Get Involved ▾, Blog on a desktop and in the phone menu. Blog is marked current on `/blog` and on an article. Get Involved is the only menu left | — |
 
-## 2026-10-16 — Header: FAQ taken out of the navbar (uncommitted)
+## 2026-10-16 — Header: FAQ taken out of the navbar
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `lib/site-config.ts` `primaryNav`: the "FAQ — Common questions" item removed from the Resources dropdown (`children`) and from the phone menu's Resources group (`mobileChildren`). Only those two lines; the file's other uncommitted changes (footer columns, "Our team") belong to earlier work and are untouched. `AGENTS.md` §11 item 5 records the decision | Owner, with a screenshot of the dropdown item: "remove this page from the navbar" | The desktop Resources dropdown now lists Blog only; the phone menu's group lists Stories and Blog. `/faq` still exists and is still linked from the footer's Information column (`AGENTS.md` §11 item 13) and from the campaign page's "View All FAQs" | — |
 
-## 2026-10-16 — Campaign page: "More in <programme>" removed (uncommitted)
+## 2026-10-16 — Campaign page: "More in <programme>" removed
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `app/(public)/campaigns/[slug]/page.tsx` no longer renders the "More in <programme>" band after the FAQs (up to three other campaigns from the same programme, as cards). Its `Section` and `CampaignCard` imports and the `relatedCampaigns` list are gone. The programme's campaigns are still fetched, because the stories strip uses them to prefer that programme's stories when a campaign has none of its own. `components/campaigns/campaign-card.tsx`: header comment no longer names the "More in" card | Owner: "remove the section after the faq section in campaign program details page". The programme detail page has no FAQ section; on the campaign detail page this band is the only thing after the FAQs | A campaign page ends at its FAQs (or at Stories / Recent Supporters when it has no FAQs), then the footer. Before, it showed on campaigns sharing a programme, e.g. `skills-training-second-cohort` and `women-livelihoods-ranchi` ("More in Women Empowerment"). Programme pages still list their campaigns | — |
 
-## 2026-10-16 — Campaign page: "The Difference Your Support Can Make" removed (uncommitted)
+## 2026-10-16 — Campaign page: "The Difference Your Support Can Make" removed
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `app/(public)/campaigns/[slug]/page.tsx` no longer renders `<CampaignImpact />` and the section links lose their "Impact" entry; `e2e/campaign.spec.ts` "lays the sections out in the approved order" drops that heading. The component (`components/campaigns/campaign-impact.tsx`) and its unit test are left in place, unused by any page, so the block can be put back with one line if wanted | Owner, with a screenshot of the block: "remove this section from campaign details page". (The same block was removed and then restored earlier today, see the entries below; this is a fresh, explicit instruction) | A campaign page runs photograph, section links, the ways of giving, About, Stories, Recent Supporters, FAQs — on every campaign, with or without products | — |
 
-## 2026-10-16 — Campaign page: one design for every campaign, with or without products (uncommitted)
+## 2026-10-16 — Campaign page: one design for every campaign, with or without products
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -489,19 +528,19 @@ Tests: 7 new API integration tests (`events.spec.ts` "gate passes" and the payme
 | `components/donations/donation-builder.tsx`: without products, the "Choose an amount" panel carries `id="give"` and `scroll-mt-32`, and is where the page returns to from the checkout, so every `/campaigns/…#give` link on the site (cards, programme pages, receipts) still lands on the ask. `campaign-donation-summary.tsx`: the empty-basket hint reads "Pick an amount below." when there are no products to choose. `donation-layout.ts`: comment brought up to date | The `#give` anchor used to be on the status card | — | — |
 | `e2e/campaign.spec.ts`: new test "gives a campaign without products the same donation card and anchor" on `/campaigns/animal-care-pune#give` — no product grid or switch, the amount panel in view, "Donate" first in the section links, the card open on "Donate ₹500", no "Support This Campaign" | `AGENTS.md` §7: user flows get a Playwright test | — | — |
 
-## 2026-10-16 — The photography work of 16 October undone (uncommitted)
+## 2026-10-16 — The photography work of 16 October undone
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | Everything in the entry marked UNDONE below reversed: the 51 deleted images restored from the last commit, the 24 replaced ones (campaign, programme and story covers, testimonial portraits, `about-story-hills.webp`, `community-*.webp`, the event cover) restored to their committed versions, the 11 new photographs removed, and the code that pointed at them put back (`lib/mock/home.ts`, `lib/content/events.ts`, `lib/mock/stories.ts`, `components/dashboard/donations-table.tsx` as committed; the `toFixtureStory` helper taken out of `lib/content/stories.ts` and the two fallback paths in `dashboard/saved/page.tsx`, with that week's other work in those two files kept). The campaign page's Impact section had already been restored (entry above) | Owner: undo entry 2 completely | The site shows the images it had at the last commit. Lost: `blog-hero-banner.png`, an unused untracked source file that work deleted before the safety stash was made; `blog-hero-banner-v2.webp` (the banner in use) is unaffected. Left as found: a 3-line change in `lib/media/public-asset.ts` (a second `public` root lookup) that no entry claims | — |
 
-## 2026-10-16 — Campaign detail page: "The Difference Your Support Can Make" restored (uncommitted)
+## 2026-10-16 — Campaign detail page: "The Difference Your Support Can Make" restored
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `app/(public)/campaigns/[slug]/page.tsx` and `e2e/campaign.spec.ts` put back as committed: the `CampaignImpact` section and its "Impact" entry in the page's section navigation return (another session had removed them earlier today, see the photography entry below) | Owner: "only revert the last changes made on the campaign page" | A campaign's page shows the Impact section again; the listing page's changes of 2026-10-15 are untouched | — |
 
-## 2026-10-16 — [UNDONE the same day, see the entry above] High-definition documentary photography generated & mapped site-wide (uncommitted)
+## 2026-10-16 — [UNDONE the same day, see the entry above] High-definition documentary photography generated & mapped site-wide
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -519,7 +558,7 @@ Tests: 7 new API integration tests (`events.spec.ts` "gate passes" and the payme
 | **Stories gain a pull quote**: migration `0025_story_pull_quote.sql` adds `success_stories.pull_quote` (text, nullable); Drizzle schema, API DTO (`pullQuote`, 300 chars), `writableFields`, the public detail allowlist, the admin form ("Quote", under Summary), the admin types and action, the web `Story` type and mapping. Shown on the photograph only when an editor fills it, attributed to the subject's name (never on an anonymised story, since its name is withheld). API test added: served once published, `null` when there is none. The seed gives the demo stories quotes matching the design | The design's quote on the photograph had no field behind it; the owner chose to add one rather than leave the card out | Applied to `sailent_dev` and `sailent_e2e` locally. **Not applied to production** — a human runs it (`AGENTS.md` §8) | `0025` |
 | `components/stories/story-card.tsx`: `variant="compact"` — the "More stories" card: clean white card with border and shadow, inset thumbnail on the left (4:3), title and excerpt on the right, and bottom row with calendar date and "Read Story →" | Matches the design's bottom cards | Listing's row card is unchanged | — |
 
-## 2026-10-15 — Donor dashboard: "Together we create brighter futures." card removed (uncommitted)
+## 2026-10-15 — Donor dashboard: "Together we create brighter futures." card removed
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -531,7 +570,7 @@ Tests: 7 new API integration tests (`events.spec.ts` "gate passes" and the payme
 | `app/(dashboard)/dashboard/donations/page.tsx` (Payments): the header's top-right decoration — peach circle, three orange rays and a green leaf sprig — removed, with its `LeafSprig` import | Owner: "remove this also from the payment page" | The heading and intro text are unchanged | — |
 | `components/dashboard/dashboard-sidebar.tsx`: the `InspirationCard` (peach card with rays and leaf sprigs, "Together / we create / brighter / futures.") removed from under the sidebar, with its now-unused `LeafSprig`/`Rays` import. `dashboard-mobile-nav.tsx`: the same card removed from the phone menu drawer | Owner: "remove this section from user dashboard" | The sidebar ends at Logout; the phone drawer ends at Logout. The card was `aria-hidden`, so nothing changes for screen readers. `LeafSprig` and `Rays` stay in `components/about/decor.tsx` (still used by the saved, donations and dashboard-hero views) | — |
 
-## 2026-10-15 — Stories listing matched to the owner's redesign; leaner footer; no sideways scroll (uncommitted)
+## 2026-10-15 — Stories listing matched to the owner's redesign; leaner footer; no sideways scroll
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -544,7 +583,7 @@ Tests: 7 new API integration tests (`events.spec.ts` "gate passes" and the payme
 | `site-footer.tsx`: `overflow-clip` on the footer | Its corner leaves sat 24px outside it and gave **every page** a 24px sideways scroll (recorded 2026-10-14 as known) | `scrollWidth` equals the viewport on every page measured | — |
 | `app/admin/(workspace)/team/[id]/edit/page.tsx`: the unused `Link` import removed | An uncommitted edit of 2026-10-15 22:01 removed the page's only `Link` ("View the public page", with the "Our Team" link removals) and left the import, which failed `lint`, `typecheck` and `next build` | Admin team edit page unchanged otherwise | — |
 
-## 2026-10-14 — Stories hero matched to the owner's redesign (uncommitted)
+## 2026-10-14 — Stories hero matched to the owner's redesign
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -553,7 +592,7 @@ Tests: 7 new API integration tests (`events.spec.ts` "gate passes" and the payme
 
 Known: "Real change." (`#EB6A1F`) on the cream card measures 2.97:1 — a hair under the 3:1 WCAG AA threshold for large text (it is 3.03:1 on the blue-grey page, where the programs heading sits). axe flags it on `/stories`, which is not in the Playwright axe list. The breadcrumb keeps the site's chevron separator; the design draws a slash.
 
-## 2026-10-14 — Programs toolbar: "Sort by" and "Clear filters" removed (uncommitted)
+## 2026-10-14 — Programs toolbar: "Sort by" and "Clear filters" removed
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -562,13 +601,13 @@ Known: "Real change." (`#EB6A1F`) on the cream card measures 2.97:1 — a hair u
 | `programs-menu.tsx`: the caption and leading-icon props went with the sort control; it is the orange category menu only | — | — | — |
 | `e2e/journeys.spec.ts` › "programs listing": the "Sort by" test removed; the category test goes back through "All categories" instead of "Clear filters" | — | — | — |
 
-## 2026-10-14 — Programs page: "Support our programs" panel removed (uncommitted)
+## 2026-10-14 — Programs page: "Support our programs" panel removed
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `programs/page.tsx` no longer renders the closing "Support our programs" panel (eyebrow, heading, paragraph, Donate Now, two tilted photographs with leaf decorations); `components/programs/support-programs.tsx` deleted, nothing else used it. The listing section's bottom padding grows to 64–96px so the grid does not sit on the footer | Owner: "remove this section" | The programs page ends with the grid and "View More Programs", then the footer. `components/programs/decor.tsx` keeps its drawings (`auth-shell.tsx` and `dashboard/side-cards.tsx` still use some) | — |
 
-## 2026-10-14 — Programs toolbar: "Sort by" replaces the area chips (uncommitted)
+## 2026-10-14 — Programs toolbar: "Sort by" replaces the area chips
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -579,7 +618,7 @@ Known: "Real change." (`#EB6A1F`) on the cream card measures 2.97:1 — a hair u
 
 Deliberate: the sort options are the three above, chosen by the agent as the only orders the data supports without inventing anything; the mockup shows only "Most relevant".
 
-## 2026-10-14 — Programs listing: toolbar and compact cards, matched to the owner's mockup (uncommitted)
+## 2026-10-14 — Programs listing: toolbar and compact cards, matched to the owner's mockup
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -595,7 +634,7 @@ Deliberate: the sort options are the three above, chosen by the agent as the onl
 
 Deliberate differences from the mockup: descriptions, counts and photographs are the programmes' real ones (the mockup's copy is shorter, so some descriptions clamp at three lines with an ellipsis); Women Empowerment keeps its data-driven briefcase icon (the mockup draws people); the eyebrow uses the AA orange ink (`text-primary`).
 
-## 2026-10-14 — Filled orange is #EB6A1F everywhere; #C5531A retired (uncommitted)
+## 2026-10-14 — Filled orange is #EB6A1F everywhere; #C5531A retired
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -605,7 +644,7 @@ Deliberate differences from the mockup: descriptions, counts and photographs are
 
 **Accessibility:** white on #EB6A1F is 3.18:1, below WCAG AA's 4.5:1 for button-size text (#C5531A gave 4.54:1). axe `color-contrast` (WCAG 2.1 AA tags) now flags these fills: 26 elements on `/`, 13 on `/about`, 10 on `/campaigns` and `/donate`, 5 on `/programs`, 3 on `/sign-in` (1440px, light). Some, such as the About hero's buttons, were already white on #EB6A1F before this change. The Playwright axe checks (`shell`, `journeys`, `campaign`, `dashboard`, `phase-9` specs) are expected to fail on these until the owner decides otherwise; they were not changed.
 
-## 2026-10-14 — Programs listing: introduction, pills and cards matched to the owner's mockup (uncommitted)
+## 2026-10-14 — Programs listing: introduction, pills and cards matched to the owner's mockup
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -616,33 +655,33 @@ Deliberate differences from the mockup: descriptions, counts and photographs are
 
 Deliberate differences from the mockup: the eyebrow text uses the orange text ink (`text-primary` → #B74500) instead of the mockup's brighter orange, because 16px #EB6A1F text fails WCAG AA. The photographs are the programmes' real covers. (The active pill was #C5531A here at first; it became #EB6A1F with the site-wide change above.)
 
-## 2026-10-08 — Campaign card: smaller, evenly aligned figures (uncommitted)
+## 2026-10-08 — Campaign card: smaller, evenly aligned figures
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `campaign-card.tsx`: Donors / Raised / Goal in three equal columns (two when the donor count is hidden), each figure centred, dividers between; the tinted disc hugs its icon (22px around a 12px icon; was 30px around 14px), values 12–13px (were 14–15), labels 11px. Loading skeleton matched | Owner: "make little small and align properly", then "decrease the icon height and remove the right and left padding of the icon" — the content-sized columns left uneven spacing between the figures | Every campaign card (listing, homepage bands, programme pages, related campaigns). Replaces the "sized to content, edge to edge" spacing from earlier the same day. ₹10,00,000 fits at the narrowest card measured (80px column at 1024px) | — |
 
-## 2026-10-08 — Login card: text kept off the photograph; fits the screen after "Send OTP" (uncommitted)
+## 2026-10-08 — Login card: text kept off the photograph; fits the screen after "Send OTP"
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `AuthShell`: the welcome panel keeps its proportions (`aspect-[770/840]`) and the form column centres in it. The panel's peach shapes stretch with its height, so a panel only as tall as the short form squashed the greeting's ground and the text ran onto the photograph | Owner: the welcome text overlapped the photograph | Card height is now set by the panel (622px at 1470px wide) and does not jump when the code step opens | — |
 | `sign-in-form.tsx`: "Send OTP" is hidden once a code is sent ("Resend OTP" below does that job); tighter code-step spacing. `/sign-in` and `/sign-up`: one-line intro, smaller heading | Owner: the card grew past the screen after "Send OTP" | Whole card visible on a 1470×735 window in both states (dev preview banner aside) | — |
 
-## 2026-10-08 — Login: the OTP step appears after "Send OTP"; footer link targets (uncommitted)
+## 2026-10-08 — Login: the OTP step appears after "Send OTP"; footer link targets
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `sign-in-form.tsx`: the "Enter OTP" divider, the OTP field and the Login button render only once a code has been sent; focus then moves to the OTP field. "Use a different email?" hides them again until the next send | Owner request | Before sending, the card shows only the email field, Send OTP and Sign Up. `dashboard.spec.ts` now also asserts the OTP field and Login button are absent before sending | — |
 | `site-footer.tsx`: each link in the footer's link lists is a 24px-high target (`min-h-6`), rows 2px apart (was 16px text 6px apart) | WCAG 2.2 target size (2.5.8): the links had 23.2px of clear space, flagged by axe whenever sub-pixel positions fell badly (seen on `/sign-in` after sending a code) | Footer lists about 4px taller per row; every page | — |
 
-## 2026-10-08 — Login and Sign Up card made smaller (uncommitted)
+## 2026-10-08 — Login and Sign Up card made smaller
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `AuthShell`: card capped at 66rem (was 88.5rem); the welcome panel's fixed `min-h-[52rem]` removed, so the form sets the height; tighter padding; smaller brand lockup. `/sign-in`, `/sign-up` and `sign-in-form.tsx`: smaller heading, text and spacing; fields and buttons 44px (`h-11`, was 56px). The panel's tagline may shrink to 11px so it stays on its peach ground at 1024px | Owner: the card was too big and not visible without scrolling | Card 917px → 636px tall; the whole card shows on a 1470×830 window. Layout, wording and behaviour unchanged; touch targets stay ≥ 44px | — |
 
-## 2026-10-08 — Header: Login / Sign Up replaces Donate (uncommitted)
+## 2026-10-08 — Header: Login / Sign Up replaces Donate
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -650,7 +689,7 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | Phone menu: a "Login / Sign Up" row ("My account" when signed in) above Search | Owner decision: add login to the menu; Donate stays in the menu | — | — |
 | Tests: `dashboard.spec.ts` — signed out, the header offers Login / Sign Up (bar or menu) and no Donate in the bar; signed in, the header shows the account badge and no login | Refusal and state paths | — | — |
 
-## 2026-10-08 — Stories page redesigned to the owner's design (uncommitted)
+## 2026-10-08 — Stories page redesigned to the owner's design
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -662,7 +701,7 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | Leaf decorations drawn whole: the top leaf of every sprig on the page (hero, featured story, closing band) was cut off by its SVG box (`viewBox` started at 0; the top leaf rises to y = −22). Boxes now start above it, and each placement is rescaled so every other leaf keeps its size and position | Owner: "every leaf the top is not complete" | `/stories` only | — |
 | Known differences from the design: it shows nine stories and seven categories; the local data has three published stories in three categories, so only those appear and "View More" is hidden. The CTA photos are the closest available (children walking arm in arm, hands planting). Navy button labels follow the owner's colour decision | Data and owner decisions | — | — |
 
-## 2026-10-09 — Fix: signed-in donors (and staff) logged out ~15 minutes into a visit (uncommitted)
+## 2026-10-09 — Fix: signed-in donors (and staff) logged out ~15 minutes into a visit
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -671,7 +710,7 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | `lib/auth/token-store.ts`: a page render never rotates a token — where cookies cannot be saved it uses the token while valid and never calls the API; route handlers and server actions keep their fallback refresh. Shares cookie options and parsing with the middleware | The root cause | — | — |
 | Tests: `session-refresh.test.ts` (23), `token-store.test.ts` (4), `middleware.test.ts` (rewritten, 23: refresh on public pages and the dashboard; expired / revoked / replayed / forged refresh tokens and a garbled cookie clear the session without looping; API down, failing or rate-limiting keeps it; donor and staff never refresh each other). `e2e/dashboard.spec.ts`'s sign-out test first makes the stored session look expired and browses `/`, `/campaigns`, `/dashboard` — still signed in on every page, and the first response's `Set-Cookie` carries a rotated token (checked in the header, not the cookie jar: the production build marks the cookie `Secure`, which WebKit will not store over the suite's plain `http://localhost`) | CLAUDE.md §5 refusal paths | All 48 signed-in donor tests pass on the four projects | — |
 
-## 2026-10-08 — Donor dashboard redesigned to the owner's design (uncommitted)
+## 2026-10-08 — Donor dashboard redesigned to the owner's design
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -686,14 +725,14 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | Right-hand cards re-matched to the owner's card design: My Profile (17px title, 58px avatar, solid phone / pin / calendar icons, "Member since Oct 2024", Indian mobiles shown as "+91 98765 43210" — other numbers exactly as stored), Your Impact (solid green leaf, narrow four-line text, a sprout-in-soil illustration with the sun), Explore More Campaigns (peach rise with pointed leaves, more room under the button). Artwork in `components/dashboard/decor.tsx`; `formatPhone` unit-tested | Owner: "exact 100 percent" | The column still fits the owner's screen (ends at 749px, 793px with a location row). Unchanged by design: initials instead of a photo (none is stored), the button's navy label (AGENTS.md §11 contrast rule), and no Location row when the donor has no city | — |
 | `dashboard/profile/page.tsx`: each `<dl>` row is one `<div>` holding only its `<dt>`/`<dd>` (the hint moved inside the `<dd>`) | axe `definition-list` failed on the page before this work | Markup only | — |
 
-## 2026-10-08 — White header on a tinted page (uncommitted)
+## 2026-10-08 — White header on a tinted page
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | Light `--background` is now `oklch(0.958 0.016 245)` (about #e9f3fb) instead of `--neutral-50` (about #f6fbff); the header bar is `bg-surface` (pure white, opaque) instead of `bg-background/95` | Owner decision: the header and the pages were the same colour and did not read as different surfaces | Every public and dashboard page in light mode; white cards and panels now stand out from the page. Dark mode is unchanged. `--surface-tint` stepped down to `oklch(0.94 0.028 250)` so the tinted bands (Who We Are, the Programs breadcrumb band, campaign sections) still read as bands. `--muted`/`--surface-sunken` (`--neutral-100`) are now a touch lighter than the page; they are used inside cards, where that is fine | — |
 | Two contrast fixes the darker page needed: light `--info-action` (small blue links, "View All …") is `oklch(0.515 0.155 250)`, a step below `--accent-600`, which measured 4.43:1 on the tinted page and 4.19:1 on the band; "View More Programs" is a solid peach (`--cta-50`) instead of 10% orange, which turned grey over the tinted page (4.34:1) | WCAG AA | Every blue text link and info button, light mode only (white on the button is higher-contrast than before). axe clean on /, /programs, /stories, /campaigns, a campaign page, /about, /sign-in and /donate | — |
 
-## 2026-10-08 — Login page redesigned to the owner's design; a Sign Up explanation page (uncommitted)
+## 2026-10-08 — Login page redesigned to the owner's design; a Sign Up explanation page
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -704,7 +743,7 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | `lib/fonts.ts`: the scoped Manrope 800 now shared by the programs hero and the sign-in/sign-up headings | Designs set these headings heavier | Only those pages load it | — |
 | `e2e/dashboard.spec.ts`: the three signed-out sign-in checks follow the new wording (heading, "Send OTP", OTP field) with the same intent, and now also follow Sign Up to `/sign-up` | Design change | — | — |
 
-## 2026-10-08 — Programs page redesigned to the owner's design (uncommitted)
+## 2026-10-08 — Programs page redesigned to the owner's design
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -715,7 +754,7 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | Tests: `programs-query.test.ts` (0, 1, 3, 6, 7 and 23 programmes; area matching; fallbacks) and `program-card.test.tsx`; a `programs listing` block in `e2e/journeys.spec.ts` (pill narrows the grid; View More adds the rest) | Brief | — | — |
 | Hero re-matched to the owner's banner reference: ExtraBold heading (Manrope 800, loaded only by `programs-hero.tsx`, so other pages' fonts are unchanged); navy body text; the design's principle labels and icons (leafy stem, three people, heart); a pale sun with three thick rays, a taller peach shape, larger orange leaf and broad sage sprig (whole, in clear space just right of the photo so it neither covers the photo nor is cut off — owner requests; the photo takes 82% of its column to make that room, and the sprig's drawing box was enlarged so no leaf is clipped); the photo outline traced from the design; a wider frame so the girl appears at about the design's scale. Between 1024 and 1440px the copy wraps narrower and the left-hand decorations sit closer, so they never cross the text | Owner: "exact 100 percent" match of the hero | /programs only. The "Stronger communities" card stays removed (owner's earlier request). The design's taller crop of the photo is not available: the supplied photo is a 625×314 crop, so the girl is shown slightly larger than in the design | — |
 
-## 2026-10-08 — Campaign card redesigned to the owner's card design (uncommitted)
+## 2026-10-08 — Campaign card redesigned to the owner's card design
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -724,7 +763,7 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | New `--wash-coral` / `--wash-coral-ink` tint pair (light and dark) in `tokens.css` | The design's red-orange Donors and Goal marks sit between the rose and amber tints | No raw colours in the component | — |
 | Kept: the category pill's 60% wash (full wash puts the blue and gold inks at 4.36:1 and 4.24:1), Education's closed-book icon (shared with the approved cause tiles), the navy Donate label | Contrast and the approved cause tiles | — | — |
 
-## 2026-10-07 — Dark mode; search icon removed from the header bar (uncommitted)
+## 2026-10-07 — Dark mode; search icon removed from the header bar
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -734,7 +773,7 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | Search icon removed from the header bar at every width | Owner request | Search stays in the phone menu and at `/search` | — |
 | About, "Check us before you give": the Donate Now button is hidden on phones (below `sm`) | Owner request | On a phone the section's one action is "Ask us anything"; tablet and desktop unchanged | — |
 
-## 2026-10-07 — Brand primary colour #EB6A1F; desktop About sections and phone header bar to the owner's mockups (uncommitted)
+## 2026-10-07 — Brand primary colour #EB6A1F; desktop About sections and phone header bar to the owner's mockups
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -744,7 +783,7 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | Form focus: `Input`, `Textarea`, `SelectTrigger` border and a flush 2 px ring in `#EB6A1F`; an error keeps its red border. Radio dot `#EB6A1F`; product selector's selected row on `#FFF7ED` | Brief §10–11 | Other focus outlines keep the site-wide ring | — |
 | About: hero, "How this started" and "Our presence" matched to the owner's desktop mockups (type sizes, collage proportions, larger map in Mercator projection, card, decorations); phone header bar (no Donate pill below `sm`, search + menu icons, one-line name with tagline, orange glyph) | Owner's mockups | Layout below the matched widths adapts; no new data or copy | — |
 
-## 2026-10-07 — Mobile menu matched to the owner's menu design (uncommitted)
+## 2026-10-07 — Mobile menu matched to the owner's menu design
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -752,7 +791,7 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | Group links in the phone menu: Get Involved → Donate, Volunteer with Us, Partner with Us (/contact); Resources → Stories, Blog, FAQ (`NavEntry.mobileChildren`) | The design lists these | The desktop dropdowns are unchanged. Events and Our Team are no longer in the phone menu; both remain in the footer | — |
 | Measured to the design: 44px rows with a 38px capsule 10px from the edges; sub-links indented and 32px apart in slate blue; a 50px Donate Now; dividers above Search and above the social row; a solid envelope for Contact Us; solid Facebook, LinkedIn and YouTube marks (`SOCIAL_ICONS_SOLID`); white panel | Design | Sub-links are below the 44px target in `docs/design-system.md` (recorded in `DEVELOPMENT_STATUS.md` §9, row 26); they pass WCAG 2.2 AA (24px) | — |
 
-## 2026-10-07 — Mobile footer to the approved mobile design (uncommitted)
+## 2026-10-07 — Mobile footer to the approved mobile design
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -762,7 +801,7 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | `social-icons.tsx`: one icon map shared by the header menu and both footers, with an X logo for "X"/"Twitter" | The header and footer had separate copies, with the old Twitter bird | Shows only when an X/Twitter link is entered in Admin → Settings | — |
 | Legal row keeps the existing links (Privacy Policy, Terms of Use, Donation Policy) | The design's "Sitemap" has no page for people (`/sitemap` is a 404; only the XML index for search engines exists); no refund policy (Phase 9) | — | — |
 
-## 2026-10-07 — Mobile menu redesigned to the approved mobile design (uncommitted)
+## 2026-10-07 — Mobile menu redesigned to the approved mobile design
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -770,13 +809,13 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 | Header menu button always labelled "Open menu" (state in `aria-expanded`) | The open menu has its own "Close menu"; two of the same name were ambiguous | `shell.spec` unchanged and passing | — |
 | `SiteHeader` takes `socialLinks`; the public and dashboard layouts pass `getOrganisation().social`. `BrandLockup` gains `tagline="always"` | Social row comes from Admin → Settings, like the footer; the design shows the tagline in the menu | Twitter/X icon supported when that link is entered | — |
 
-## 2026-10-07 — About page: phone layout to the mobile mockup (uncommitted)
+## 2026-10-07 — About page: phone layout to the mobile mockup
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
 | `/about` below `sm` (640px) only: larger four-line headline, full-width stacked buttons, rays and leaves beside the photo, horizontal "Focused on people" card; focus areas 2×2 centred; story reflowed (first paragraph, village photo, rest, two photos, centred button) via `contents` + `order`; Mission/Vision icon-and-title row; presence reordered (map, full-width button, rounded photo, handwritten line); "Full team and board" under the cards; registration list in two columns with the buttons after it | Owner's mobile mockup | Desktop and tablet pixel-identical at 640/768/1024/1280/1440 (screenshot diff) | — |
 
-## 2026-10-07 — Typography system: Manrope + Inter (uncommitted)
+## 2026-10-07 — Typography system: Manrope + Inter
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
@@ -810,7 +849,7 @@ Deliberate differences from the mockup: the eyebrow text uses the orange text in
 
 **Not done (by scope):** no deployment, no production database access, no secrets created, no DNS/TLS, no Razorpay changes, no SEO. **Validation:** `DEVELOPMENT_STATUS.md` §2.
 
-## 2026-10-07 — About page redesign (uncommitted)
+## 2026-10-07 — About page redesign
 
 | Change | Reason | Impact | Migration |
 |---|---|---|---|
