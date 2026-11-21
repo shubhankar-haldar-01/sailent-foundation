@@ -6,190 +6,89 @@ import type { Campaign } from '@/lib/mock/types';
 import { campaignFaqsWithDefaults } from '../campaign-default-faqs';
 
 /*
-  Every campaign gets related FAQs, built from its own record (owner,
-  2026-11-21): what it pays for, where and who it helps, how much is needed
-  and until when. Nothing invented; its own FAQs first and winning.
+  Every campaign ends its FAQs with five general questions, modelled on a
+  peer's list and rewritten to records only (owner, 2026-11-21). The owner
+  removed "Can I give every month?" and the three campaign-specific ones.
 */
 
 const BASE = campaigns[0]!;
+const SITE = {
+  organisationName: 'Sailent Foundation',
+  programmes: ['Education', 'Healthcare'],
+  causes: ['Education', 'Animal Welfare'],
+};
 
-function build(overrides: Partial<Campaign> = {}) {
-  return campaignFaqsWithDefaults({ ...BASE, faqs: [], ...overrides });
+function build(overrides: Partial<Campaign> = {}, site = SITE) {
+  return campaignFaqsWithDefaults({ ...BASE, faqs: [], ...overrides }, site);
 }
 
 describe('campaignFaqsWithDefaults', () => {
-  it('gives a campaign with no FAQs of its own three questions about it', () => {
-    const faqs = build({
-      title: 'School Kits for Jharkhand',
-      location: 'Ranchi, Jharkhand',
-      programName: 'Education',
-      status: 'active',
-      donation: { state: 'open' },
-      endsAt: '2026-11-30T00:00:00+05:30',
-      progress: undefined,
-      goalAmount: 45_000_000,
-      amountRaised: 31_860_000,
-      beneficiaryTarget: 500,
-    });
-
-    expect(faqs.map((faq) => faq.question)).toEqual([
-      'What does a donation to School Kits for Jharkhand pay for?',
-      'Where does this campaign work, and who does it help?',
-      'How much is still needed, and until when can I give?',
+  it('gives every campaign the five general questions, in order', () => {
+    expect(build().map((faq) => faq.question)).toEqual([
+      'What is Sailent Foundation?',
+      'How do I know my donation is used well?',
+      'What causes can I support?',
+      'Do I get a tax benefit on my donation?',
+      'Besides donating, how else can I help?',
     ]);
-    // Its own products and prices.
-    const [paysFor, whereWho, progress] = faqs;
-    expect(paysFor!.answer).toContain(`${BASE.products[0]!.name} (₹`);
-    // Its own place, programme and people.
-    expect(whereWho!.answer).toContain(
-      'It works in Ranchi, Jharkhand, as part of our Education programme.',
+  });
+
+  it('no longer has the questions the owner removed', () => {
+    const questions = build()
+      .map((faq) => faq.question)
+      .join(' | ');
+    expect(questions).not.toMatch(
+      /every month|still needed|until when|where does this campaign work|pay for/i,
     );
-    expect(whereWho!.answer).toContain(BASE.beneficiaryContext.slice(0, 40));
-    expect(whereWho!.answer).toContain('It aims to reach 500 people.');
-    // The live figures and the same end date the page header shows.
-    expect(progress!.answer).toContain('₹3,18,600 has been raised of the ₹4,50,000 goal (70%).');
-    expect(progress!.answer).toContain('₹1,31,400 is still needed.');
-    expect(progress!.answer).toContain('The campaign ends on 30 November 2026.');
   });
 
-  it('describes a campaign without products in its own words', () => {
-    const faqs = build({
-      products: [],
-      supportProvides: null,
-      shortDescription: 'Meals for children under five',
-    });
-    expect(faqs[0]).toEqual({
-      question: `What does a donation to ${BASE.title} pay for?`,
-      answer: 'Meals for children under five.',
-    });
+  it('says only what the site can stand behind', () => {
+    const text = build()
+      .map((faq) => `${faq.question} ${faq.answer}`)
+      .join(' ');
+    expect(text).toContain(
+      'Relief is claimed through Form 10BE, issued after our annual Form 10BD filing.',
+    );
+    expect(text).toContain(
+      'Sailent Foundation is an Indian NGO. Its programmes are Education and Healthcare',
+    );
+    expect(text).toContain('Education and Animal Welfare.');
+    for (const claim of [
+      /trusted/i,
+      /100%/,
+      /verified/i,
+      /80G certif/i,
+      /refund/i,
+      /partner/i,
+      /deduction/i,
+    ]) {
+      expect(text).not.toMatch(claim);
+    }
   });
 
-  it('keeps the campaign’s own FAQs first, and drops a default whose topic they cover', () => {
+  it('names progress updates and documents only when the campaign has them', () => {
+    const none = build({ updates: [], documents: [] }).find((faq) =>
+      /used well/.test(faq.question),
+    )!;
+    expect(none.answer).toBe(
+      'This page shows how much has been raised so far. You also receive a receipt by email for every donation.',
+    );
+    const some = build({
+      updates: [{ id: 'u', title: 't', body: 'b', publishedAt: '2026-11-01' }],
+    }).find((faq) => /used well/.test(faq.question))!;
+    expect(some.answer).toContain('the progress updates we publish for this campaign');
+  });
+
+  it('keeps the campaign’s own FAQs first, gives way on the same topic, and leaves out causes when there are none', () => {
     const own = [
-      { question: 'How is the money spent?', answer: 'On kits.' },
       { question: 'Will I get a receipt?', answer: 'Yes.' },
+      { question: 'Is my donation eligible for tax deduction under Section 80G?', answer: 'x' },
     ];
-    const faqs = build({ faqs: own });
-
+    const faqs = build({ faqs: own }, { ...SITE, causes: [] });
     expect(faqs.slice(0, 2)).toEqual(own);
-    expect(faqs.map((faq) => faq.question)).not.toContain(
-      `What does a donation to ${BASE.title} pay for?`,
-    );
-    expect(faqs).toHaveLength(4); // own two, then where/who and progress
-  });
-
-  it('does not treat "Where does my money go?" as covering where the campaign works', () => {
-    const faqs = build({ faqs: [{ question: 'Where does my money go?', answer: 'To kits.' }] });
     const questions = faqs.map((faq) => faq.question);
-    expect(questions).toContain('Where does this campaign work, and who does it help?');
-    expect(questions).not.toContain(`What does a donation to ${BASE.title} pay for?`);
-  });
-
-  it('says a finished or paused campaign is not taking donations, and invents nothing missing', () => {
-    const ended = build({
-      status: 'completed',
-      progress: undefined,
-      goalAmount: 1_000_000,
-      amountRaised: 1_000_000,
-    });
-    expect(ended.at(-1)).toEqual({
-      question: 'How much did this campaign raise?',
-      answer:
-        '₹10,000 has been raised of the ₹10,000 goal (100%). It is no longer accepting donations.',
-    });
-
-    const paused = build({ status: 'paused' });
-    expect(paused.at(-1)!.answer).toMatch(/Donations are paused for now\.$/);
-
-    const bare = build({
-      location: null,
-      beneficiaryContext: '',
-      goalAmount: 0,
-      progress: undefined,
-    });
-    expect(bare.map((faq) => faq.question)).toEqual([
-      `What does a donation to ${BASE.title} pay for?`,
-    ]);
-  });
-
-  describe('the general questions (modelled on a peer list, owner 2026-11-21)', () => {
-    const SITE = {
-      organisationName: 'Sailent Foundation',
-      programmes: ['Education', 'Healthcare'],
-      causes: ['Education', 'Animal Welfare'],
-    };
-    const withSite = (overrides: Partial<Campaign> = {}) =>
-      campaignFaqsWithDefaults({ ...BASE, faqs: [], ...overrides }, SITE);
-
-    it('follow the campaign’s own three, in the peer list’s order', () => {
-      expect(
-        withSite()
-          .map((faq) => faq.question)
-          .slice(3),
-      ).toEqual([
-        'What is Sailent Foundation?',
-        'Can I give every month?',
-        'How do I know my donation is used well?',
-        'What causes can I support?',
-        'Do I get a tax benefit on my donation?',
-        'Besides donating, how else can I help?',
-      ]);
-    });
-
-    it('say only what the site can stand behind', () => {
-      const text = withSite()
-        .map((faq) => `${faq.question} ${faq.answer}`)
-        .join(' ');
-      expect(text).toContain(
-        'Relief is claimed through Form 10BE, issued after our annual Form 10BD filing.',
-      );
-      expect(text).toContain('one-time gift; there are no monthly or automatic payments');
-      expect(text).toContain(
-        'Sailent Foundation is an Indian NGO. Its programmes are Education and Healthcare',
-      );
-      expect(text).toContain('Education and Animal Welfare.');
-      for (const claim of [
-        /trusted/i,
-        /100%/,
-        /verified/i,
-        /80G certif/i,
-        /refund/i,
-        /partner/i,
-        /deduction/i,
-      ]) {
-        expect(text).not.toMatch(claim);
-      }
-    });
-
-    it('name progress updates and documents only when the campaign has them', () => {
-      const none = withSite({ updates: [], documents: [] }).find((faq) =>
-        /used well/.test(faq.question),
-      )!;
-      expect(none.answer).toBe(
-        'This page shows how much has been raised so far. You also receive a receipt by email for every donation.',
-      );
-      const some = withSite({
-        updates: [{ id: 'u', title: 't', body: 'b', publishedAt: '2026-11-01' }],
-      }).find((faq) => /used well/.test(faq.question))!;
-      expect(some.answer).toContain('the progress updates we publish for this campaign');
-    });
-
-    it('give way to the campaign’s own FAQ on the same topic, and leave out causes when there are none', () => {
-      const faqs = campaignFaqsWithDefaults(
-        {
-          ...BASE,
-          faqs: [
-            {
-              question: 'Is my donation eligible for tax deduction under Section 80G?',
-              answer: 'x',
-            },
-          ],
-        },
-        { ...SITE, causes: [] },
-      );
-      const questions = faqs.map((faq) => faq.question);
-      expect(questions).not.toContain('Do I get a tax benefit on my donation?');
-      expect(questions).not.toContain('What causes can I support?');
-    });
+    expect(questions).not.toContain('Do I get a tax benefit on my donation?');
+    expect(questions).not.toContain('What causes can I support?');
+    expect(questions).toHaveLength(5); // own two, then about, used well, other ways
   });
 });

@@ -10,7 +10,15 @@ Newest first.
 
 ---
 
-## 2026-11-21 — General FAQs on every campaign, modelled on a peer's list (uncommitted)
+## 2026-11-21 — Four default campaign FAQs removed (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| Removed "Can I give every month?", "How much is still needed, and until when can I give?", "Where does this campaign work, and who does it help?" and "What does a donation to <campaign> pay for?" | Owner | Each campaign now ends with five general defaults: what Sailent Foundation is, used well, causes, tax relief, other ways to help (`AGENTS.md` §11 item 21) |
+
+Tests: the default-FAQ tests rewritten for the five (web 530/530), including a check that the removed questions do not return.
+
+## 2026-11-21 — General FAQs on every campaign, modelled on a peer's list
 
 | Change | Reason | Impact |
 |---|---|---|
