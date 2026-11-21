@@ -1,0 +1,139 @@
+== FONTS (next/font)
+apps/web/src/app/layout.tsx:2:import { Caveat, Inter, Manrope } from 'next/font/google';
+apps/web/src/lib/fonts.ts:1:import { Manrope } from 'next/font/google';
+apps/web/src/lib/fonts.ts:17:export const headingExtraBold = Manrope({ subsets: ['latin'], weight: '800', display: 'swap' });
+apps/web/src/app/layout.tsx:40:  weight: ['400', '500', '600'],
+apps/web/src/app/layout.tsx:52:  weight: ['600', '700'],
+
+== HEX COLOURS outside tokens.css (files, count)
+  70 apps/web/src/app/(public)/about/page.tsx
+  60 apps/web/src/components/events/download-pass.ts
+  37 apps/web/src/app/(public)/stories/[slug]/page.tsx
+  35 apps/web/src/components/admin/identity-card-dialog.tsx
+  33 apps/web/src/components/layout/mobile-footer.tsx
+  28 apps/web/src/components/events/event-registration-flow.tsx
+  26 apps/web/src/components/home/newsletter-section.tsx
+  24 apps/web/src/components/home/spotlight-section.tsx
+  23 apps/web/src/components/home/who-we-are.tsx
+  22 apps/web/src/components/admin/gate-kiosk-view.tsx
+  21 apps/web/src/components/events/event-entry-pass.tsx
+  19 apps/web/src/components/layout/site-footer.tsx
+  17 apps/web/src/components/events/event-summary-card.tsx
+  16 apps/web/src/components/home/impact-stats.tsx
+  14 apps/web/src/components/blog/blog-sidebar.tsx
+  12 apps/web/src/components/events/event-registration-hero.tsx
+  11 apps/web/src/components/donations/payment-logos.tsx
+  10 apps/web/src/components/programs/program-detail-hero.tsx
+  10 apps/web/src/components/programs/program-about-section.tsx
+   9 apps/web/src/components/home/stories-and-events.tsx
+   8 apps/web/src/components/dashboard/status-pill.tsx
+   8 apps/web/src/components/campaigns/campaigns-hero.tsx
+   7 apps/web/src/components/admin/event-check-in-scanner.tsx
+   6 apps/web/src/components/team/team-directory.tsx
+   6 apps/web/src/components/events/more-events-strip.tsx
+   6 apps/web/src/app/global-error.tsx
+   6 apps/web/src/app/admin/gate/page.tsx
+   5 apps/web/src/components/blog/post-card.tsx
+   4 apps/web/src/components/programs/program-campaigns-section.tsx
+   4 apps/web/src/components/about/india-presence-map.tsx
+   4 apps/web/src/app/(dashboard)/dashboard/saved/page.tsx
+   3 apps/web/src/components/home/featured-campaigns.tsx
+   3 apps/web/src/components/home/campaign-showcase.tsx
+   3 apps/web/src/components/dashboard/dashboard-mobile-nav.tsx
+   2 packages/ui/src/primitives/select.tsx
+   2 packages/ui/src/primitives/input.tsx
+   2 packages/ui/src/primitives/button.tsx
+   2 apps/web/src/styles/globals.css
+   2 apps/web/src/components/team/member-card.tsx
+   2 apps/web/src/components/team/leadership-card.tsx
+total hex occurrences:
+     606
+distinct hex values (top 30):
+ 179 #EB6A1F
+  38 #0F172A
+  22 #64748B
+  18 #102A43
+  16 #475569
+  16 #0070BA
+  15 #071630
+  11 #FFFFFF
+  11 #F8FAFC
+  11 #D45914
+   9 #E2E8F0
+   7 #E9A944
+   6 #555555
+   6 #334155
+   6 #0A2540
+   5 #FFFBF5
+   5 #FFF0E6
+   5 #FFEDD5
+   5 #EADBCC
+   5 #486581
+   5 #0284C7
+   4 #FFF2E5
+   4 #F97316
+   4 #E5BEAA
+   4 #CBD5E1
+   4 #94A3B8
+   4 #2E63AD
+   3 #FFF9F2
+   3 #FFF7ED
+   3 #FEEFE6
+
+== ARBITRARY text sizes
+  40 text-[11px]
+  37 text-[0.9375rem]
+  37 text-[0.8125rem]
+  31 text-[0.6875rem]
+  24 text-[10px]
+  19 text-[13px]
+  15 text-[1.0625rem]
+  14 text-[0.625rem]
+  12 text-[15px]
+  10 text-[0.875rem]
+   7 text-[38px]
+   7 text-[1.75rem]
+   6 text-[1.375rem]
+   5 text-[13.5px]
+   5 text-[0.75rem]
+   4 text-[9px]
+   4 text-[8px]
+   4 text-[28px]
+   3 text-[2.25rem]
+   3 text-[1.125rem]
+== SHADOW classes
+ 165 shadow-xs
+  72 shadow-sm
+  43 shadow-md
+  17 shadow-lg
+   9 shadow-none
+   6 shadow-[0_4px_24px_rgba(0,0,0,0.03)]
+   3 shadow-xl
+   3 shadow-2xl
+   2 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]
+   2 shadow-[0_4px_14px_rgba(2,132,199,0.22)]
+   2 shadow-[0_14px_30px_-5px_rgba(34,197,94,0.42)]
+   2 shadow-[0_12px_28px_-6px_rgba(34,197,94,0.32)]
+   2 shadow-[0_12px_28px_-6px_rgba(225,29,72,0.24)]
+   1 shadow-[0_8px_30px_rgb(0,0,0,0.04)]
+   1 shadow-[0_8px_28px_rgba(0,0,0,0.07)]
+   1 shadow-[0_6px_18px_rgba(0,0,0,0.05)]
+   1 shadow-[0_6px_14px_-8px_rgb(16_42_67/0.6)]
+   1 shadow-[0_6px_14px_-8px_rgb(16_42_67/0.5)]
+   1 shadow-[0_4px_25px_-4px_rgba(0,0,0,0.05)]
+   1 shadow-[0_4px_14px_rgba(7,22,48,0.14)]
+== RADIUS classes
+ 375 rounded-full
+ 250 rounded-lg
+ 173 rounded-xl
+ 166 rounded
+ 136 rounded-2xl
+  99 rounded-md
+  66 rounded-sm
+  16 rounded-3xl
+   4 rounded-none
+== ICON LIBRARIES
+ 215 from 'lucide-react'
+== RAW <button> with own colour classes (not the kit Button)
+       0
+      52

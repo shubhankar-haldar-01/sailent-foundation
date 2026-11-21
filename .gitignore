@@ -46,3 +46,7 @@ apps/web/public/uploads/
 # Local https for phones (scripts/dev-https.mjs): certificates and the local
 # certificate authority's PRIVATE KEY. Never commit.
 .dev-https/
+
+# Visual audit screenshots: large, local only (owner, 2026-11-21).
+docs/design-audit/before/
+docs/design-audit/after/
