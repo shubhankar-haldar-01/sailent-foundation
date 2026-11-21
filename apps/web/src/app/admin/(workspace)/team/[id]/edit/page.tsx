@@ -78,7 +78,7 @@ export default async function EditTeamMemberPage({
                     <Users className="text-primary size-4" />
                   </div>
                   <div>
-                    <CardTitle className="text-base font-semibold">Publication Lifecycle</CardTitle>
+                    <CardTitle className="text-base font-semibold">Publication lifecycle</CardTitle>
                     <p className="text-caption text-muted-foreground mt-1">
                       {member.status === 'published'
                         ? 'Currently visible on the public About page directory.'
@@ -124,7 +124,7 @@ export default async function EditTeamMemberPage({
           {member.slugHistory?.length ? (
             <Card className="border-border">
               <CardHeader className="border-border border-b pb-4">
-                <CardTitle className="text-base font-semibold">Previous Addresses</CardTitle>
+                <CardTitle className="text-base font-semibold">Previous addresses</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <ul className="text-caption text-muted-foreground space-y-1">

@@ -20,8 +20,8 @@ export interface EventProgramme {
  * One upcoming event on /events, matched to the owner's design (2026-10-17).
  *
  * The photograph with its date block; the programme chip; the title, the
- * summary, where and when; and the one thing a visitor can do — "Register Now"
- * while there is a place, or why there is not — beside "View Details".
+ * summary, where and when; and the one thing a visitor can do — "Register now"
+ * while there is a place, or why there is not — beside "View details".
  *
  * The full card is clickable: hovering or clicking anywhere navigates to
  * the event's detail page.
@@ -162,7 +162,7 @@ export function EventListingCard({
             href={href}
             className="text-primary-ink group/details focus-visible:outline-ring inline-flex items-center gap-1 rounded-sm text-xs font-semibold hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 sm:text-[0.8125rem]"
           >
-            View Details
+            View details
             <span className="sr-only"> of {event.title}</span>
             <ArrowRight
               className="duration-(--duration-base) size-3.5 transition-transform motion-safe:group-hover/details:translate-x-0.5"
@@ -180,7 +180,7 @@ const STATUS_PILL =
   'inline-flex h-9 items-center justify-center rounded-full px-4 text-xs sm:text-[0.8125rem] font-semibold leading-none';
 
 /**
- * "Register Now" — or, when there is no place to be had, a quiet pill saying
+ * "Register now" — or, when there is no place to be had, a quiet pill saying
  * why. Never an active button for an event the page and the API would refuse.
  *
  * The button goes to the event's registration page, which decides the rest:
@@ -204,7 +204,7 @@ function CardActionControl({
           className="group/register h-9 px-4 text-xs font-bold sm:text-[0.8125rem]"
         >
           <Link href={href}>
-            Register Now
+            Register now
             <span className="sr-only"> for {title}</span>
             <ArrowRight
               className="duration-(--duration-base) size-3.5 transition-transform motion-safe:group-hover/register:translate-x-0.5"
@@ -214,7 +214,7 @@ function CardActionControl({
         </Button>
       );
     case 'full':
-      return <p className={cn(STATUS_PILL, 'bg-wash-coral text-primary-ink')}>Fully booked</p>;
+      return <p className={cn(STATUS_PILL, 'bg-accent text-primary-ink')}>Fully booked</p>;
     case 'cancelled':
       return (
         <p className={cn(STATUS_PILL, 'bg-destructive-subtle text-destructive')}>Event cancelled</p>

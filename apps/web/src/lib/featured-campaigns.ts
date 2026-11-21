@@ -1,5 +1,5 @@
 /**
- * Which campaigns lead the homepage's Featured Campaigns band, and in what
+ * Which campaigns lead the homepage's Featured campaigns band, and in what
  * order.
  *
  * ══════════════════════════════════════════════════════════════════════════

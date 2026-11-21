@@ -166,13 +166,13 @@ export default async function AdminCampaignsPage({
                     Status
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Fundraising Progress
+                    Fundraising progress
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
                     Donors
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    End Date
+                    End date
                   </th>
                 </tr>
               </thead>

@@ -13,8 +13,8 @@ import { StoryCategoryIcon } from './story-category-icon';
  * The lead story at the head of the Stories listing, matched to the owner's
  * design (2026-10-15): one rounded card, the photograph on the left (53% of
  * the card) with the category on an orange pill at its foot, and on the right
- * a warm cream panel — the "Featured Story" badge, the title, the summary,
- * where and when, and "Read Full Story".
+ * a warm cream panel — the "Featured story" badge, the title, the summary,
+ * where and when, and "Read full story".
  *
  * The panel's peach disc and outline leaves are the Stories page's own
  * decorations (`stories-decor.tsx`), drawn from `xl` only, where the panel is
@@ -62,7 +62,7 @@ export function FeaturedStory({ story }: { story: Story }) {
 
         <p className="bg-primary/8 text-primary relative inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-[0.8125rem] font-semibold">
           <Star className="fill-primary text-primary size-4" aria-hidden="true" />
-          Featured Story
+          Featured story
         </p>
 
         <h2 className="font-display text-foreground relative mt-3.5 text-[1.625rem] font-bold leading-tight tracking-[-0.015em] sm:text-[1.75rem] xl:text-[1.875rem]">
@@ -87,7 +87,7 @@ export function FeaturedStory({ story }: { story: Story }) {
           className="relative mt-6 h-12 px-8 text-base font-bold sm:h-[3.375rem] sm:px-10 sm:text-[1.0625rem]"
         >
           <Link href={href}>
-            Read Full Story
+            Read full story
             <ArrowRight className="size-[1.125rem]" aria-hidden="true" />
           </Link>
         </Button>

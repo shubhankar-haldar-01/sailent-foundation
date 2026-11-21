@@ -43,7 +43,7 @@ export function SupportedCampaigns({
             className="mt-5 xl:mt-3"
             title="You haven't supported a campaign yet."
             description="When a donation is confirmed, its campaign appears here with what you gave."
-            action={{ label: 'Explore Campaigns', href: '/campaigns' }}
+            action={{ label: 'Explore campaigns', href: '/campaigns' }}
           />
         ) : (
           <>

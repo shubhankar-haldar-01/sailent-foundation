@@ -49,7 +49,7 @@ describe('BlogHero', () => {
 
     expect(screen.getByRole('link', { name: 'Home' })).toBeDefined();
     expect(screen.getByText('Blog')).toBeDefined();
-    expect(screen.getByText(/Our Blog/i)).toBeDefined();
+    expect(screen.getByText(/Our blog/i)).toBeDefined();
     expect(
       screen.getByRole('heading', { level: 1, name: /Ideas, insights and stories that matter/i }),
     ).toBeDefined();
@@ -68,7 +68,7 @@ describe('PostCard', () => {
     expect(link.getAttribute('href')).toBe(`/blog/${samplePost.slug}`);
     expect(screen.getByText('15 Feb 2026')).toBeDefined();
     expect(screen.getByText(samplePost.excerpt!)).toBeDefined();
-    expect(screen.getByText(/Read More/i)).toBeDefined();
+    expect(screen.getByText(/Read more/i)).toBeDefined();
   });
 
   it('sets a featured post on the sunken grey and a standard post on the card surface', () => {
@@ -105,20 +105,20 @@ describe('BlogSidebar', () => {
     expect(screen.getByPlaceholderText('Search articles...')).toBeDefined();
   });
 
-  it('renders Latest Articles section with posts and formatted dates', () => {
+  it('renders Latest articles section with posts and formatted dates', () => {
     render(<BlogSidebar latestPosts={[samplePost, secondPost]} currentQuery="" />);
 
-    expect(screen.getByRole('heading', { level: 3, name: 'Latest Articles' })).toBeDefined();
+    expect(screen.getByRole('heading', { level: 3, name: 'Latest articles' })).toBeDefined();
     expect(screen.getByText(samplePost.title)).toBeDefined();
     expect(screen.getByText(secondPost.title)).toBeDefined();
     expect(screen.getByText('15 Feb 2026')).toBeDefined();
     expect(screen.getByText('26 Jan 2026')).toBeDefined();
   });
 
-  it('renders Subscribe to Our Blog section with email input and submit button', () => {
+  it('renders Subscribe to our blog section with email input and submit button', () => {
     render(<BlogSidebar latestPosts={[samplePost]} currentQuery="" />);
 
-    expect(screen.getByRole('heading', { level: 3, name: 'Subscribe to Our Blog' })).toBeDefined();
+    expect(screen.getByRole('heading', { level: 3, name: 'Subscribe to our blog' })).toBeDefined();
     expect(screen.getByPlaceholderText('Enter your email address')).toBeDefined();
     expect(screen.getByRole('button', { name: /Subscribe/i })).toBeDefined();
   });

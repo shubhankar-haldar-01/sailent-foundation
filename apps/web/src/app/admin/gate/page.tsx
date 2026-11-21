@@ -51,7 +51,7 @@ export default async function GateHubPage() {
             className="border-border bg-background text-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors"
           >
             <ArrowLeft className="size-3.5" />
-            <span className="hidden sm:inline">Admin Dashboard</span>
+            <span className="hidden sm:inline">Admin dashboard</span>
           </Link>
           <div className="bg-border h-4 w-px" />
           <div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ export default async function GateHubPage() {
               <span className="bg-success relative inline-flex size-2.5 rounded-full" />
             </span>
             <span className="text-foreground text-sm font-bold tracking-tight">
-              Sailent Gate Operations Hub
+              Sailent gate operations hub
             </span>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default async function GateHubPage() {
             className="text-2xs border-border bg-muted text-foreground gap-1.5 font-mono"
           >
             <ShieldCheck className="text-success size-3.5" />
-            Active Session
+            Active session
           </Badge>
         </div>
       </header>
@@ -87,7 +87,7 @@ export default async function GateHubPage() {
               </span>
             </div>
             <h1 className="text-foreground mt-2 text-2xl font-black tracking-tight sm:text-3xl">
-              Gate Pass Scanner & Check-In Desk
+              Gate pass scanner & check-in desk
             </h1>
             <p className="text-muted-foreground mt-1 text-sm">
               Select an event to open its high-speed QR pass camera scanner, instant search, and
@@ -100,7 +100,7 @@ export default async function GateHubPage() {
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="shadow-xs border-border/90 bg-surface rounded-2xl border p-5">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-xs font-semibold">Events Active</span>
+              <span className="text-muted-foreground text-xs font-semibold">Events active</span>
               <span className="bg-accent text-primary flex size-8 items-center justify-center rounded-xl">
                 <Calendar className="size-4" />
               </span>
@@ -112,7 +112,7 @@ export default async function GateHubPage() {
           <div className="shadow-xs border-border/90 bg-surface rounded-2xl border p-5">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground text-xs font-semibold">
-                Total Registered Guests
+                Total registered guests
               </span>
               <span className="bg-info-subtle text-info flex size-8 items-center justify-center rounded-xl">
                 <Users className="size-4" />
@@ -124,7 +124,7 @@ export default async function GateHubPage() {
 
           <div className="shadow-xs border-border/90 bg-surface rounded-2xl border p-5">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-xs font-semibold">Total Admitted</span>
+              <span className="text-muted-foreground text-xs font-semibold">Total admitted</span>
               <span className="bg-success-subtle text-success flex size-8 items-center justify-center rounded-xl">
                 <CheckCircle2 className="size-4" />
               </span>
@@ -138,13 +138,13 @@ export default async function GateHubPage() {
         {events.length === 0 ? (
           <div className="border-border-strong bg-surface text-muted-foreground flex flex-col items-center justify-center rounded-3xl border border-dashed p-12 text-center">
             <Calendar className="text-muted-foreground mb-3 size-12" />
-            <p className="text-foreground text-base font-bold">No Events Scheduled</p>
+            <p className="text-foreground text-base font-bold">No events scheduled</p>
             <p className="text-muted-foreground mt-1 text-xs">
               Create an event in the admin dashboard to start accepting pass registrations and gate
               check-ins.
             </p>
             <Button asChild variant="primary" size="sm" className="mt-4 font-bold">
-              <Link href="/admin/events/new">Create Event</Link>
+              <Link href="/admin/events/new">Create event</Link>
             </Button>
           </div>
         ) : (
@@ -220,7 +220,7 @@ export default async function GateHubPage() {
                       {/* Live Admission Progress Bar */}
                       <div className="border-border bg-background/80 space-y-1.5 rounded-xl border p-3">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-foreground font-semibold">Admitted Guests</span>
+                          <span className="text-foreground font-semibold">Admitted guests</span>
                           <span className="text-foreground font-mono font-bold">
                             {checkedIn} / {total} ({percent}%)
                           </span>
@@ -252,7 +252,7 @@ export default async function GateHubPage() {
                     >
                       <Link href={`/admin/gate/${evt.id}`}>
                         <QrCode className="size-4" />
-                        Launch Gate Scanner & Desk
+                        Launch gate scanner & desk
                         <ChevronRight className="ml-auto size-4" />
                       </Link>
                     </Button>

@@ -27,10 +27,10 @@ export type CampaignStatusFilter = (typeof CAMPAIGN_STATUSES)[number];
  * campaigns are one choice away, under their own names.
  */
 export const STATUS_LABELS: Record<CampaignStatusFilter, string> = {
-  active: 'Active Campaigns',
-  closed: 'Closed Campaigns',
-  completed: 'Completed Campaigns',
-  all: 'All Campaigns',
+  active: 'Active campaigns',
+  closed: 'Closed campaigns',
+  completed: 'Completed campaigns',
+  all: 'All campaigns',
 };
 
 /**

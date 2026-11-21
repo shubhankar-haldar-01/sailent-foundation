@@ -131,7 +131,7 @@ export function openRazorpayCheckout(handoff: CheckoutHandoff): Promise<Checkout
       amount: handoff.amount,
       currency: handoff.currency,
       name: 'Sailent Foundation',
-      description: handoff.description ?? handoff.campaign?.title ?? 'Event Registration Fee',
+      description: handoff.description ?? handoff.campaign?.title ?? 'Event registration Fee',
       prefill: {
         name: handoff.donor.name,
         email: handoff.donor.email,

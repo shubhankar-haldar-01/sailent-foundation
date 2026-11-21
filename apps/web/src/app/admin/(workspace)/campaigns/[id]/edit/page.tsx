@@ -131,7 +131,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
           <div className="grid gap-6 sm:grid-cols-3">
             <div className="sm:col-span-2">
               <p className="text-caption text-muted-foreground font-semibold uppercase tracking-wider">
-                Total Raised
+                Total raised
               </p>
               <p
                 data-numeric=""
@@ -202,7 +202,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
               </div>
               <div>
                 <CardTitle className="text-base font-semibold">
-                  Lifecycle Status & Permissions
+                  Lifecycle status & permissions
                 </CardTitle>
                 <p className="text-caption text-muted-foreground mt-1">
                   {campaign.status === 'active'
@@ -246,7 +246,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
       {/* Campaign Details Form Card */}
       <Card className="border-border">
         <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Campaign Information & Content</CardTitle>
+          <CardTitle className="text-base font-semibold">Campaign information & content</CardTitle>
           <p className="text-caption text-muted-foreground mt-1">
             Core narrative, location, beneficiary scope, and fund utilization breakdown.
           </p>
@@ -267,7 +267,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
       <Card className="border-border">
         <CardHeader className="border-border border-b pb-4">
           <CardTitle className="text-base font-semibold">
-            Catalogue Products & Targeted Giving
+            Catalogue products & targeted giving
           </CardTitle>
           <p className="text-caption text-muted-foreground mt-1">
             Product allocations for itemized donor giving. Modifying pricing here applies
@@ -286,7 +286,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
       {/* FAQs Panel */}
       <Card className="border-border">
         <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Frequently Asked Questions</CardTitle>
+          <CardTitle className="text-base font-semibold">Frequently asked questions</CardTitle>
           <p className="text-caption text-muted-foreground mt-1">
             Questions and answers rendered specifically on this campaign detail page.
           </p>
@@ -300,7 +300,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
       {campaign.slugHistory.length > 0 ? (
         <Card className="border-border">
           <CardHeader className="border-border border-b pb-4">
-            <CardTitle className="text-base font-semibold">Previous URL Permalinks</CardTitle>
+            <CardTitle className="text-base font-semibold">Previous URL permalinks</CardTitle>
             <p className="text-caption text-muted-foreground mt-1">
               Permanent 301 redirects preserved so physical posters, QR codes, and external links
               remain valid.

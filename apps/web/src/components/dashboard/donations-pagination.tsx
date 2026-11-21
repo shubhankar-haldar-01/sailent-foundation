@@ -80,7 +80,7 @@ export function DonationsPagination({
 
       {/* Page controls: < 1 2 3 > */}
       <nav
-        aria-label="Pagination Navigation"
+        aria-label="Pagination navigation"
         className="order-1 flex items-center gap-1 sm:order-2"
       >
         <button

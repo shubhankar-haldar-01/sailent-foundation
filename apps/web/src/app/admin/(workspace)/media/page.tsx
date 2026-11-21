@@ -35,7 +35,7 @@ export default async function AdminMediaPage({
   }
 
   const filters = [
-    { key: 'all', label: 'All Assets', icon: Layers },
+    { key: 'all', label: 'All assets', icon: Layers },
     { key: 'public', label: 'Public', icon: Globe },
     { key: 'private', label: 'Private', icon: Lock },
   ] as const;
@@ -44,7 +44,7 @@ export default async function AdminMediaPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Media Assets"
+        title="Media assets"
         description="Public and private media assets. Every image requires accessible alt text before publication."
         count={data?.pagination.total}
         actions={can(actor, 'media.create') ? <UploadPanel /> : null}

@@ -11,7 +11,7 @@ export function DeleteTeamMemberButton({
   slug,
   variant = 'destructive',
   size = 'sm',
-  label = 'Delete Member',
+  label = 'Delete member',
   className,
 }: {
   id: string;

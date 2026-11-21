@@ -807,8 +807,9 @@
 
 /** Long-form measure: 60–75 characters. Does more for readability than any
     other single rule, so it is a utility rather than a repeated arbitrary value. */
+/* The reading column: 680px (visual polish Phase 4, 2026-11-21). */
 @utility prose-measure {
-  max-width: 68ch;
+  max-width: 42.5rem;
 }
 
 /** Public section rhythm: 96–128px. The admin equivalent is 16–24px, which is

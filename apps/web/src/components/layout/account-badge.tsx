@@ -16,7 +16,7 @@ import { donorFetch, type DonorProfile } from '@/lib/donor/api';
  * where sessions belong.
  *
  * RENDERS NOTHING FOR A VISITOR WHO IS NOT SIGNED IN. The header shows its
- * "Login / Sign Up" button in that case (owner request, 2026-10-08); the
+ * "Login / Sign up" button in that case (owner request, 2026-10-08); the
  * layouts tell it which with `signedIn`.
  *
  * AVATAR RESOLUTION:

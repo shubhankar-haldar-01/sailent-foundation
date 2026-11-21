@@ -107,140 +107,24 @@ interface CategoryTone {
   wash: string;
 }
 
-const TONES: Record<string, CategoryTone> = {
-  education: {
-    ink: 'text-wash-blue-ink',
-    fill: 'bg-wash-blue-ink',
-    bar: 'from-wash-blue-ink to-wash-blue-ink',
-    chip: 'bg-wash-blue/60 text-wash-blue-ink',
-    wash: 'bg-wash-blue',
-  },
-  healthcare: {
-    ink: 'text-wash-rose-ink',
-    fill: 'bg-wash-rose-ink',
-    bar: 'from-wash-blue-ink to-wash-rose-ink',
-    chip: 'bg-wash-rose/60 text-wash-rose-ink',
-    wash: 'bg-wash-rose',
-  },
-  health: {
-    ink: 'text-wash-rose-ink',
-    fill: 'bg-wash-rose-ink',
-    bar: 'from-wash-blue-ink to-wash-rose-ink',
-    chip: 'bg-wash-rose/60 text-wash-rose-ink',
-    wash: 'bg-wash-rose',
-  },
-  foodsecurity: {
-    ink: 'text-wash-gold-ink',
-    fill: 'bg-wash-gold-ink',
-    bar: 'from-wash-blue-ink to-wash-gold-ink',
-    chip: 'bg-wash-amber/60 text-wash-gold-ink',
-    wash: 'bg-wash-amber',
-  },
-  foodsupport: {
-    ink: 'text-wash-gold-ink',
-    fill: 'bg-wash-gold-ink',
-    bar: 'from-wash-blue-ink to-wash-gold-ink',
-    chip: 'bg-wash-amber/60 text-wash-gold-ink',
-    wash: 'bg-wash-amber',
-  },
-  disasterrelief: {
-    ink: 'text-wash-violet-ink',
-    fill: 'bg-wash-violet-ink',
-    bar: 'from-wash-blue-ink to-wash-violet-ink',
-    chip: 'bg-wash-violet/60 text-wash-violet-ink',
-    wash: 'bg-wash-violet',
-  },
-  womenempowerment: {
-    ink: 'text-wash-pink-ink',
-    fill: 'bg-wash-pink-ink',
-    bar: 'from-wash-blue-ink to-wash-pink-ink',
-    chip: 'bg-wash-pink/60 text-wash-pink-ink',
-    wash: 'bg-wash-pink',
-  },
-  childwelfare: {
-    ink: 'text-wash-violet-ink',
-    fill: 'bg-wash-violet-ink',
-    bar: 'from-wash-blue-ink to-wash-violet-ink',
-    chip: 'bg-wash-violet/60 text-wash-violet-ink',
-    wash: 'bg-wash-violet',
-  },
-  livelihood: {
-    ink: 'text-wash-mint-ink',
-    fill: 'bg-wash-mint-ink',
-    bar: 'from-wash-blue-ink to-wash-mint-ink',
-    chip: 'bg-wash-mint/60 text-wash-mint-ink',
-    wash: 'bg-wash-mint',
-  },
-  environment: {
-    ink: 'text-wash-mint-ink',
-    fill: 'bg-wash-mint-ink',
-    bar: 'from-wash-blue-ink to-wash-mint-ink',
-    chip: 'bg-wash-mint/60 text-wash-mint-ink',
-    wash: 'bg-wash-mint',
-  },
-  animalwelfare: {
-    ink: 'text-wash-amber-ink',
-    fill: 'bg-wash-amber-ink',
-    bar: 'from-wash-blue-ink to-wash-amber-ink',
-    chip: 'bg-wash-amber/60 text-wash-amber-ink',
-    wash: 'bg-wash-amber',
-  },
-  clothing: {
-    ink: 'text-wash-gold-ink',
-    fill: 'bg-wash-gold-ink',
-    bar: 'from-wash-blue-ink to-wash-gold-ink',
-    chip: 'bg-wash-amber/60 text-wash-gold-ink',
-    wash: 'bg-wash-amber',
-  },
-  communitydevelopment: {
-    ink: 'text-wash-blue-ink',
-    fill: 'bg-wash-blue-ink',
-    bar: 'from-wash-blue-ink to-wash-blue-ink',
-    chip: 'bg-wash-blue/60 text-wash-blue-ink',
-    wash: 'bg-wash-blue',
-  },
-  volunteer: {
-    ink: 'text-wash-violet-ink',
-    fill: 'bg-wash-violet-ink',
-    bar: 'from-wash-blue-ink to-wash-violet-ink',
-    chip: 'bg-wash-violet/60 text-wash-violet-ink',
-    wash: 'bg-wash-violet',
-  },
-  volunteering: {
-    ink: 'text-wash-violet-ink',
-    fill: 'bg-wash-violet-ink',
-    bar: 'from-wash-blue-ink to-wash-violet-ink',
-    chip: 'bg-wash-violet/60 text-wash-violet-ink',
-    wash: 'bg-wash-violet',
-  },
-  communitysupport: {
-    ink: 'text-wash-coral-ink',
-    fill: 'bg-wash-coral-ink',
-    bar: 'from-wash-blue-ink to-wash-coral-ink',
-    chip: 'bg-wash-amber/60 text-wash-gold-ink',
-    wash: 'bg-wash-amber',
-  },
-  communityengagement: {
-    ink: 'text-wash-gold-ink',
-    fill: 'bg-wash-gold-ink',
-    bar: 'from-wash-blue-ink to-wash-gold-ink',
-    chip: 'bg-wash-amber/60 text-wash-gold-ink',
-    wash: 'bg-wash-amber',
-  },
+/**
+ * ONE TONE FOR EVERY CAUSE (visual polish Phase 4, owner 2026-11-21).
+ *
+ * Causes used to have a colour each — blue Education, rose Healthcare and so
+ * on — which put eight pastel hues on one page. The brand carries every cause
+ * now; the icon is what tells them apart. The interface stays, so callers keep
+ * asking for `ink`, `chip` and `wash` and get the brand's.
+ */
+const BRAND_TONE: CategoryTone = {
+  ink: 'text-primary',
+  fill: 'bg-primary',
+  bar: 'from-primary to-primary',
+  chip: 'bg-accent text-accent-foreground',
+  wash: 'bg-accent',
 };
 
-/** Blue on both stops, so an unmapped category is plain rather than odd. */
-const NEUTRAL_TONE: CategoryTone = {
-  ink: 'text-wash-blue-ink',
-  fill: 'bg-wash-blue-ink',
-  bar: 'from-wash-blue-ink to-wash-blue-ink',
-  chip: 'bg-wash-blue/60 text-wash-blue-ink',
-  wash: 'bg-wash-blue',
-};
-
-export function categoryTone(category: string | null | undefined): CategoryTone {
-  if (!category) return NEUTRAL_TONE;
-  return TONES[normalise(category)] ?? NEUTRAL_TONE;
+export function categoryTone(_category: string | null | undefined): CategoryTone {
+  return BRAND_TONE;
 }
 
 export function CategoryIcon({ category, className }: { category: string; className?: string }) {

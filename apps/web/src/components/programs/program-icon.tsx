@@ -54,12 +54,12 @@ export interface ProgramTone {
 const ORANGE: ProgramTone = { disc: 'bg-primary/12', ink: 'text-primary' };
 const TONES: Record<string, ProgramTone> = {
   education: ORANGE,
-  healthcare: { disc: 'bg-wash-blue', ink: 'text-wash-blue-ink' },
-  childwelfare: { disc: 'bg-wash-pink', ink: 'text-wash-pink-ink' },
-  womenempowerment: { disc: 'bg-wash-violet', ink: 'text-wash-violet-ink' },
-  disasterrelief: { disc: 'bg-wash-mint', ink: 'text-wash-mint-ink' },
-  animalwelfare: { disc: 'bg-wash-amber', ink: 'text-wash-gold-ink' },
-  environment: { disc: 'bg-wash-mint', ink: 'text-wash-mint-ink' },
+  healthcare: { disc: 'bg-accent', ink: 'text-primary' },
+  childwelfare: { disc: 'bg-accent', ink: 'text-primary' },
+  womenempowerment: { disc: 'bg-accent', ink: 'text-primary' },
+  disasterrelief: { disc: 'bg-accent', ink: 'text-primary' },
+  animalwelfare: { disc: 'bg-accent', ink: 'text-primary' },
+  environment: { disc: 'bg-accent', ink: 'text-primary' },
 };
 
 export function programTone(area: string | null | undefined): ProgramTone {

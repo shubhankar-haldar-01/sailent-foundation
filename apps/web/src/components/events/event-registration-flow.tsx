@@ -209,19 +209,19 @@ export function EventRegistrationFlow({
   ) => {
     const badgeConfig = {
       cancelled: {
-        label: 'Event Cancelled',
+        label: 'Event cancelled',
         className: 'bg-destructive-subtle text-destructive ring-destructive/30',
       },
       finished: {
-        label: 'Event Concluded',
+        label: 'Event concluded',
         className: 'bg-muted text-foreground ring-border',
       },
       full: {
-        label: 'Event Full',
+        label: 'Event full',
         className: 'bg-warning-subtle text-warning-foreground ring-warning/30',
       },
       closed: {
-        label: 'Registration Closed',
+        label: 'Registration closed',
         className: 'bg-destructive-subtle text-destructive ring-destructive/30',
       },
     }[state];
@@ -280,7 +280,7 @@ export function EventRegistrationFlow({
           </div>
           <div>
             <span className="text-caption bg-success-subtle/70 text-success inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-bold">
-              Admission Confirmed
+              Admission confirmed
             </span>
             <h2 className="font-display text-foreground text-xl font-bold sm:text-2xl">
               You are registered
@@ -332,7 +332,7 @@ export function EventRegistrationFlow({
             ) : (
               <>
                 <Download className="size-4" />
-                <span>Download Pass</span>
+                <span>Download pass</span>
               </>
             )}
           </Button>
@@ -341,11 +341,11 @@ export function EventRegistrationFlow({
               asChild
               className="border-border bg-surface text-foreground hover:bg-background border text-xs font-bold sm:text-sm"
             >
-              <Link href="/dashboard/events">View in Dashboard</Link>
+              <Link href="/dashboard/events">View in dashboard</Link>
             </Button>
           ) : null}
           <Button asChild variant="secondary" className="text-xs font-bold sm:text-sm">
-            <Link href={`/events/${slug}`}>Event Details</Link>
+            <Link href={`/events/${slug}`}>Event details</Link>
           </Button>
           {isSignedIn ? <CancelRegistrationButton eventId={eventId} slug={slug} /> : null}
         </div>
@@ -395,10 +395,10 @@ export function EventRegistrationFlow({
           </div>
           <div>
             <span className="text-caption bg-success-subtle/70 text-success inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-bold">
-              Registration Successful
+              Registration successful
             </span>
             <h2 className="font-display text-foreground text-xl font-bold sm:text-2xl">
-              Registration Confirmed!
+              Registration confirmed!
             </h2>
           </div>
         </div>
@@ -456,7 +456,7 @@ export function EventRegistrationFlow({
             ) : isDownloading ? (
               <>
                 <Spinner className="size-4 text-white" />
-                <span>Generating Ticket File...</span>
+                <span>Generating ticket file...</span>
               </>
             ) : (
               <>
@@ -464,7 +464,7 @@ export function EventRegistrationFlow({
                 <span>
                   {effectiveAttendees.length > 1
                     ? `Download All ${effectiveAttendees.length} Passes (1 File)`
-                    : 'Download Pass'}
+                    : 'Download pass'}
                 </span>
               </>
             )}
@@ -474,11 +474,11 @@ export function EventRegistrationFlow({
               asChild
               className="border-border bg-surface text-foreground hover:bg-background border text-xs font-bold sm:text-sm"
             >
-              <Link href="/dashboard/events">View in Dashboard</Link>
+              <Link href="/dashboard/events">View in dashboard</Link>
             </Button>
           ) : null}
           <Button asChild variant="secondary" className="text-xs font-bold sm:text-sm">
-            <Link href="/events">Explore More Events</Link>
+            <Link href="/events">Explore more events</Link>
           </Button>
         </div>
       </Card>
@@ -591,7 +591,7 @@ export function EventRegistrationFlow({
     }
 
     if (!consent) {
-      errors.consent = 'You must agree to the Terms of Use and Privacy Policy.';
+      errors.consent = 'You must agree to the Terms of use and Privacy policy.';
     }
 
     setFieldErrors(errors);
@@ -725,7 +725,7 @@ export function EventRegistrationFlow({
       <div className="flex items-center gap-2">
         <span className="text-caption bg-accent text-primary inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-bold uppercase tracking-wider">
           <Sparkles className="text-primary size-3" aria-hidden="true" />
-          Event Registration
+          Event registration
         </span>
       </div>
 
@@ -774,7 +774,7 @@ export function EventRegistrationFlow({
               </div>
             </div>
             <span className="text-caption bg-success-subtle text-success inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 font-bold">
-              Account Active
+              Account active
             </span>
           </div>
         </div>
@@ -832,12 +832,12 @@ export function EventRegistrationFlow({
           </div>
         ) : null}
 
-        {/* 2. Number of Passes Selector (1 to 4 passes) */}
+        {/* 2. Number of passes Selector (1 to 4 passes) */}
         <div className="border-border/90 bg-background/50 rounded-2xl border p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <Label className="text-foreground text-sm font-bold">
-                Number of Passes <span className="text-destructive">*</span>
+                Number of passes <span className="text-destructive">*</span>
               </Label>
               <p className="text-muted-foreground mt-0.5 text-xs">
                 Book up to 4 passes in a single reservation.
@@ -937,14 +937,14 @@ export function EventRegistrationFlow({
         {/* 4. Primary Contact Information (1 Email + 1 Phone for all passes) */}
         <div className="border-border/90 bg-background/50 space-y-4 rounded-2xl border p-4 sm:p-5">
           <h3 className="text-muted-foreground text-xs font-bold uppercase tracking-wider">
-            Booking Contact Information
+            Booking contact information
           </h3>
 
-          {/* Email Address with Send OTP & Validation */}
+          {/* Email address with Send OTP & Validation */}
           <div>
             <div className="flex items-center justify-between">
               <Label htmlFor="reg-email" className="text-foreground text-sm font-semibold">
-                Email Address <span className="text-destructive">*</span>
+                Email address <span className="text-destructive">*</span>
               </Label>
               {isEmailVerified ? (
                 <span className="text-success inline-flex items-center gap-1 text-xs font-bold">
@@ -962,7 +962,7 @@ export function EventRegistrationFlow({
                 <Input
                   id="reg-email"
                   name="email"
-                  aria-label="Email Address"
+                  aria-label="Email address"
                   type="email"
                   autoComplete="email"
                   disabled={isEmailVerified}
@@ -1037,7 +1037,7 @@ export function EventRegistrationFlow({
                       disabled={isSendingOtp}
                       className="text-primary hover:text-primary text-xs font-bold underline underline-offset-2"
                     >
-                      Resend Code
+                      Resend code
                     </button>
                   )}
                 </div>
@@ -1077,10 +1077,10 @@ export function EventRegistrationFlow({
             ) : null}
           </div>
 
-          {/* Mobile Number */}
+          {/* Mobile number */}
           <div>
             <Label htmlFor="reg-phone" className="text-foreground text-sm font-semibold">
-              Mobile Number <span className="text-destructive">*</span>
+              Mobile number <span className="text-destructive">*</span>
             </Label>
             <div className="relative mt-1.5 flex gap-2">
               <div className="border-border bg-background/70 text-foreground flex h-11 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold sm:text-sm">
@@ -1091,7 +1091,7 @@ export function EventRegistrationFlow({
                 <Input
                   id="reg-phone"
                   name="phone"
-                  aria-label="Mobile Number"
+                  aria-label="Mobile number"
                   type="tel"
                   inputMode="tel"
                   autoComplete="tel"
@@ -1159,7 +1159,7 @@ export function EventRegistrationFlow({
                 target="_blank"
                 className="text-primary hover:text-primary font-semibold underline underline-offset-2"
               >
-                Terms of Use
+                Terms of use
               </Link>{' '}
               and{' '}
               <Link
@@ -1167,7 +1167,7 @@ export function EventRegistrationFlow({
                 target="_blank"
                 className="text-primary hover:text-primary font-semibold underline underline-offset-2"
               >
-                Privacy Policy
+                Privacy policy
               </Link>{' '}
               of Sailent Foundation. <span className="text-destructive">*</span>
             </span>
@@ -1206,7 +1206,7 @@ export function EventRegistrationFlow({
               <p className="text-muted-foreground text-xs">Free admission for this event</p>
             </div>
             <span className="bg-success-subtle text-success ring-success/30 rounded-full px-2.5 py-0.5 text-xs font-bold ring-1">
-              Free Entry
+              Free entry
             </span>
           </div>
         )}

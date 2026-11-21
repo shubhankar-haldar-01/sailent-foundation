@@ -212,21 +212,21 @@ export function AdminHeader({
                 <DropdownMenuItem asChild>
                   <Link href="/admin/settings" className="flex items-center gap-2 text-xs">
                     <Sliders className="text-muted-foreground size-3.5" aria-hidden="true" />
-                    <span>Organization Settings</span>
+                    <span>Organization settings</span>
                   </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
                   <Link href="/admin/audit-logs" className="flex items-center gap-2 text-xs">
                     <History className="text-muted-foreground size-3.5" aria-hidden="true" />
-                    <span>Audit Logs</span>
+                    <span>Audit logs</span>
                   </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
                   <Link href="/" target="_blank" className="flex items-center gap-2 text-xs">
                     <ExternalLink className="text-muted-foreground size-3.5" aria-hidden="true" />
-                    <span>Public Website</span>
+                    <span>Public website</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuGroup>

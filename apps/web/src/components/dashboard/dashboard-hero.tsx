@@ -37,11 +37,11 @@ export function DashboardHero({ firstName }: { firstName: string | null }) {
 
         <h1 id="dashboard-greeting" className="text-foreground mt-1">
           <span className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[2.25rem]">
-            Dashboard, <span className="text-primary font-extrabold">{firstName ?? 'Friend'}</span>
+            Dashboard, {firstName ?? 'friend'}
           </span>
         </h1>
         <p className="text-muted-foreground mt-1 text-xs font-normal sm:text-sm">
-          View Your Successful Donations And Receipts.
+          View your successful donations and receipts.
         </p>
       </div>
     </section>

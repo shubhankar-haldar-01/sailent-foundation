@@ -28,7 +28,7 @@ export interface ProgramsQuery {
   category: string | null;
   /** The search box's text, trimmed; null when it is empty. */
   q: string | null;
-  /** How many pages of cards are showing — "View More Programs" adds one. */
+  /** How many pages of cards are showing — "View more programs" adds one. */
   page: number;
 }
 

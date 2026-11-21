@@ -211,7 +211,7 @@ export default async function MyVolunteeringPage() {
                   {certificate.status === 'issued' ? (
                     <div className="border-border mt-4 border-t pt-4">
                       <p className="text-body-sm flex items-center gap-1.5">
-                        <ShieldCheck className="text-wash-mint-ink size-4" aria-hidden="true" />
+                        <ShieldCheck className="text-primary size-4" aria-hidden="true" />
                         {/*
                           The volunteer needs this link: it is how an employer
                           confirms the certificate without an account.

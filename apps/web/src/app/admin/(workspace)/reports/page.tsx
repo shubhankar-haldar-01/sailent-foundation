@@ -122,28 +122,28 @@ export default async function AdminReportsPage({
           <div className="flex items-center gap-2">
             <HeartHandshake className="text-primary h-5 w-5" />
             <h2 id="donations-report" className="text-foreground text-lg font-bold">
-              Donation Summary
+              Donation summary
             </h2>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <Stat
-              label="Captured Funds"
+              label="Captured funds"
               value={formatCurrency(donations.totals.capturedPaise)}
               hint="Successful payments only"
             />
             <Stat
-              label="Total Donations"
+              label="Total donations"
               value={donations.totals.donations}
               hint="Across all transaction states"
             />
-            <Stat label="Distinct Donors" value={donations.totals.distinctDonors} />
+            <Stat label="Distinct donors" value={donations.totals.distinctDonors} />
           </div>
 
           <Card className="overflow-hidden">
             <CardHeader className="border-border bg-muted/20 border-b px-5 py-3">
               <CardTitle className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-                Payment State Breakdown
+                Payment state breakdown
               </CardTitle>
             </CardHeader>
             <div className="overflow-x-auto">
@@ -151,13 +151,13 @@ export default async function AdminReportsPage({
                 <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
                   <tr>
                     <th scope="col" className="px-5 py-3">
-                      Payment State
+                      Payment state
                     </th>
                     <th scope="col" className="px-5 py-3">
                       Transactions
                     </th>
                     <th scope="col" className="px-5 py-3">
-                      Total Amount
+                      Total amount
                     </th>
                   </tr>
                 </thead>
@@ -195,7 +195,7 @@ export default async function AdminReportsPage({
           <div className="flex items-center gap-2">
             <Flag className="text-primary h-5 w-5" />
             <h2 id="campaigns-report" className="text-foreground text-lg font-bold">
-              Campaign Performance
+              Campaign performance
             </h2>
           </div>
 
@@ -205,16 +205,16 @@ export default async function AdminReportsPage({
                 <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
                   <tr>
                     <th scope="col" className="px-5 py-3">
-                      Campaign Title
+                      Campaign title
                     </th>
                     <th scope="col" className="px-5 py-3">
-                      Raised in Range
+                      Raised in range
                     </th>
                     <th scope="col" className="px-5 py-3">
-                      Donations in Range
+                      Donations in range
                     </th>
                     <th scope="col" className="px-5 py-3">
-                      Lifetime Raised
+                      Lifetime raised
                     </th>
                   </tr>
                 </thead>
@@ -256,14 +256,14 @@ export default async function AdminReportsPage({
             <div className="flex items-center gap-2">
               <Users className="text-primary h-5 w-5" />
               <h2 id="volunteers-report" className="text-foreground text-lg font-bold">
-                Volunteer Activity
+                Volunteer activity
               </h2>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Stat label="Active Volunteers" value={volunteers.standing.activeVolunteers} />
+              <Stat label="Active volunteers" value={volunteers.standing.activeVolunteers} />
               <Stat
-                label="Verified Hours"
+                label="Verified hours"
                 value={volunteers.standing.verifiedHours}
                 hint="From validated attendance"
               />
@@ -280,7 +280,7 @@ export default async function AdminReportsPage({
             <div className="flex items-center gap-2">
               <Activity className="text-primary h-5 w-5" />
               <h2 id="impact-report" className="text-foreground text-lg font-bold">
-                Impact Metrics
+                Impact metrics
               </h2>
             </div>
 
@@ -320,7 +320,7 @@ export default async function AdminReportsPage({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <FileSpreadsheet className="text-primary h-4 w-4" />
-            Statutory & Operational Data Exports
+            Statutory & operational data exports
           </CardTitle>
           <CardDescription>
             Download verifiable CSV records for reconciliation and compliance reporting.

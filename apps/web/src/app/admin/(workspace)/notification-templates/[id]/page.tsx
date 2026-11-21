@@ -37,7 +37,7 @@ export default async function AdminTemplatePage({ params }: { params: Promise<{ 
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Template Specification & Content</CardTitle>
+          <CardTitle className="text-base">Template specification & content</CardTitle>
           <CardDescription>
             {template.description ||
               'Modify email subject and body copy. Interpolation tokens are replaced dynamically at dispatch time.'}

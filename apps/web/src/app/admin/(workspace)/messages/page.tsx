@@ -55,7 +55,7 @@ export default async function AdminMessagesPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Contact Messages"
+        title="Contact messages"
         description="Inquiries submitted via the public contact form. Messages are persisted locally and mirrored to the staff contact inbox."
         count={data.counts.new}
       />
@@ -86,7 +86,7 @@ export default async function AdminMessagesPage({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Mail className="text-primary size-4" />
-            Inbox Messages
+            Inbox messages
           </CardTitle>
           <CardDescription>
             Showing {data.items.length} {active} message items

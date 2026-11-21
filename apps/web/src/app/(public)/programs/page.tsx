@@ -33,13 +33,13 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
  * breadcrumb band, the listing's introduction (eyebrow, two-tone heading and
  * a line of text), the toolbar (category menu, search and count), a grid of
  * compact programme cards
- * with "View More Programs". The global footer follows. (The closing "Support
+ * with "View more programs". The global footer follows. (The closing "Support
  * our programs" panel was removed at the owner's request, 2026-10-14.)
  *
  * EVERYTHING ON IT IS LIVE DATA. The programmes, their areas, covers and
  * open-campaign counts come from the API (`getPrograms`) in the order the CMS
  * sets; the toolbar's areas are the areas those programmes have; the grid
- * shows six at a time and "View More Programs" appears only while more
+ * shows six at a time and "View more programs" appears only while more
  * remain. Any number of programmes works — none, one, six or a hundred.
  *
  * The area, the search and the page count live in the URL

@@ -568,7 +568,7 @@ export function IdentityCardPreview({
           )}
         </div>
 
-        {/* Full Name */}
+        {/* Full name */}
         <h2 className="mt-4 max-w-[320px] truncate text-center text-[26px] font-bold leading-[30px] tracking-tight text-[#071630]">
           {name}
         </h2>
@@ -709,7 +709,7 @@ export function IssueIdentityCardDialog({
             className="hover:bg-primary/10 hover:text-primary text-foreground gap-1.5 text-xs font-medium"
           >
             <IdCard className="text-primary size-3.5" aria-hidden="true" />
-            <span>ID Card</span>
+            <span>ID card</span>
           </Button>
         )}
       </DialogTrigger>
@@ -723,7 +723,7 @@ export function IssueIdentityCardDialog({
               </div>
               <div className="min-w-0">
                 <DialogTitle className="text-foreground text-base font-bold tracking-tight">
-                  Official Staff Identity Card
+                  Official staff identity card
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground truncate text-xs sm:text-clip">
                   Approved 100% exact CR80 standard identity card (54 × 85.6 mm PDF) for {name}.
@@ -764,10 +764,10 @@ export function IssueIdentityCardDialog({
           </div>
         </DialogHeader>
 
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 overflow-y-auto bg-muted/70 p-6 lg:flex-row lg:items-start">
+        <div className="bg-muted/70 flex flex-1 flex-col items-center justify-center gap-8 overflow-y-auto p-6 lg:flex-row lg:items-start">
           {/* Card Preview Column */}
           <div className="flex flex-col items-center">
-            <div className="rounded-3xl border border-border bg-surface p-3 shadow-sm">
+            <div className="border-border bg-surface rounded-3xl border p-3 shadow-sm">
               <IdentityCardPreview card={currentCard} />
             </div>
             <p className="text-muted-foreground mt-3 text-center text-[11px]">
@@ -781,7 +781,7 @@ export function IssueIdentityCardDialog({
               <div className="border-border flex items-center justify-between border-b pb-2">
                 <h3 className="text-foreground flex items-center gap-1.5 text-sm font-semibold">
                   <Sparkles className="text-primary size-4" />
-                  Customize Card Information
+                  Customize card information
                 </h3>
                 <Button
                   variant="ghost"
@@ -810,7 +810,7 @@ export function IssueIdentityCardDialog({
 
                 <div>
                   <Label htmlFor="card-name" className="text-xs font-medium">
-                    Staff Name
+                    Staff name
                   </Label>
                   <Input
                     id="card-name"
@@ -834,7 +834,7 @@ export function IssueIdentityCardDialog({
 
                 <div>
                   <Label htmlFor="card-idno" className="text-xs font-medium">
-                    ID Number
+                    ID number
                   </Label>
                   <Input
                     id="card-idno"
@@ -859,7 +859,7 @@ export function IssueIdentityCardDialog({
 
                 <div>
                   <Label htmlFor="card-email" className="text-xs font-medium">
-                    Official Email
+                    Official email
                   </Label>
                   <Input
                     id="card-email"
@@ -872,7 +872,7 @@ export function IssueIdentityCardDialog({
 
                 <div>
                   <Label htmlFor="card-phone" className="text-xs font-medium">
-                    Contact Phone
+                    Contact phone
                   </Label>
                   <Input
                     id="card-phone"
@@ -884,7 +884,7 @@ export function IssueIdentityCardDialog({
 
                 <div>
                   <Label htmlFor="card-photo" className="text-xs font-medium">
-                    Custom Photo URL
+                    Custom photo URL
                   </Label>
                   <Input
                     id="card-photo"
@@ -897,7 +897,7 @@ export function IssueIdentityCardDialog({
 
                 <div>
                   <Label htmlFor="card-logo" className="text-xs font-medium">
-                    Organization Logo URL
+                    Organization logo URL
                   </Label>
                   <Input
                     id="card-logo"
@@ -918,7 +918,7 @@ export function IssueIdentityCardDialog({
                   className="w-full gap-1.5 text-xs font-semibold"
                 >
                   <Check className="size-3.5" />
-                  <span>Done Editing</span>
+                  <span>Done editing</span>
                 </Button>
               </div>
             </div>

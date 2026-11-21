@@ -25,14 +25,14 @@ export default async function NewStoryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Draft Success Story"
+        title="Draft success story"
         breadcrumb={<AdminBackButton href="/admin/stories">Back to stories</AdminBackButton>}
         description="Saved as a draft. Nothing is public until verified and published deliberately."
       />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Story Details & Subject</CardTitle>
+          <CardTitle className="text-base">Story details & subject</CardTitle>
           <CardDescription>
             Record beneficiary quotes, subject consent, location, and associated campaigns.
           </CardDescription>

@@ -158,7 +158,7 @@ export function BlueLeaves({ className }: { className?: string }) {
   );
 }
 
-/** A small orange sprig in outline, beside "View More Programs". */
+/** A small orange sprig in outline, beside "View more programs". */
 export function SprigFlourish({ className }: { className?: string }) {
   return (
     <svg aria-hidden="true" viewBox="0 0 48 40" className={cn('pointer-events-none', className)}>

@@ -62,9 +62,9 @@ export default async function AdminDonorsPage({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <nav aria-label="Filter by giving status" className="flex flex-wrap gap-1.5">
           {[
-            { value: 'all', label: 'All Donors' },
-            { value: 'true', label: 'Have Donated' },
-            { value: 'false', label: 'Never Donated' },
+            { value: 'all', label: 'All donors' },
+            { value: 'true', label: 'Have donated' },
+            { value: 'false', label: 'Never donated' },
           ].map((status) => {
             const isSelected = activeDonated === status.value;
             const href = `/admin/donors?hasDonated=${status.value}${params.q ? `&q=${encodeURIComponent(params.q)}` : ''}`;
@@ -148,7 +148,7 @@ export default async function AdminDonorsPage({
                     Contact
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
-                    Lifetime Given
+                    Lifetime given
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
                     Donations

@@ -15,7 +15,7 @@ export function AboutHero() {
         dangerouslySetInnerHTML={jsonLd(
           breadcrumbSchema([
             { name: 'Home', path: '/' },
-            { name: 'About Us', path: '/about' },
+            { name: 'About us', path: '/about' },
           ]),
         )}
       />
@@ -28,12 +28,12 @@ export function AboutHero() {
               <Link href="/">Home</Link>
             </li>
             <li>
-              <span aria-current="page">About Us</span>
+              <span aria-current="page">About us</span>
             </li>
           </ol>
         </nav>
         <p>About Sailent Foundation</p>
-        <h1 id="about-title">About Us — Real People. Lasting Change.</h1>
+        <h1 id="about-title">About us — Real people. Lasting change.</h1>
         <p>
           We work with communities to remove real and practical obstacles in education, health,
           livelihoods, and social welfare. We focus on what is possible, work with existing systems,
@@ -42,7 +42,7 @@ export function AboutHero() {
       </div>
 
       <PageShell>
-        <div className="border-border bg-surface-inverse relative overflow-hidden rounded-[24px] border shadow-card sm:rounded-[32px]">
+        <div className="border-border bg-surface-inverse shadow-card relative overflow-hidden rounded-[24px] border sm:rounded-[32px]">
           <Image
             src={HERO_IMAGE}
             alt="Sailent Foundation field team coordinator and volunteers smiling warmly with rural villagers and school children under a banyan tree"

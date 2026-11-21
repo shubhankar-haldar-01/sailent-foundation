@@ -163,7 +163,7 @@ export function UploadPanel() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg font-bold">
             <UploadCloud className="text-primary size-5" />
-            Upload Media Asset
+            Upload media asset
           </DialogTitle>
           <DialogDescription>
             Add a photograph or graphic to the media library. Alt text is mandatory for
@@ -541,8 +541,8 @@ export function MediaGallery({ items, query }: { items: AdminMedia[]; query?: st
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16">Preview</TableHead>
-                  <TableHead>Asset Details</TableHead>
-                  <TableHead>Type & Size</TableHead>
+                  <TableHead>Asset details</TableHead>
+                  <TableHead>Type & size</TableHead>
                   <TableHead>Resolution</TableHead>
                   <TableHead>Visibility</TableHead>
                   <TableHead>Uploaded</TableHead>
@@ -696,7 +696,7 @@ export function MediaDetailPanel({ item }: { item: AdminMediaDetail }) {
       {src ? (
         <div className="border-border bg-surface-sunken flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
           <div className="min-w-0 flex-1">
-            <p className="text-caption text-muted-foreground">Resource Link</p>
+            <p className="text-caption text-muted-foreground">Resource link</p>
             <p className="text-caption text-foreground truncate font-mono">{src}</p>
           </div>
           <Button
@@ -745,7 +745,7 @@ export function MediaDetailPanel({ item }: { item: AdminMediaDetail }) {
       </form>
 
       <section className="border-border space-y-3 border-t pt-4">
-        <h2 className="text-h4 text-destructive font-semibold">Danger Zone</h2>
+        <h2 className="text-h4 text-destructive font-semibold">Danger zone</h2>
         <FormStatus state={deleteState} success="File deleted" />
 
         {inUse ? (

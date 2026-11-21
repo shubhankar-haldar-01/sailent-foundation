@@ -47,7 +47,7 @@ export function AdminSearchDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="overflow-hidden p-0 sm:max-w-md">
         <DialogHeader className="border-border border-b px-4 py-3">
-          <DialogTitle className="sr-only">Quick Jump</DialogTitle>
+          <DialogTitle className="sr-only">Quick jump</DialogTitle>
           <div className="flex items-center gap-2">
             <Search className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
             <input

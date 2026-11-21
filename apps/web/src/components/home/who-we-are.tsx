@@ -43,14 +43,14 @@ const IMPACT_PROGRAMS = [
 ];
 
 /**
- * Who We Are & What We Do section.
+ * Who we are & What we do section.
  *
  * 100% precision match to the approved visual reference:
  * - Prominent white rounded container card with gentle elevation.
  * - 3-column layout:
- *   1. Left: "ABOUT US ——" eyebrow, "Who We Are" heading (with orange "Are"), description, and blue pill button.
+ *   1. Left: "ABOUT US ——" eyebrow, "Who we are" heading (with orange "Are"), description, and blue pill button.
  *   2. Center: Primary classroom photograph with top-right radiating orange sunburst rays.
- *   3. Right: "OUR IMPACT ——" eyebrow, "What We Do" heading (with orange "Do"), description, 6 program focus items with tinted icon discs, and "Explore Our Programs →" link.
+ *   3. Right: "OUR IMPACT ——" eyebrow, "What we do" heading (with orange "Do"), description, 6 program focus items with tinted icon discs, and "Explore our programs →" link.
  */
 export function WhoWeAre() {
   return (
@@ -63,7 +63,7 @@ export function WhoWeAre() {
         <div className="border-border bg-surface dark:border-border dark:bg-surface shadow-elevated relative mx-auto w-full rounded-[28px] border p-6 sm:rounded-[36px] sm:p-8 md:p-10 lg:p-12">
           <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr_1.1fr] lg:items-center lg:gap-8 xl:gap-10">
             {/* ─────────────────────────────────────────────────────────────
-                LEFT COLUMN: Who We Are
+                LEFT COLUMN: Who we are
                 ───────────────────────────────────────────────────────────── */}
             <div className="flex flex-col items-start">
               {/* Eyebrow */}
@@ -78,7 +78,7 @@ export function WhoWeAre() {
                 id="who-we-are-title"
                 className="font-display text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[38px] xl:text-[42px]"
               >
-                Who We Are
+                Who we are
               </h2>
 
               {/* Description */}
@@ -94,7 +94,7 @@ export function WhoWeAre() {
                 href="/about"
                 className="bg-primary text-primary-foreground hover:bg-primary-hover mt-7 inline-flex items-center gap-2.5 rounded-full px-7 py-3.5 text-sm font-bold shadow-md transition-all duration-200 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 sm:text-base"
               >
-                <span>Learn More About Us</span>
+                <span>Learn more about us</span>
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
@@ -128,7 +128,7 @@ export function WhoWeAre() {
             </div>
 
             {/* ─────────────────────────────────────────────────────────────
-                RIGHT COLUMN: What We Do & Impact Focus Areas
+                RIGHT COLUMN: What we do & Impact Focus Areas
                 ───────────────────────────────────────────────────────────── */}
             <div className="flex flex-col items-start">
               {/* Eyebrow */}
@@ -140,7 +140,7 @@ export function WhoWeAre() {
 
               {/* Heading */}
               <h2 className="font-display text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[38px] xl:text-[42px]">
-                What We Do
+                What we do
               </h2>
 
               {/* Description */}
@@ -171,13 +171,13 @@ export function WhoWeAre() {
                 ))}
               </ul>
 
-              {/* Explore Our Programs Link */}
+              {/* Explore our programs Link */}
               <div className="mt-6">
                 <Link
                   href="/programs"
                   className="text-primary hover:text-primary-hover group inline-flex items-center gap-2 text-sm font-bold transition-colors hover:underline sm:text-[15px]"
                 >
-                  <span>Explore Our Programs</span>
+                  <span>Explore our programs</span>
                   <ArrowRight
                     className="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
                     aria-hidden="true"

@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@sailent/ui';
 
 /**
- * "View More Programs" — the blue outlined pill centred under the grid, as
+ * "View more programs" — the blue outlined pill centred under the grid, as
  * the owner's design (2026-10-14) draws it. The shared secondary button, so
  * it matches every other blue outline on the site.
  *
@@ -23,7 +23,7 @@ export function ViewMorePrograms({ href }: { href: string }) {
         className="group h-12 px-10 text-[0.9375rem] shadow-none sm:h-[3.25rem] sm:px-12 sm:text-[0.9375rem]"
       >
         <Link href={href} scroll={false}>
-          View More Programs
+          View more programs
           <ArrowRight
             className="duration-(--duration-base) transition-transform motion-safe:group-hover:translate-x-1"
             aria-hidden="true"

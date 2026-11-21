@@ -66,7 +66,7 @@ export function validateEmail(email: string): string | null {
 }
 
 export function validatePhone(phone: string): string | null {
-  if (!phone.trim()) return 'Contact Number is mandatory.';
+  if (!phone.trim()) return 'Contact number is mandatory.';
   const digits = phone.replace(/[\s\-()+]/g, '');
   if (digits.length < 10 || !/^\d+$/.test(digits)) {
     return 'Please enter a valid contact number (at least 10 digits).';
@@ -75,10 +75,10 @@ export function validatePhone(phone: string): string | null {
 }
 
 export function validateAadhaar(aadhaar: string): string | null {
-  if (!aadhaar.trim()) return 'Adhar Number is mandatory.';
+  if (!aadhaar.trim()) return 'Adhar number is mandatory.';
   const digits = aadhaar.replace(/\s|-/g, '');
   if (!/^\d{12}$/.test(digits)) {
-    return 'Adhar Number must be exactly 12 digits (e.g. 1234 5678 9012).';
+    return 'Adhar number must be exactly 12 digits (e.g. 1234 5678 9012).';
   }
   return null;
 }
@@ -95,10 +95,10 @@ export function validateAddress(address: string): string | null {
  * Team member creation & edit form built with shadcn UI.
  *
  * All 8 fields are mandatory with in-box validation:
- * 1. Full Name *
+ * 1. Full name *
  * 2. Email *
- * 3. Contact Number *
- * 4. Adhar Number *
+ * 3. Contact number *
+ * 4. Adhar number *
  * 5. Address *
  * 6. Type dropdown * ('Team' / 'Trustee')
  * 7. Designation * (automatically set to 'Team' when Type is 'Team')
@@ -198,8 +198,8 @@ export function TeamForm({
   const validateField = (field: string, val: string): string | null => {
     switch (field) {
       case 'name':
-        if (!val.trim()) return 'Full Name is mandatory.';
-        if (val.trim().length < 2) return 'Full Name must be at least 2 characters.';
+        if (!val.trim()) return 'Full name is mandatory.';
+        if (val.trim().length < 2) return 'Full name must be at least 2 characters.';
         return null;
       case 'emailPublic':
         return validateEmail(val);
@@ -367,7 +367,7 @@ export function TeamForm({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-h4 text-foreground font-bold">
-              {member ? 'Edit Team Member Profile' : 'New Team Member Profile'}
+              {member ? 'Edit Team member Profile' : 'New Team member Profile'}
             </CardTitle>
             <CardDescription className="text-body-sm text-muted-foreground mt-1">
               {member
@@ -379,7 +379,7 @@ export function TeamForm({
             variant={memberType === 'trustee' ? 'info' : 'accent'}
             className="px-3 py-1 font-semibold capitalize"
           >
-            {memberType === 'trustee' ? 'Trustee' : 'Team Member'}
+            {memberType === 'trustee' ? 'Trustee' : 'Team member'}
           </Badge>
         </div>
       </CardHeader>
@@ -410,14 +410,14 @@ export function TeamForm({
             </Alert>
           ) : null}
 
-          {/* 1. Full Name */}
+          {/* 1. Full name */}
           <div className="space-y-1.5">
             <Label
               htmlFor="name"
               className="text-foreground flex items-center gap-1.5 text-sm font-semibold"
             >
               <User className="text-primary size-4" aria-hidden="true" />
-              <span>Full Name</span>
+              <span>Full name</span>
               <span className="text-destructive font-bold">*</span>
             </Label>
             <Input
@@ -475,14 +475,14 @@ export function TeamForm({
             ) : null}
           </div>
 
-          {/* 3. Contact Number */}
+          {/* 3. Contact number */}
           <div className="space-y-1.5">
             <Label
               htmlFor="contactNumber"
               className="text-foreground flex items-center gap-1.5 text-sm font-semibold"
             >
               <Phone className="text-primary size-4" aria-hidden="true" />
-              <span>Contact Number</span>
+              <span>Contact number</span>
               <span className="text-destructive font-bold">*</span>
             </Label>
             <Input
@@ -508,14 +508,14 @@ export function TeamForm({
             ) : null}
           </div>
 
-          {/* 4. Adhar Number */}
+          {/* 4. Adhar number */}
           <div className="space-y-1.5">
             <Label
               htmlFor="aadharNumber"
               className="text-foreground flex items-center gap-1.5 text-sm font-semibold"
             >
               <CreditCard className="text-primary size-4" aria-hidden="true" />
-              <span>Adhar Number</span>
+              <span>Adhar number</span>
               <span className="text-destructive font-bold">*</span>
             </Label>
             <Input
@@ -722,7 +722,7 @@ export function TeamForm({
                     ) : (
                       <>
                         <UploadCloud className="mr-1.5 size-3.5" />
-                        Upload Photograph
+                        Upload photograph
                       </>
                     )}
                   </Button>
@@ -790,9 +790,9 @@ export function TeamForm({
                   {member ? 'Saving Changes...' : 'Creating Profile...'}
                 </>
               ) : member ? (
-                'Save Changes'
+                'Save changes'
               ) : (
-                'Create Team Member'
+                'Create Team member'
               )}
             </Button>
           </div>

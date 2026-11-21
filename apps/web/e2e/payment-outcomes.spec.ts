@@ -128,7 +128,7 @@ async function stubPayments(page: Page, outcome: Outcome, statuses: string[] = [
 /** From the campaign page to the donor form, then fill it. */
 async function reachCheckout(page: Page) {
   await page.goto(CAMPAIGN);
-  const add = page.getByRole('button', { name: /Add one School Kit/i }).first();
+  const add = page.getByRole('button', { name: /Add one School kit/i }).first();
   await add.scrollIntoViewIfNeeded();
   await add.click();
   await page.waitForLoadState('networkidle');

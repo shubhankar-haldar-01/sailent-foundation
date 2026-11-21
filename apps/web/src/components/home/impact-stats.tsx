@@ -29,34 +29,34 @@ import type { ImpactMetric } from '@/lib/content';
 const ICONS = {
   beneficiaries: {
     icon: PeopleSolid,
-    wash: 'bg-muted text-primary shadow-card',
+    wash: 'bg-accent text-primary',
     stroke: false,
   },
   communities: {
     icon: PinSolid,
-    wash: 'bg-info-subtle text-info shadow-card',
+    wash: 'bg-accent text-primary',
     stroke: false,
   },
   campaigns: {
     icon: Heart,
-    wash: 'bg-success-subtle text-success shadow-card',
+    wash: 'bg-accent text-primary',
     stroke: true,
   },
   volunteers: {
     icon: PeopleSolid,
-    wash: 'bg-accent text-primary shadow-card',
+    wash: 'bg-accent text-primary',
     stroke: false,
   },
   years: {
     icon: Star,
-    wash: 'bg-accent text-warning-foreground shadow-card',
+    wash: 'bg-accent text-primary',
     stroke: true,
   },
 } as const;
 
 const FALLBACK = {
   icon: Star,
-  wash: 'bg-info-subtle text-info shadow-card',
+  wash: 'bg-accent text-primary',
   stroke: true,
 } as const;
 

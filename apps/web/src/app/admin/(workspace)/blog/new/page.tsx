@@ -25,14 +25,14 @@ export default async function NewBlogPostPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Write Article"
+        title="Write article"
         breadcrumb={<AdminBackButton href="/admin/blog">Back to blog</AdminBackButton>}
         description="Saved as a draft. Nothing is made public until published deliberately."
       />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Article Details</CardTitle>
+          <CardTitle className="text-base">Article details</CardTitle>
           <CardDescription>Compose title, slug, excerpt, content, and metadata.</CardDescription>
         </CardHeader>
         <CardContent>

@@ -85,7 +85,7 @@ export default async function AdminMessagePage({ params }: { params: Promise<{ i
       {can(actor, 'contact.manage') ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Inquiry Status Controls</CardTitle>
+            <CardTitle className="text-base">Inquiry status controls</CardTitle>
             <CardDescription>Mark message as handled or delete the inquiry record.</CardDescription>
           </CardHeader>
           <CardContent>

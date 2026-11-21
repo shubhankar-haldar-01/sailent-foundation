@@ -106,18 +106,18 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
               <div className="flex items-center gap-2">
                 <User className="text-primary size-5" aria-hidden="true" />
                 <CardTitle className="text-base font-semibold">
-                  Contact & Personal Details
+                  Contact & personal details
                 </CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
               <dl className="text-body-sm grid gap-x-6 gap-y-3 sm:grid-cols-2">
                 <div>
-                  <dt className="text-caption text-muted-foreground font-medium">Email Address</dt>
+                  <dt className="text-caption text-muted-foreground font-medium">Email address</dt>
                   <dd className="text-foreground mt-0.5 font-medium">{volunteer.email ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-caption text-muted-foreground font-medium">Phone Number</dt>
+                  <dt className="text-caption text-muted-foreground font-medium">Phone number</dt>
                   <dd className="text-foreground mt-0.5 font-mono">{volunteer.phone}</dd>
                 </div>
                 <div>
@@ -132,11 +132,11 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
                 </div>
               </dl>
 
-              {/* Emergency Contact */}
+              {/* Emergency contact */}
               <div className="border-border border-t pt-4">
                 <div className="mb-2 flex items-center gap-2">
                   <PhoneCall className="text-destructive size-4" aria-hidden="true" />
-                  <h3 className="text-body-sm text-foreground font-semibold">Emergency Contact</h3>
+                  <h3 className="text-body-sm text-foreground font-semibold">Emergency contact</h3>
                 </div>
                 {volunteer.emergencyContactName ? (
                   <p className="text-body-sm text-foreground">
@@ -166,13 +166,13 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
             <CardHeader className="border-border border-b pb-4">
               <div className="flex items-center gap-2">
                 <HeartHandshake className="text-primary size-5" aria-hidden="true" />
-                <CardTitle className="text-base font-semibold">Skills & Experience</CardTitle>
+                <CardTitle className="text-base font-semibold">Skills & experience</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-4 p-6">
               <div>
                 <p className="text-caption text-muted-foreground mb-2 font-medium uppercase">
-                  Key Competencies
+                  Key competencies
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {(volunteer.skills ?? []).map((skill) => (
@@ -196,7 +196,7 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
               {volunteer.experience ? (
                 <div className="border-border border-t pt-4">
                   <p className="text-caption text-muted-foreground mb-1 font-medium uppercase">
-                    Prior Experience
+                    Prior experience
                   </p>
                   <p className="text-body-sm text-foreground whitespace-pre-wrap leading-relaxed">
                     {volunteer.experience}
@@ -206,13 +206,13 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
             </CardContent>
           </Card>
 
-          {/* Field Assignments Card */}
+          {/* Field assignments Card */}
           <Card className="border-border">
             <CardHeader className="border-border border-b pb-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Calendar className="text-primary size-5" aria-hidden="true" />
-                  <CardTitle className="text-base font-semibold">Field Assignments</CardTitle>
+                  <CardTitle className="text-base font-semibold">Field assignments</CardTitle>
                 </div>
                 {can(actor, 'volunteer.assign') ? (
                   <NewAssignment
@@ -269,13 +269,13 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
             </CardContent>
           </Card>
 
-          {/* Verified Service Attendance Card */}
+          {/* Verified service attendance Card */}
           <Card className="border-border">
             <CardHeader className="border-border border-b pb-4">
               <div className="flex items-center gap-2">
                 <CheckSquare className="text-primary size-5" aria-hidden="true" />
                 <CardTitle className="text-base font-semibold">
-                  Verified Service Attendance
+                  Verified service attendance
                 </CardTitle>
               </div>
               <p className="text-caption text-muted-foreground mt-1">
@@ -301,7 +301,7 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
           {/* Review Decision Card */}
           <Card className="border-border">
             <CardHeader className="border-border border-b pb-4">
-              <CardTitle className="text-base font-semibold">Onboarding Decision</CardTitle>
+              <CardTitle className="text-base font-semibold">Onboarding decision</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               {can(actor, 'volunteer.approve') ? (
@@ -318,12 +318,12 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
             </CardContent>
           </Card>
 
-          {/* Service Certificates Card */}
+          {/* Service certificates Card */}
           <Card className="border-border">
             <CardHeader className="border-border border-b pb-4">
               <div className="flex items-center gap-2">
                 <Award className="text-primary size-5" aria-hidden="true" />
-                <CardTitle className="text-base font-semibold">Service Certificates</CardTitle>
+                <CardTitle className="text-base font-semibold">Service certificates</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-4 p-6">
@@ -363,14 +363,14 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
             </CardContent>
           </Card>
 
-          {/* Internal Staff Notes */}
+          {/* Internal staff notes */}
           {volunteer.statusReason || volunteer.internalNotes || application?.reviewNotes ? (
             <Card className="border-warning/40 bg-warning-subtle/30">
               <CardHeader className="border-warning/30 border-b pb-3">
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="text-warning-foreground size-4" aria-hidden="true" />
                   <CardTitle className="text-warning-foreground text-sm font-semibold">
-                    Internal Staff Notes
+                    Internal staff notes
                   </CardTitle>
                 </div>
                 <p className="text-caption text-muted-foreground">
@@ -391,7 +391,7 @@ export default async function AdminVolunteerPage({ params }: { params: Promise<{
               <CardHeader className="border-border border-b pb-4">
                 <div className="flex items-center gap-2">
                   <FileText className="text-primary size-5" aria-hidden="true" />
-                  <CardTitle className="text-base font-semibold">Original Application</CardTitle>
+                  <CardTitle className="text-base font-semibold">Original application</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="text-caption text-muted-foreground space-y-2 p-6">

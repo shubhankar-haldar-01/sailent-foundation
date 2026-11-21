@@ -86,7 +86,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </div>
             <div className="min-w-0 print:w-full">
               {/*
-                Phone-only "My Account" card above each dashboard page. The
+                Phone-only "My account" card above each dashboard page. The
                 dashboard home renders it itself, under its welcome banner.
               */}
               <MyAccountNavSlot />

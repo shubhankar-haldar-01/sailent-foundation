@@ -9,7 +9,7 @@ import { e2eStack } from '../playwright.config';
  *
  * ══════════════════════════════════════════════════════════════════════════
  * "Feature on the homepage" on a campaign's admin form puts it at the front
- * of the Featured Campaigns band, in the order given; un-ticking it takes it
+ * of the Featured campaigns band, in the order given; un-ticking it takes it
  * out again. The assertions are on the DATABASE and on the PUBLIC PAGE, not on
  * a confirmation banner: what matters is that the choice was stored and that
  * visitors see it.

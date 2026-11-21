@@ -54,7 +54,7 @@ export default async function AdminTaxPage({
     <div className="space-y-6">
       <PageHeader
         title="Tax compliance"
-        description={`Annual Form 10BD statutory filing readiness for Financial Year ${report.financialYear}. Form 10BE tax relief certificates are issued by the Income Tax Department based on this filing.`}
+        description={`Annual Form 10BD statutory filing readiness for Financial year ${report.financialYear}. Form 10BE tax relief certificates are issued by the Income Tax Department based on this filing.`}
         status={
           <Badge variant={percentReady === 100 ? 'success' : 'warning'}>
             {percentReady}% Ready
@@ -82,22 +82,22 @@ export default async function AdminTaxPage({
       {/* KPI Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="Eligible Donations"
+          label="Eligible donations"
           value={report.eligible}
           hint={formatCurrency(report.eligiblePaise)}
         />
         <Stat
-          label="Ready to File"
+          label="Ready to file"
           value={report.ready}
           hint={`${percentReady}% of eligible donations`}
         />
         <Stat
-          label="Missing Tax ID"
+          label="Missing tax ID"
           value={report.missing}
           hint={formatCurrency(report.missingPaise)}
         />
         <Stat
-          label="Donors to Contact"
+          label="Donors to contact"
           value={report.donorsMissingTaxId}
           hint="Donors with missing PANs"
         />
@@ -145,15 +145,15 @@ export default async function AdminTaxPage({
         <CardHeader className="border-border border-b pb-4">
           <div className="flex items-center gap-2">
             <FileText className="text-primary size-5" aria-hidden="true" />
-            <CardTitle className="text-base font-semibold">Statutory Export Guidance</CardTitle>
+            <CardTitle className="text-base font-semibold">Statutory export guidance</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="p-6">
           <p className="text-body-sm text-muted-foreground">
             To prepare the official government filing, export the verified donations CSV for
-            Financial Year {report.financialYear} from the{' '}
+            Financial year {report.financialYear} from the{' '}
             <Link href="/admin/reports" className="text-primary font-medium hover:underline">
-              Administrative Reports & Exports
+              Administrative reports & exports
             </Link>{' '}
             section. That export includes full tax IDs and addresses unlocked under sensitive staff
             permissions.

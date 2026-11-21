@@ -57,7 +57,7 @@ describe('ProgramForm', () => {
 
     // 6. Upload image (mandatory)
     expect(screen.getByText(/Upload image/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Choose from Media Library/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Choose from media library/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Upload photo from device/i })).toBeInTheDocument();
 
     // Verify hidden input exists for coverImage

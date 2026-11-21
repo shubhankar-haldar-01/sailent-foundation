@@ -198,7 +198,7 @@ export function DonorCorrectionForm({ donor }: { donor: CorrectableDonor }) {
 
       <div className="flex flex-col gap-1.5">
         <div className="flex h-5 items-center justify-between">
-          <Label htmlFor="taxIdNumber">PAN (Permanent Account Number)</Label>
+          <Label htmlFor="taxIdNumber">PAN (permanent account number)</Label>
           <span className="text-caption text-muted-foreground font-mono text-xs">
             {pan.length}/10
           </span>

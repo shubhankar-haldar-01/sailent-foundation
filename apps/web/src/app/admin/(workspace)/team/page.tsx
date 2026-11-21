@@ -65,7 +65,7 @@ export default async function AdminTeamPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Team Directory"
+        title="Team directory"
         count={data.pagination.total}
         description="Public team members and leadership profiles displayed on the public About page."
         actions={
@@ -158,19 +158,19 @@ export default async function AdminTeamPage({
               <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
                 <tr>
                   <th scope="col" className="px-5 py-3.5">
-                    Team Member
+                    Team member
                   </th>
                   <th scope="col" className="px-5 py-3.5">
                     Department
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Role Type
+                    Role type
                   </th>
                   <th scope="col" className="px-5 py-3.5">
                     Status
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Last Updated
+                    Last updated
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
                     <span className="sr-only">Actions</span>

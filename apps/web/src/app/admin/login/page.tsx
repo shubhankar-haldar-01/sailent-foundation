@@ -56,6 +56,9 @@ export default function AdminLoginPage() {
               alt="Sailent Foundation"
               width={1743}
               height={453}
+              // Shown at most ~220px wide: without `sizes` the browser fetched the
+              // 3840px rendition (44 KB) of the 1743px PNG (visual polish Phase 5).
+              sizes="220px"
               priority
               className="h-12 w-auto object-contain sm:h-14"
             />
@@ -63,7 +66,7 @@ export default function AdminLoginPage() {
           <h1 className="font-display text-foreground text-2xl font-bold tracking-tight">
             Sailent Foundation
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">Staff Administration Console</p>
+          <p className="text-muted-foreground mt-1 text-sm">Staff administration console</p>
         </div>
 
         <Card className="shadow-sm">
@@ -114,7 +117,7 @@ export default function AdminLoginPage() {
                 <div className="border-border mt-3 space-y-1.5 border-t pt-1">
                   <div className="text-warning mb-1 flex items-center gap-1.5 text-xs font-medium">
                     <Lock className="h-3.5 w-3.5" />
-                    Two-Factor Authentication Required
+                    Two-factor authentication required
                   </div>
                   <Label htmlFor="totpCode">Authenticator code</Label>
                   <Input

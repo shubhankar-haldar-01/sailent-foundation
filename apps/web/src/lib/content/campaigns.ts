@@ -306,7 +306,7 @@ export async function getCampaigns(query: CampaignQuery = {}): Promise<Campaign[
 }
 
 /**
- * The homepage's Featured Campaigns band: the campaigns an administrator
+ * The homepage's Featured campaigns band: the campaigns an administrator
  * marked featured, in their featured order, then the rest by deadline — active
  * ones only. See `lib/featured-campaigns.ts` for the rule.
  *
@@ -348,7 +348,7 @@ export interface CampaignListing {
  *
  * `getCampaigns` fetches everything and drops the pagination envelope, which
  * suits the pages that want a whole set. The listing page needs the envelope:
- * "View More Campaigns" appears only when the API says there is more, rather
+ * "View more campaigns" appears only when the API says there is more, rather
  * than when a client-side slice happens to be shorter than the array it came
  * from.
  *

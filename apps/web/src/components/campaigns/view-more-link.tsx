@@ -4,8 +4,8 @@ import { ArrowDown, ArrowRight } from 'lucide-react';
 import { cn } from '@sailent/ui';
 
 /**
- * "View More Campaigns" — the mint pill with a soft green glow, the same
- * design as the homepage's "View All Campaigns" (owner, 2026-10-15; it was an
+ * "View more campaigns" — the mint pill with a soft green glow, the same
+ * design as the homepage's "View all campaigns" (owner, 2026-10-15; it was an
  * amber pill between two leaf-tipped rules).
  *
  * One component for both places it appears, so they cannot drift apart:
@@ -20,7 +20,7 @@ import { cn } from '@sailent/ui';
  */
 export function ViewMoreLink({
   href,
-  label = 'View More Campaigns',
+  label = 'View more campaigns',
   direction = 'down',
   className,
 }: {
@@ -36,7 +36,7 @@ export function ViewMoreLink({
       <Link
         href={href}
         scroll={direction !== 'down'}
-        className="bg-wash-mint text-wash-mint-ink-strong focus-visible:outline-ring duration-(--duration-base) ease-(--ease-out-soft) group/more inline-flex shrink-0 items-center gap-2 rounded-full px-7 py-3 text-sm font-bold shadow-elevated transition-[translate,scale,box-shadow,filter] hover:shadow-card-hover hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-[0.98] sm:text-base"
+        className="bg-accent text-primary focus-visible:outline-ring duration-(--duration-base) ease-(--ease-out-soft) group/more shadow-elevated hover:shadow-card-hover inline-flex shrink-0 items-center gap-2 rounded-full px-7 py-3 text-sm font-bold transition-[translate,scale,box-shadow,filter] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-[0.98] sm:text-base"
       >
         {label}
         {/*

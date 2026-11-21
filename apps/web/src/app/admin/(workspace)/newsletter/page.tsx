@@ -75,7 +75,7 @@ export default async function AdminNewsletterPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Newsletter Subscribers"
+        title="Newsletter subscribers"
         description="Subscriber consent directory following double opt-in verification. Used for audit records and broadcast audience exports."
         count={data.counts.subscribed}
       />
@@ -106,7 +106,7 @@ export default async function AdminNewsletterPage({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <MailCheck className="text-primary size-4" />
-            Verified Subscribers
+            Verified subscribers
           </CardTitle>
           <CardDescription>Showing {data.items.length} records in current view</CardDescription>
         </CardHeader>
@@ -120,9 +120,9 @@ export default async function AdminNewsletterPage({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
-                    <TableHead className="font-semibold">Email Address</TableHead>
-                    <TableHead className="font-semibold">Subscription Status</TableHead>
-                    <TableHead className="text-right font-semibold">Consent Date</TableHead>
+                    <TableHead className="font-semibold">Email address</TableHead>
+                    <TableHead className="font-semibold">Subscription status</TableHead>
+                    <TableHead className="text-right font-semibold">Consent date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

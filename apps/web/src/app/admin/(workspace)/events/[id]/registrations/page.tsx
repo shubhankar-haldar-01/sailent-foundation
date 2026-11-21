@@ -99,7 +99,7 @@ export default async function EventRegistrationsPage({
           <Card className="border-warning/30 bg-warning/5">
             <CardContent className="flex flex-col items-center justify-center p-8 text-center">
               <ShieldAlert className="text-warning mb-2 size-8" />
-              <p className="text-body font-medium">Access Restricted</p>
+              <p className="text-body font-medium">Access restricted</p>
               <p className="text-body-sm text-muted-foreground mt-1 max-w-md">
                 You do not have permission to view attendee details for this event.
               </p>
@@ -138,13 +138,13 @@ export default async function EventRegistrationsPage({
             <Button asChild variant="primary" size="sm" className="shadow-xs font-semibold">
               <Link href={`/admin/gate/${event.id}`}>
                 <QrCode className="mr-1.5 size-4" />
-                Gate QR Scanner
+                Gate QR scanner
               </Link>
             </Button>
             <Button asChild variant="secondary" size="sm">
               <Link href={`/admin/events/${event.id}/edit`}>
                 <ArrowLeft className="mr-1.5 size-4" />
-                Edit Event
+                Edit event
               </Link>
             </Button>
           </div>
@@ -159,7 +159,7 @@ export default async function EventRegistrationsPage({
                 <div>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Users className="text-primary size-4" />
-                    Attendee Register
+                    Attendee register
                   </CardTitle>
                   <CardDescription>
                     {data.pagination.total} {data.pagination.total === 1 ? 'person' : 'people'}{' '}
@@ -196,7 +196,7 @@ export default async function EventRegistrationsPage({
               {past && can(actor, 'event.attendance') ? (
                 <div className="space-y-4">
                   <div className="border-border/60 bg-muted/30 rounded-lg border p-4">
-                    <h3 className="text-body-sm font-semibold">Mark Attendance</h3>
+                    <h3 className="text-body-sm font-semibold">Mark attendance</h3>
                     <p className="text-caption text-muted-foreground mt-0.5">
                       Leave a row on “Leave” and its record is not touched. Somebody who cancelled
                       and came anyway must register again first.

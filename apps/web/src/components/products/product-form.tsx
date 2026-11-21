@@ -44,14 +44,14 @@ export function ProductForm({ product }: { product?: CatalogueProduct }) {
         name="name"
         errors={state.fieldErrors}
         required
-        hint="What a donor sees. “School Kit”, not “Education pack (2026 revision)”."
+        hint="What a donor sees. “School kit”, not “Education pack (2026 revision)”."
       >
         <Input
           id="name"
           name="name"
           required
           defaultValue={product?.name}
-          placeholder="School Kit"
+          placeholder="School kit"
         />
       </Field>
 

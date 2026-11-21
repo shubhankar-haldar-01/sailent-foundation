@@ -12,14 +12,14 @@ import { can, currentActor } from '@/lib/auth/session';
 export const dynamic = 'force-dynamic';
 
 const STATUSES = [
-  { value: 'all', label: 'All Visibility' },
+  { value: 'all', label: 'All visibility' },
   { value: 'published', label: 'Published' },
   { value: 'draft', label: 'Draft' },
   { value: 'cancelled', label: 'Cancelled' },
 ] as const;
 
 const TIMINGS = [
-  { value: 'all', label: 'All Dates' },
+  { value: 'all', label: 'All dates' },
   { value: 'upcoming', label: 'Upcoming' },
   { value: 'past', label: 'Past' },
 ] as const;
@@ -222,10 +222,10 @@ export default async function AdminEventsPage({
                     Fee
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Date & Time
+                    Date & time
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
-                    Capacity & Seats
+                    Capacity & seats
                   </th>
                   <th scope="col" className="px-5 py-3.5">
                     Visibility

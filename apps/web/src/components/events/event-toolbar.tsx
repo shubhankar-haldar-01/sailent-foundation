@@ -26,7 +26,7 @@ const ITEM =
   'cursor-pointer rounded-lg py-2.5 pl-3 pr-9 data-[state=checked]:bg-primary-soft data-[state=checked]:font-semibold';
 
 /**
- * The search box and the "All Dates" menu — the only two controls the
+ * The search box and the "All dates" menu — the only two controls the
  * owner's design (2026-10-17) puts over the events grid. On one row from `md`,
  * stacked on a phone.
  *
@@ -78,7 +78,7 @@ export function EventToolbar({
     startTransition(() => router.push(href, { scroll: false }));
   }
 
-  const dateLabel = months.find((option) => option.value === activeDate)?.label ?? 'All Dates';
+  const dateLabel = months.find((option) => option.value === activeDate)?.label ?? 'All dates';
 
   return (
     <form
@@ -180,7 +180,7 @@ export function EventToolbar({
               Show events in
             </SelectLabel>
             <SelectItem value={ALL_DATES} indicatorSide="end" className={ITEM}>
-              All Dates
+              All dates
             </SelectItem>
             {months.map((option) => (
               <SelectItem

@@ -15,7 +15,7 @@ const ACTIONS = [
     icon: PeopleSolid,
     title: 'Volunteer',
     blurb: 'Share your time and skills',
-    wash: 'bg-wash-blue text-info-action',
+    wash: 'bg-accent text-info-action',
   },
   {
     /*
@@ -32,14 +32,14 @@ const ACTIONS = [
     icon: FlagSolid,
     title: 'Donate',
     blurb: 'Fund a campaign that needs it',
-    wash: 'bg-wash-amber text-primary',
+    wash: 'bg-accent text-primary',
   },
   {
     href: '/contact',
     icon: PartnerSolid,
     title: 'Partner',
     blurb: 'Collaborate for greater reach',
-    wash: 'bg-wash-mint text-success',
+    wash: 'bg-accent text-success',
   },
 ] as const;
 
@@ -111,7 +111,7 @@ export function CommunityCta() {
               id="community-title"
               className="font-display text-h2 text-balance font-bold tracking-tight text-white"
             >
-              Join Our Community
+              Join our community
             </h2>
             <p className="text-body-sm mt-2 leading-relaxed text-white/85">
               Your time, skills or support can create real, lasting impact.
@@ -124,7 +124,7 @@ export function CommunityCta() {
                 className="text-info-action ring-info-action/25 bg-surface hover:bg-surface/90 shadow-sm ring-1"
               >
                 <Link href="/volunteer">
-                  Become a Volunteer
+                  Become a volunteer
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
               </Button>
@@ -134,7 +134,7 @@ export function CommunityCta() {
                 className="bg-surface-inverse/35 hover:bg-surface-inverse/55 text-white ring-1 ring-white/70"
               >
                 <Link href="/donate">
-                  Make a Donation
+                  Make a donation
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
               </Button>

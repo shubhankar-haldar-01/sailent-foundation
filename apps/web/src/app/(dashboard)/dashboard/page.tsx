@@ -18,8 +18,8 @@ export const dynamic = 'force-dynamic';
 
 /**
  * The dashboard (design, 2026-10-08): the welcome banner, three figures,
- * and recent payments in the centre; the profile, "Your Impact" and
- * "Explore More Campaigns" on the right. On a phone the right column
+ * and recent payments in the centre; the profile, "Your impact" and
+ * "Explore more campaigns" on the right. On a phone the right column
  * follows the centre, in that order.
  *
  * ══════════════════════════════════════════════════════════════════════════
@@ -45,15 +45,15 @@ export default async function DashboardPage() {
         <DashboardHero firstName={profile.firstName?.trim() || null} />
 
         {/*
-          Phone only: the "My Account" card comes AFTER the welcome banner on
+          Phone only: the "My account" card comes AFTER the welcome banner on
           this page (owner, 2026-10-17). The layout leaves it out here.
         */}
         <MyAccountNavCard className="lg:hidden" />
 
-        {/* 3. Core Stat Cards: Total Donations & Campaigns Supported */}
+        {/* 3. Core Stat Cards: Total donations & Campaigns supported */}
         <StatCards impact={impact} />
 
-        {/* 4. Recent Successful Payments */}
+        {/* 4. Recent successful payments */}
         <RecentPayments donations={recentDonations} />
       </div>
       <div className="hidden space-y-5 xl:block xl:space-y-4">

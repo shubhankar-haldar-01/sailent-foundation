@@ -30,24 +30,24 @@ export function RecentPayments({ donations }: { donations: DonorDonation[] }) {
               id="payments-heading"
               className="font-display text-foreground text-lg font-bold sm:text-xl"
             >
-              Recent Successful Payments
+              Recent successful payments
             </h2>
             <p className="text-muted-foreground text-xs font-normal sm:text-sm">
               {donations.length} {donations.length === 1 ? 'Payment' : 'Payments'}
             </p>
           </div>
           {donations.length > 0 ? (
-            <PanelLink href="/dashboard/donations">View All Payments</PanelLink>
+            <PanelLink href="/dashboard/donations">View all payments</PanelLink>
           ) : null}
         </div>
 
         {donations.length === 0 ? (
           <div className="mt-4 space-y-4">
             <div className="border-border/70 bg-muted/30 text-muted-foreground flex min-h-[5.5rem] items-center justify-center rounded-2xl border p-5 text-center text-xs font-medium sm:text-sm">
-              No Payments Found For This Selection.
+              No payments found for this selection.
             </div>
             <div>
-              <PanelLink href="/dashboard/donations">View All Payments</PanelLink>
+              <PanelLink href="/dashboard/donations">View all payments</PanelLink>
             </div>
           </div>
         ) : (

@@ -64,7 +64,7 @@ export default async function AdminProductPage({ params }: { params: Promise<{ i
           <CardHeader className="border-border border-b pb-4">
             <div className="flex items-center gap-2">
               <ShoppingBag className="text-primary size-5" aria-hidden="true" />
-              <CardTitle className="text-base font-semibold">Product Definition</CardTitle>
+              <CardTitle className="text-base font-semibold">Product definition</CardTitle>
             </div>
             <p className="text-caption text-muted-foreground mt-1">
               Updating details here modifies the catalogue benchmark. Active campaigns maintain
@@ -89,7 +89,7 @@ export default async function AdminProductPage({ params }: { params: Promise<{ i
               <div className="flex items-center gap-2">
                 <Layers className="text-primary size-5" aria-hidden="true" />
                 <CardTitle className="text-base font-semibold">
-                  Active Campaign Allocations
+                  Active campaign allocations
                 </CardTitle>
               </div>
               <p className="text-caption text-muted-foreground mt-1">

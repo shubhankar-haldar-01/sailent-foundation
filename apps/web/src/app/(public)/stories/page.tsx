@@ -20,7 +20,7 @@ export const metadata: Metadata = buildMetadata({
 
 /** One lead story and two rows of three. */
 const FIRST_BATCH = 7;
-/** "View More Stories" adds two more rows. */
+/** "View more stories" adds two more rows. */
 const BATCH = 6;
 const MAX_SHOWN = 100;
 
@@ -31,7 +31,7 @@ const MAX_SHOWN = 100;
   EVERYTHING ON IT IS READ, NOTHING IS FIXED. The categories offered are the
   ones published stories are filed under (a story's own category, else its
   programme's — owner decision); the lead is the newest story in the current
-  view; "View More Stories" asks for six more of the same view, as a plain
+  view; "View more stories" asks for six more of the same view, as a plain
   link (`?count=`), so it works without JavaScript and keeps the filter.
   ══════════════════════════════════════════════════════════════════════════
 */
@@ -99,9 +99,9 @@ export default async function StoriesPage({
                     <Link
                       href={moreHref}
                       scroll={false}
-                      className="bg-wash-coral/80 text-primary hover:bg-primary-light focus-visible:outline-ring inline-flex h-12 items-center gap-2 rounded-full px-12 text-[0.9375rem] font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 sm:px-[5.5rem]"
+                      className="bg-accent/80 text-primary hover:bg-primary-light focus-visible:outline-ring inline-flex h-12 items-center gap-2 rounded-full px-12 text-[0.9375rem] font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 sm:px-[5.5rem]"
                     >
-                      View More Stories
+                      View more stories
                       <ArrowRight className="size-4" aria-hidden="true" />
                     </Link>
                     <LeafFan className="text-primary absolute -right-[2.125rem] -top-1.5 h-12 w-auto" />

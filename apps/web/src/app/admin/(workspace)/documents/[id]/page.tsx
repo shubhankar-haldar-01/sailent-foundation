@@ -68,24 +68,24 @@ export default async function AdminDocumentPage({ params }: { params: Promise<{ 
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <FileSpreadsheet className="text-primary size-4" />
-            Document Overview
+            Document overview
           </CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="text-body-sm grid gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="border-border/60 bg-muted/20 rounded-md border p-3">
-              <dt className="text-caption text-muted-foreground">Financial Year</dt>
+              <dt className="text-caption text-muted-foreground">Financial year</dt>
               <dd className="mt-1 font-semibold">{document.financialYear ?? '—'}</dd>
             </div>
             <div className="border-border/60 bg-muted/20 rounded-md border p-3">
-              <dt className="text-caption text-muted-foreground">Campaign Attachment</dt>
+              <dt className="text-caption text-muted-foreground">Campaign attachment</dt>
               <dd className="mt-1 font-semibold">
                 {document.relatedType === 'campaign' && document.relatedId ? (
                   <Link
                     href={`/admin/campaigns/${document.relatedId}/edit`}
                     className="text-primary hover:underline"
                   >
-                    View Campaign
+                    View campaign
                   </Link>
                 ) : (
                   <span className="text-muted-foreground">None</span>
@@ -93,7 +93,7 @@ export default async function AdminDocumentPage({ params }: { params: Promise<{ 
               </dd>
             </div>
             <div className="border-border/60 bg-muted/20 rounded-md border p-3">
-              <dt className="text-caption text-muted-foreground">Published Date</dt>
+              <dt className="text-caption text-muted-foreground">Published date</dt>
               <dd className="mt-1 font-semibold">
                 {document.publishedAt
                   ? new Date(document.publishedAt).toLocaleDateString()
@@ -101,7 +101,7 @@ export default async function AdminDocumentPage({ params }: { params: Promise<{ 
               </dd>
             </div>
             <div className="border-border/60 bg-muted/20 rounded-md border p-3">
-              <dt className="text-caption text-muted-foreground">Download Count</dt>
+              <dt className="text-caption text-muted-foreground">Download count</dt>
               <dd className="mt-1 font-mono font-semibold">{document.downloadCount}</dd>
             </div>
           </dl>
@@ -124,7 +124,7 @@ export default async function AdminDocumentPage({ params }: { params: Promise<{ 
         {can(actor, 'document.manage') ? (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Document Properties</CardTitle>
+              <CardTitle className="text-base">Document properties</CardTitle>
               <CardDescription>Edit title, description, and campaign relationship.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -137,7 +137,7 @@ export default async function AdminDocumentPage({ params }: { params: Promise<{ 
           {can(actor, 'document.change_visibility') ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Access & Visibility</CardTitle>
+                <CardTitle className="text-base">Access & visibility</CardTitle>
                 <CardDescription>
                   Modify who is permitted to access and download this file.
                 </CardDescription>
@@ -151,7 +151,7 @@ export default async function AdminDocumentPage({ params }: { params: Promise<{ 
           {can(actor, 'document.delete') ? (
             <Card className="border-destructive/30">
               <CardHeader>
-                <CardTitle className="text-destructive text-base">Danger Zone</CardTitle>
+                <CardTitle className="text-destructive text-base">Danger zone</CardTitle>
                 <CardDescription>Permanently delete this document from storage.</CardDescription>
               </CardHeader>
               <CardContent>

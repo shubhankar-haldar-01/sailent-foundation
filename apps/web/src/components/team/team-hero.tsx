@@ -17,8 +17,8 @@ export function TeamHero() {
         dangerouslySetInnerHTML={jsonLd(
           breadcrumbSchema([
             { name: 'Home', path: '/' },
-            { name: 'About Us', path: '/about' },
-            { name: 'Our Team', path: '/team' },
+            { name: 'About us', path: '/about' },
+            { name: 'Our team', path: '/team' },
           ]),
         )}
       />
@@ -31,22 +31,22 @@ export function TeamHero() {
               <Link href="/">Home</Link>
             </li>
             <li>
-              <Link href="/about">About Us</Link>
+              <Link href="/about">About us</Link>
             </li>
             <li>
-              <span aria-current="page">Our Team</span>
+              <span aria-current="page">Our team</span>
             </li>
           </ol>
         </nav>
         <p>Sailent Foundation Team</p>
-        <h1 id="team-hero-title">Meet Our Team — Sailent Foundation</h1>
+        <h1 id="team-hero-title">Meet our team — Sailent Foundation</h1>
         <p>
           A dedicated group of people working together to support communities, create opportunities,
           and build a better tomorrow.
         </p>
       </div>
 
-      <div className="border-border bg-surface-inverse relative overflow-hidden rounded-[24px] border shadow-card sm:rounded-[32px]">
+      <div className="border-border bg-surface-inverse shadow-card relative overflow-hidden rounded-[24px] border sm:rounded-[32px]">
         <Image
           src={HERO_IMAGE}
           alt="Sailent Foundation coordinator with children in outdoor community setting"

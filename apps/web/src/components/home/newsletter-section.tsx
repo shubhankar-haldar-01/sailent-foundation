@@ -15,11 +15,11 @@ import { useRevealResult } from '@/lib/ui/reveal-result';
  *
  * Balanced horizontal banner with:
  * - Left: Large radiating envelope circle badge, uppercase orange "STAY CONNECTED",
- *   bold "Join Our Newsletter" heading with orange accent, and 2-line description.
+ *   bold "Join our newsletter" heading with orange accent, and 2-line description.
  * - Center-Right: High-contrast white input pill with blue-grey mail icon, email input,
  *   and bold brand-orange Subscribe pill button.
  * - Beneath Form: 3 compact benefits with two-line labels separated by clean vertical dividers:
- *   "Latest Stories & Updates", "Upcoming Events", "Volunteer Opportunities".
+ *   "Latest stories & updates", "Upcoming events", "Volunteer opportunities".
  * - Far-Right: Rich origami paper airplane with 3D faceted folds, 3 celebration ray bursts,
  *   and a smooth dashed loop flight trail.
  * - Bottom-Left: Subtle botanical leaf watermark.
@@ -100,7 +100,7 @@ export function NewsletterSection() {
                   id="newsletter-title"
                   className="font-display text-foreground mt-0.5 text-2xl font-bold tracking-tight sm:text-3xl lg:text-[32px] lg:leading-tight"
                 >
-                  Join Our Newsletter
+                  Join our newsletter
                 </h2>
                 <p className="text-muted-foreground mt-1.5 max-w-[420px] text-xs leading-relaxed sm:text-sm">
                   Get the latest stories, updates and opportunities delivered directly to your
@@ -185,8 +185,8 @@ export function NewsletterSection() {
                     <FileText className="size-4 stroke-[2.2]" aria-hidden="true" />
                   </span>
                   <span className="text-foreground text-xs font-semibold leading-tight">
-                    Latest Stories
-                    <br className="hidden sm:inline" /> &amp; Updates
+                    Latest stories
+                    <br className="hidden sm:inline" /> &amp; updates
                   </span>
                 </div>
 
@@ -199,7 +199,7 @@ export function NewsletterSection() {
                   </span>
                   <span className="text-foreground text-xs font-semibold leading-tight">
                     Upcoming
-                    <br className="hidden sm:inline" /> Events
+                    <br className="hidden sm:inline" /> events
                   </span>
                 </div>
 
@@ -212,7 +212,7 @@ export function NewsletterSection() {
                   </span>
                   <span className="text-foreground text-xs font-semibold leading-tight">
                     Volunteer
-                    <br className="hidden sm:inline" /> Opportunities
+                    <br className="hidden sm:inline" /> opportunities
                   </span>
                 </div>
               </div>

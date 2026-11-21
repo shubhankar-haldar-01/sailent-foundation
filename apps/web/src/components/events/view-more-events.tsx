@@ -6,7 +6,7 @@ import { ChevronDown } from 'lucide-react';
 import { cn, Spinner } from '@sailent/ui';
 
 /**
- * "View More Events" — the outlined orange pill centred under the grid, as
+ * "View more events" — the outlined orange pill centred under the grid, as
  * the owner's design (2026-10-17) draws it.
  *
  * ══════════════════════════════════════════════════════════════════════════
@@ -55,7 +55,7 @@ function Label() {
     </>
   ) : (
     <>
-      View More Events
+      View more events
       <ChevronDown
         className="size-4.5 duration-(--duration-base) transition-transform motion-safe:group-hover/more:translate-y-0.5"
         aria-hidden="true"

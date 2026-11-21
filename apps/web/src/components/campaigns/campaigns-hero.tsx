@@ -163,7 +163,7 @@ export function CampaignsHero() {
           <div className="lg:pl-(--hero-indent) flex flex-col justify-center pb-16 pt-7 lg:h-full lg:max-w-[calc(var(--hero-indent)_+_var(--hero-text))] lg:pb-9 lg:pt-3 xl:pt-4">
             <p className="text-caption text-(--hero-eyebrow) flex items-center gap-2 font-medium">
               <TwinLeaf className="text-(--hero-green) size-4" />
-              Be a Part of the Change
+              Be a part of the change
             </p>
 
             <h1
@@ -295,7 +295,7 @@ function Cluster({
   );
 }
 
-/** The two-leaf mark before "Be a Part of the Change". */
+/** The two-leaf mark before "Be a part of the change". */
 function TwinLeaf({ className }: { className?: string }) {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className={className}>

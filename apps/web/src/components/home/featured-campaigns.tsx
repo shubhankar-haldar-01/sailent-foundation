@@ -22,7 +22,7 @@ import type { Campaign } from '@/lib/mock/types';
  * FOUR ON SCREEN at desktop — the approved four-up width the cards are drawn
  * against — and up to twelve in the rail behind them, which it moves through
  * on its own. The band is still a teaser, not an index: everything else is
- * reached through "View All Campaigns", which queries the server rather than
+ * reached through "View all campaigns", which queries the server rather than
  * shipping a longer list to the browser.
  *
  * WHICH twelve is decided on the server (`getFeaturedCampaigns`): the ones an
@@ -92,7 +92,7 @@ export function FeaturedCampaigns({
   if (campaigns.length === 0) return null;
 
   const viewAllHref = area ? `/campaigns?category=${area.slug}` : '/campaigns';
-  const viewAllLabel = area ? `View All ${area.title} Campaigns` : 'View All Campaigns';
+  const viewAllLabel = area ? `View All ${area.title} Campaigns` : 'View all campaigns';
 
   return (
     <section aria-labelledby="campaigns-title" className="bg-background border-border border-b">
@@ -107,13 +107,13 @@ export function FeaturedCampaigns({
           level with the lead, which is not where the design puts it.
         */}
         {/*
-          Featured Campaigns section heading:
+          Featured campaigns section heading:
           Centered eyebrow badge + punchy headline with proper spacing.
         */}
         <div className="mx-auto mb-6 flex max-w-5xl flex-col items-center text-center sm:mb-8 md:mb-10">
           <div className="mb-2 flex items-center justify-center gap-2">
             <p className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
-              Featured Campaigns
+              Featured campaigns
             </p>
           </div>
 
@@ -121,7 +121,7 @@ export function FeaturedCampaigns({
             id="campaigns-title"
             className="font-display mt-1 text-2xl font-black leading-[1.2] tracking-tight sm:text-3xl md:text-[2.25rem]"
           >
-            <span className="text-foreground">Make a Real Difference</span>
+            <span className="text-foreground">Make a real difference</span>
           </h2>
         </div>
 
@@ -181,17 +181,24 @@ export function FeaturedCampaigns({
           and the listing cannot drift apart. Rail items stretch to the tallest
           card, so the Donate buttons line up across whatever is on screen.
         */}
+        {/*
+          No `scroll-smooth` on this rail (visual polish Phase 5, 2026-11-21):
+          with mandatory snapping it made Chrome stop recording the page's
+          Largest Contentful Paint (Lighthouse: NO_LCP, performance 0). The
+          autoplay already scrolls smoothly through its own scroll calls.
+        */}
         <ul
           ref={rail.ref}
           hidden={visible.length === 0}
           aria-label="Featured campaigns"
-          className="rail -mb-6 mt-2 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-2 pb-10 pt-2"
+          className="rail -mb-6 mt-2 flex snap-x snap-mandatory gap-5 overflow-x-auto px-2 pb-10 pt-2"
         >
-          {visible.map((campaign, index) => (
+          {visible.map((campaign) => (
             <li
               key={campaign.slug}
-              className="rise-in flex shrink-0 basis-full snap-start sm:basis-[calc((100%-1.25rem)/2)] xl:basis-[calc((100%-3.75rem)/4)]"
-              style={{ '--rise-delay': `${Math.min(index, 3) * 70}ms` } as React.CSSProperties}
+              // No entrance animation (visual polish Phase 5, 2026-11-21):
+              // the band sits just under the hero.
+              className="flex shrink-0 basis-full snap-start sm:basis-[calc((100%-1.25rem)/2)] xl:basis-[calc((100%-3.75rem)/4)]"
             >
               <CampaignCard
                 campaign={campaign}
@@ -210,7 +217,7 @@ export function FeaturedCampaigns({
           ))}
         </ul>
 
-        {/* View All Campaigns button matching reference screenshot mint pill + glow */}
+        {/* View all campaigns button matching reference screenshot mint pill + glow */}
         {visible.length > 0 ? (
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {rail.canPlay ? (
@@ -226,13 +233,13 @@ export function FeaturedCampaigns({
             <Link
               href={viewAllHref}
               className={cn(
-                'bg-wash-mint text-wash-mint-ink-strong shadow-elevated hover:shadow-card-hover group inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:brightness-95 sm:text-base',
+                'bg-accent text-primary shadow-elevated hover:shadow-card-hover group inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:brightness-95 sm:text-base',
                 'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
               )}
             >
               {viewAllLabel}
               <ArrowRight
-                className="size-4.5 text-wash-mint-ink-strong transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none"
+                className="size-4.5 text-primary transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none"
                 aria-hidden="true"
               />
             </Link>

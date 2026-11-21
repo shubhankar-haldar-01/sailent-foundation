@@ -117,7 +117,7 @@ export default async function AdminPaymentExceptionsPage() {
         <CardHeader className="border-border border-b pb-4">
           <div className="flex items-center gap-2">
             <Webhook className="text-primary size-5" aria-hidden="true" />
-            <CardTitle className="text-base font-semibold">Webhook Exception Log</CardTitle>
+            <CardTitle className="text-base font-semibold">Webhook exception log</CardTitle>
           </div>
           <p className="text-caption text-muted-foreground mt-1">
             Incoming Razorpay event notifications that failed processing or flagged order
@@ -135,11 +135,11 @@ export default async function AdminPaymentExceptionsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Received</TableHead>
-                    <TableHead>Event Type</TableHead>
+                    <TableHead>Event type</TableHead>
                     <TableHead>State</TableHead>
                     <TableHead>Payment / Order ID</TableHead>
                     <TableHead>Donation</TableHead>
-                    <TableHead>Error Detail</TableHead>
+                    <TableHead>Error detail</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -198,7 +198,7 @@ export default async function AdminPaymentExceptionsPage() {
         <CardHeader className="border-border border-b pb-4">
           <div className="flex items-center gap-2">
             <Clock className="text-primary size-5" aria-hidden="true" />
-            <CardTitle className="text-base font-semibold">Stuck Checkout Sessions</CardTitle>
+            <CardTitle className="text-base font-semibold">Stuck checkout sessions</CardTitle>
           </div>
           <p className="text-caption text-muted-foreground mt-1">
             Donations awaiting payment confirmation exceeding {thresholds.stuckDonationMinutes}{' '}
@@ -218,8 +218,8 @@ export default async function AdminPaymentExceptionsPage() {
                     <TableHead>Reference</TableHead>
                     <TableHead>Campaign</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Gateway Order</TableHead>
-                    <TableHead>Session Started</TableHead>
+                    <TableHead>Gateway order</TableHead>
+                    <TableHead>Session started</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -23,7 +23,7 @@ export default async function NewProgramPage() {
 
       <Card className="border-border">
         <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Program Information</CardTitle>
+          <CardTitle className="text-base font-semibold">Program information</CardTitle>
           <p className="text-caption text-muted-foreground mt-1">
             Core title, description, challenge, approach, and cover photograph.
           </p>

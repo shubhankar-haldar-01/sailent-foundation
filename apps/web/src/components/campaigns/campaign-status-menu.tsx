@@ -60,7 +60,7 @@ export function CampaignStatusMenu({
           'duration-(--duration-fast) transition-shadow hover:shadow-lg',
           // Inside the edge, like the search pill — not an outline that grows it.
           'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2',
-          'data-[state=open]:ring-wash-mint-ink/45 data-[state=open]:ring-2',
+          'data-[state=open]:ring-primary/45 data-[state=open]:ring-2',
           // The design system's chevron: firmer, and turned over while open.
           '[&>svg:last-child]:duration-(--duration-base) [&>svg:last-child]:opacity-80 [&>svg:last-child]:transition-transform data-[state=open]:[&>svg:last-child]:rotate-180',
         )}
@@ -111,9 +111,9 @@ export function CampaignStatusMenu({
                 indicatorSide="end"
                 className={cn(
                   // The tick inherits this ink; the label and the explanation set their own.
-                  'text-wash-mint-ink-strong group/item cursor-pointer rounded-xl py-2.5 pl-2.5 pr-10',
+                  'text-primary group/item cursor-pointer rounded-xl py-2.5 pl-2.5 pr-10',
                   'duration-(--duration-fast) transition-colors',
-                  'focus:bg-wash-mint/40 data-[state=checked]:bg-wash-mint/60',
+                  'focus:bg-accent/40 data-[state=checked]:bg-accent/60',
                 )}
               >
                 <span className="flex items-center gap-3">

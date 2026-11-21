@@ -54,7 +54,7 @@ export default async function SignInPage({
           'text-foreground mt-4 text-[clamp(1.625rem,1.3rem+1vw,1.875rem)] leading-tight tracking-[-0.025em]',
         )}
       >
-        Login to Continue
+        Login to continue
       </h1>
       <p className="text-muted-foreground mt-1 text-[0.875rem] leading-relaxed">
         Enter your email address and OTP to access your account.
@@ -69,7 +69,7 @@ export default async function SignInPage({
       >
         <UserRound aria-hidden="true" className="text-primary size-5 shrink-0" strokeWidth={1.8} />
         <span className="text-foreground text-[0.9375rem]">Don&rsquo;t have an account?</span>
-        <span className="text-primary text-base font-semibold">Sign Up</span>
+        <span className="text-primary text-base font-semibold">Sign up</span>
       </Link>
     </AuthShell>
   );

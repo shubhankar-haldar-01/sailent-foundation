@@ -82,7 +82,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Shield className="text-primary h-4 w-4" />
-                Account Details
+                Account details
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -134,7 +134,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           {user.roles.length === 0 && can(actor, 'user.assign_role') && !isSelf ? (
             <Card className="border-warning/30 bg-warning/5">
               <CardHeader>
-                <CardTitle className="text-warning text-base">Grant Administrative Role</CardTitle>
+                <CardTitle className="text-warning text-base">Grant administrative role</CardTitle>
                 <CardDescription>
                   This account currently has no active permissions and cannot manage any modules.
                 </CardDescription>
@@ -149,7 +149,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Edit Account</CardTitle>
+              <CardTitle className="text-base">Edit account</CardTitle>
               <CardDescription>Update name, email, or contact phone details.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -168,7 +168,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
       {user.status === 'invited' && can(actor, 'user.invite') ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Invitation Management</CardTitle>
+            <CardTitle className="text-base">Invitation management</CardTitle>
             <CardDescription>
               This user has been invited but has not yet accepted and activated their account.
             </CardDescription>
@@ -182,7 +182,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
       {can(actor, 'user.suspend') ? (
         <Card className="border-destructive/20">
           <CardHeader>
-            <CardTitle className="text-base">Access & Account Status</CardTitle>
+            <CardTitle className="text-base">Access & account status</CardTitle>
             <CardDescription>
               Suspend or reactivate staff access to the administration console.
             </CardDescription>

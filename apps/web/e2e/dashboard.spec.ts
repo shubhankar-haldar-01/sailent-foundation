@@ -102,7 +102,7 @@ test.describe('signed out', () => {
       // Where they were going, so sign-in could return them there.
       expect(page.url()).toContain(`next=${encodeURIComponent(path)}`);
       // And nothing from the dashboard leaked into the response on the way.
-      await expect(page.getByRole('heading', { name: 'Login to Continue' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Login to continue' })).toBeVisible();
     });
   }
 
@@ -117,15 +117,15 @@ test.describe('signed out', () => {
     await expect(page.getByLabel('OTP', { exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Login', exact: true })).toHaveCount(0);
 
-    // "Sign Up" explains that there is no separate sign-up (owner decision,
+    // "Sign up" explains that there is no separate sign-up (owner decision,
     // 2026-10-08), rather than offering a form that could never send a code.
-    // In the page, not the header's "Login / Sign Up". Settled first, like every
+    // In the page, not the header's "Login / Sign up". Settled first, like every
     // other click in this file: on the tablet (WebKit) project a click that lands
     // while the page is still hydrating could be lost.
     await settle(page);
     await page
       .getByRole('main')
-      .getByRole('link', { name: /Sign Up/ })
+      .getByRole('link', { name: /Sign up/ })
       .click();
     await page.waitForURL('**/sign-up');
     await expect(page.getByText(/no separate sign-up form/i)).toBeVisible();
@@ -153,11 +153,11 @@ test.describe('signed out', () => {
   });
 
   /**
-   * Owner request, 2026-10-08: the header's button is "Login / Sign Up", not
+   * Owner request, 2026-10-08: the header's button is "Login / Sign up", not
    * Donate. There is no separate sign-up, so it goes to /sign-in. On a phone
    * it is a row in the menu, under the menu's Donate button, which stays.
    */
-  test('the header offers Login / Sign Up in place of Donate', async ({ page }) => {
+  test('the header offers Login / Sign up in place of Donate', async ({ page }) => {
     await page.goto('/');
     const header = page.getByRole('banner');
     const phone = (page.viewportSize()?.width ?? 0) < 640;
@@ -165,13 +165,13 @@ test.describe('signed out', () => {
     if (phone) {
       await page.getByRole('button', { name: 'Open menu' }).click();
       const menu = page.getByRole('dialog');
-      await expect(menu.getByRole('link', { name: 'Login / Sign Up' })).toHaveAttribute(
+      await expect(menu.getByRole('link', { name: 'Login / Sign up' })).toHaveAttribute(
         'href',
         '/sign-in',
       );
       await expect(menu.getByRole('link', { name: /Donate/ })).toBeVisible();
     } else {
-      const login = header.getByRole('link', { name: 'Login / Sign Up' });
+      const login = header.getByRole('link', { name: 'Login / Sign up' });
       await expect(login).toBeVisible();
       await expect(login).toHaveAttribute('href', '/sign-in');
     }
@@ -215,8 +215,8 @@ test.describe('signed in as a donor', () => {
       }),
     ).toBeVisible();
     // ₹1,800 from the fixture's single confirmed donation.
-    await expect(page.getByText('Total Donations')).toBeVisible();
-    await expect(page.getByText('Campaigns Supported', { exact: true })).toBeVisible();
+    await expect(page.getByText('Total donations')).toBeVisible();
+    await expect(page.getByText('Campaigns supported', { exact: true })).toBeVisible();
 
     // Counted from the donor's own product lines: two school kits. The side
     // column that carries it is drawn from `xl` (1280px) in the dashboard design.
@@ -228,7 +228,7 @@ test.describe('signed in as a donor', () => {
 
   /**
    * Every account page is one tap away at every width: the sidebar rail from
-   * `lg`, the "My Account" card below it (owner, 2026-10-21).
+   * `lg`, the "My account" card below it (owner, 2026-10-21).
    */
   test('the account navigation reaches every account page at this width', async ({ page }) => {
     await page.goto('/dashboard/profile');
@@ -239,7 +239,7 @@ test.describe('signed in as a donor', () => {
     const pages: [string, string][] = [
       ['Dashboard', '/dashboard'],
       ['Payments', '/dashboard/donations'],
-      [wide ? 'Saved' : 'Saved Campaigns', '/dashboard/saved'],
+      [wide ? 'Saved' : 'Saved campaigns', '/dashboard/saved'],
       ['Profile', '/dashboard/profile'],
       ['Events', '/dashboard/events'],
       ['Volunteering', '/dashboard/volunteering'],
@@ -253,14 +253,14 @@ test.describe('signed in as a donor', () => {
     );
   });
 
-  test('the header shows the donor’s account, not Login / Sign Up', async ({ page }) => {
+  test('the header shows the donor’s account, not Login / Sign up', async ({ page }) => {
     await page.goto('/');
     const header = page.getByRole('banner');
     await expect(header.getByRole('link', { name: /^Your account/ })).toHaveAttribute(
       'href',
       '/dashboard',
     );
-    await expect(header.getByRole('link', { name: 'Login / Sign Up' })).toHaveCount(0);
+    await expect(header.getByRole('link', { name: 'Login / Sign up' })).toHaveCount(0);
 
     if ((page.viewportSize()?.width ?? 0) < 640) {
       await page.getByRole('button', { name: 'Open menu' }).click();
@@ -269,7 +269,7 @@ test.describe('signed in as a donor', () => {
         'href',
         '/dashboard',
       );
-      await expect(menu.getByRole('link', { name: 'Login / Sign Up' })).toHaveCount(0);
+      await expect(menu.getByRole('link', { name: 'Login / Sign up' })).toHaveCount(0);
     }
   });
 
@@ -460,7 +460,7 @@ test.describe('signed in as a donor', () => {
   test('a donor registers, is refused a second place, sees it listed, and cancels', async ({
     page,
   }, testInfo) => {
-    // Where an event card's "Register Now" leads (the redesign, 2026-10-18).
+    // Where an event card's "Register now" leads (the redesign, 2026-10-18).
     await page.goto(`/events/${OPEN_EVENT}/register`);
     await settle(page);
 
@@ -473,8 +473,8 @@ test.describe('signed in as a donor', () => {
       // read it; a donor fills in whatever is empty, and agrees to the terms.
       const donor = donorFor(testInfo.project.name);
       const fields: [string, string][] = [
-        ['Full Name', `${donor.firstName} ${donor.lastName}`],
-        ['Mobile Number', donor.phone],
+        ['Full name', `${donor.firstName} ${donor.lastName}`],
+        ['Mobile number', donor.phone],
       ];
       for (const [label, value] of fields) {
         const field = page.getByLabel(label);

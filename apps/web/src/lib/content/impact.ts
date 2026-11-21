@@ -202,7 +202,7 @@ export async function getHeadlineMetrics(): Promise<ImpactMetric[]> {
   const candidates: ImpactMetric[] = [
     {
       id: 'beneficiaries',
-      label: 'Lives Impacted',
+      label: 'Lives impacted',
       value: totals.beneficiariesReached,
       derivation: 'Sum of beneficiaries recorded across published programs and campaigns.',
     },
@@ -220,7 +220,7 @@ export async function getHeadlineMetrics(): Promise<ImpactMetric[]> {
     },
     {
       id: 'years',
-      label: 'Years of Service',
+      label: 'Years of service',
       value: yearsOfService(registeredOn),
       derivation: `Whole years since registration on ${registeredOnText ?? 'the registration date'}.`,
     },

@@ -34,7 +34,7 @@ export default async function NewEventPage() {
 
       <Card className="border-border max-w-3xl">
         <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Event Setup & Schedule</CardTitle>
+          <CardTitle className="text-base font-semibold">Event setup & schedule</CardTitle>
           <p className="text-caption text-muted-foreground mt-1">
             Specify venue, seat capacity, registration deadlines, and thematic program association.
           </p>

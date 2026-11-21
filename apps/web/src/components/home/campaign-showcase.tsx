@@ -29,7 +29,7 @@ const VISIBLE_CARDS = 8;
  *
  * The tiles are the causes the live campaigns actually have, and they narrow
  * the cards IN PLACE — toggles, not links, so choosing one costs no page load.
- * "View More Campaigns" is where it becomes a link, carrying the chosen cause
+ * "View more campaigns" is where it becomes a link, carrying the chosen cause
  * through to the full listing.
  *
  * Its selection is its own. The featured band above keeps its own, so pressing
@@ -87,7 +87,7 @@ export function CampaignShowcase({
           <div className="mx-auto mb-6 flex max-w-5xl flex-col items-center text-center sm:mb-8 md:mb-10">
             <div className="mb-2 flex items-center justify-center gap-2">
               <p className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
-                Browse By Cause
+                Browse by cause
               </p>
             </div>
 
@@ -95,7 +95,7 @@ export function CampaignShowcase({
               id="campaign-showcase-title"
               className="font-display mt-1 text-2xl font-black leading-[1.2] tracking-tight sm:text-3xl md:text-[2.25rem]"
             >
-              <span className="text-foreground">Discover Causes That</span> Inspire You.
+              Discover causes that inspire you
             </h2>
           </div>
 
@@ -151,7 +151,7 @@ export function CampaignShowcase({
             href={
               activeCategory ? `/campaigns?category=${categorySlug(activeCategory)}` : '/campaigns'
             }
-            label={activeCategory ? `View More ${activeCategory} Campaigns` : 'View More Campaigns'}
+            label={activeCategory ? `View more ${activeCategory} campaigns` : 'View more campaigns'}
           />
         </div>
       </PageShell>

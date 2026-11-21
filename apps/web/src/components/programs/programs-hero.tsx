@@ -36,7 +36,7 @@ export function ProgramsHero() {
           </ol>
         </nav>
         <p>Sailent Foundation Programs</p>
-        <h1 id="programs-title">Programs — Long-Term Work, Lasting Impact</h1>
+        <h1 id="programs-title">Programs — Long-term work, lasting impact</h1>
         <p>
           Our programs run for years and are measured over time. Campaigns fund specific pieces of
           them, which is why a campaign always belongs to a program.
@@ -44,7 +44,7 @@ export function ProgramsHero() {
       </div>
 
       <PageShell>
-        <div className="border-border bg-surface-inverse relative overflow-hidden rounded-[24px] border shadow-card sm:rounded-[32px]">
+        <div className="border-border bg-surface-inverse shadow-card relative overflow-hidden rounded-[24px] border sm:rounded-[32px]">
           <Image
             src={HERO_IMAGE}
             alt="Sailent Foundation community development programs in action across healthcare, education, and livelihoods"

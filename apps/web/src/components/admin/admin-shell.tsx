@@ -123,7 +123,7 @@ export function AdminShell({
                   'focus-visible:outline-ring focus-visible:outline-2',
                   isMounted && isCollapsed ? 'justify-center' : 'min-w-0 gap-3',
                 )}
-                title="Sailent Admin — Operations Hub"
+                title="Sailent admin — Operations hub"
               >
                 <div className="flex size-9 shrink-0 items-center justify-center">
                   <Image
@@ -146,7 +146,7 @@ export function AdminShell({
                       </span>
                     </div>
                     <span className="text-muted-foreground mt-0.5 truncate text-[0.625rem] font-medium uppercase tracking-wider">
-                      Operations Hub
+                      Operations hub
                     </span>
                   </div>
                 )}
@@ -201,7 +201,7 @@ export function AdminShell({
                   href="/admin"
                   onClick={() => setIsSidebarOpen(false)}
                   className="focus-visible:outline-ring flex min-w-0 items-center gap-3 rounded-lg transition-opacity hover:opacity-90 focus-visible:outline-2"
-                  title="Sailent Admin — Operations Hub"
+                  title="Sailent admin — Operations hub"
                 >
                   <div className="flex size-9 shrink-0 items-center justify-center">
                     <Image
@@ -222,7 +222,7 @@ export function AdminShell({
                       </span>
                     </div>
                     <span className="text-muted-foreground mt-0.5 truncate text-[0.625rem] font-medium uppercase tracking-wider">
-                      Operations Hub
+                      Operations hub
                     </span>
                   </div>
                 </Link>

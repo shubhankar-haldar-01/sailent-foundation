@@ -10,20 +10,20 @@ import { signOutDonor } from '@/lib/auth/donor-actions';
 /**
  * Every page of the account, in the desktop rail's order (`dashboard-nav.tsx`),
  * so a phone or tablet reaches the same places.
- * "Saved Campaigns" is the Saved page — campaigns a donor bookmarked, not the
+ * "Saved campaigns" is the Saved page — campaigns a donor bookmarked, not the
  * ones they gave to.
  */
 const ACCOUNT_LINKS = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
   { label: 'Payments', href: '/dashboard/donations', icon: CreditCard },
-  { label: 'Saved Campaigns', href: '/dashboard/saved', icon: Heart },
+  { label: 'Saved campaigns', href: '/dashboard/saved', icon: Heart },
   { label: 'Profile', href: '/dashboard/profile', icon: User },
   { label: 'Events', href: '/dashboard/events', icon: CalendarDays },
   { label: 'Volunteering', href: '/dashboard/volunteering', icon: HandHeart },
 ] as const;
 
 /**
- * The "My Account" card: the account's navigation below `lg`, where the
+ * The "My account" card: the account's navigation below `lg`, where the
  * sidebar rail is not drawn. `aria-current` marks the page; the colour is a
  * second signal, not the only one.
  */
@@ -35,7 +35,7 @@ export function MyAccountNavCard({ className }: { className?: string }) {
       aria-label="Account quick navigation"
       className={cn('card-standard rounded-2xl p-5 sm:p-6', className)}
     >
-      <h2 className="font-display text-foreground text-lg font-bold tracking-tight">My Account</h2>
+      <h2 className="font-display text-foreground text-lg font-bold tracking-tight">My account</h2>
       <div className="border-border/60 my-3.5 border-t" />
 
       <ul className="grid grid-cols-2 gap-x-4 gap-y-3.5 text-sm">

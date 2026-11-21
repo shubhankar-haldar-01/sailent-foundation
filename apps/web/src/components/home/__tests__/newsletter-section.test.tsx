@@ -19,16 +19,16 @@ describe('NewsletterSection', () => {
     render(<NewsletterSection />);
 
     expect(screen.getByText('STAY CONNECTED')).toBeDefined();
-    expect(screen.getByRole('heading', { level: 2, name: /Join Our Newsletter/i })).toBeDefined();
+    expect(screen.getByRole('heading', { level: 2, name: /Join our newsletter/i })).toBeDefined();
     expect(
       screen.getByText(
         /Get the latest stories, updates and opportunities delivered directly to your inbox/i,
       ),
     ).toBeDefined();
 
-    expect(screen.getByText('Latest Stories & Updates')).toBeDefined();
-    expect(screen.getByText('Upcoming Events')).toBeDefined();
-    expect(screen.getByText('Volunteer Opportunities')).toBeDefined();
+    expect(screen.getByText('Latest stories & updates')).toBeDefined();
+    expect(screen.getByText('Upcoming events')).toBeDefined();
+    expect(screen.getByText('Volunteer opportunities')).toBeDefined();
 
     expect(screen.getByPlaceholderText('Enter your email address')).toBeDefined();
     expect(screen.getByRole('button', { name: /Subscribe/i })).toBeDefined();

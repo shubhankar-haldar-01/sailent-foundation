@@ -312,7 +312,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
 
   handleVerifyRef.current = handleVerify;
 
-  // Start Camera
+  // Start camera
   const startCamera = React.useCallback(
     async (mode: 'environment' | 'user' = facingMode) => {
       // A second tap while the camera is still starting would start it twice.
@@ -401,7 +401,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
     }
   };
 
-  // Stop Camera
+  // Stop camera
   const stopCamera = React.useCallback(async () => {
     await scanner.stop();
     setScannerActive(false);
@@ -517,7 +517,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
             className="border-border bg-background text-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors"
           >
             <ArrowLeft className="size-3.5" />
-            <span className="hidden sm:inline">Exit Desk</span>
+            <span className="hidden sm:inline">Exit desk</span>
           </Link>
 
           <div className="bg-border h-5 w-px" />
@@ -570,7 +570,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
             title="Auto-Admit instantly admits the attendee upon scanning without extra tap"
           >
             <Zap className={`size-3.5 ${autoAdmit ? 'fill-current' : 'text-muted-foreground'}`} />
-            <span className="hidden sm:inline">Auto-Admit:</span> {autoAdmit ? 'ON' : 'OFF'}
+            <span className="hidden sm:inline">Auto-admit:</span> {autoAdmit ? 'ON' : 'OFF'}
           </button>
 
           {/* Chime Sound Toggle */}
@@ -592,7 +592,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
             type="button"
             onClick={toggleFullscreen}
             className="border-border bg-background text-muted-foreground hover:bg-muted hidden size-9 items-center justify-center rounded-xl border sm:flex"
-            title="Toggle Fullscreen"
+            title="Toggle fullscreen"
           >
             {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
           </button>
@@ -612,7 +612,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
             }`}
           >
             <Camera className="size-4" />
-            QR Scanner
+            QR scanner
           </button>
 
           <button
@@ -696,7 +696,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                     <div className="text-surface-inverse-muted mb-3 flex size-14 items-center justify-center rounded-full bg-white/10">
                       <Camera className="size-7" />
                     </div>
-                    <p className="text-base font-bold text-white">Camera Scanner Ready</p>
+                    <p className="text-base font-bold text-white">Camera scanner ready</p>
                     <p className="text-surface-inverse-muted mt-1 max-w-xs text-xs">
                       {cameraError ??
                         'Tap below to activate camera, or type pass details in the box underneath.'}
@@ -711,7 +711,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                         className="font-bold shadow-md"
                       >
                         <Camera className="mr-1.5 size-4" />
-                        Enable Camera
+                        Enable camera
                       </Button>
                       <Button
                         type="button"
@@ -721,7 +721,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                         className="text-foreground font-semibold"
                       >
                         <ListFilter className="mr-1.5 size-4" />
-                        Open Guest List
+                        Open guest list
                       </Button>
                     </div>
                   </div>
@@ -755,7 +755,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                   type="text"
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
-                  placeholder="Pass ID (SF-EVT-...), Name, or Phone..."
+                  placeholder="Pass ID (SF-EVT-...), Name, or phone..."
                   className="shadow-xs focus:outline-hidden border-border-strong bg-surface text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary/20 h-12 w-full rounded-2xl border px-4 pr-10 text-sm font-medium focus:ring-2"
                 />
                 {manualCode && (
@@ -1086,7 +1086,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
             {filteredGuests.length === 0 ? (
               <div className="border-border bg-surface text-muted-foreground flex flex-col items-center justify-center rounded-3xl border border-dashed p-12 text-center">
                 <UserCheck className="text-muted-foreground mb-2 size-10" />
-                <p className="text-foreground text-base font-bold">No Guests Found</p>
+                <p className="text-foreground text-base font-bold">No guests found</p>
                 <p className="text-muted-foreground mt-0.5 text-xs">
                   No registered attendees match your current search or filter.
                 </p>
@@ -1183,7 +1183,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
                                   <>
                                     {passes.length === 1 && (
                                       <span className="text-2xs text-muted-foreground font-semibold">
-                                        Pending Entry
+                                        Pending entry
                                       </span>
                                     )}
                                     <button
@@ -1239,7 +1239,7 @@ export function GateKioskView({ event, initialRegistrations = [] }: GateKioskVie
             {admitted.length === 0 ? (
               <div className="border-border bg-surface text-muted-foreground flex flex-col items-center justify-center rounded-3xl border border-dashed p-12 text-center">
                 <History className="text-muted-foreground mb-2 size-10" />
-                <p className="text-foreground text-base font-bold">No Check-Ins Yet</p>
+                <p className="text-foreground text-base font-bold">No check-ins yet</p>
                 <p className="text-muted-foreground mt-0.5 text-xs">
                   Scanned attendees and manual check-ins will appear here in real-time.
                 </p>

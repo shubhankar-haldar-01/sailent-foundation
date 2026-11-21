@@ -94,7 +94,7 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-caption text-muted-foreground font-semibold uppercase tracking-wider">
-                Total Donation Amount
+                Total donation amount
               </p>
               <p
                 data-numeric=""
@@ -129,7 +129,7 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
               <div className="flex items-center gap-2">
                 <HeartHandshake className="text-primary size-5" aria-hidden="true" />
                 <CardTitle id="what-was-funded" className="text-base font-semibold">
-                  What Was Funded
+                  What was funded
                 </CardTitle>
               </div>
               <p className="text-caption text-muted-foreground mt-1">
@@ -183,7 +183,7 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
               {donation.donorMessage ? (
                 <div className="border-border bg-muted/10 border-t p-5">
                   <p className="text-caption text-muted-foreground mb-1 font-semibold uppercase">
-                    Donor Note
+                    Donor note
                   </p>
                   <blockquote className="border-primary/40 text-body-sm text-foreground/90 border-l-2 pl-3 italic">
                     “{donation.donorMessage}”
@@ -201,7 +201,7 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
             <CardHeader className="border-border border-b pb-4">
               <div className="flex items-center gap-2">
                 <User className="text-primary size-5" aria-hidden="true" />
-                <CardTitle className="text-base font-semibold">Donor Details</CardTitle>
+                <CardTitle className="text-base font-semibold">Donor details</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -235,7 +235,7 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
                 <div className="flex items-center gap-2">
                   <CreditCard className="text-primary size-5" aria-hidden="true" />
                   <CardTitle className="text-base font-semibold">
-                    Payment Gateway Transaction
+                    Payment gateway transaction
                   </CardTitle>
                 </div>
               </CardHeader>
@@ -278,7 +278,7 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <FileCheck2 className="text-primary size-5" aria-hidden="true" />
-                  <CardTitle className="text-base font-semibold">Payment Receipt</CardTitle>
+                  <CardTitle className="text-base font-semibold">Payment receipt</CardTitle>
                 </div>
                 {donation.receiptNumber ? (
                   <Badge variant="success" className="font-mono text-xs">
@@ -294,9 +294,9 @@ export default async function AdminDonationPage({ params }: { params: Promise<{ 
             <CardContent className={donation.receiptNumber ? 'p-0' : 'p-5'}>
               {donation.receiptNumber ? (
                 <dl className="divide-border divide-y">
-                  <Row label="Receipt Number" value={donation.receiptNumber} mono />
+                  <Row label="Receipt number" value={donation.receiptNumber} mono />
                   <Row
-                    label="Issued Date"
+                    label="Issued date"
                     value={donation.receiptIssuedAt ? formatDate(donation.receiptIssuedAt) : null}
                   />
                 </dl>

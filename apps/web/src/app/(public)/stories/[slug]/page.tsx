@@ -90,8 +90,8 @@ function getChapterConfig(category?: string | null): {
       key: 'intervention',
       heading: 'What we did',
       icon: interventionIcon,
-      iconTone: 'text-info',
-      discTone: 'bg-info-subtle',
+      iconTone: 'text-primary',
+      discTone: 'bg-accent',
     },
     {
       key: 'journey',
@@ -104,8 +104,8 @@ function getChapterConfig(category?: string | null): {
       key: 'outcome',
       heading: 'The outcome',
       icon: TrendingUp,
-      iconTone: 'text-info',
-      discTone: 'bg-info-subtle',
+      iconTone: 'text-primary',
+      discTone: 'bg-accent',
     },
   ];
 }
@@ -296,10 +296,10 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
                           <Icon className="size-6 sm:size-7" strokeWidth={1.8} />
                         </span>
                         <div className="min-w-0 pt-1 sm:pt-2">
-                          <h2 className="font-display dark:text-foreground text-foreground text-xl font-bold leading-tight tracking-tight sm:text-2xl">
+                          <h2 className="font-display text-foreground text-xl font-semibold leading-tight sm:text-2xl">
                             {chapter.heading}
                           </h2>
-                          <p className="dark:text-muted-foreground text-muted-foreground mt-3 text-base font-normal leading-[1.75] sm:text-[1.0625rem]">
+                          <p className="text-foreground/90 text-body-lg mt-3 font-normal leading-[1.75]">
                             {story[chapter.key]}
                           </p>
                         </div>
@@ -347,7 +347,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
 
               {/* What it means: Highlighted organisation quote card */}
               {story.impact.trim() ? (
-                <figure className="shadow-xs dark:border-border dark:bg-wash-blue/15 border-info/30 bg-info-subtle relative overflow-hidden rounded-2xl border p-6 sm:p-7">
+                <figure className="card-standard relative overflow-hidden rounded-2xl p-6 sm:p-7">
                   <div className="flex items-start gap-3.5">
                     <span
                       aria-hidden="true"
@@ -374,10 +374,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
 
       {/* More stories section */}
       {moreStories.length > 0 ? (
-        <section
-          aria-labelledby="more-stories"
-          className="dark:bg-surface-sunken bg-info-subtle py-14 lg:py-16"
-        >
+        <section aria-labelledby="more-stories" className="bg-muted py-14 lg:py-16">
           <PageShell>
             <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
               <div>

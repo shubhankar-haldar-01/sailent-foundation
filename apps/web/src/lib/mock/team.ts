@@ -82,7 +82,7 @@ export const teamMembers: TeamMember[] = [
     ],
   },
 
-  // ── Our Team (Programmes, Community Outreach, Operations) ──────────────────
+  // ── Our team (Programmes, Community Outreach, Operations) ──────────────────
   {
     slug: 'priya-mehta',
     name: 'Priya Mehta',

@@ -498,7 +498,7 @@ export function CoverImagePicker({
           className="gap-2 font-medium"
         >
           <Plus className="text-primary size-4" />
-          <span>Choose from Media Library</span>
+          <span>Choose from media library</span>
         </Button>
 
         <Button
@@ -529,7 +529,7 @@ export function CoverImagePicker({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="flex items-center gap-2.5">
-                  <DialogTitle className="text-h3 font-semibold">Media Assets</DialogTitle>
+                  <DialogTitle className="text-h3 font-semibold">Media assets</DialogTitle>
                   <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-medium">
                     {allOptions.length}
                   </span>
@@ -551,7 +551,7 @@ export function CoverImagePicker({
                   {showUploadPanel ? (
                     <>
                       <X className="size-4" />
-                      <span>Close Upload</span>
+                      <span>Close upload</span>
                     </>
                   ) : (
                     <>
@@ -729,7 +729,7 @@ export function CoverImagePicker({
                   }`}
                 >
                   <Layers className="size-3.5" />
-                  <span>All Assets</span>
+                  <span>All assets</span>
                   <span className="py-0.2 bg-surface/20 rounded-full px-1.5 text-[10px]">
                     {allOptions.length}
                   </span>
@@ -981,8 +981,8 @@ export function CoverImagePicker({
                     <TableHeader className="bg-muted/30">
                       <TableRow>
                         <TableHead className="w-16">Preview</TableHead>
-                        <TableHead>File Details</TableHead>
-                        <TableHead>Format & Size</TableHead>
+                        <TableHead>File details</TableHead>
+                        <TableHead>Format & size</TableHead>
                         <TableHead>Dimensions</TableHead>
                         <TableHead>Visibility</TableHead>
                         <TableHead>Uploaded</TableHead>
@@ -1137,7 +1137,7 @@ export function CoverImagePicker({
                 className="gap-1.5"
               >
                 <Check className="size-4" />
-                <span>Use Selected Image</span>
+                <span>Use selected image</span>
               </Button>
             </div>
           </DialogFooter>

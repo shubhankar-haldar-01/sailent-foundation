@@ -34,7 +34,7 @@ describe('TeamForm - In-Box Validation Helpers', () => {
   });
 
   it('validates contact numbers correctly', () => {
-    expect(validatePhone('')).toBe('Contact Number is mandatory.');
+    expect(validatePhone('')).toBe('Contact number is mandatory.');
     expect(validatePhone('12345')).toBe(
       'Please enter a valid contact number (at least 10 digits).',
     );
@@ -43,9 +43,9 @@ describe('TeamForm - In-Box Validation Helpers', () => {
   });
 
   it('validates and formats 12-digit Aadhaar numbers correctly', () => {
-    expect(validateAadhaar('')).toBe('Adhar Number is mandatory.');
+    expect(validateAadhaar('')).toBe('Adhar number is mandatory.');
     expect(validateAadhaar('12345')).toBe(
-      'Adhar Number must be exactly 12 digits (e.g. 1234 5678 9012).',
+      'Adhar number must be exactly 12 digits (e.g. 1234 5678 9012).',
     );
     expect(validateAadhaar('1234 5678 9012')).toBeNull();
     expect(validateAadhaar('123456789012')).toBeNull();
@@ -64,24 +64,24 @@ describe('TeamForm - In-Box Validation Helpers', () => {
   });
 });
 
-describe('TeamForm (Admin Add/Edit Team Member)', () => {
+describe('TeamForm (Admin Add/Edit Team member)', () => {
   it('renders all 8 mandatory fields with red asterisk indicator', () => {
     render(<TeamForm />);
 
-    // 1. Full Name *
-    expect(screen.getByText('Full Name')).toBeInTheDocument();
+    // 1. Full name *
+    expect(screen.getByText('Full name')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/e\.g\. Rahul Sharma/i)).toBeInTheDocument();
 
     // 2. Email *
     expect(screen.getByText('Email')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/e\.g\. rahul\.sharma@sailent\.org/i)).toBeInTheDocument();
 
-    // 3. Contact Number *
-    expect(screen.getByText('Contact Number')).toBeInTheDocument();
+    // 3. Contact number *
+    expect(screen.getByText('Contact number')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/e\.g\. \+91 98765 43210/i)).toBeInTheDocument();
 
-    // 4. Adhar Number *
-    expect(screen.getByText('Adhar Number')).toBeInTheDocument();
+    // 4. Adhar number *
+    expect(screen.getByText('Adhar number')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/e\.g\. 1234 5678 9012/i)).toBeInTheDocument();
 
     // 5. Address *
@@ -102,23 +102,23 @@ describe('TeamForm (Admin Add/Edit Team Member)', () => {
 
     // 8. Image *
     expect(screen.getByText('Image')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Upload Photograph/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Upload photograph/i })).toBeInTheDocument();
 
     // Submit button
-    expect(screen.getByRole('button', { name: /Create Team Member/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Create Team member/i })).toBeInTheDocument();
   });
 
   it('triggers in-box validation and displays error messages on empty form submission', () => {
     render(<TeamForm />);
 
-    const submitBtn = screen.getByRole('button', { name: /Create Team Member/i });
+    const submitBtn = screen.getByRole('button', { name: /Create Team member/i });
     fireEvent.click(submitBtn);
 
     // Verifies in-box validation errors are shown
-    expect(screen.getByText('Full Name is mandatory.')).toBeInTheDocument();
+    expect(screen.getByText('Full name is mandatory.')).toBeInTheDocument();
     expect(screen.getByText('Email is mandatory.')).toBeInTheDocument();
-    expect(screen.getByText('Contact Number is mandatory.')).toBeInTheDocument();
-    expect(screen.getByText('Adhar Number is mandatory.')).toBeInTheDocument();
+    expect(screen.getByText('Contact number is mandatory.')).toBeInTheDocument();
+    expect(screen.getByText('Adhar number is mandatory.')).toBeInTheDocument();
     expect(screen.getByText('Address is mandatory.')).toBeInTheDocument();
     expect(
       screen.getByText('Photograph is mandatory. Please upload an image or provide an image URL.'),
@@ -153,7 +153,7 @@ describe('TeamForm (Admin Add/Edit Team Member)', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('pre-populates existing member fields and shows Save Changes', () => {
+  it('pre-populates existing member fields and shows Save changes', () => {
     const existingMember = {
       id: 'tm-1',
       name: 'Priya Verma',
@@ -185,7 +185,7 @@ describe('TeamForm (Admin Add/Edit Team Member)', () => {
     expect(
       screen.getByDisplayValue('Indiranagar, Bengaluru, Karnataka 560038'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Save Changes/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Save changes/i })).toBeInTheDocument();
     expect(screen.getByAltText(/Team member preview/i)).toHaveAttribute(
       'src',
       'https://example.com/priya.jpg',

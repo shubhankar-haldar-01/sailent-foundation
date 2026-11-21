@@ -6,7 +6,7 @@ import type { CampaignStatusFilter } from './listing-query';
  * How each campaign status LOOKS — its mark, its wash and its ink — in one
  * place, shared by the "Show" menu and the badge on each card.
  *
- * The menu and the cards must agree: someone who picks "Closed Campaigns" by
+ * The menu and the cards must agree: someone who picks "Closed campaigns" by
  * its amber pause mark should find that same amber pause mark on the cards it
  * returns. Kept out of the client-only menu module so the server-rendered card
  * can read it too.

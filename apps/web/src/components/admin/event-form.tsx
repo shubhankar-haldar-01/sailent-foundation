@@ -300,7 +300,7 @@ export function EventForm({
 
       <fieldset className="border-border space-y-4 rounded-lg border p-4">
         <legend className="text-body-sm px-1 font-medium">
-          Registration Fee & Payment Gateway
+          Registration fee & payment gateway
         </legend>
         <p className="text-caption text-muted-foreground">
           Choose whether this event is free or requires attendees to pay a registration fee via
@@ -308,7 +308,7 @@ export function EventForm({
         </p>
 
         <div className="space-y-3">
-          <Label>Event Fee Type</Label>
+          <Label>Event fee type</Label>
           <div className="flex gap-4">
             <label className="flex cursor-pointer items-center gap-2">
               <input
@@ -318,7 +318,7 @@ export function EventForm({
                 onChange={() => setIsPaid(false)}
                 className="accent-primary"
               />
-              <span className="text-sm font-medium">Free Event</span>
+              <span className="text-sm font-medium">Free event</span>
             </label>
             <label className="flex cursor-pointer items-center gap-2">
               <input
@@ -328,7 +328,7 @@ export function EventForm({
                 onChange={() => setIsPaid(true)}
                 className="accent-primary"
               />
-              <span className="text-sm font-medium">Paid Event (Razorpay)</span>
+              <span className="text-sm font-medium">Paid event (Razorpay)</span>
             </label>
           </div>
           <input type="hidden" name="isPaid" value={isPaid ? 'true' : 'false'} />
@@ -336,7 +336,7 @@ export function EventForm({
 
         {isPaid ? (
           <Field
-            label="Registration Fee (₹)"
+            label="Registration fee (₹)"
             name="feeAmount"
             errors={state.fieldErrors}
             hint="Fixed registration fee in Rupees (₹) collected via Razorpay during registration."
@@ -377,7 +377,7 @@ export function EventForm({
             <SelectValue placeholder="None" />
           </SelectTrigger>
           <SelectContent position="popper" side="bottom" align="start">
-            <SelectItem value="none">None (No Category)</SelectItem>
+            <SelectItem value="none">None (no category)</SelectItem>
             {programs.map((program) => (
               <SelectItem key={program.id} value={program.id}>
                 {program.title}
@@ -394,7 +394,7 @@ export function EventForm({
         </Label>
         <p className="text-caption text-muted-foreground">
           Enter sub-activities or functions separated by commas (e.g.{' '}
-          <code>Dance, Singing, Running</code>). When provided, attendees can choose which function
+          <code>Dance, singing, running</code>). When provided, attendees can choose which function
           to register for.
         </p>
         <Input
@@ -402,14 +402,14 @@ export function EventForm({
           name="functions"
           value={functionsText}
           onChange={(e) => setFunctionsText(e.target.value)}
-          placeholder="Dance, Singing, Running"
+          placeholder="Dance, singing, running"
           className="max-w-xl"
         />
       </div>
 
       <CoverImagePicker
         name="coverImage"
-        label="Cover Image"
+        label="Cover image"
         hint="Photograph displayed on event cards and at the top of the event page. Upload directly from your device or choose from media."
         value={coverImage}
         options={mediaOptions}

@@ -9,14 +9,6 @@ import { categorySlug } from '@/lib/categories';
 import { LinkPendingMark } from './link-pending-mark';
 import { listingHref, type ListingQuery } from './listing-query';
 
-function normaliseCategory(category: string): string {
-  return category
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/[^a-z]/g, '')
-    .replace(/and/g, '');
-}
-
 interface CauseCardStyle {
   cardBg: string;
   badgeBg: string;
@@ -26,101 +18,23 @@ interface CauseCardStyle {
   activeText: string;
 }
 
-const CAUSE_STYLES: Record<string, CauseCardStyle> = {
-  all: {
-    cardBg: 'bg-wash-mint/50',
-    badgeBg: 'bg-wash-mint',
-    iconColor: 'text-wash-mint-ink-strong',
-    shadow: 'shadow-elevated',
-    activeBorder: 'border-2 border-wash-mint-ink-strong',
-    activeText: 'text-wash-mint-ink-strong',
-  },
-  animalwelfare: {
-    cardBg: 'bg-wash-amber/50',
-    badgeBg: 'bg-wash-amber',
-    iconColor: 'text-wash-amber-ink',
-    shadow: 'shadow-elevated',
-    activeBorder: 'border-2 border-wash-amber-ink',
-    activeText: 'text-wash-amber-ink',
-  },
-  childwelfare: {
-    cardBg: 'bg-wash-violet/50',
-    badgeBg: 'bg-wash-violet',
-    iconColor: 'text-wash-violet-ink',
-    shadow: 'shadow-elevated',
-    activeBorder: 'border-2 border-wash-violet-ink',
-    activeText: 'text-wash-violet-ink',
-  },
-  disasterrelief: {
-    cardBg: 'bg-wash-blue/50',
-    badgeBg: 'bg-wash-blue',
-    iconColor: 'text-wash-blue-ink',
-    shadow: 'shadow-elevated',
-    activeBorder: 'border-2 border-wash-blue-ink',
-    activeText: 'text-wash-blue-ink',
-  },
-  education: {
-    cardBg: 'bg-wash-blue/50',
-    badgeBg: 'bg-wash-blue',
-    iconColor: 'text-wash-blue-ink',
-    shadow: 'shadow-elevated',
-    activeBorder: 'border-2 border-wash-blue-ink',
-    activeText: 'text-wash-blue-ink',
-  },
-  environment: {
-    cardBg: 'bg-wash-mint/50',
-    badgeBg: 'bg-wash-mint',
-    iconColor: 'text-wash-mint-ink-strong',
-    shadow: 'shadow-elevated',
-    activeBorder: 'border-2 border-wash-mint-ink-strong',
-    activeText: 'text-wash-mint-ink-strong',
-  },
-  healthcare: {
-    cardBg: 'bg-wash-rose/50',
-    badgeBg: 'bg-wash-rose',
-    iconColor: 'text-wash-rose-ink',
-    shadow: 'shadow-elevated',
-    activeBorder: 'border-2 border-wash-rose-ink',
-    activeText: 'text-wash-rose-ink',
-  },
-  health: {
-    cardBg: 'bg-wash-rose/50',
-    badgeBg: 'bg-wash-rose',
-    iconColor: 'text-wash-rose-ink',
-    shadow: 'shadow-elevated',
-    activeBorder: 'border-2 border-wash-rose-ink',
-    activeText: 'text-wash-rose-ink',
-  },
-  livelihood: {
-    cardBg: 'bg-wash-coral/50',
-    badgeBg: 'bg-wash-coral',
-    iconColor: 'text-wash-coral-ink',
-    shadow: 'shadow-elevated',
-    activeBorder: 'border-2 border-wash-coral-ink',
-    activeText: 'text-wash-coral-ink',
-  },
-  womenempowerment: {
-    cardBg: 'bg-wash-pink/50',
-    badgeBg: 'bg-wash-pink',
-    iconColor: 'text-wash-pink-ink',
-    shadow: 'shadow-elevated',
-    activeBorder: 'border-2 border-wash-pink-ink',
-    activeText: 'text-wash-pink-ink',
-  },
-};
-
-const DEFAULT_STYLE: CauseCardStyle = {
+/**
+ * ONE STYLE FOR EVERY TILE (visual polish Phase 4, 2026-11-21): a neutral
+ * bordered tile with a grey icon; the selected tile takes the brand border,
+ * tint and ink. The tiles used to carry a pastel hue each (§11 item 1 keeps
+ * the tiles and their layout; only their colours changed).
+ */
+const TILE_STYLE: CauseCardStyle = {
   cardBg: 'bg-surface',
   badgeBg: 'bg-muted',
-  iconColor: 'text-foreground',
-  shadow: 'shadow-elevated',
-  activeBorder: 'border-2 border-wash-mint-ink-strong',
-  activeText: 'text-wash-mint-ink-strong',
+  iconColor: 'text-muted-foreground',
+  shadow: '',
+  activeBorder: 'border-primary bg-accent',
+  activeText: 'text-primary',
 };
 
-function getCauseStyle(name: string | null): CauseCardStyle {
-  if (!name || name === 'All Causes') return CAUSE_STYLES.all ?? DEFAULT_STYLE;
-  return CAUSE_STYLES[normaliseCategory(name)] ?? DEFAULT_STYLE;
+function getCauseStyle(_name: string | null): CauseCardStyle {
+  return TILE_STYLE;
 }
 
 /**
@@ -141,7 +55,7 @@ export function CauseFilters({
   | { onSelect: (category: string | null) => void; query?: never }
 )) {
   const tiles = [
-    { name: 'All Causes', slug: null },
+    { name: 'All causes', slug: null },
     ...categories.map((name) => ({ name, slug: categorySlug(name) })),
   ];
 
@@ -160,24 +74,21 @@ export function CauseFilters({
         const style = getCauseStyle(tile.slug === null ? null : tile.name);
 
         const className = cn(
-          'group flex h-[6.5rem] w-[6.75rem] sm:h-[6.85rem] sm:w-[7.25rem] md:h-[7.2rem] md:w-[7.6rem] shrink-0 flex-col items-center justify-center rounded-[20px] p-2.5 text-center',
+          'group flex h-[6.5rem] w-[6.75rem] sm:h-[6.85rem] sm:w-[7.25rem] md:h-[7.2rem] md:w-[7.6rem] shrink-0 flex-col items-center justify-center rounded-xl border p-2.5 text-center',
           'duration-200 ease-out transition-[transform,box-shadow,border-color,background-color]',
-          'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
-          'motion-safe:hover:-translate-y-1 motion-safe:active:scale-[0.97]',
+          'focus-visible:outline-2 focus-visible:outline-offset-2',
+          'active:scale-[0.98] motion-reduce:active:scale-100',
           style.cardBg,
           style.shadow,
-          isActive
-            ? cn(style.activeBorder, 'shadow-lg')
-            : 'border border-white/80 hover:border-black/5',
+          isActive ? style.activeBorder : 'border-border hover:border-border-strong',
         );
 
         const content = (
           <>
             <span
               className={cn(
-                'sm:size-11.5 mb-2 grid size-11 shrink-0 place-items-center rounded-full transition-transform duration-200 motion-safe:group-hover:scale-105',
-                style.badgeBg,
-                style.iconColor,
+                'sm:size-11.5 mb-2 grid size-11 shrink-0 place-items-center rounded-full',
+                isActive ? 'bg-surface text-primary' : cn(style.badgeBg, style.iconColor),
               )}
             >
               {tile.slug === null ? (
@@ -189,7 +100,7 @@ export function CauseFilters({
             <span
               className={cn(
                 'inline-flex items-center justify-center gap-1 px-1 text-center text-xs leading-tight tracking-tight sm:text-[13px]',
-                isActive ? cn('font-bold', style.activeText) : 'text-foreground font-semibold',
+                isActive ? cn('font-semibold', style.activeText) : 'text-foreground font-medium',
               )}
             >
               {tile.name}

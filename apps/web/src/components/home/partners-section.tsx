@@ -99,7 +99,7 @@ export function PartnersSection() {
       <PageShell className="py-5 lg:py-6">
         <div className="relative flex flex-wrap items-center gap-x-6 gap-y-4">
           <h2 id="partners-title" className="text-body-lg whitespace-nowrap font-bold">
-            Our Partners &amp; Supporters
+            Our partners &amp; supporters
           </h2>
 
           {/*

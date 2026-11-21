@@ -49,7 +49,7 @@ export interface EventsQuery {
   q: string | null;
   /** A month (`YYYY-MM`) as it arrived; checked against the months events actually have. */
   date: string | null;
-  /** How many pages of upcoming cards are showing — "View More Events" adds one. */
+  /** How many pages of upcoming cards are showing — "View more events" adds one. */
   page: number;
   /** Every past event, rather than the latest three. */
   allPast: boolean;
@@ -267,7 +267,7 @@ export function eventsView(
   /*
     RESOLVED, not merely well-formed. A month nobody has an event in — a stale
     link, or one typed by hand — falls back to every date rather than to an
-    empty page, and the menu then shows "All Dates", so the two agree.
+    empty page, and the menu then shows "All dates", so the two agree.
   */
   const activeDate =
     query.date && events.some((event) => monthKey(event.startsAt) === query.date)
@@ -306,7 +306,7 @@ export type CardAction =
   | { kind: 'finished' };
 
 /**
- * Whether a card offers "Register Now", or says why it cannot.
+ * Whether a card offers "Register now", or says why it cannot.
  *
  * ══════════════════════════════════════════════════════════════════════════
  * THE SHARED RULE, NOT A SECOND ONE. `registrationAvailability` is the same

@@ -13,7 +13,7 @@ import type { DonorImpact } from '@/lib/donor/api';
 export function StatCards({ impact }: { impact: DonorImpact }) {
   return (
     <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-      {/* Total Donations Card */}
+      {/* Total donations Card */}
       <li className="card-elevated p-4.5 flex items-center gap-4 rounded-2xl sm:p-5">
         <div
           aria-hidden="true"
@@ -24,7 +24,7 @@ export function StatCards({ impact }: { impact: DonorImpact }) {
           </span>
         </div>
         <div className="min-w-0">
-          <p className="text-muted-foreground text-xs font-medium sm:text-sm">Total Donations</p>
+          <p className="text-muted-foreground text-xs font-medium sm:text-sm">Total donations</p>
           <p
             data-numeric=""
             className="font-display text-foreground text-2xl font-bold tabular-nums sm:text-[1.75rem]"
@@ -33,23 +33,23 @@ export function StatCards({ impact }: { impact: DonorImpact }) {
           </p>
           <p className="text-muted-foreground mt-0.5 text-xs">
             {impact.donationCount > 0
-              ? `${impact.donationCount} Successful ${impact.donationCount === 1 ? 'Payment' : 'Payments'}`
-              : 'Successful Payments'}
+              ? `${impact.donationCount} successful ${impact.donationCount === 1 ? 'payment' : 'payments'}`
+              : 'Successful payments'}
           </p>
         </div>
       </li>
 
-      {/* Campaigns Supported Card */}
+      {/* Campaigns supported Card */}
       <li className="card-elevated p-4.5 flex items-center gap-4 rounded-2xl sm:p-5">
         <div
           aria-hidden="true"
-          className="bg-warning-subtle text-warning-foreground flex size-14 shrink-0 items-center justify-center rounded-2xl"
+          className="bg-accent text-primary flex size-14 shrink-0 items-center justify-center rounded-2xl"
         >
           <Heart className="size-6 fill-current stroke-none" />
         </div>
         <div className="min-w-0">
           <p className="text-muted-foreground text-xs font-medium sm:text-sm">
-            Campaigns Supported
+            Campaigns supported
           </p>
           <p
             data-numeric=""
@@ -57,7 +57,7 @@ export function StatCards({ impact }: { impact: DonorImpact }) {
           >
             {String(impact.campaignsSupported || 0)}
           </p>
-          <p className="text-muted-foreground mt-0.5 text-xs">Distinct Campaigns</p>
+          <p className="text-muted-foreground mt-0.5 text-xs">Distinct campaigns</p>
         </div>
       </li>
     </ul>

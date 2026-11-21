@@ -37,7 +37,7 @@ export default function DashboardError({
         We couldn&rsquo;t load this information right now.
       </p>
       <Button type="button" onClick={reset} className="mt-6 h-11 px-6">
-        Try Again
+        Try again
       </Button>
     </div>
   );

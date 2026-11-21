@@ -97,7 +97,7 @@ export default async function AdminDocumentsPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Institutional Documents"
+        title="Institutional documents"
         description="Audited financials, compliance filings, governance policies, and internal reports. Documents remain internal unless marked public and attached to a campaign."
         count={data?.pagination.total}
         actions={can(actor, 'document.manage') ? <UploadPanel campaigns={campaigns} /> : null}
@@ -133,7 +133,7 @@ export default async function AdminDocumentsPage({
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Document Repository</CardTitle>
+          <CardTitle className="text-base">Document repository</CardTitle>
           <CardDescription>
             {data ? `${data.pagination.total} documents catalogued` : 'Document files'}
           </CardDescription>
@@ -150,11 +150,11 @@ export default async function AdminDocumentsPage({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
-                    <TableHead className="font-semibold">Document Title</TableHead>
-                    <TableHead className="font-semibold">Document Type</TableHead>
+                    <TableHead className="font-semibold">Document title</TableHead>
+                    <TableHead className="font-semibold">Document type</TableHead>
                     <TableHead className="font-semibold">Visibility</TableHead>
-                    <TableHead className="font-semibold">Financial Year</TableHead>
-                    <TableHead className="text-right font-semibold">File Size</TableHead>
+                    <TableHead className="font-semibold">Financial year</TableHead>
+                    <TableHead className="text-right font-semibold">File size</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

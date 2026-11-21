@@ -13,14 +13,14 @@ import { StoryCategoryIcon } from './story-category-icon';
  */
 function filterIconColor(category: string): string {
   const key = category.toLowerCase().replace(/[^a-z]/g, '');
-  if (key.includes('education') || key.includes('health')) return 'text-wash-rose-ink';
-  if (key.includes('women')) return 'text-wash-pink-ink';
+  if (key.includes('education') || key.includes('health')) return 'text-primary';
+  if (key.includes('women')) return 'text-primary';
   return categoryTone(category).ink;
 }
 
 /**
  * The category pills above the stories, as the owner's design (2026-10-15)
- * draws them: "All Stories" and one pill per category, the one in force
+ * draws them: "All stories" and one pill per category, the one in force
  * filled brand orange with a white label, the rest white with a navy label
  * and the category's icon.
  *
@@ -36,7 +36,7 @@ export function StoryFilters({
   categories: string[];
   current: string | null;
 }) {
-  const pills = [{ label: 'All Stories', value: null as string | null }].concat(
+  const pills = [{ label: 'All stories', value: null as string | null }].concat(
     categories.map((category) => ({ label: category, value: category })),
   );
 

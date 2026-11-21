@@ -31,7 +31,7 @@ export interface PostCardProps {
  *
  * In 'horizontal' layout (the default for the blog index):
  * - Large landscape thumbnail on the left (rounded-xl)
- * - Article info on the right: date, reading time if available, Manrope title, excerpt, "Read More →"
+ * - Article info on the right: date, reading time if available, Manrope title, excerpt, "Read more →"
  * - The sunken grey surface when `featured={true}`
  * - The card surface when `featured={false}`
  *
@@ -122,10 +122,10 @@ export function PostCard({
           ) : null}
         </div>
 
-        {/* Read More Link */}
+        {/* Read more Link */}
         <div className="mt-4 pt-3 sm:mt-auto">
           <span className="text-primary group-hover:text-primary inline-flex items-center gap-1.5 text-xs font-semibold transition-colors sm:text-sm">
-            Read More
+            Read more
             <ArrowRight
               className="size-4 transition-transform group-hover:translate-x-1"
               aria-hidden="true"

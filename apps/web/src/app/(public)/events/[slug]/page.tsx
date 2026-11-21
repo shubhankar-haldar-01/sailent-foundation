@@ -119,7 +119,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       {/* 2. Main Two-Column Layout */}
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10 print:m-0 print:w-full print:max-w-none print:p-0">
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10 print:m-0 print:block print:w-full print:p-0">
-          {/* Left Column (Width ~ 7 cols): Event Registration Form */}
+          {/* Left Column (Width ~ 7 cols): Event registration Form */}
           <div className="lg:col-span-7 xl:col-span-7 print:m-0 print:block print:w-full print:max-w-none print:p-0">
             <EventRegistrationFlow
               eventId={event.id || ''}

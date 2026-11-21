@@ -142,7 +142,7 @@ function PresetAmountsEditor({ initialAmounts }: { initialAmounts?: number[] | n
             className="border-border hover:border-primary text-muted-foreground hover:text-primary hover:bg-primary/5 inline-flex cursor-pointer items-center gap-1.5 rounded-xl border-2 border-dashed px-3 py-2 text-xs font-semibold transition-colors"
           >
             <Plus className="size-3.5" aria-hidden="true" />
-            <span>Add Button</span>
+            <span>Add button</span>
           </button>
         )}
 
@@ -158,7 +158,7 @@ function PresetAmountsEditor({ initialAmounts }: { initialAmounts?: number[] | n
       {/* Live Preview Bar */}
       <div className="border-border/70 bg-surface-sunken/40 rounded-lg border px-3.5 py-2.5">
         <div className="text-muted-foreground mb-1.5 text-[11px] font-semibold uppercase tracking-wider">
-          Live Donor Form Preview
+          Live donor form preview
         </div>
         {validAmounts.length > 0 ? (
           <div className="flex flex-wrap items-center gap-2">
@@ -315,7 +315,7 @@ function CampaignVideoUploadField({ initialUrl }: { initialUrl: string }) {
             className="border-border bg-surface text-foreground group-hover:border-primary/40 shadow-xs mt-4 inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-1.5 text-xs font-semibold"
           >
             <Upload className="text-primary size-3.5" />
-            Choose Video File
+            Choose video file
           </button>
         </div>
       )}
@@ -585,7 +585,7 @@ function CampaignGalleryPicker({
           className="border-border bg-surface text-body-sm text-foreground hover:bg-muted inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3.5 py-2 font-medium transition-colors"
         >
           <Plus className="text-primary size-4" />
-          {isOpen ? 'Close Media Library selection' : 'Choose from Media Library'}
+          {isOpen ? 'Close Media Library selection' : 'Choose from media library'}
         </button>
 
         <button
@@ -824,7 +824,7 @@ function CampaignCoverPicker({
           className="border-border bg-surface text-body-sm text-foreground hover:bg-muted inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3.5 py-2 font-medium transition-colors"
         >
           <Plus className="text-primary size-4" />
-          {isOpen ? 'Close Media Library selection' : 'Choose from Media Library'}
+          {isOpen ? 'Close Media Library selection' : 'Choose from media library'}
         </button>
 
         <button
@@ -1008,12 +1008,12 @@ export function CampaignForm({
 
   const formFields = (
     <>
-      {/* Hero Cover Image */}
+      {/* Hero cover image */}
       <div className="border-border/80 bg-muted/20 space-y-4 rounded-xl border p-4">
         <div className="border-border/60 border-b pb-3">
           <h4 className="text-foreground flex items-center gap-2 text-sm font-semibold">
             <ImageIcon className="text-primary size-4" aria-hidden="true" />
-            Hero Cover Image
+            Hero cover image
           </h4>
           <p className="text-muted-foreground mt-0.5 text-xs">
             Primary visual displayed at the top of the campaign and on listing cards.
@@ -1209,7 +1209,7 @@ export function CampaignForm({
           </div>
 
           <Field
-            label="Campaign Video"
+            label="Campaign video"
             name="videoUrl"
             errors={state.fieldErrors}
             hint="Optional. Upload a video file from your local machine (MP4, WebM, MOV up to 100MB). When uploaded, the video appears in the 'About This Campaign' gallery carousel."
@@ -1218,7 +1218,7 @@ export function CampaignForm({
           </Field>
 
           <Field
-            label="Campaign Gallery Photographs"
+            label="Campaign gallery photographs"
             name="galleryImages"
             errors={state.fieldErrors}
             hint="Upload photos from your device or select existing photographs from your Media Library to show in the 'About This Campaign' carousel."
@@ -1232,7 +1232,7 @@ export function CampaignForm({
         </div>
 
         <Field
-          label="Why This Campaign? (The Story)"
+          label="Why this campaign? (The story)"
           name="description"
           errors={state.fieldErrors}
           hint="Powers the 'Why This Campaign?' card on the public campaign page. First paragraph becomes the lead. Separate paragraphs with blank lines."
@@ -1246,10 +1246,10 @@ export function CampaignForm({
         </Field>
 
         <Field
-          label="What Will Your Support Provide?"
+          label="What will your support provide?"
           name="supportProvides"
           errors={state.fieldErrors}
-          hint="Powers the 'What Will Your Support Provide?' card on the public campaign page. Explains what donations deliver or fund. If left blank, it automatically summarizes the campaign's products."
+          hint="Powers the 'What will your support provide?' card on the public campaign page. Explains what donations deliver or fund. If left blank, it automatically summarizes the campaign's products."
         >
           <TextArea
             name="supportProvides"
@@ -1279,10 +1279,10 @@ export function CampaignForm({
       {guard.dialog}
       <FormStatus state={state} success="Campaign saved" />
 
-      {/* Card 1: Campaign Details & Goals */}
+      {/* Card 1: Campaign details & goals */}
       <Card className="border-border">
         <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Campaign Details & Goals</CardTitle>
+          <CardTitle className="text-base font-semibold">Campaign details & goals</CardTitle>
           <p className="text-caption text-muted-foreground mt-1">
             Every campaign funds a specific piece of a program. Program association is required
             before publishing.
@@ -1293,11 +1293,11 @@ export function CampaignForm({
         </CardContent>
       </Card>
 
-      {/* Card 2: Catalogue Products & Targeted Giving */}
+      {/* Card 2: Catalogue products & targeted giving */}
       <Card className="border-border">
         <CardHeader className="border-border border-b pb-4">
           <CardTitle className="text-base font-semibold">
-            Catalogue Products & Targeted Giving
+            Catalogue products & targeted giving
           </CardTitle>
           <p className="text-caption text-muted-foreground mt-1">
             Product allocations for itemized donor giving. Modifying pricing here applies
@@ -1313,10 +1313,10 @@ export function CampaignForm({
         </CardContent>
       </Card>
 
-      {/* Card 3: Frequently Asked Questions */}
+      {/* Card 3: Frequently asked questions */}
       <Card className="border-border">
         <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Frequently Asked Questions</CardTitle>
+          <CardTitle className="text-base font-semibold">Frequently asked questions</CardTitle>
           <p className="text-caption text-muted-foreground mt-1">
             Questions and answers rendered specifically on this campaign detail page.
           </p>

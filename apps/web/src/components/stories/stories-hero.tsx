@@ -36,7 +36,7 @@ export function StoriesHero() {
           </ol>
         </nav>
         <p>Sailent Foundation Stories</p>
-        <h1 id="stories-title">Stories — Real Voices, Real Change</h1>
+        <h1 id="stories-title">Stories — Real voices, real change</h1>
         <p>
           Stories from children, families, and communities whose lives are changing through our
           sustained work and community programs.
@@ -44,7 +44,7 @@ export function StoriesHero() {
       </div>
 
       <PageShell>
-        <div className="border-border bg-surface-inverse relative overflow-hidden rounded-[24px] border shadow-card sm:rounded-[32px]">
+        <div className="border-border bg-surface-inverse shadow-card relative overflow-hidden rounded-[24px] border sm:rounded-[32px]">
           <Image
             src={HERO_IMAGE}
             alt="Smiling Indian schoolgirls in blue uniforms sitting together in their classroom with colourful schoolbags and notebooks"

@@ -35,7 +35,7 @@ async function expectNoAxeViolations(page: Page) {
 test.describe('the public pages', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test("About's Our Team is visible and the dedicated /team page renders", async ({ page }) => {
+  test("About's Our team is visible and the dedicated /team page renders", async ({ page }) => {
     await page.goto('/about');
 
     const team = page.locator('section[aria-labelledby="team-heading"]');
@@ -44,9 +44,9 @@ test.describe('the public pages', () => {
     await expect(team.getByRole('heading', { level: 3 }).first()).toBeVisible();
 
     await page.goto('/team');
-    await expect(page.getByRole('heading', { level: 1, name: /Meet Our Team/i })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /Meet Our team/i })).toBeVisible();
     await expect(page.getByRole('heading', { level: 2, name: 'Leadership Team' })).toBeVisible();
-    await expect(page.getByRole('heading', { level: 2, name: 'Our Team' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Our team' })).toBeVisible();
   });
 
   test('a full event says so instead of offering a form', async ({ page }) => {

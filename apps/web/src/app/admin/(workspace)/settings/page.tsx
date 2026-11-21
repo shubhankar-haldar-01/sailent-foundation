@@ -26,7 +26,7 @@ export default async function AdminSettingsPage() {
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center p-12 text-center">
           <ShieldAlert className="text-muted-foreground/40 mb-3 h-10 w-10" />
-          <p className="text-foreground text-sm font-medium">Access Restricted</p>
+          <p className="text-foreground text-sm font-medium">Access restricted</p>
           <p className="text-muted-foreground mt-1 text-xs">
             You do not have permission to view or manage organisation settings.
           </p>

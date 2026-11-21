@@ -145,7 +145,7 @@ export default async function AdminProgramsPage({
                     Status
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Last Updated
+                    Last updated
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
                     <span className="sr-only">Actions</span>

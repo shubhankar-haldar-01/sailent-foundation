@@ -149,7 +149,7 @@ export default async function AdminDashboardPage() {
       />
 
       {/* ──────── 1. Key Metrics Stat Cards ──────── */}
-      <section aria-label="Key Performance Indicators">
+      <section aria-label="Key performance indicators">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Donations this Month */}
           {data.donations ? (
@@ -388,11 +388,13 @@ export default async function AdminDashboardPage() {
       </section>
 
       {/* ──────── 3. Middle Grid: Recent Donations & Campaign Pulse ──────── */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* `grid-cols-1` + `min-w-0`: a grid column otherwise grows to its widest
+          table, and at 360px the page scrolled sideways (Phase 5 check). */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Donations Table */}
         {data.donations ? (
           <section
-            className="border-border bg-surface shadow-xs flex flex-col justify-between rounded-xl border p-5"
+            className="border-border bg-surface shadow-xs flex min-w-0 flex-col justify-between rounded-xl border p-5"
             aria-labelledby="recent-donations"
           >
             <div>
@@ -479,12 +481,12 @@ export default async function AdminDashboardPage() {
         {/* Campaign & Programme Distribution */}
         {data.campaigns ? (
           <section
-            className="border-border bg-surface shadow-xs rounded-xl border p-5"
+            className="border-border bg-surface shadow-xs min-w-0 rounded-xl border p-5"
             aria-labelledby="campaign-distribution"
           >
             <div className="border-border flex items-center justify-between border-b pb-3.5">
               <h2 id="campaign-distribution" className="text-h4 font-semibold">
-                Campaign & Programme Pulse
+                Campaign & programme pulse
               </h2>
               <Link
                 href="/admin/campaigns"

@@ -94,7 +94,7 @@ describe('IssueIdentityCardDialog', () => {
 
     fireEvent.click(triggerBtn);
 
-    expect(screen.getByText('Official Staff Identity Card')).toBeInTheDocument();
+    expect(screen.getByText('Official staff identity card')).toBeInTheDocument();
     expect(screen.getByText('Shubhankar Haldar')).toBeInTheDocument();
     expect(screen.getByText('OPERATIONS DIRECTOR')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /download pdf/i })).toBeInTheDocument();

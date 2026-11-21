@@ -136,7 +136,7 @@ test.describe('admin screens', () => {
     await expect(page.getByRole('heading', { name: 'Cover image' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Campaign Gallery' })).toBeVisible();
     await expect(
-      page.getByRole('heading', { name: 'Catalogue Products & Targeted Giving' }),
+      page.getByRole('heading', { name: 'Catalogue products & targeted giving' }),
     ).toBeVisible();
   });
 

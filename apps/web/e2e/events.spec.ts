@@ -5,7 +5,7 @@ import { STAFF_STATE } from './global-setup';
 import { e2eStack } from '../playwright.config';
 
 /**
- * The events listing: search, the date menu, "View More Events", and what
+ * The events listing: search, the date menu, "View more events", and what
  * each card offers.
  *
  * ══════════════════════════════════════════════════════════════════════════
@@ -182,7 +182,7 @@ test.describe('the events listing', () => {
     await expect(page.getByRole('status').filter({ hasText: 'Showing 6 of 8' })).toBeVisible();
     await expect(cards(page)).toHaveCount(6);
 
-    const more = page.getByRole('link', { name: 'View More Events' });
+    const more = page.getByRole('link', { name: 'View more events' });
     await expect(more).toBeVisible();
     await more.click();
 
@@ -196,7 +196,7 @@ test.describe('the events listing', () => {
     expect(titles).toEqual(FIXTURES.map((fixture) => titleFor(key, fixture.n)));
 
     // Everything is showing, so there is nothing more to offer.
-    await expect(page.getByRole('link', { name: 'View More Events' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'View more events' })).toHaveCount(0);
   });
 
   test('narrows to a month, with or without the search, and lifts either filter cleanly', async ({
@@ -230,21 +230,21 @@ test.describe('the events listing', () => {
     await expect(cards(page).first()).toBeVisible();
     for (const text of await cards(page).allTextContents()) expect(text).toContain('April 2027');
 
-    // And "All Dates" lifts the month.
+    // And "All dates" lifts the month.
     await menu.click();
-    await page.getByRole('option', { name: 'All Dates' }).click();
+    await page.getByRole('option', { name: 'All dates' }).click();
     await page.waitForURL((url) => !url.searchParams.has('date'));
-    await expect(menu).toHaveText(/All Dates/);
+    await expect(menu).toHaveText(/All dates/);
   });
 
-  test('offers "Register Now" only where the shared registration rule allows it', async ({
+  test('offers "Register now" only where the shared registration rule allows it', async ({
     page,
   }) => {
     await page.goto(`/events?q=${key}&page=2`);
     await expect(cards(page)).toHaveCount(8);
 
     const register = (n: number) =>
-      cardFor(page, titleFor(key, n)).getByRole('link', { name: /^Register Now/ });
+      cardFor(page, titleFor(key, n)).getByRole('link', { name: /^Register now/ });
 
     // Open, with a cap: the button — to the event's registration page — and the places left.
     await expect(register(1)).toBeVisible();
@@ -293,7 +293,7 @@ test.describe('the events page around the listing', () => {
 
     const involved = page.getByRole('region', { name: 'Want to get involved?' });
     await expect(involved).toBeVisible();
-    await expect(involved.getByRole('link', { name: /Explore Volunteering/ })).toHaveAttribute(
+    await expect(involved.getByRole('link', { name: /Explore volunteering/ })).toHaveAttribute(
       'href',
       '/volunteer',
     );
@@ -301,7 +301,7 @@ test.describe('the events page around the listing', () => {
     await expect(page.getByRole('heading', { level: 2, name: 'Past events' })).toBeVisible();
     const past = page.getByRole('list', { name: 'Past events' }).getByRole('listitem');
     await expect(past.filter({ hasText: 'Community Plantation Drive' })).toHaveCount(1);
-    await expect(past.getByRole('link', { name: /^View Details/ }).first()).toHaveAttribute(
+    await expect(past.getByRole('link', { name: /^View details/ }).first()).toHaveAttribute(
       'href',
       /^\/events\/[a-z0-9-]+$/,
     );

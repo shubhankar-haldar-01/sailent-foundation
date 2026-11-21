@@ -13,7 +13,7 @@ import { dayLabel } from './events-query';
  * (2026-10-17) draws under "Past events": the photograph on the left, then the
  * title, the date and a link to the event's page.
  *
- * The link reads "View Details", not the design's "View highlights": the
+ * The link reads "View details", not the design's "View highlights": the
  * listing does not know whether an event has a gallery or a report, and a
  * promise of highlights over a page with none would be a broken one. The
  * event's own page shows its photographs when it has them.
@@ -60,7 +60,7 @@ export function PastEventCard({ event, className }: { event: SailentEvent; class
           href={href}
           className="text-primary-ink group/past focus-visible:outline-ring relative z-20 mt-2 inline-flex items-center gap-1 rounded-sm text-[0.8125rem] font-semibold hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
-          View Details
+          View details
           <span className="sr-only"> of {event.title}</span>
           <ArrowRight
             className="duration-(--duration-base) size-3.5 transition-transform motion-safe:group-hover/past:translate-x-0.5"

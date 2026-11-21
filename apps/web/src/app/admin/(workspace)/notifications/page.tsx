@@ -45,7 +45,7 @@ export default async function AdminNotificationsPage({
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Staff Alerts & Notifications"
+          title="Staff alerts & notifications"
           description="Operational system alerts, batch failures, and webhook execution notices for your administrator account."
           count={unread}
           actions={
@@ -53,7 +53,7 @@ export default async function AdminNotificationsPage({
               <Button asChild variant="secondary" size="sm">
                 <Link href="/admin/notifications/log">
                   <History className="mr-1.5 size-4" />
-                  View Send Log
+                  View send log
                 </Link>
               </Button>
               <MarkAllReadButton disabled={unread === 0} />
@@ -85,7 +85,7 @@ export default async function AdminNotificationsPage({
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Bell className="text-primary size-4" />
-              Notification Feed
+              Notification feed
             </CardTitle>
             <CardDescription>
               Showing {data.items.length} {unreadOnly ? 'unread' : 'total'} notification items

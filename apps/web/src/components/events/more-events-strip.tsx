@@ -27,7 +27,7 @@ export function MoreEventsStrip({ events, programsBySlug = {} }: MoreEventsStrip
             id="more-events-heading"
             className="font-display text-foreground text-2xl font-bold tracking-tight sm:text-3xl"
           >
-            More Events You Might Like
+            More events you might like
           </h2>
           <Link
             href="/events"
@@ -46,7 +46,7 @@ export function MoreEventsStrip({ events, programsBySlug = {} }: MoreEventsStrip
           {events.slice(0, 3).map((item) => {
             const badge = dateBadge(item.startsAt);
             const prog = item.programSlug ? programsBySlug[item.programSlug] : null;
-            const category = prog?.category || prog?.name || 'Community Support';
+            const category = prog?.category || prog?.name || 'Community support';
             const tone = categoryTone(category);
 
             return (
@@ -125,13 +125,13 @@ export function MoreEventsStrip({ events, programsBySlug = {} }: MoreEventsStrip
                     </div>
                   </div>
 
-                  {/* View Details Link */}
+                  {/* View details Link */}
                   <div className="border-border mt-5 flex items-center justify-between border-t pt-3">
                     <Link
                       href={`/events/${item.slug}`}
                       className="text-primary inline-flex items-center gap-1 text-xs font-semibold hover:underline hover:underline-offset-4"
                     >
-                      <span>View Details</span>
+                      <span>View details</span>
                       <ArrowRight className="size-3" aria-hidden="true" />
                     </Link>
                   </div>

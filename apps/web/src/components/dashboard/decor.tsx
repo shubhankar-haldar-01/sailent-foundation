@@ -4,7 +4,7 @@ import { cn } from '@sailent/ui';
  * The dashboard's right-hand artwork, drawn to the owner's design
  * (2026-10-08): solid icons for the profile rows, the green leaf beside "Your
  * Impact", the sprout growing from a soil mound, and the leaves in the corner
- * of "Explore More Campaigns".
+ * of "Explore more campaigns".
  *
  * All decorative — `aria-hidden`, no pointer events. The icons take
  * `currentColor`; the illustrations carry their own soft palette, dimmed a
@@ -68,7 +68,7 @@ export function LeafSolid({ className }: { className?: string }) {
 
 /**
  * A sprout growing from a soil mound on a sandy ground, the sun and its rays
- * above it — the "Your Impact" illustration.
+ * above it — the "Your impact" illustration.
  */
 export function SproutIllustration({ className }: { className?: string }) {
   const LIGHT = 'oklch(0.75 0.13 135)';
@@ -128,7 +128,7 @@ export function SproutIllustration({ className }: { className?: string }) {
   );
 }
 
-/** A soft peach rise with a few leaves on it — the "Explore More Campaigns" corner. */
+/** A soft peach rise with a few leaves on it — the "Explore more campaigns" corner. */
 export function ExploreLeaves({ className }: { className?: string }) {
   const LIGHT = 'oklch(0.82 0.06 150)';
   const DEEP = 'oklch(0.7 0.08 155)';

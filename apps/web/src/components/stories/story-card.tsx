@@ -20,7 +20,7 @@ import { StoryCategoryIcon } from './story-category-icon';
  */
 function badgeInk(category: string): string {
   const key = category.toLowerCase().replace(/[^a-z]/g, '');
-  if (key === 'healthcare' || key === 'health') return 'text-wash-blue-ink';
+  if (key === 'healthcare' || key === 'health') return 'text-primary';
   return categoryTone(category).ink;
 }
 
@@ -28,12 +28,12 @@ function badgeInk(category: string): string {
  * A story below the lead one, matched to the owner's design (2026-10-15): a
  * row — the photograph on the left (53% of the card, as tall as the card)
  * with the category's badge in its top corner; on the right the title, the
- * summary, where and when, and "Read Story" beside a pale-orange arrow.
+ * summary, where and when, and "Read story" beside a pale-orange arrow.
  * Below `md` the photograph goes on top.
  *
  * THE WHOLE CARD IS ONE LINK. The title is the only anchor; its `::after`
  * stretches over the card, so a click anywhere opens the story while a screen
- * reader hears one link named by the title. "Read Story" and the arrow are
+ * reader hears one link named by the title. "Read story" and the arrow are
  * decoration. A keyboard focus ring is drawn round the whole card.
  */
 export function StoryCard({
@@ -46,7 +46,7 @@ export function StoryCard({
   /**
    * `row`: the listing's card. `compact`: the story page's "More stories"
    * card — the photograph inset at the left, the title and summary beside it,
-   * and the date and "Read Story" on a row beneath both.
+   * and the date and "Read story" on a row beneath both.
    */
   variant?: 'row' | 'compact';
 }) {
@@ -102,7 +102,7 @@ export function StoryCard({
             aria-hidden="true"
             className="text-primary inline-flex items-center gap-1 text-xs font-semibold"
           >
-            Read Story
+            Read story
             <ArrowRight
               className="size-3.5 transition-transform motion-safe:group-hover:translate-x-0.5"
               strokeWidth={2}
@@ -133,7 +133,7 @@ export function StoryCard({
         {storyCategory ? (
           <span
             className={cn(
-              'bg-surface absolute left-3.5 top-3.5 z-10 inline-flex h-[2.125rem] items-center gap-2 rounded-full px-3.5 text-[0.8125rem] font-bold shadow-card',
+              'bg-surface shadow-card absolute left-3.5 top-3.5 z-10 inline-flex h-[2.125rem] items-center gap-2 rounded-full px-3.5 text-[0.8125rem] font-bold',
               badgeInk(storyCategory),
             )}
           >
@@ -166,7 +166,7 @@ export function StoryCard({
           aria-hidden="true"
           className="text-primary mt-auto inline-flex items-center gap-3 pt-5 text-[0.9375rem] font-bold"
         >
-          Read Story
+          Read story
           <span className="bg-primary/12 text-primary duration-(--duration-base) group-hover:bg-primary group-hover:text-primary-foreground grid size-8 shrink-0 place-items-center rounded-full transition-colors">
             <ArrowRight
               className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5"

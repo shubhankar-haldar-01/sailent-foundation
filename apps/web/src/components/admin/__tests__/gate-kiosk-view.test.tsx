@@ -231,13 +231,13 @@ describe('GateKioskView', () => {
     render(<GateKioskView event={EVENT} />);
 
     expect(await screen.findByText(/Camera access was refused/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Enable Camera/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Enable camera/i })).toBeInTheDocument();
   });
 
   describe('leaving the page', () => {
     type FakeScanner = { isScanning: boolean; busy?: boolean };
 
-    it('does not crash when the camera is still stopping (Exit Desk)', async () => {
+    it('does not crash when the camera is still stopping (Exit desk)', async () => {
       // Like html5-qrcode: a second stop while one is under way THROWS.
       scanner.start.mockImplementation(async function (this: FakeScanner) {
         this.isScanning = true;

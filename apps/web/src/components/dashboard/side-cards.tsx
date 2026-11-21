@@ -19,7 +19,7 @@ import { Panel, PanelHeader } from './panel';
 
 /**
  * The right-hand column (design, 2026-10-08): the profile card, "Your
- * Impact", "Explore More Campaigns", and — when the donor's gifts bought
+ * Impact", "Explore more campaigns", and — when the donor's gifts bought
  * things — what they were.
  */
 
@@ -51,7 +51,7 @@ export function ProfileCard({ profile }: { profile: DonorProfile }) {
             id="profile-heading"
             className="font-display text-foreground text-[1.0625rem] font-bold tracking-[-0.01em]"
           >
-            My Profile
+            My profile
           </h2>
           <Link
             href="/dashboard/profile"
@@ -114,7 +114,7 @@ export function ImpactCard() {
   return (
     <section
       aria-labelledby="impact-heading"
-      className="bg-success-subtle relative overflow-hidden rounded-2xl p-5 sm:p-[1.375rem]"
+      className="card-standard relative overflow-hidden rounded-2xl p-5 sm:p-[1.375rem]"
     >
       <SproutIllustration className="absolute -right-1 bottom-0 h-[8.5rem] w-auto dark:opacity-70" />
       <div className="relative">
@@ -123,7 +123,7 @@ export function ImpactCard() {
           className="font-display text-foreground flex items-center gap-2.5 text-[1.0625rem] font-bold tracking-[-0.01em]"
         >
           <LeafSolid className="text-success size-[1.625rem] shrink-0" />
-          Your Impact
+          Your impact
         </h2>
         <p className="text-foreground mt-3 max-w-[9.25rem] text-[0.9375rem] leading-normal">
           You&rsquo;re helping build stronger, healthier and happier communities.
@@ -145,7 +145,7 @@ export function ExploreCard() {
           id="explore-heading"
           className="font-display text-foreground text-[1.0625rem] font-bold tracking-[-0.01em]"
         >
-          Explore More Campaigns
+          Explore more campaigns
         </h2>
         <p className="text-foreground/85 mt-2.5 max-w-[12.5rem] text-[0.9375rem] leading-[1.4]">
           Support more causes and create a bigger impact.
@@ -156,7 +156,7 @@ export function ExploreCard() {
         */}
         <Button asChild size="md" className="mt-5 h-[2.625rem] px-6 text-[0.9375rem]">
           <Link href="/campaigns">
-            Browse Campaigns
+            Browse campaigns
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </Button>

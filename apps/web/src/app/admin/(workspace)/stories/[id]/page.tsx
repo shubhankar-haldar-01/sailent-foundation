@@ -75,7 +75,7 @@ export default async function AdminStoryPage({ params }: { params: Promise<{ id:
       {can(actor, 'story.publish') ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Publishing Controls</CardTitle>
+            <CardTitle className="text-base">Publishing controls</CardTitle>
             <CardDescription>
               Consent verification is required before making any story public.
             </CardDescription>
@@ -88,7 +88,7 @@ export default async function AdminStoryPage({ params }: { params: Promise<{ id:
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Story Content & Metadata</CardTitle>
+          <CardTitle className="text-base">Story content & metadata</CardTitle>
           <CardDescription>
             Subject details, quotes, narrative, media attachments, and permissions.
           </CardDescription>

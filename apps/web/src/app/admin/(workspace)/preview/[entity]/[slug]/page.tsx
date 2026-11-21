@@ -81,7 +81,7 @@ export default async function PreviewPage({
       </div>
 
       <Alert variant="warning">
-        <span className="font-semibold">Internal Preview Mode.</span>{' '}
+        <span className="font-semibold">Internal preview mode.</span>{' '}
         {isPublic
           ? 'This record is published and currently live on the public website.'
           : 'This record is a draft and not published. It is visible only to authorized staff.'}
@@ -96,7 +96,7 @@ export default async function PreviewPage({
             <Button asChild variant="secondary" size="sm">
               <Link href={`/${resource}/${slug}`} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                View Live Page
+                View live page
               </Link>
             </Button>
           ) : undefined
@@ -107,7 +107,7 @@ export default async function PreviewPage({
         <Card>
           <CardContent className="p-6">
             <h2 className="text-muted-foreground mb-2 text-xs font-semibold uppercase tracking-wider">
-              Summary Lead
+              Summary lead
             </h2>
             <p className="text-foreground text-base leading-relaxed">
               {String(record.shortDescription)}
@@ -125,7 +125,7 @@ export default async function PreviewPage({
           <Card>
             <CardContent className="p-5">
               <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-                Fundraising Goal
+                Fundraising goal
               </span>
               <p className="text-foreground mt-2 text-xl font-bold tabular-nums">
                 {record.fundraisingGoal ? formatCurrency(Number(record.fundraisingGoal)) : '—'}
@@ -135,7 +135,7 @@ export default async function PreviewPage({
           <Card>
             <CardContent className="p-5">
               <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-                Associated Program
+                Associated program
               </span>
               <p className="text-foreground mt-2 text-sm font-medium">
                 {String(record.programTitle ?? 'Not attached')}
@@ -145,7 +145,7 @@ export default async function PreviewPage({
           <Card>
             <CardContent className="p-5">
               <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-                Cause Category
+                Cause category
               </span>
               <p className="text-foreground mt-2 text-sm font-medium capitalize">
                 {String(record.category ?? '—')}
@@ -158,7 +158,7 @@ export default async function PreviewPage({
       {record.description ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Full Content Body</CardTitle>
+            <CardTitle className="text-base">Full content body</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {String(record.description)

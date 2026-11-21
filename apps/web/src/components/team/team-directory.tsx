@@ -62,7 +62,7 @@ export function TeamDirectory({ initialMembers }: TeamDirectoryProps) {
               id="our-team-heading"
               className="text-foreground text-2xl font-extrabold tracking-tight sm:text-[28px]"
             >
-              Our Team
+              Our team
             </h2>
             <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
               A diverse and dedicated team working on the ground to support our programs and create
@@ -126,7 +126,7 @@ export function TeamDirectory({ initialMembers }: TeamDirectoryProps) {
               onClick={() => setVisibleCount((prev) => prev + 6)}
               className="bg-primary text-primary-foreground hover:bg-primary-hover inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold shadow-sm transition-all duration-200 hover:shadow-md sm:text-base"
             >
-              View More Team Members
+              View more team members
               <ArrowRight className="size-4" />
             </button>
           </div>

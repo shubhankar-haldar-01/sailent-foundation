@@ -69,7 +69,7 @@ export default async function ProfilePage() {
             </span>
           </div>
 
-          {/* Row 2: Mobile Number */}
+          {/* Row 2: Mobile number */}
           <div className="flex items-center justify-between gap-4 py-3.5">
             <div className="flex items-center gap-3">
               <div className="size-9.5 bg-accent text-primary flex shrink-0 items-center justify-center rounded-full">

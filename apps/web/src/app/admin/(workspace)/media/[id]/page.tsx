@@ -55,7 +55,7 @@ export default async function AdminMediaItemPage({ params }: { params: Promise<{
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Asset Preview</CardTitle>
+              <CardTitle className="text-base">Asset preview</CardTitle>
               <CardDescription>
                 {item.visibility === 'private'
                   ? 'Private asset using temporary signed preview URL.'
@@ -82,22 +82,22 @@ export default async function AdminMediaItemPage({ params }: { params: Promise<{
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Technical Specifications</CardTitle>
+              <CardTitle className="text-base">Technical specifications</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <dl className="text-body-sm divide-border/60 divide-y">
-                <Row label="MIME Type">{item.mimeType}</Row>
-                <Row label="File Size">{formatBytes(item.sizeBytes)}</Row>
+                <Row label="MIME type">{item.mimeType}</Row>
+                <Row label="File size">{formatBytes(item.sizeBytes)}</Row>
                 <Row label="Resolution">
                   {item.width && item.height ? `${item.width} × ${item.height} px` : 'Unknown'}
                 </Row>
-                <Row label="Visibility Policy">
+                <Row label="Visibility policy">
                   <Badge variant={item.visibility === 'public' ? 'success' : 'neutral'}>
                     {item.visibility}
                   </Badge>
                 </Row>
                 <Row label="Uploaded At">{formatDate(item.createdAt)}</Row>
-                <Row label="Storage Object Key">
+                <Row label="Storage object key">
                   <code className="text-caption text-muted-foreground break-all font-mono">
                     {item.storageKey}
                   </code>
@@ -110,7 +110,7 @@ export default async function AdminMediaItemPage({ params }: { params: Promise<{
         <div>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Metadata & Accessibility</CardTitle>
+              <CardTitle className="text-base">Metadata & accessibility</CardTitle>
               <CardDescription>
                 Configure alt text, descriptive captions, and visibility settings.
               </CardDescription>

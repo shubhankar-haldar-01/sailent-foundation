@@ -76,7 +76,7 @@ export default async function AdminBlogPostPage({ params }: { params: Promise<{ 
       {can(actor, 'blog.publish') ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Publishing & Status</CardTitle>
+            <CardTitle className="text-base">Publishing & status</CardTitle>
             <CardDescription>Control publication status and public visibility.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -87,7 +87,7 @@ export default async function AdminBlogPostPage({ params }: { params: Promise<{ 
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Article Content & Metadata</CardTitle>
+          <CardTitle className="text-base">Article content & metadata</CardTitle>
           <CardDescription>Edit title, category, media, excerpt, and body content.</CardDescription>
         </CardHeader>
         <CardContent>

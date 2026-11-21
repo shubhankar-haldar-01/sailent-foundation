@@ -24,8 +24,8 @@ export interface BlogSidebarProps {
  * Right sidebar for the Sailent Foundation Blog.
  * Matches the reference design:
  * 1. Search field with "Search articles..." placeholder
- * 2. "Latest Articles" panel with compact thumbnails, titles, and dates
- * 3. "Subscribe to Our Blog" panel with email subscription form
+ * 2. "Latest articles" panel with compact thumbnails, titles, and dates
+ * 3. "Subscribe to our blog" panel with email subscription form
  */
 export function BlogSidebar({ latestPosts, currentQuery = '', className }: BlogSidebarProps) {
   return (
@@ -57,7 +57,7 @@ export function BlogSidebar({ latestPosts, currentQuery = '', className }: BlogS
         </form>
       </section>
 
-      {/* 2. Latest Articles Panel */}
+      {/* 2. Latest articles Panel */}
       <section aria-labelledby="latest-articles-title" className="card-interactive rounded-2xl p-5">
         <div className="mb-4 flex items-center gap-2">
           <span aria-hidden="true" className="bg-primary inline-block h-4 w-1 rounded-full" />
@@ -65,7 +65,7 @@ export function BlogSidebar({ latestPosts, currentQuery = '', className }: BlogS
             id="latest-articles-title"
             className="font-display text-foreground text-base font-bold"
           >
-            Latest Articles
+            Latest articles
           </h3>
         </div>
 
@@ -111,7 +111,7 @@ export function BlogSidebar({ latestPosts, currentQuery = '', className }: BlogS
         )}
       </section>
 
-      {/* 3. Subscribe to Our Blog Panel */}
+      {/* 3. Subscribe to our blog Panel */}
       <BlogNewsletterCard />
     </aside>
   );
@@ -167,7 +167,7 @@ function BlogNewsletterCard() {
             id="subscribe-panel-title"
             className="font-display text-foreground text-base font-bold"
           >
-            Subscribe to Our Blog
+            Subscribe to our blog
           </h3>
         </div>
 

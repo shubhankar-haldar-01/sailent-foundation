@@ -247,7 +247,7 @@ export function EventSummaryCard({
                   </span>
                 </span>
               ) : (
-                <span>Free Entry</span>
+                <span>Free entry</span>
               )}
             </p>
           </div>
@@ -310,7 +310,7 @@ export function EventSummaryCard({
         <p className={cn('mt-1 text-xs sm:text-sm', status.textClass)}>{status.text}</p>
       </div>
 
-      {/* Need Help? & Share section */}
+      {/* Need help? & Share section */}
       <div
         className={cn(
           'border-border mt-6 grid gap-4 border-t pt-5',
@@ -322,7 +322,7 @@ export function EventSummaryCard({
           <div className="space-y-1.5">
             <div className="text-foreground flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider">
               <Headphones className="text-muted-foreground size-3.5" aria-hidden="true" />
-              <span>Need Help?</span>
+              <span>Need help?</span>
             </div>
             <div className="text-muted-foreground mt-1.5 space-y-1.5 text-xs sm:text-[13px]">
               {supportEmail ? (
@@ -379,11 +379,11 @@ export function EventSummaryCard({
               </svg>
             </a>
 
-            {/* Copy Link */}
+            {/* Copy link */}
             <button
               type="button"
               onClick={handleCopy}
-              aria-label="Copy Link"
+              aria-label="Copy link"
               className="shadow-xs border-border bg-muted text-muted-foreground hover:border-primary hover:text-primary flex size-8 items-center justify-center rounded-full border transition-transform hover:scale-105"
             >
               {copied ? (

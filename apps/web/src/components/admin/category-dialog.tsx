@@ -44,39 +44,39 @@ import { createCategoryAction, updateCategoryAction, type ActionState } from '@/
 import type { AdminCategory } from '@/lib/admin/api';
 
 export const CATEGORY_ICONS: { id: string; label: string; icon: LucideIcon }[] = [
-  { id: 'book', label: 'Education & Learning', icon: Book },
-  { id: 'heart', label: 'Health & Medical', icon: Heart },
-  { id: 'shield', label: 'Disaster & Protection', icon: Shield },
-  { id: 'users', label: 'Community & Welfare', icon: Users },
-  { id: 'briefcase', label: 'Livelihood & Skills', icon: Briefcase },
-  { id: 'sprout', label: 'Environment & Nature', icon: Sprout },
+  { id: 'book', label: 'Education & learning', icon: Book },
+  { id: 'heart', label: 'Health & medical', icon: Heart },
+  { id: 'shield', label: 'Disaster & protection', icon: Shield },
+  { id: 'users', label: 'Community & welfare', icon: Users },
+  { id: 'briefcase', label: 'Livelihood & skills', icon: Briefcase },
+  { id: 'sprout', label: 'Environment & nature', icon: Sprout },
   { id: 'paw', label: 'Animal Welfare', icon: PawPrint },
-  { id: 'utensils', label: 'Food & Nutrition', icon: UtensilsCrossed },
-  { id: 'home', label: 'Shelter & Housing', icon: Home },
-  { id: 'globe', label: 'Outreach & Global', icon: Globe },
-  { id: 'sparkles', label: 'Impact & Innovation', icon: Sparkles },
+  { id: 'utensils', label: 'Food & nutrition', icon: UtensilsCrossed },
+  { id: 'home', label: 'Shelter & housing', icon: Home },
+  { id: 'globe', label: 'Outreach & global', icon: Globe },
+  { id: 'sparkles', label: 'Impact & innovation', icon: Sparkles },
   { id: 'tag', label: 'General / Supplies', icon: Tag },
 ];
 
 export const CATEGORY_KINDS = [
   {
     value: 'both',
-    label: 'Both Programs & Campaigns',
+    label: 'Both programs & campaigns',
     description: 'Available across campaigns and programs',
   },
   {
     value: 'program',
-    label: 'Programs Only',
+    label: 'Programs only',
     description: 'For organizational long-term programs',
   },
   {
     value: 'campaign',
-    label: 'Campaigns Only',
+    label: 'Campaigns only',
     description: 'For fundraising appeals only',
   },
   {
     value: 'blog',
-    label: 'Blog Only',
+    label: 'Blog only',
     description: 'For editorial and story categorization',
   },
 ] as const;
@@ -184,7 +184,7 @@ export function CategoryDialog({ category, open, onOpenChange, onSuccess }: Cate
             </div>
             <div>
               <DialogTitle>
-                {isEditing ? `Edit “${category?.name}”` : 'Create New Category'}
+                {isEditing ? `Edit “${category?.name}”` : 'Create New category'}
               </DialogTitle>
               <DialogDescription>
                 {isEditing
@@ -207,7 +207,7 @@ export function CategoryDialog({ category, open, onOpenChange, onSuccess }: Cate
 
           {isEditing && category?.key ? (
             <div className="border-border bg-muted/40 flex items-center justify-between rounded-lg border px-3 py-2 text-xs">
-              <span className="text-muted-foreground font-medium">Machine Identifier</span>
+              <span className="text-muted-foreground font-medium">Machine identifier</span>
               <code className="text-foreground font-mono font-semibold">{category.key}</code>
             </div>
           ) : null}
@@ -215,7 +215,7 @@ export function CategoryDialog({ category, open, onOpenChange, onSuccess }: Cate
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="category-name">
-                Category Name <span className="text-destructive">*</span>
+                Category name <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="category-name"
@@ -234,7 +234,7 @@ export function CategoryDialog({ category, open, onOpenChange, onSuccess }: Cate
 
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="category-slug">
-                URL Slug <span className="text-destructive">*</span>
+                URL slug <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
                 <Input
@@ -252,7 +252,7 @@ export function CategoryDialog({ category, open, onOpenChange, onSuccess }: Cate
                 />
               </div>
               <p className="text-muted-foreground text-xs">
-                Used in URLs: <code>/campaigns?category={slug || 'slug'}</code>
+                Used in urls: <code>/campaigns?category={slug || 'slug'}</code>
               </p>
               {formState.fieldErrors?.slug ? (
                 <p className="text-destructive text-xs">{formState.fieldErrors.slug}</p>
@@ -280,7 +280,7 @@ export function CategoryDialog({ category, open, onOpenChange, onSuccess }: Cate
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="category-order">Display Order</Label>
+              <Label htmlFor="category-order">Display order</Label>
               <Input
                 id="category-order"
                 name="displayOrder"
@@ -294,7 +294,7 @@ export function CategoryDialog({ category, open, onOpenChange, onSuccess }: Cate
           </div>
 
           <div className="space-y-1.5">
-            <Label>Category Icon</Label>
+            <Label>Category icon</Label>
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
               {CATEGORY_ICONS.map((item) => {
                 const IconComponent = item.icon;
@@ -321,7 +321,7 @@ export function CategoryDialog({ category, open, onOpenChange, onSuccess }: Cate
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="category-description">Description (Optional)</Label>
+            <Label htmlFor="category-description">Description (optional)</Label>
             <textarea
               id="category-description"
               name="description"
@@ -361,7 +361,7 @@ export function CategoryDialog({ category, open, onOpenChange, onSuccess }: Cate
               ) : isEditing ? (
                 <>
                   <Check className="size-4" />
-                  Save Changes
+                  Save changes
                 </>
               ) : (
                 'Create Category'

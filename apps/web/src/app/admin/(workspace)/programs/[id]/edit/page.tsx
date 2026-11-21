@@ -107,7 +107,7 @@ export default async function EditProgramPage({ params }: { params: Promise<{ id
                 <Layers className="text-info size-4" />
               </div>
               <div>
-                <CardTitle className="text-base font-semibold">Publication Lifecycle</CardTitle>
+                <CardTitle className="text-base font-semibold">Publication lifecycle</CardTitle>
                 <p className="text-caption text-muted-foreground mt-1">
                   {program.status === 'published'
                     ? 'This program is currently visible on the public website.'
@@ -133,7 +133,7 @@ export default async function EditProgramPage({ params }: { params: Promise<{ id
       {/* Program Details Card */}
       <Card className="border-border">
         <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Program Information & Focus</CardTitle>
+          <CardTitle className="text-base font-semibold">Program information & focus</CardTitle>
           <p className="text-caption text-muted-foreground mt-1">
             Core description, problem context, strategic approach, and cover photograph.
           </p>
@@ -147,7 +147,7 @@ export default async function EditProgramPage({ params }: { params: Promise<{ id
       {program.campaigns.length > 0 ? (
         <Card className="border-border">
           <CardHeader className="border-border border-b pb-4">
-            <CardTitle className="text-base font-semibold">Associated Campaigns</CardTitle>
+            <CardTitle className="text-base font-semibold">Associated campaigns</CardTitle>
             <p className="text-caption text-muted-foreground mt-1">
               Active and completed fundraising campaigns organized under this programmatic umbrella.
             </p>
@@ -177,7 +177,7 @@ export default async function EditProgramPage({ params }: { params: Promise<{ id
       {program.slugHistory.length > 0 ? (
         <Card className="border-border">
           <CardHeader className="border-border border-b pb-4">
-            <CardTitle className="text-base font-semibold">Permanent URL Redirects</CardTitle>
+            <CardTitle className="text-base font-semibold">Permanent URL redirects</CardTitle>
             <p className="text-caption text-muted-foreground mt-1">
               Historical URLs preserved as permanent 301 redirects to ensure external links do not
               break.

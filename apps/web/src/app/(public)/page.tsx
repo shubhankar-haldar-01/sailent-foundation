@@ -9,6 +9,7 @@ import { PartnersSection } from '@/components/home/partners-section';
 import { SpotlightSection } from '@/components/home/spotlight-section';
 import { StoriesAndEvents } from '@/components/home/stories-and-events';
 import { Testimonials } from '@/components/home/testimonials';
+import { TrustSection } from '@/components/home/trust-section';
 import { WhoWeAre } from '@/components/home/who-we-are';
 import { ComposedSections } from '@/components/home/section-renderer';
 import { SHOW_PRESS_MENTIONS, SHOW_TESTIMONIALS } from '@/lib/content/hidden-sections';
@@ -29,8 +30,8 @@ export const metadata: Metadata = buildMetadata({
    * searching for "Sailent Foundation", and the name should be the first thing
    * in the result rather than trailing after a strapline.
    */
-  titleOverride: 'Sailent Foundation | Empowering People, Transforming Lives',
-  title: 'Empowering People, Transforming Lives',
+  titleOverride: 'Sailent Foundation | Empowering people, transforming lives',
+  title: 'Empowering people, transforming lives',
   description:
     'Sailent Foundation works across education, healthcare, food security, disaster relief, livelihoods, women’s empowerment and animal welfare to build stronger, more inclusive communities.',
   path: '/',
@@ -61,7 +62,7 @@ export default async function HomePage() {
     await Promise.all([
       getHeadlineMetrics(),
       /*
-        The Featured Campaigns band: what an administrator marked featured, in
+        The Featured campaigns band: what an administrator marked featured, in
         their order, then the rest by deadline — active campaigns only. See
         `lib/featured-campaigns.ts`.
       */
@@ -108,7 +109,13 @@ export default async function HomePage() {
     ══════════════════════════════════════════════════════════════════════════
   */
   if (composed && composed.sections.length > 0) {
-    return <ComposedSections sections={composed.sections} data={data} />;
+    return (
+      <>
+        <ComposedSections sections={composed.sections} data={data} />
+        {/* Not a composer section type: always last, before the footer. */}
+        <TrustSection />
+      </>
+    );
   }
 
   return (
@@ -145,6 +152,8 @@ export default async function HomePage() {
       {SHOW_TESTIMONIALS ? <Testimonials /> : null}
       <PartnersSection />
       <NewsletterSection />
+      {/* Why give here: recorded facts only (owner, 2026-11-21). */}
+      <TrustSection />
     </>
   );
 }

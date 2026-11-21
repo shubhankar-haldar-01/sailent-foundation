@@ -67,11 +67,11 @@ export function UnsaveButton({
  * is small so it does not cover the picture, the target is not.
  */
 const HEART_DISC = cn(
-  'relative grid size-9 place-items-center rounded-full bg-surface text-wash-rose-ink shadow-sm',
+  'relative grid size-9 place-items-center rounded-full bg-surface text-primary shadow-sm',
   'before:absolute before:-inset-1 before:content-[""]',
   // Grows and warms under the pointer, presses in when tapped.
   'transition-[scale,background-color] duration-(--duration-base) ease-(--ease-out-soft)',
-  'hover:bg-wash-rose motion-safe:hover:scale-110 motion-safe:active:scale-95',
+  'hover:bg-accent motion-safe:hover:scale-110 motion-safe:active:scale-95',
   'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
 );
 

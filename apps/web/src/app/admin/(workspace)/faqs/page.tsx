@@ -36,7 +36,7 @@ export default async function AdminFaqsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Frequently Asked Questions"
+        title="Frequently asked questions"
         description="Public site FAQs organized by topic section. Campaign-specific FAQs are managed on their respective campaign."
         count={faqs.length}
       />
@@ -46,7 +46,7 @@ export default async function AdminFaqsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <HelpCircle className="text-primary size-4" />
-              Add FAQ Question
+              Add FAQ question
             </CardTitle>
             <CardDescription>
               Create a new general question and answer to publish under a category section.

@@ -25,7 +25,7 @@ export interface ProductSelectorProps {
  *
  * Before Phase 5, adding an item to a campaign meant typing a name, a
  * description and a price into a campaign-shaped form. Three campaigns offering
- * a School Kit therefore held three descriptions of it, written months apart by
+ * a School kit therefore held three descriptions of it, written months apart by
  * different people, drifting. The fix is not a warning on the form. It is a
  * form that has no name field.
  *

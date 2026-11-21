@@ -46,7 +46,7 @@ export default async function AdminTemplatesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Email Notification Templates"
+        title="Email notification templates"
         description="Transactional email copy for receipts, event confirmations, volunteer updates, and auth notices. Modifying a template versions it dynamically."
         count={items.length}
       />
@@ -55,7 +55,7 @@ export default async function AdminTemplatesPage() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <MailCheck className="text-primary size-4" />
-            Configured Templates
+            Configured templates
           </CardTitle>
           <CardDescription>
             {items.length} transactional templates registered in processor
@@ -66,10 +66,10 @@ export default async function AdminTemplatesPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40">
-                  <TableHead className="font-semibold">Template Name & Slug</TableHead>
-                  <TableHead className="font-semibold">Default Subject Line</TableHead>
+                  <TableHead className="font-semibold">Template name & slug</TableHead>
+                  <TableHead className="font-semibold">Default subject line</TableHead>
                   <TableHead className="font-semibold">Version</TableHead>
-                  <TableHead className="text-right font-semibold">Active State</TableHead>
+                  <TableHead className="text-right font-semibold">Active state</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

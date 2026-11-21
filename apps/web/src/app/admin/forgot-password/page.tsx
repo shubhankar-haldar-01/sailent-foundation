@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
             <KeyRound className="h-6 w-6" />
           </div>
           <h1 className="font-display text-foreground text-2xl font-bold tracking-tight">
-            Reset Password
+            Reset password
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Enter your staff email to receive a password reset link.

@@ -143,16 +143,16 @@ export default async function AdminUsersPage({
               <thead className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold uppercase tracking-wider">
                 <tr>
                   <th scope="col" className="px-5 py-3.5">
-                    Name & Email
+                    Name & email
                   </th>
                   <th scope="col" className="px-5 py-3.5">
                     Status
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Second Factor
+                    Second factor
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Last Signed In
+                    Last signed in
                   </th>
                   <th scope="col" className="px-5 py-3.5">
                     Added

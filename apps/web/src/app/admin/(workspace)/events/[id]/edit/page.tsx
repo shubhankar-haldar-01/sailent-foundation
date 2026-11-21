@@ -115,7 +115,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         {/* Left Column: Event Form */}
         <Card className="border-border">
           <CardHeader className="border-border border-b pb-4">
-            <CardTitle className="text-base font-semibold">Event Configuration & Details</CardTitle>
+            <CardTitle className="text-base font-semibold">Event configuration & details</CardTitle>
             <p className="text-caption text-muted-foreground mt-1">
               Title, date, start/end time, physical venue, and program linkage.
             </p>
@@ -135,7 +135,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
                   <Users className="text-info size-4" />
                 </div>
                 <div>
-                  <CardTitle className="text-base font-semibold">Attendee Capacity</CardTitle>
+                  <CardTitle className="text-base font-semibold">Attendee capacity</CardTitle>
                   <p className="text-caption text-muted-foreground mt-0.5">
                     Registration limit and reserved places
                   </p>
@@ -145,7 +145,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
             <CardContent className="space-y-4 p-5 sm:p-6">
               <div className="flex items-baseline justify-between">
                 <span className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
-                  Confirmed Places
+                  Confirmed places
                 </span>
                 <span
                   data-numeric=""
@@ -195,7 +195,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
                     <Globe className="text-info size-4" />
                   </div>
                   <div>
-                    <CardTitle className="text-base font-semibold">Visibility Status</CardTitle>
+                    <CardTitle className="text-base font-semibold">Visibility status</CardTitle>
                     <p className="text-caption text-muted-foreground mt-1">
                       Controls whether the event appears on the public website.
                     </p>
@@ -237,7 +237,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
             </CardContent>
           </Card>
 
-          {/* Registration Lifecycle Controls */}
+          {/* Registration lifecycle Controls */}
           <Card className="border-border shadow-xs overflow-hidden">
             <CardHeader className="border-border bg-muted/20 border-b pb-4">
               <div className="flex items-start justify-between gap-3">
@@ -247,7 +247,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
                   </div>
                   <div>
                     <CardTitle className="text-base font-semibold">
-                      Registration Lifecycle
+                      Registration lifecycle
                     </CardTitle>
                     <p className="text-caption text-muted-foreground mt-1">
                       Attendee reservation and capacity state.
@@ -284,7 +284,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
           {event.slugHistory?.length ? (
             <Card className="border-border">
               <CardHeader className="border-border border-b pb-4">
-                <CardTitle className="text-base font-semibold">Previous URL Permalinks</CardTitle>
+                <CardTitle className="text-base font-semibold">Previous URL permalinks</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <ul className="text-caption text-muted-foreground space-y-1">

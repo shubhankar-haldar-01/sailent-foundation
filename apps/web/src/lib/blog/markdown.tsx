@@ -187,7 +187,7 @@ export function renderMarkdown(source: string | null | undefined): React.ReactNo
     if (paragraph.length === 0) return;
     const text = paragraph.join(' ');
     blocks.push(
-      <p key={`p${key}`} className="text-body text-muted-foreground my-4 leading-relaxed">
+      <p key={`p${key}`} className="text-body-lg text-foreground/90 my-5 leading-[1.75]">
         {renderInline(text, `p${key}`)}
       </p>,
     );
@@ -224,7 +224,7 @@ export function renderMarkdown(source: string | null | undefined): React.ReactNo
     blocks.push(
       <blockquote
         key={`q${key}`}
-        className="border-primary text-body text-muted-foreground my-6 border-l-4 py-1 pl-5 italic"
+        className="border-primary text-body-lg text-foreground/80 my-6 border-l-4 py-1 pl-5 italic leading-[1.75]"
       >
         {renderInline(quote.join(' '), `q${key}`)}
       </blockquote>,

@@ -80,7 +80,7 @@ export function CampaignSearchBar({ query }: { query: ListingQuery }) {
         )}
       >
         <Search
-          className="text-muted-foreground group-focus-within/search:text-wash-mint-ink duration-(--duration-base) pointer-events-none absolute left-5 size-5 transition-colors"
+          className="text-muted-foreground group-focus-within/search:text-primary duration-(--duration-base) pointer-events-none absolute left-5 size-5 transition-colors"
           aria-hidden="true"
         />
         <label htmlFor="campaign-search" className="sr-only">
@@ -102,10 +102,10 @@ export function CampaignSearchBar({ query }: { query: ListingQuery }) {
           type="submit"
           aria-busy={pending || undefined}
           className={cn(
-            'bg-wash-mint-ink text-body-sm absolute right-1.5 inline-flex h-11 items-center gap-2 rounded-full px-5 font-bold text-white sm:px-7',
+            'bg-primary text-body-sm text-primary-foreground absolute right-1.5 inline-flex h-11 items-center gap-2 rounded-full px-5 font-bold sm:px-7',
             // Dark mode only: the mint lightens there, so the label goes navy.
             '',
-            'hover:bg-wash-mint-ink-strong duration-(--duration-base) ease-(--ease-out-soft) transition-[translate,scale,box-shadow,background-color]',
+            'hover:bg-primary duration-(--duration-base) ease-(--ease-out-soft) transition-[translate,scale,box-shadow,background-color]',
             'hover:shadow-md motion-safe:hover:-translate-y-px motion-safe:active:scale-[0.97]',
             'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
           )}
@@ -115,7 +115,7 @@ export function CampaignSearchBar({ query }: { query: ListingQuery }) {
         </button>
       </div>
 
-      {/* Wide enough for the longest name, "Completed Campaigns", in full. */}
+      {/* Wide enough for the longest name, "Completed campaigns", in full. */}
       <div className="md:w-[15.5rem] md:shrink-0">
         <CampaignStatusMenu
           value={status}

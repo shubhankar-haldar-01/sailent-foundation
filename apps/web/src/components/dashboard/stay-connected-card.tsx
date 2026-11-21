@@ -10,7 +10,7 @@ import { Honeypot } from '@/components/forms/honeypot';
 import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
- * "Stay Connected" newsletter card matching competitor reference (Image 2).
+ * "Stay connected" newsletter card matching competitor reference (Image 2).
  */
 export function StayConnectedCard({ className }: { className?: string }) {
   const [value, setValue] = React.useState('');
@@ -43,9 +43,9 @@ export function StayConnectedCard({ className }: { className?: string }) {
       aria-labelledby="stay-connected-title"
       className={cn('card-standard relative overflow-hidden rounded-2xl p-5 sm:p-6', className)}
     >
-      {/* "Stay Connected" Pill Badge */}
+      {/* "Stay connected" Pill Badge */}
       <span className="bg-warning-subtle text-warning-foreground inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold">
-        Stay Connected
+        Stay connected
       </span>
 
       {/* Heading */}
@@ -53,7 +53,7 @@ export function StayConnectedCard({ className }: { className?: string }) {
         id="stay-connected-title"
         className="font-display text-foreground mt-3 text-lg font-bold leading-snug sm:text-xl"
       >
-        Get Campaign Updates And Impact Stories In Your Inbox
+        Get campaign updates and impact stories in your inbox
       </h2>
 
       {/* Form matching Image 2 */}

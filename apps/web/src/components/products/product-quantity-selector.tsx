@@ -6,7 +6,7 @@ import { Minus, Plus } from 'lucide-react';
 import { cn, formatCurrency } from '@sailent/ui';
 
 export interface ProductQuantitySelectorProps {
-  /** Announced to assistive technology: "Add one School Kit". */
+  /** Announced to assistive technology: "Add one School kit". */
   productName: string;
   quantity: number;
   onQuantityChange: (quantity: number) => void;

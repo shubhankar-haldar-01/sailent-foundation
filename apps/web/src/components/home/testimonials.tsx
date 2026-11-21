@@ -72,13 +72,13 @@ export function Testimonials() {
             className="focus-visible:left-0 focus-visible:top-0"
           />
           <p className="text-overline tracking-(--text-overline--letter-spacing) text-primary font-bold uppercase">
-            Real Stories, Real Impact
+            Real stories, real impact
           </p>
           <h2
             id="testimonials-title"
             className="font-display text-h1 sm:text-display-sm text-foreground mt-1.5 font-bold tracking-tight"
           >
-            Voices of Hope and Change
+            Voices of hope and change
           </h2>
           <div className="bg-primary mx-auto mt-2.5 h-1 w-10 rounded-full" aria-hidden="true" />
           <p className="text-body-sm sm:text-body text-muted-foreground mt-3 leading-relaxed">

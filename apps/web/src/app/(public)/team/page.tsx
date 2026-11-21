@@ -7,7 +7,7 @@ import { buildMetadata } from '@/lib/seo/metadata';
 import { getTeam } from '@/lib/content';
 
 export const metadata: Metadata = buildMetadata({
-  title: 'Our Team',
+  title: 'Our team',
   description:
     'Meet our team: a dedicated group of people working together to support communities, create opportunities, and build a better tomorrow.',
   path: '/team',
@@ -25,7 +25,7 @@ export default async function TeamPage() {
         {/* Hero Section */}
         <TeamHero />
 
-        {/* Interactive Directory: Toolbar, Leadership, and Our Team Grid */}
+        {/* Interactive Directory: Toolbar, Leadership, and Our team Grid */}
         <TeamDirectory initialMembers={members} />
       </PageShell>
     </div>

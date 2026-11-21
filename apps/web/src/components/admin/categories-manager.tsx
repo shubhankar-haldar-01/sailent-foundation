@@ -27,7 +27,7 @@ interface CategoriesManagerProps {
 }
 
 const DEFAULT_SCOPE_META: { label: string; variant: 'accent' | 'neutral' | 'info' | 'outline' } = {
-  label: 'Programs & Campaigns',
+  label: 'Programs & campaigns',
   variant: 'accent',
 };
 
@@ -35,10 +35,10 @@ const KIND_LABELS: Record<
   string,
   { label: string; variant: 'accent' | 'neutral' | 'info' | 'outline' }
 > = {
-  both: { label: 'Programs & Campaigns', variant: 'accent' },
-  program: { label: 'Programs Only', variant: 'neutral' },
-  campaign: { label: 'Campaigns Only', variant: 'info' },
-  blog: { label: 'Blog Only', variant: 'outline' },
+  both: { label: 'Programs & campaigns', variant: 'accent' },
+  program: { label: 'Programs only', variant: 'neutral' },
+  campaign: { label: 'Campaigns only', variant: 'info' },
+  blog: { label: 'Blog only', variant: 'outline' },
 };
 
 export function CategoriesManager({ categories, canManage }: CategoriesManagerProps) {
@@ -118,14 +118,14 @@ export function CategoriesManager({ categories, canManage }: CategoriesManagerPr
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Category Management"
+        title="Category management"
         count={totalCount}
         description="Lookup catalogue of causes and thematic sectors. Organizes public filters for campaigns, programs, and articles."
         actions={
           canManage ? (
             <Button onClick={handleCreateClick} className="shadow-xs gap-1.5">
               <Plus className="size-4" aria-hidden="true" />
-              New Category
+              New category
             </Button>
           ) : null
         }
@@ -134,11 +134,11 @@ export function CategoriesManager({ categories, canManage }: CategoriesManagerPr
       {/* Metrics overview */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Card className="border-border/70 p-3 sm:p-4">
-          <p className="text-muted-foreground text-xs font-medium">Total Categories</p>
+          <p className="text-muted-foreground text-xs font-medium">Total categories</p>
           <p className="text-foreground mt-1 text-2xl font-bold tracking-tight">{totalCount}</p>
         </Card>
         <Card className="border-border/70 p-3 sm:p-4">
-          <p className="text-muted-foreground text-xs font-medium">Active in Catalogue</p>
+          <p className="text-muted-foreground text-xs font-medium">Active in catalogue</p>
           <p className="text-primary mt-1 text-2xl font-bold tracking-tight">{activeCount}</p>
         </Card>
         <Card className="border-border/70 p-3 sm:p-4">
@@ -148,14 +148,14 @@ export function CategoriesManager({ categories, canManage }: CategoriesManagerPr
           </p>
         </Card>
         <Card className="border-border/70 p-3 sm:p-4">
-          <p className="text-muted-foreground text-xs font-medium">Public Programs</p>
+          <p className="text-muted-foreground text-xs font-medium">Public programs</p>
           <div className="mt-1 flex items-baseline gap-1.5">
             <Layers className="text-muted-foreground size-4" />
             <p className="text-foreground text-2xl font-bold tracking-tight">{totalPrograms}</p>
           </div>
         </Card>
         <Card className="border-border/70 p-3 sm:p-4">
-          <p className="text-muted-foreground text-xs font-medium">Active Appeals</p>
+          <p className="text-muted-foreground text-xs font-medium">Active appeals</p>
           <div className="mt-1 flex items-baseline gap-1.5">
             <Megaphone className="text-primary size-4" />
             <p className="text-foreground text-2xl font-bold tracking-tight">{totalCampaigns}</p>
@@ -169,8 +169,8 @@ export function CategoriesManager({ categories, canManage }: CategoriesManagerPr
           {/* Scope and status chips */}
           <div className="flex flex-wrap items-center gap-1.5">
             {[
-              { id: 'all', label: 'All Scopes' },
-              { id: 'both', label: 'Programs & Campaigns' },
+              { id: 'all', label: 'All scopes' },
+              { id: 'both', label: 'Programs & campaigns' },
               { id: 'program', label: 'Programs' },
               { id: 'campaign', label: 'Campaigns' },
               { id: 'blog', label: 'Blog' },
@@ -196,7 +196,7 @@ export function CategoriesManager({ categories, canManage }: CategoriesManagerPr
             <span className="bg-border/80 mx-1 hidden h-4 w-px sm:inline-block" />
 
             {[
-              { id: 'all', label: 'All Status' },
+              { id: 'all', label: 'All status' },
               { id: 'active', label: 'Active only' },
               { id: 'inactive', label: 'Inactive only' },
             ].map((st) => {
@@ -289,7 +289,7 @@ export function CategoriesManager({ categories, canManage }: CategoriesManagerPr
                     Order
                   </th>
                   <th scope="col" className="px-4 py-3">
-                    Linked Records
+                    Linked records
                   </th>
                   <th scope="col" className="px-4 py-3 text-center">
                     Status
@@ -363,7 +363,7 @@ export function CategoriesManager({ categories, canManage }: CategoriesManagerPr
                         </Badge>
                       </td>
 
-                      {/* Display Order */}
+                      {/* Display order */}
                       <td className="text-muted-foreground px-4 py-3.5 text-center font-mono text-xs">
                         {category.displayOrder ?? 100}
                       </td>

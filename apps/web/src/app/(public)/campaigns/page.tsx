@@ -245,7 +245,7 @@ function resultSummary(
 function NoResults() {
   return (
     <div className="border-border bg-surface rise-in mt-6 flex flex-col items-center rounded-2xl border border-dashed px-6 py-14 text-center">
-      <span className="bg-wash-mint text-wash-mint-ink-strong grid size-12 place-items-center rounded-full">
+      <span className="bg-accent text-primary grid size-12 place-items-center rounded-full">
         <SearchX className="size-6" aria-hidden="true" />
       </span>
       <p className="font-display text-h4 mt-4 font-bold">No campaigns found</p>
@@ -254,7 +254,7 @@ function NoResults() {
       </p>
       <Button asChild className="mt-5 font-bold">
         <Link href="/campaigns" scroll={false}>
-          View All Campaigns
+          View all campaigns
         </Link>
       </Button>
     </div>

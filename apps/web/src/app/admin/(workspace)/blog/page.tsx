@@ -76,7 +76,7 @@ export default async function AdminBlogPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Blog Articles"
+        title="Blog articles"
         description="Editorial content published under the organisation’s voice. Drafts remain internal until publication."
         count={data?.pagination.total}
         actions={
@@ -84,7 +84,7 @@ export default async function AdminBlogPage({
             <Button asChild>
               <Link href="/admin/blog/new">
                 <Plus className="mr-1.5 size-4" />
-                Write Article
+                Write article
               </Link>
             </Button>
           ) : null
@@ -138,7 +138,7 @@ export default async function AdminBlogPage({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <FileText className="text-primary size-4" />
-            All Publications
+            All publications
           </CardTitle>
           <CardDescription>
             {data ? `${data.pagination.total} articles match current criteria` : 'Articles list'}
@@ -156,11 +156,11 @@ export default async function AdminBlogPage({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
-                    <TableHead className="font-semibold">Article Title</TableHead>
+                    <TableHead className="font-semibold">Article title</TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
                     <TableHead className="font-semibold">Author</TableHead>
                     <TableHead className="font-semibold">Published</TableHead>
-                    <TableHead className="text-right font-semibold">Last Updated</TableHead>
+                    <TableHead className="text-right font-semibold">Last updated</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

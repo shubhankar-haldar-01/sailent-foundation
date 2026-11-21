@@ -82,7 +82,7 @@ export default async function AdminStoriesPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Impact Stories"
+        title="Impact stories"
         description="First-person beneficiary accounts. Named subjects require recorded consent prior to publication."
         count={data?.pagination.total}
         actions={
@@ -90,7 +90,7 @@ export default async function AdminStoriesPage({
             <Button asChild>
               <Link href="/admin/stories/new">
                 <Plus className="mr-1.5 size-4" />
-                Draft Story
+                Draft story
               </Link>
             </Button>
           ) : null
@@ -144,7 +144,7 @@ export default async function AdminStoriesPage({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <BookOpen className="text-primary size-4" />
-            Stories Library
+            Stories library
           </CardTitle>
           <CardDescription>
             {data ? `${data.pagination.total} stories in current view` : 'Story entries'}
@@ -162,11 +162,11 @@ export default async function AdminStoriesPage({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
-                    <TableHead className="font-semibold">Story Title & Context</TableHead>
+                    <TableHead className="font-semibold">Story title & context</TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
-                    <TableHead className="font-semibold">Subject Person</TableHead>
-                    <TableHead className="font-semibold">Consent Verification</TableHead>
-                    <TableHead className="text-right font-semibold">Last Updated</TableHead>
+                    <TableHead className="font-semibold">Subject person</TableHead>
+                    <TableHead className="font-semibold">Consent verification</TableHead>
+                    <TableHead className="text-right font-semibold">Last updated</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -236,7 +236,7 @@ function ConsentCell({ story }: { story: AdminStorySummary }) {
   return (
     <Badge variant="warning" className="gap-1">
       <AlertCircle className="size-3" />
-      Missing Consent
+      Missing consent
     </Badge>
   );
 }

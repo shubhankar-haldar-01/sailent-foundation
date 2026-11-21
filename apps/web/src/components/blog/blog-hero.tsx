@@ -42,7 +42,7 @@ export function BlogHero() {
             </li>
           </ol>
         </nav>
-        <p>Our Blog</p>
+        <p>Our blog</p>
         <h1>Ideas, insights and stories that matter</h1>
         <p>
           Explore our latest articles, updates and perspectives on education, healthcare, community

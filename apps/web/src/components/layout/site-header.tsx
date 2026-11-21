@@ -15,13 +15,13 @@ import { SOCIAL_ICONS_SOLID } from './social-icons';
  * Site header.
  *
  * Behaviour that matters more than the styling:
- *   • The bar's one button, from `sm` up, is "Login / Sign Up" (owner
+ *   • The bar's one button, from `sm` up, is "Login / Sign up" (owner
  *     request, 2026-10-08 — it replaced Donate there). There is no separate
  *     sign-up: a donor account is created by the first donation, so the
  *     button goes to /sign-in. A signed-in donor sees their initials instead
  *     (`accountSlot`). On a phone the bar shows only the brand, dark mode
  *     and the menu; inside the menu Donate stays the first full-width
- *     button, and "Login / Sign Up" (or "My account") is a row below it.
+ *     button, and "Login / Sign up" (or "My account") is a row below it.
  *   • Dropdowns open on hover AND on click, and close on Escape with focus
  *     returned — a hover-only menu is unusable by keyboard and on touch.
  *   • The mobile drawer traps nothing it should not: it locks body scroll,
@@ -105,7 +105,7 @@ export function SiteHeader({
     THE PHONE MENU'S OWN "CURRENT PAGE".
 
     Its groups list their own links (`mobileChildren`), and one of those is
-    also somewhere else: "Partner with Us" shares /contact with the Contact Us
+    also somewhere else: "Partner with us" shares /contact with the Contact us
     row under the groups. On that page the row marks the current page, and no
     group claims it. A page that has a top-level row of its own is never
     claimed by a group either.
@@ -300,7 +300,7 @@ export function SiteHeader({
               >
                 <Link href="/sign-in" aria-current={isActive('/sign-in') ? 'page' : undefined}>
                   <UserRound className="size-4 lg:max-xl:hidden" aria-hidden="true" />
-                  Login / Sign Up
+                  Login / Sign up
                 </Link>
               </Button>
             )}
@@ -474,7 +474,7 @@ export function SiteHeader({
                 className={utilityRow(isActive(signedIn ? '/dashboard' : '/sign-in'))}
               >
                 <UserRound className="size-7 shrink-0" strokeWidth={2.2} aria-hidden="true" />
-                {signedIn ? 'My account' : 'Login / Sign Up'}
+                {signedIn ? 'My account' : 'Login / Sign up'}
               </Link>
             </li>
             <li>
@@ -485,7 +485,7 @@ export function SiteHeader({
                 className={utilityRow(isActive('/contact'))}
               >
                 <MailSolid className="size-7 shrink-0" />
-                Contact Us
+                Contact us
               </Link>
             </li>
           </ul>
@@ -522,7 +522,7 @@ export function SiteHeader({
   );
 }
 
-/** Login, Search, Contact Us and Dark mode, under the menu's Donate button. */
+/** Login, Search, Contact us and Dark mode, under the menu's Donate button. */
 function utilityRow(current: boolean) {
   return cn(
     'text-body flex h-11 items-center gap-5 rounded-lg px-1.5 transition-colors',
@@ -531,7 +531,7 @@ function utilityRow(current: boolean) {
   );
 }
 
-/** A solid envelope, as the menu's design draws Contact Us; the flap is cut out. */
+/** A solid envelope, as the menu's design draws Contact us; the flap is cut out. */
 function MailSolid({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>

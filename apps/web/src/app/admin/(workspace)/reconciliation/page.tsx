@@ -81,22 +81,22 @@ export default async function AdminReconciliationPage({
       {/* KPI Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="Pending Checkouts"
+          label="Pending checkouts"
           value={summary.pending}
           hint={formatCurrency(summary.pendingPaise)}
         />
         <Stat
-          label="Stuck Over 1 Hour"
+          label="Stuck over 1 hour"
           value={summary.stuckOverAnHour}
           hint="Delayed beyond normal gateway webhook threshold"
         />
         <Stat
-          label="Failed Sessions"
+          label="Failed sessions"
           value={summary.failed}
           hint="Gateway rejected or donor aborted"
         />
         <Stat
-          label="Missing Receipt"
+          label="Missing receipt"
           value={summary.capturedWithoutReceipt}
           hint="Integrity check (must always be zero)"
         />
@@ -125,7 +125,7 @@ export default async function AdminReconciliationPage({
         <CardHeader className="border-border border-b pb-4">
           <div className="flex items-center gap-2">
             <Clock className="text-primary size-5" aria-hidden="true" />
-            <CardTitle className="text-base font-semibold">Oldest Unresolved Checkouts</CardTitle>
+            <CardTitle className="text-base font-semibold">Oldest unresolved checkouts</CardTitle>
           </div>
           <p className="text-caption text-muted-foreground mt-1">
             Checkouts within the selected range that have not settled or cancelled.
@@ -150,7 +150,7 @@ export default async function AdminReconciliationPage({
                     <TableHead>Reference</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Checkout Started</TableHead>
+                    <TableHead>Checkout started</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

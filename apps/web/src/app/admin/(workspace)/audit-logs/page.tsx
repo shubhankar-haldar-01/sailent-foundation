@@ -66,7 +66,7 @@ export default async function AdminAuditLogsPage({
               />
             </label>
             <label className="text-muted-foreground text-xs font-medium">
-              <span className="mb-1 block">Entity Type</span>
+              <span className="mb-1 block">Entity type</span>
               <input
                 type="search"
                 name="entityType"
@@ -124,13 +124,13 @@ export default async function AdminAuditLogsPage({
                     Action
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Target Entity
+                    Target entity
                   </th>
                   <th scope="col" className="px-5 py-3.5">
                     Severity
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Detail & Changes
+                    Detail & changes
                   </th>
                 </tr>
               </thead>

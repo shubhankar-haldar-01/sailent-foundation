@@ -22,7 +22,7 @@ const RESEND_SECONDS = 30;
  * ══════════════════════════════════════════════════════════════════════════
  * NO PASSWORD EXISTS (decision A8). Donors authenticate with a six-digit code
  * emailed to an address the foundation already holds — from a donation or a
- * volunteer application. There is no separate sign-up; "Sign Up" on the page
+ * volunteer application. There is no separate sign-up; "Sign up" on the page
  * explains that rather than pretending otherwise.
  *
  * THE FIRST STEP ALWAYS ADVANCES. The API answers identically whether or not
@@ -128,7 +128,7 @@ export function DonorSignInForm({ next }: { next?: string }) {
       <form id="sign-in-request" action={requestAction} noValidate>
         <div className="flex items-baseline justify-between gap-4">
           <Label htmlFor="email" className="text-foreground text-[0.9375rem] font-semibold">
-            Email Address
+            Email address
           </Label>
           {onCodeStep ? (
             <button

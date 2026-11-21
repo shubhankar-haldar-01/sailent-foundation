@@ -71,12 +71,12 @@ export default async function AdminDonationsPage({
           seesDonors ? (
             <span className="text-caption text-success bg-success-subtle inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-medium">
               <ShieldCheck className="size-3.5" aria-hidden="true" />
-              PII Unlocked
+              PII unlocked
             </span>
           ) : (
             <span className="text-caption text-muted-foreground bg-muted inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-medium">
               <Lock className="size-3" aria-hidden="true" />
-              PII Redacted
+              PII redacted
             </span>
           )
         }

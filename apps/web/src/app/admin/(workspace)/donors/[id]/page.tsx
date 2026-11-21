@@ -168,7 +168,7 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
         <Card className="border-border">
           <CardContent className="p-4">
             <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
-              Lifetime Given
+              Lifetime given
             </p>
             <p
               data-numeric=""
@@ -182,7 +182,7 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
         <Card className="border-border">
           <CardContent className="p-4">
             <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
-              Total Contributions
+              Total contributions
             </p>
             <p
               data-numeric=""
@@ -196,7 +196,7 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
         <Card className="border-border">
           <CardContent className="p-4">
             <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
-              First Donation Date
+              First donation date
             </p>
             <p className="text-body text-foreground mt-2 font-medium">
               {donor.firstDonatedAt ? formatDate(donor.firstDonatedAt) : 'No donations recorded'}
@@ -207,7 +207,7 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
         <Card className="border-border">
           <CardContent className="p-4">
             <p className="text-caption text-muted-foreground font-medium uppercase tracking-wider">
-              Last Donation Date
+              Last donation date
             </p>
             <p className="text-body text-foreground mt-2 font-medium">
               {donor.lastDonatedAt ? formatDate(donor.lastDonatedAt) : '—'}
@@ -221,7 +221,7 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
         <CardHeader className="border-border border-b pb-4">
           <div className="flex items-center gap-2">
             <User className="text-primary size-5" aria-hidden="true" />
-            <CardTitle className="text-base font-semibold">Contact & Profile</CardTitle>
+            <CardTitle className="text-base font-semibold">Contact & profile</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -230,12 +230,12 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
             <Row label="Phone" value={donor.phone ?? '—'} mono />
             {donor.taxIdNumber ? <Row label="PAN" value={donor.taxIdNumber} mono /> : null}
             {hasRegisteredAddress ? <Row label="Address" value={registeredAddress} /> : null}
-            <Row label="Donor Type" value={donor.donorType} />
+            <Row label="Donor type" value={donor.donorType} />
             <Row
-              label="Public Listing"
+              label="Public listing"
               value={donor.isAnonymous ? 'Anonymous' : 'Named publicly'}
             />
-            <Row label="Acquisition Source" value={donor.source ?? 'Direct website'} />
+            <Row label="Acquisition source" value={donor.source ?? 'Direct website'} />
           </dl>
         </CardContent>
       </Card>
@@ -246,7 +246,7 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
           <CardHeader className="border-border border-b pb-4">
             <div className="flex items-center gap-2">
               <UserCog className="text-primary size-5" aria-hidden="true" />
-              <CardTitle className="text-base font-semibold">Correct Donor Record</CardTitle>
+              <CardTitle className="text-base font-semibold">Correct donor record</CardTitle>
             </div>
             <p className="text-caption text-muted-foreground mt-1">
               For transcription errors — a misspelled name, an updated address, or adding a PAN for
@@ -264,7 +264,7 @@ export default async function AdminDonorPage({ params }: { params: Promise<{ id:
         <CardHeader className="border-border border-b pb-4">
           <div className="flex items-center gap-2">
             <History className="text-primary size-5" aria-hidden="true" />
-            <CardTitle className="text-base font-semibold">Donation History</CardTitle>
+            <CardTitle className="text-base font-semibold">Donation history</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="p-0">

@@ -23,7 +23,7 @@ export default async function NewProductPage() {
 
       <Card className="border-border max-w-2xl">
         <CardHeader className="border-border border-b pb-4">
-          <CardTitle className="text-base font-semibold">Product Specifications</CardTitle>
+          <CardTitle className="text-base font-semibold">Product specifications</CardTitle>
           <p className="text-caption text-muted-foreground mt-1">
             Specify the default benchmark price, measure unit (e.g. kit, ration pack, scholarship),
             and public description.

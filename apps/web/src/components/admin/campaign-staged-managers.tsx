@@ -124,7 +124,7 @@ export function StagedProductsManager({
                     <p className="text-body-sm font-semibold">{item.product.name}</p>
                     {item.isMostNeeded ? (
                       <span className="bg-primary text-primary-foreground rounded-md px-2 py-0.5 text-[11px] font-semibold leading-none">
-                        Most Needed
+                        Most needed
                       </span>
                     ) : null}
                   </div>
@@ -234,9 +234,9 @@ export function StagedProductsManager({
                     className="border-border text-primary focus:ring-primary size-4 rounded focus:ring-offset-0"
                   />
                   <div className="min-w-0">
-                    <span className="text-body-sm text-foreground font-semibold">Most Needed</span>
+                    <span className="text-body-sm text-foreground font-semibold">Most needed</span>
                     <p className="text-caption text-muted-foreground">
-                      Display an orange &ldquo;Most Needed&rdquo; badge on this product card on the
+                      Display an orange &ldquo;Most needed&rdquo; badge on this product card on the
                       campaign page.
                     </p>
                   </div>

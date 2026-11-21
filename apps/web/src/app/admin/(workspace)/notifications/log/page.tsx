@@ -68,14 +68,14 @@ export default async function AdminSendLogPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Transaction Send Log"
+        title="Transaction send log"
         description="Delivery tracking for every transactional email produced by the platform. Recipients are identified by record ID to safeguard donor privacy."
         count={data.pagination.total}
         actions={
           <Button asChild variant="secondary" size="sm">
             <Link href="/admin/notifications">
               <ArrowLeft className="mr-1.5 size-4" />
-              Alerts Feed
+              Alerts feed
             </Link>
           </Button>
         }
@@ -109,7 +109,7 @@ export default async function AdminSendLogPage({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Send className="text-primary size-4" />
-            Dispatch Log Records
+            Dispatch log records
           </CardTitle>
           <CardDescription>
             Showing {data.items.length} {active} transactional records
@@ -125,9 +125,9 @@ export default async function AdminSendLogPage({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
-                    <TableHead className="font-semibold">Delivery Status</TableHead>
-                    <TableHead className="font-semibold">Message & Template</TableHead>
-                    <TableHead className="font-semibold">Transport Channel</TableHead>
+                    <TableHead className="font-semibold">Delivery status</TableHead>
+                    <TableHead className="font-semibold">Message & template</TableHead>
+                    <TableHead className="font-semibold">Transport channel</TableHead>
                     <TableHead className="font-semibold">Queued At</TableHead>
                     <TableHead className="text-right font-semibold">Actions</TableHead>
                   </TableRow>

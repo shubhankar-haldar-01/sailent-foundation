@@ -103,7 +103,7 @@ export default async function SavedCampaignsPage({
                 ? 'Women Empowerment'
                 : campaign.slug.includes('school') || campaign.slug.includes('educat')
                   ? 'Education'
-                  : 'Community Support');
+                  : 'Community support');
 
             return (
               <li key={campaign.campaignId}>

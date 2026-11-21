@@ -52,7 +52,7 @@ const healthcareStory: Story = {
 };
 
 describe('StoryFilters', () => {
-  it('renders "All Stories" as active by default with brand orange styling', () => {
+  it('renders "All stories" as active by default with brand orange styling', () => {
     render(<StoryFilters categories={['Education', 'Healthcare']} current={null} />);
 
     const allLink = screen.getByRole('link', { name: /all stories/i });
@@ -87,7 +87,7 @@ describe('FeaturedStory', () => {
   it('renders featured story badge, title, summary, location, date, and button', () => {
     render(<FeaturedStory story={sampleStory} />);
 
-    expect(screen.getByText('Featured Story')).toBeInTheDocument();
+    expect(screen.getByText('Featured story')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'A New Beginning for Meera' })).toBeInTheDocument();
     expect(screen.getByText(/From a small village to a brighter future/)).toBeInTheDocument();
     expect(screen.getByText('Ranchi, Jharkhand')).toBeInTheDocument();
@@ -105,7 +105,7 @@ describe('FeaturedStory', () => {
 });
 
 describe('StoryCard', () => {
-  it('renders supporting story with title, summary, category badge, and Read Story action', () => {
+  it('renders supporting story with title, summary, category badge, and Read story action', () => {
     render(<StoryCard story={healthcareStory} />);
 
     expect(
@@ -115,6 +115,6 @@ describe('StoryCard', () => {
     expect(screen.getByText('Healthcare')).toBeInTheDocument();
     expect(screen.getByText('Bastar, Chhattisgarh')).toBeInTheDocument();
     expect(screen.getByText('30 Sep 2026')).toBeInTheDocument();
-    expect(screen.getByText('Read Story')).toBeInTheDocument();
+    expect(screen.getByText('Read story')).toBeInTheDocument();
   });
 });

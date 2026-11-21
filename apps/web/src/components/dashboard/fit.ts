@@ -5,7 +5,7 @@
  * sized so that the whole dashboard shows without scrolling. The lists are
  * what decide its height, so they show as many rows as the screen has room
  * for: two on a laptop-height screen (as the design shows), and a third,
- * fourth and fifth as the window gets taller. "View All Payments" leads to
+ * fourth and fifth as the window gets taller. "View all payments" leads to
  * the rest. Below `xl` the columns stack and the page scrolls as any phone
  * page does, so every row is shown.
  *

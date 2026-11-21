@@ -22,7 +22,7 @@ export interface FaqRow {
  * Adding a product to a campaign now means choosing an existing catalogue entry
  * rather than typing a name and a description into a campaign-shaped form —
  * which is how three campaigns ended up with three different descriptions of
- * one School Kit. A panel that still offered the old form would keep that door
+ * one School kit. A panel that still offered the old form would keep that door
  * open, so it is gone rather than deprecated.
  */
 

@@ -9,13 +9,13 @@ vi.mock('@/lib/admin/actions', () => ({
 
 describe('DeleteTeamMemberButton', () => {
   it('renders delete button with given label', () => {
-    render(<DeleteTeamMemberButton id="member-1" name="Shubhankar Haldar" label="Delete Member" />);
-    expect(screen.getByRole('button', { name: 'Delete Member' })).toBeInTheDocument();
+    render(<DeleteTeamMemberButton id="member-1" name="Shubhankar Haldar" label="Delete member" />);
+    expect(screen.getByRole('button', { name: 'Delete member' })).toBeInTheDocument();
   });
 
   it('opens confirmation dialog on click with warning message', () => {
     render(<DeleteTeamMemberButton id="member-1" name="Shubhankar Haldar" />);
-    const btn = screen.getByRole('button', { name: 'Delete Member' });
+    const btn = screen.getByRole('button', { name: 'Delete member' });
     fireEvent.click(btn);
 
     expect(screen.getByText('Delete “Shubhankar Haldar”?')).toBeInTheDocument();

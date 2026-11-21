@@ -83,7 +83,7 @@ export function FilledSprig({ className, flip = false }: { className?: string; f
   );
 }
 
-/** Four outlined leaves fanned from one point — the doodle beside "View More Stories". */
+/** Four outlined leaves fanned from one point — the doodle beside "View more stories". */
 export function LeafFan({ className }: { className?: string }) {
   // [x, y, rotation°, length, half-width], all rising from the bottom left.
   const leaves: [number, number, number, number, number][] = [

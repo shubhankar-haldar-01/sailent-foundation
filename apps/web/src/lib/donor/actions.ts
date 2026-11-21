@@ -248,7 +248,7 @@ export async function registerForEvent(
   const slug = String(form.get('slug') ?? '');
 
   if (form.has('consent') && !checkbox(form, 'consent')) {
-    return { ok: false, error: 'You must agree to the Terms of Use and Privacy Policy.' };
+    return { ok: false, error: 'You must agree to the Terms of use and Privacy policy.' };
   }
 
   const fullName = text(form, 'fullName');

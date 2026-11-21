@@ -11,10 +11,10 @@ describe('Team Components', () => {
   it('renders TeamHero with heading, breadcrumbs, and banner image', () => {
     render(<TeamHero />);
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Meet Our Team/i);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Meet Our team/i);
     expect(screen.getByRole('navigation', { name: /Breadcrumb/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/');
-    expect(screen.getByRole('link', { name: 'About Us' })).toHaveAttribute('href', '/about');
+    expect(screen.getByRole('link', { name: 'About us' })).toHaveAttribute('href', '/about');
     expect(
       screen.getByRole('img', { name: /Sailent Foundation coordinator with children/i }),
     ).toBeInTheDocument();
@@ -51,13 +51,13 @@ describe('Team Components', () => {
     expect(
       screen.queryByRole('heading', { level: 2, name: 'Leadership Team' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: 'Our Team' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Our team' })).toBeInTheDocument();
 
     // Click 'Programmes' filter
     const programmesBtn = screen.getByRole('button', { name: /Programmes/i });
     fireEvent.click(programmesBtn);
 
-    expect(screen.getByRole('heading', { level: 2, name: 'Our Team' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Our team' })).toBeInTheDocument();
     expect(screen.getByText('Priya Mehta')).toBeInTheDocument();
 
     // Search for a specific member

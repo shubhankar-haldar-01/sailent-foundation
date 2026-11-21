@@ -10,7 +10,7 @@ import { can, currentActor } from '@/lib/auth/session';
 export const dynamic = 'force-dynamic';
 
 const FILTERS = [
-  { value: 'pending', label: 'Review Queue' },
+  { value: 'pending', label: 'Review queue' },
   { value: 'active', label: 'Active' },
   { value: 'approved', label: 'Approved' },
   { value: 'all', label: 'All' },
@@ -145,16 +145,16 @@ export default async function AdminVolunteersPage({
                     Volunteer ID
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Skills & Focus
+                    Skills & focus
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
-                    Verified Hours
+                    Verified hours
                   </th>
                   <th scope="col" className="px-5 py-3.5">
                     Status
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Applied Date
+                    Applied date
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
                     <span className="sr-only">Actions</span>

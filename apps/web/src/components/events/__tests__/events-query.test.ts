@@ -163,7 +163,7 @@ describe('matchesSearch', () => {
   });
 });
 
-describe('eventsView — the grid and "View More Events"', () => {
+describe('eventsView — the grid and "View more events"', () => {
   const events = series(14);
 
   it('shows six at a time, and says when more remain', () => {
@@ -206,7 +206,7 @@ describe('eventsView — the grid and "View More Events"', () => {
     expect(slugs({})).toEqual(['oct-camp', 'nov-camp', 'nov-drive']);
   });
 
-  it('treats a month with no events as "All Dates", so the menu and the grid agree', () => {
+  it('treats a month with no events as "All dates", so the menu and the grid agree', () => {
     const view = eventsView(events, parseEventsQuery({ date: '2030-01' }));
     expect(view.activeDate).toBeNull();
     expect(view.filtered).toBe(false);
