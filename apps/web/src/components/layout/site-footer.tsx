@@ -4,22 +4,22 @@ import { Mail, MapPin, Phone } from 'lucide-react';
 
 import { getOrganisation } from '@/lib/content/organisation';
 import { footerNav, legalNav, siteConfig } from '@/lib/site-config';
-import { HeartDoodle } from '@/components/home/focus-icons';
-import { ScriptAccent } from '@/components/sections/script-accent';
 
 import { MobileFooter } from './mobile-footer';
 import { SOCIAL_ICONS } from './social-icons';
 
 /**
- * Site footer matching the approved warm design.
+ * Site footer, simplified (visual polish Phase 3, owner 2026-11-21).
  *
- * Warm cream background (#FFF9F2), prominent brand lockup with mission text and
- * round social buttons, orange section heading bars, two short link columns,
- * contact details with peach icon badges, and the handwritten "People,
- * Purpose, Possibilities" script with heart flourish. No "Donate Now" button:
- * taken out of the footer at the owner's request (2026-10-16). The pages' own
- * donate buttons and the phone menu's Donate Now remain; the desktop header
- * bar has none.
+ * A clean column grid on the page surface: the brand column (logo, mission
+ * line, a quiet tagline, social links), the two link columns (`footerNav`:
+ * Explore, Information), Contact Us, and the legal row. Neutral headings with
+ * no bars, muted links that turn brand on hover, plain contact icons, 40px
+ * neutral social circles. The botanical corners, the handwritten tagline and
+ * the coloured icon badges are gone.
+ *
+ * Kept from `AGENTS.md` §11 item 13: the columns and links, the legal row, and
+ * no "Donate Now" button (owner, 2026-10-16).
  */
 export async function SiteFooter() {
   const year = new Date().getFullYear();
@@ -29,36 +29,7 @@ export async function SiteFooter() {
   const addressSecond = [address.city, address.state, address.country].filter(Boolean).join(', ');
 
   return (
-    // `overflow-clip`: the corner leaves sit 24px outside the footer, and unclipped they gave every page a sideways scroll.
-    <footer className="border-border bg-surface dark:border-border dark:bg-surface text-muted-foreground relative mt-auto overflow-clip border-t print:hidden">
-      {/* Decorative botanical watermark corners from approved design */}
-      <div
-        className="text-muted-foreground pointer-events-none absolute -bottom-6 -left-6 select-none opacity-25 dark:opacity-10"
-        aria-hidden="true"
-      >
-        <svg width="220" height="160" viewBox="0 0 220 160" fill="currentColor">
-          <path d="M0 160C30 100 90 60 170 30C120 90 60 140 0 160Z" />
-          <path d="M40 160C80 110 140 80 220 70C170 115 100 150 40 160Z" opacity="0.75" />
-          <path d="M10 160C50 130 90 105 150 95C110 125 60 150 10 160Z" opacity="0.5" />
-        </svg>
-      </div>
-      <div
-        className="text-muted-foreground pointer-events-none absolute -bottom-6 -right-6 select-none opacity-25 dark:opacity-10"
-        aria-hidden="true"
-      >
-        <svg
-          width="220"
-          height="160"
-          viewBox="0 0 220 160"
-          fill="currentColor"
-          className="-scale-x-100"
-        >
-          <path d="M0 160C30 100 90 60 170 30C120 90 60 140 0 160Z" />
-          <path d="M40 160C80 110 140 80 220 70C170 115 100 150 40 160Z" opacity="0.75" />
-          <path d="M10 160C50 130 90 105 150 95C110 125 60 150 10 160Z" opacity="0.5" />
-        </svg>
-      </div>
-
+    <footer className="border-border bg-surface text-muted-foreground relative mt-auto border-t print:hidden">
       {/* Mobile view (< md) */}
       <MobileFooter organisation={organisation} year={year} />
 
@@ -81,6 +52,7 @@ export async function SiteFooter() {
               Empowering communities through education, healthcare, and sustainable opportunities
               for a brighter tomorrow.
             </p>
+            <p className="text-caption text-muted-foreground">People · Purpose · Possibilities</p>
 
             <ul className="flex flex-wrap gap-2.5 pt-1">
               {organisation.social.map((link) => {
@@ -92,7 +64,7 @@ export async function SiteFooter() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`${siteConfig.name} on ${link.label}`}
-                      className="focus-visible:outline-ring shadow-xs size-8.5 border-border bg-surface dark:border-border dark:bg-surface hover:text-primary text-foreground hover:border-primary flex items-center justify-center rounded-full border transition-all focus-visible:outline-2 focus-visible:outline-offset-2"
+                      className="border-border text-muted-foreground hover:border-border-strong hover:bg-muted hover:text-foreground duration-(--duration-fast) flex size-10 items-center justify-center rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
                       {Icon ? (
                         <Icon className="size-4" aria-hidden="true" />
@@ -114,16 +86,9 @@ export async function SiteFooter() {
               const id = `footer-${group.label.replace(/\s+/g, '-').toLowerCase()}`;
               return (
                 <nav key={group.label} aria-labelledby={id}>
-                  <h2
-                    id={id}
-                    className="font-display text-foreground text-[15px] font-bold tracking-tight"
-                  >
+                  <h2 id={id} className="text-foreground mb-3 text-sm font-semibold">
                     {group.label}
                   </h2>
-                  <div
-                    className="h-0.75 bg-primary mb-2 mt-1 w-6 rounded-full"
-                    aria-hidden="true"
-                  />
                   <ul className="space-y-1.5 text-sm">
                     {group.items.map((item) => (
                       <li key={item.label}>
@@ -142,23 +107,19 @@ export async function SiteFooter() {
           </div>
 
           {/* Column 5: Contact Us + Script Accent */}
-          <div className="flex flex-col justify-between gap-6 lg:col-span-4 xl:flex-row">
+          <div className="lg:col-span-4">
             <div>
-              <h2
-                id="footer-contact"
-                className="font-display text-foreground text-[15px] font-bold tracking-tight"
-              >
+              <h2 id="footer-contact" className="text-foreground mb-3 text-sm font-semibold">
                 Contact Us
               </h2>
-              <div className="h-0.75 bg-primary mb-2 mt-1 w-6 rounded-full" aria-hidden="true" />
               <address
                 aria-labelledby="footer-contact"
                 className="text-muted-foreground space-y-2.5 text-sm not-italic"
               >
                 {addressFirst || addressSecond ? (
                   <div className="flex items-start gap-2.5">
-                    <span className="size-7.5 text-primary bg-muted flex shrink-0 items-center justify-center rounded-full">
-                      <MapPin className="size-3.5" aria-hidden="true" />
+                    <span className="text-muted-foreground flex size-5 shrink-0 items-center justify-center">
+                      <MapPin className="size-4" aria-hidden="true" />
                     </span>
                     <span className="leading-snug">
                       {addressFirst}
@@ -170,8 +131,8 @@ export async function SiteFooter() {
 
                 {organisation.phoneDisplay && organisation.phoneHref ? (
                   <div className="flex items-center gap-2.5">
-                    <span className="size-7.5 text-primary bg-muted flex shrink-0 items-center justify-center rounded-full">
-                      <Phone className="size-3.5" aria-hidden="true" />
+                    <span className="text-muted-foreground flex size-5 shrink-0 items-center justify-center">
+                      <Phone className="size-4" aria-hidden="true" />
                     </span>
                     <a
                       href={`tel:${organisation.phoneHref}`}
@@ -184,8 +145,8 @@ export async function SiteFooter() {
 
                 {organisation.email ? (
                   <div className="flex items-center gap-2.5">
-                    <span className="size-7.5 text-primary bg-muted flex shrink-0 items-center justify-center rounded-full">
-                      <Mail className="size-3.5" aria-hidden="true" />
+                    <span className="text-muted-foreground flex size-5 shrink-0 items-center justify-center">
+                      <Mail className="size-4" aria-hidden="true" />
                     </span>
                     <a
                       href={`mailto:${organisation.email}`}
@@ -208,36 +169,11 @@ export async function SiteFooter() {
                 ) : null}
               </address>
             </div>
-
-            {/* Hand-drawn People Purpose Possibilities flourish */}
-            <div className="hidden flex-col items-center justify-center pl-2 xl:flex">
-              <div className="flex items-start gap-2">
-                <ScriptAccent size="sm" className="text-muted-foreground leading-tight">
-                  <span className="block">People</span>
-                  <span className="block ps-[0.45em]">Purpose</span>
-                  <span className="block ps-[0.9em]">Possibilities</span>
-                </ScriptAccent>
-                <HeartDoodle className="text-primary mt-1 size-7 shrink-0" />
-              </div>
-              <svg
-                viewBox="0 0 100 16"
-                fill="none"
-                className="text-primary mt-1 w-20"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4 12C30 3 70 3 96 12"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
           </div>
         </div>
 
         {/* Bottom Sub-footer */}
-        <div className="border-border dark:border-border text-muted-foreground mt-6 flex flex-col items-center justify-between gap-3 border-t pt-3.5 text-xs sm:flex-row">
+        <div className="border-border text-muted-foreground mt-8 flex flex-col items-center justify-between gap-3 border-t pt-3.5 text-xs sm:flex-row">
           <p>
             © {year} <span className="text-foreground font-semibold">{siteConfig.name}</span>. All
             rights reserved.
@@ -247,13 +183,13 @@ export async function SiteFooter() {
             {legalNav.map((item, index) => (
               <li key={item.href} className="inline-flex items-center">
                 {index > 0 && (
-                  <span className="text-primary/40 mx-2" aria-hidden="true">
-                    |
+                  <span className="text-border-strong mx-2" aria-hidden="true">
+                    ·
                   </span>
                 )}
                 <Link
                   href={item.href}
-                  className="focus-visible:outline-ring hover:text-primary rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                  className="hover:text-foreground rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   {item.label}
                 </Link>

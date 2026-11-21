@@ -154,7 +154,7 @@ export function ExploreCard() {
           The design draws a white label; the owner's contrast rule (AGENTS.md
           §11) gives buttons on #EB6A1F a navy one, as everywhere else.
         */}
-        <Button asChild size="md" className="mt-5 h-[2.625rem] rounded-full px-6 text-[0.9375rem]">
+        <Button asChild size="md" className="mt-5 h-[2.625rem] px-6 text-[0.9375rem]">
           <Link href="/campaigns">
             Browse Campaigns
             <ArrowRight className="size-4" aria-hidden="true" />

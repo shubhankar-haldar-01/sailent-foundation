@@ -24,7 +24,7 @@ import { siteConfig } from '@/lib/site-config';
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <PageShell className="py-6 md:py-6">
-      <div className="border-border/60 bg-surface mx-auto grid max-w-[66rem] overflow-hidden rounded-[1.5rem] border shadow-elevated lg:grid-cols-[minmax(0,1.17fr)_minmax(0,1fr)]">
+      <div className="border-border/60 bg-surface shadow-elevated mx-auto grid max-w-[66rem] overflow-hidden rounded-[1.5rem] border lg:grid-cols-[minmax(0,1.17fr)_minmax(0,1fr)]">
         <div className="px-6 py-8 sm:px-10 lg:flex lg:flex-col lg:justify-center lg:px-10 lg:py-5 xl:px-12">
           {children}
         </div>
@@ -137,7 +137,6 @@ function WelcomePanel() {
 
       <div className="relative px-[6.6%] pt-[11%]">
         <p className="text-muted-foreground flex items-center gap-[1.6cqw] text-[clamp(1rem,3.12cqw,1.5rem)] leading-tight">
-          <span aria-hidden="true" className="bg-primary h-0.5 w-[6.2cqw] rounded-full" />
           Welcome to
         </p>
         <p
@@ -168,7 +167,7 @@ function WelcomePanel() {
         </p>
       </div>
 
-      <figure className="bg-primary-soft absolute bottom-[10%] left-[6.6%] w-[43%] rounded-[3.6cqw] border border-white/70 py-[3.6cqw] pl-[3.6cqw] pr-[3.1cqw] shadow-elevated">
+      <figure className="bg-primary-soft shadow-elevated absolute bottom-[10%] left-[6.6%] w-[43%] rounded-[3.6cqw] border border-white/70 py-[3.6cqw] pl-[3.6cqw] pr-[3.1cqw]">
         <blockquote className="flex gap-[2.1cqw]">
           <QuoteMark className="text-primary mt-[0.8cqw] h-[3.6cqw] w-[4.7cqw] shrink-0" />
           <p className="text-foreground text-[clamp(0.9375rem,2.86cqw,1.375rem)] leading-[1.45]">

@@ -35,7 +35,7 @@ export function StoriesCta() {
             <Button
               variant="action"
               asChild
-              className="mt-6 h-12 rounded-full px-[4.75rem] text-[0.9375rem] font-bold"
+              className="mt-6 h-12 px-[4.75rem] text-[0.9375rem] font-bold"
             >
               <Link href="/donate">
                 Donate Now
@@ -88,7 +88,7 @@ function Framed({
   return (
     <div
       className={cn(
-        'absolute rounded-[1.25rem] border-[5px] border-white shadow-elevated',
+        'shadow-elevated absolute rounded-[1.25rem] border-[5px] border-white',
         className,
       )}
     >

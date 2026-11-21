@@ -1,14 +1,4 @@
-import {
-  CalendarDays,
-  ArrowUp,
-  FileText,
-  HeartHandshake,
-  Lightbulb,
-  PackageCheck,
-  Target,
-  Users,
-  type LucideIcon,
-} from 'lucide-react';
+import { CalendarDays, ArrowUp, FileText, Users, type LucideIcon } from 'lucide-react';
 
 import { cn, formatCurrency, formatNumber } from '@sailent/ui';
 
@@ -85,13 +75,7 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
         <div className="@2xl:grid-cols-2 grid gap-3">
           {/* Why — the narrative, full width ---------------------------------- */}
           {campaign.story.length > 0 ? (
-            <AboutCard
-              id="about-why"
-              icon={Lightbulb}
-              tone="bg-wash-blue text-wash-blue-ink"
-              title="Why This Campaign?"
-              className="@2xl:col-span-2"
-            >
+            <AboutCard id="about-why" title="Why This Campaign?" className="@2xl:col-span-2">
               {/* Held to a reading measure: lines across the full card are hard to
                   follow back to their start. */}
               <div className="max-w-[68ch] space-y-2.5">
@@ -115,8 +99,6 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
           {campaign.supportProvides || products.length > 0 ? (
             <AboutCard
               id="about-provide"
-              icon={PackageCheck}
-              tone="bg-wash-mint text-wash-mint-ink-strong"
               title="What Will Your Support Provide?"
               className="@2xl:col-span-2"
             >
@@ -146,8 +128,6 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
           {showGoal ? (
             <AboutCard
               id="about-goal"
-              icon={Target}
-              tone="bg-wash-amber text-wash-amber-ink"
               title="Our Goal"
               className={showImpact ? null : '@2xl:col-span-2'}
             >
@@ -171,8 +151,6 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
           {showImpact ? (
             <AboutCard
               id="about-impact"
-              icon={HeartHandshake}
-              tone="bg-wash-violet text-wash-violet-ink"
               title="Your Impact"
               className={showGoal ? null : '@2xl:col-span-2'}
             >
@@ -182,7 +160,7 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
                   <p className="leading-tight">
                     <span
                       data-numeric=""
-                      className="text-h2 text-wash-violet-ink font-bold tabular-nums tracking-tight"
+                      className="text-h2 text-foreground font-semibold tabular-nums"
                     >
                       {formatNumber(reached)}
                     </span>{' '}
@@ -197,7 +175,7 @@ export function CampaignAbout({ campaign }: { campaign: Campaign }) {
                       >
                         <span
                           aria-hidden="true"
-                          className="bg-wash-violet-ink block h-full rounded-full"
+                          className="bg-primary block h-full rounded-full"
                           style={{ width: `${Math.max(reachedPercent, 2)}%` }}
                         />
                       </div>
@@ -302,42 +280,28 @@ export function hasAboutContent(campaign: Campaign): boolean {
 }
 
 /**
- * One About card: an icon on a tinted tile beside an extra-bold heading, then
- * whatever the card holds. White easing into the page's soft blue, a hairline
- * border and the light shadow every card on the page shares.
+ * One About card: a plain heading, then whatever the card holds, on a
+ * bordered, unshadowed surface (cards are border-first and only clickable
+ * ones lift; this one is not clickable). The pastel icon tile was retired
+ * for clean typography (visual polish Phase 3, 2026-11-21).
  */
 function AboutCard({
   id,
-  icon: Icon,
-  tone,
   title,
   className,
   children,
 }: {
   id: string;
-  icon: LucideIcon;
-  tone: string;
   title: string;
   className?: string | null;
   children: React.ReactNode;
 }) {
   return (
-    <article
-      aria-labelledby={id}
-      className={cn('card-interactive rounded-2xl p-5 sm:p-6', className)}
-    >
-      <div className="flex items-center gap-3">
-        <span
-          aria-hidden="true"
-          className={cn('grid size-10 shrink-0 place-items-center rounded-xl', tone)}
-        >
-          <Icon className="size-5" />
-        </span>
-        <h3 id={id} className="text-h4 font-bold leading-tight tracking-tight">
-          {title}
-        </h3>
-      </div>
-      <div className="mt-4">{children}</div>
+    <article aria-labelledby={id} className={cn('card-standard rounded-2xl p-5 sm:p-6', className)}>
+      <h3 id={id} className="text-h4 font-semibold leading-tight">
+        {title}
+      </h3>
+      <div className="mt-3">{children}</div>
     </article>
   );
 }

@@ -10,6 +10,23 @@ Newest first.
 
 ---
 
+## 2026-11-21 — Visual polish Phase 3: component polish
+
+| Change | Reason | Impact |
+|---|---|---|
+| Button: 8px corners at every size; sm 36px (44px hit area on touch), md 44px, lg 48px; press scales to 0.98; new neutral `outline` variant; one focus ring | Owner chose 8px (supersedes that part of `AGENTS.md` §11 item 7) | Every button on the site; Login is now a quiet outline button |
+| Input, Select, Textarea: hover, brand focus, red ring on error, new teal valid state with a check, `₹` prefix | Brief, Phase 3 | The donation builder's "Other amount" uses the prefix |
+| Badges one 24px pill size; progress 8px brand bar easing over 500ms; tabs with a brand underline; accordion `list` variant with 250ms open/close | Brief, Phase 3 | FAQs (campaign and /faq) are one card with divided rows |
+| Cards border-first: no shadow at rest; only clickable cards lift | Brief, Phase 3 | Campaign "About" cards lose their pastel icon tiles |
+| Campaign card simplified: whole card a link, one quiet "Donate Now", one programme tag, plain figures, brand bar, a smaller status pill | Owner (`AGENTS.md` §11 item 2) | /campaigns, home and programme pages |
+| Header: active link underlined in the brand, translucent blur when scrolled; phone menu's Donate in the action orange | Brief, Phase 3 | — |
+| Footer simplified (desktop and phone): no bars, no script, no botanical corners, neutral social circles, quiet tagline; links and structure unchanged | Owner (`AGENTS.md` §11 item 13) | — |
+| Section headers: brand eyebrow, no decorative rules or highlighted words | Brief, Phase 3 | Home, About, programmes, campaigns |
+| Amount chips: brand border, tint and a check when selected; the total and figures in the text colour, bars in the brand | Brief, Phase 3 | Campaign donation card, product cards |
+| `/dev/ui-states`: a component gallery, light and dark side by side | Owner's review | — |
+
+Tests: web 581/581 (Button sizes and variants, Input prefix and states, the accordion list, the simplified card). E2E (isolated copy, desktop/mobile/320): 406 passed, 52 failed (Phase 2: 393/61); no new code failure. Contrast failures left are the Donate orange (owner's exception).
+
 ## 2026-11-21 — Visual polish Phase 2: green brand, Inter only, colours on tokens
 
 | Change | Reason | Impact |

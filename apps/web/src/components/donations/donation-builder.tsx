@@ -468,13 +468,8 @@ export function DonationBuilder({
                 <label htmlFor={customInputId} className="sr-only">
                   Custom donation amount in rupees
                 </label>
-                <span
-                  aria-hidden="true"
-                  className="text-body-sm text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex w-9 items-center justify-center"
-                >
-                  ₹
-                </span>
                 <Input
+                  prefix="₹"
                   id={customInputId}
                   type="number"
                   inputMode="numeric"
@@ -486,7 +481,6 @@ export function DonationBuilder({
                   value={customAmount}
                   disabled={isPaused || isClosed}
                   onChange={(event) => setCustomAmount(event.target.value)}
-                  className="bg-surface rounded-lg pl-9"
                   data-numeric=""
                 />
               </div>

@@ -78,7 +78,7 @@ export function ProgramDetailHero({ program }: ProgramDetailHeroProps) {
               <Button
                 asChild
                 variant="secondary"
-                className="shadow-xs border-primary/30 bg-surface text-primary hover:bg-accent inline-flex h-auto items-center justify-center rounded-full border-2 px-7 py-3.5 text-sm font-bold transition-all sm:text-base"
+                className="shadow-xs border-primary/30 bg-surface text-primary hover:bg-accent inline-flex h-auto items-center justify-center border-2 px-7 py-3.5 text-sm font-bold transition-all sm:text-base"
               >
                 <Link href="#campaigns">Explore campaigns</Link>
               </Button>
@@ -87,7 +87,7 @@ export function ProgramDetailHero({ program }: ProgramDetailHeroProps) {
 
           {/* Right Column: Hero Image with rounded-3xl / rounded-[28px] matching design */}
           <div className="lg:col-span-6 xl:col-span-6">
-            <div className="border-border/70 relative overflow-hidden rounded-[24px] border shadow-elevated sm:rounded-[28px] lg:rounded-[32px]">
+            <div className="border-border/70 shadow-elevated relative overflow-hidden rounded-[24px] border sm:rounded-[28px] lg:rounded-[32px]">
               <MediaFrame
                 media={program.cover}
                 aspect="hero"

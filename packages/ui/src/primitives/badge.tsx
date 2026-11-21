@@ -4,16 +4,21 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../lib/cn';
 
 /**
- * Badge. Always icon + text where it conveys status — colour never carries
- * meaning alone (docs/design-system.md §3).
+ * Badge. One size: 24px high, a pill (tags are the one place pills stay,
+ * owner 2026-11-21), 12px medium text, 12px icons.
+ *
+ * Always icon + text where it conveys status — colour never carries meaning
+ * alone (docs/design-system.md §3). `brand` is for tags and selections; a
+ * success state is `success`, which is teal and carries its icon.
  */
 const badgeVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-caption font-medium [&_svg]:size-3',
+  'inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-xs font-medium [&_svg]:size-3 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
         neutral: 'bg-muted text-muted-foreground',
         accent: 'bg-accent text-accent-foreground',
+        brand: 'bg-accent text-accent-foreground',
         success: 'bg-success-subtle text-success',
         warning: 'bg-warning-subtle text-warning-foreground',
         destructive: 'bg-destructive-subtle text-destructive',

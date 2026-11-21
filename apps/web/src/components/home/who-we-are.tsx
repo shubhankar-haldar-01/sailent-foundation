@@ -60,7 +60,7 @@ export function WhoWeAre() {
     >
       <PageShell>
         {/* Main White Rounded Card Container */}
-        <div className="border-border bg-surface dark:border-border dark:bg-surface relative mx-auto w-full rounded-[28px] border p-6 shadow-elevated sm:rounded-[36px] sm:p-8 md:p-10 lg:p-12">
+        <div className="border-border bg-surface dark:border-border dark:bg-surface shadow-elevated relative mx-auto w-full rounded-[28px] border p-6 sm:rounded-[36px] sm:p-8 md:p-10 lg:p-12">
           <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr_1.1fr] lg:items-center lg:gap-8 xl:gap-10">
             {/* ─────────────────────────────────────────────────────────────
                 LEFT COLUMN: Who We Are
@@ -71,7 +71,6 @@ export function WhoWeAre() {
                 <span className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
                   ABOUT US
                 </span>
-                <span className="bg-primary h-[2px] w-8 rounded-full" aria-hidden="true" />
               </div>
 
               {/* Heading */}
@@ -79,7 +78,7 @@ export function WhoWeAre() {
                 id="who-we-are-title"
                 className="font-display text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[38px] xl:text-[42px]"
               >
-                Who We <span className="text-primary">Are</span>
+                Who We Are
               </h2>
 
               {/* Description */}
@@ -115,7 +114,7 @@ export function WhoWeAre() {
               </div>
 
               {/* Clean Framed Photograph */}
-              <div className="border-border overflow-hidden rounded-2xl border shadow-elevated sm:rounded-[26px]">
+              <div className="border-border shadow-elevated overflow-hidden rounded-2xl border sm:rounded-[26px]">
                 <MediaFrame
                   media={localMedia(
                     'community-classroom',
@@ -137,12 +136,11 @@ export function WhoWeAre() {
                 <span className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
                   OUR IMPACT
                 </span>
-                <span className="bg-primary h-[2px] w-8 rounded-full" aria-hidden="true" />
               </div>
 
               {/* Heading */}
               <h2 className="font-display text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[38px] xl:text-[42px]">
-                What We <span className="text-primary">Do</span>
+                What We Do
               </h2>
 
               {/* Description */}

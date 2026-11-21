@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ArrowRight, Lock, Minus, Plus, Share2, Trash2 } from 'lucide-react';
+import { ArrowRight, Check, Lock, Minus, Plus, Share2, Trash2 } from 'lucide-react';
 
 import { Button, Card, cn, formatCurrency, formatNumber, toast } from '@sailent/ui';
 
@@ -155,10 +155,9 @@ export function CampaignDonationSummary({
                 // page 2px wider than a 320px screen.
                 'focus-visible:outline-ring touch-target relative min-h-7 flex-1 text-nowrap rounded-md px-2 text-[0.8125rem] font-semibold tracking-tight transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 max-[359px]:text-wrap max-[359px]:py-1 max-[359px]:leading-tight',
                 mode === value
-                  ? // `-ink-strong`: the ordinary mint ink on the mint wash is
-                    // 4.31:1 against a 4.5:1 floor for 13px text.
-                    'bg-wash-mint text-wash-mint-ink-strong shadow-sm'
-                  : 'text-foreground/80 hover:text-foreground',
+                  ? // The selected segment: the brand tint and ink (above 4.5:1).
+                    'bg-surface text-primary shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
               {label}
@@ -261,13 +260,16 @@ export function CampaignDonationSummary({
                     onClick={() => onCustomAmountChange(pressed ? '' : String(rupees))}
                     data-numeric=""
                     className={cn(
-                      'text-caption focus-visible:outline-ring touch-target relative h-8 min-w-[52px] flex-1 rounded-lg border font-semibold tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60',
+                      'text-caption touch-target duration-(--duration-fast) relative inline-flex h-9 min-w-[52px] flex-1 items-center justify-center gap-1 rounded-lg border font-semibold tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60',
+                      // One selected style everywhere (visual polish Phase 3):
+                      // brand border, brand tint, a check. Hover is a border
+                      // change only. Selected is not success: no teal here.
                       pressed
-                        ? // `-ink-strong` on the mint wash: the ordinary ink is 4.31:1.
-                          'border-success bg-wash-mint text-wash-mint-ink-strong'
-                        : 'border-border bg-surface hover:border-foreground/30',
+                        ? 'border-primary bg-accent text-accent-foreground'
+                        : 'border-border bg-surface hover:border-border-strong',
                     )}
                   >
+                    {pressed ? <Check className="size-3.5 shrink-0" aria-hidden="true" /> : null}
                     {formatCurrency(rupees * 100)}
                   </button>
                 );
@@ -280,7 +282,10 @@ export function CampaignDonationSummary({
       {/* Total ---------------------------------------------------------- */}
       <div className="border-border mt-2 flex items-baseline justify-between gap-3 border-t pt-2">
         <span className="text-body font-bold">Total Amount</span>
-        <span data-numeric="" className="text-h3 text-success font-bold tabular-nums leading-tight">
+        <span
+          data-numeric=""
+          className="text-h3 text-foreground font-semibold tabular-nums leading-tight"
+        >
           {formatCurrency(total)}
         </span>
       </div>
@@ -445,7 +450,7 @@ export function CampaignProgressBlock({
       <div className="mt-0.5 flex items-end justify-between gap-3">
         <p
           data-numeric=""
-          className="text-wash-violet-ink text-h3 font-bold tabular-nums leading-tight"
+          className="text-foreground text-h3 font-semibold tabular-nums leading-tight"
         >
           {formatCurrency(raised)}
           <span className="sr-only"> raised</span>
@@ -454,7 +459,7 @@ export function CampaignProgressBlock({
           <p className="text-right leading-none">
             <span
               data-numeric=""
-              className="text-wash-violet-ink text-h4 block font-bold tabular-nums leading-none"
+              className="text-foreground text-h4 block font-semibold tabular-nums leading-none"
             >
               {formatNumber(donorCount)}
             </span>
@@ -474,7 +479,7 @@ export function CampaignProgressBlock({
           >
             <span
               aria-hidden="true"
-              className="bg-success block h-full rounded-full"
+              className="bg-primary block h-full rounded-full"
               style={{ width: `${width}%` }}
             />
           </div>

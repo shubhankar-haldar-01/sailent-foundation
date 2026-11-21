@@ -79,7 +79,7 @@ export function CampaignHero({ campaign }: { campaign: Campaign }) {
           measures 4.31:1 against a 4.5:1 floor for 13px text — the kind of
           near-miss that passes an eye and fails WCAG 1.4.3.
         */}
-        <span className="text-caption bg-wash-mint text-wash-mint-ink-strong inline-flex items-center rounded-md px-2.5 py-1 font-semibold">
+        <span className="bg-accent text-accent-foreground inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium">
           {campaign.category}
         </span>
 

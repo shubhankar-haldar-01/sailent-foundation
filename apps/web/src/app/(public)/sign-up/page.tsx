@@ -87,13 +87,13 @@ export default async function SignUpPage() {
       </ul>
 
       <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
-        <Button asChild size="lg" variant="action" className="h-11 rounded-full text-base">
+        <Button asChild size="lg" variant="action" className="h-11 text-base">
           <Link href="/donate">
             Donate Now
             <ArrowRight aria-hidden="true" />
           </Link>
         </Button>
-        <Button asChild variant="secondary" size="lg" className="h-11 rounded-full text-base">
+        <Button asChild variant="secondary" size="lg" className="h-11 text-base">
           <Link href="/volunteer">Volunteer with Us</Link>
         </Button>
       </div>

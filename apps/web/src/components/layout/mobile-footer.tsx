@@ -4,19 +4,21 @@ import { Phone } from 'lucide-react';
 
 import type { Organisation } from '@/lib/content/organisation';
 import { footerNav, legalNav, siteConfig } from '@/lib/site-config';
-import { HeartDoodle } from '@/components/home/focus-icons';
-import { ScriptAccent } from '@/components/sections/script-accent';
 
 import { BackToTop } from './back-to-top';
 import { SOCIAL_ICONS_GLYPH } from './social-icons';
 
 /**
- * Mobile footer matching the approved warm design.
+ * Mobile footer, simplified (visual polish Phase 3, owner 2026-11-21).
  *
- * Warm cream background (#FFF9F2), sprout brand mark, mission blurb,
- * round social buttons, the Explore and Information links side by side,
- * contact details in a card, and the handwritten "People, Purpose,
- * Possibilities" script. No "Donate Now" button (owner, 2026-10-16).
+ * Kept from the owner's 2026-10-16 design (`AGENTS.md` §11 item 13): the
+ * brand, mission and social links centred; Explore and Information side by
+ * side and always open (no accordions); Contact Us; Back to top; the
+ * copyright and legal links centred; no "Donate Now" button.
+ *
+ * Changed: neutral headings with no bars, Contact Us without the card, a
+ * quiet one-line tagline instead of the handwritten script, a plain
+ * copyright row on a hairline, 40px neutral social circles.
  */
 
 /*
@@ -60,13 +62,6 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
 
   return (
     <div className="relative z-10 px-5 pb-6 pt-6 md:hidden">
-      {/*
-        BRAND, MISSION AND SOCIAL LINKS, CENTRED (owner's design, 2026-10-16).
-        Measured from the design, which is about 1.67× a 390px phone: the
-        lockup centred, the mission 13px on 20px lines in #555555 (7.5:1 on
-        white), and the networks as 38px white circles with a hairline border
-        and a soft shadow, their marks near-black.
-      */}
       <div className="flex flex-col items-center text-center">
         <Link href="/" className="inline-flex items-center">
           <Image
@@ -94,7 +89,7 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${siteConfig.name} on ${link.label}`}
-                    className="focus-visible:outline-ring size-9.5 dark:border-border dark:bg-surface hover:text-primary border-border bg-surface text-foreground hover:border-primary flex items-center justify-center rounded-full border shadow-card transition-all focus-visible:outline-2 focus-visible:outline-offset-2 dark:shadow-none"
+                    className="border-border text-muted-foreground hover:border-border-strong hover:bg-muted hover:text-foreground duration-(--duration-fast) flex size-10 items-center justify-center rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                   >
                     {Icon ? (
                       <Icon className="size-4" aria-hidden="true" />
@@ -111,34 +106,20 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
         ) : null}
       </div>
 
-      {/*
-        EXPLORE AND INFORMATION, SIDE BY SIDE AND ALWAYS OPEN (owner's design,
-        2026-10-16) — they were collapsed accordions. Colours are taken from
-        the design: the heading #19013E, the bar #E9A944, the links #555555
-        (7.5:1 on the white footer). The bar is decoration.
-
-        Sized from the design at its own scale (about 1.67× a 390px phone, the
-        same as the owner's screenshots): 16px headings, a 34×3px bar, 13px
-        links on a 28px rhythm, the second column 195px along.
-      */}
       <div className="mt-6 grid grid-cols-2 gap-x-10">
         {footerNav.map((group) => {
           const id = `mobile-footer-${group.label.replace(/\s+/g, '-').toLowerCase()}`;
           return (
             <nav key={group.label} aria-labelledby={id} className="min-w-0">
-              <h2
-                id={id}
-                className="font-display text-foreground text-base font-bold leading-5 tracking-tight"
-              >
+              <h2 id={id} className="text-foreground text-sm font-semibold leading-5">
                 {group.label}
               </h2>
-              <div aria-hidden="true" className="bg-primary mt-2 h-[3px] w-[34px] rounded-full" />
-              <ul className="mt-1.5">
+              <ul className="mt-2">
                 {group.items.map((item) => (
                   <li key={item.label}>
                     <Link
                       href={item.href}
-                      className="focus-visible:outline-ring hover:text-primary text-muted-foreground block rounded-sm py-1 text-[13px] leading-5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                      className="hover:text-primary text-muted-foreground block rounded-sm py-1.5 text-sm leading-5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
                       {item.label}
                     </Link>
@@ -150,34 +131,15 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
         })}
       </div>
 
-      {/*
-        CONTACT US, AS A CARD (owner's design, 2026-10-16). Measured from the
-        design at its scale: an 18px-radius card filled #FFFEFD with a #EDEDEB
-        hairline and a soft shadow; the heading and bar as Explore's, centred;
-        solid #E9A944 marks in a 14px column, the text 13px on 19px lines in
-        #555555 starting 51px in, the rows 20px apart. The heading is ours
-        ("Contact Us"), and so are the details. The phone keeps a handset: the
-        design's WhatsApp mark would promise a chat this tel: link does not open.
-      */}
-      <section
-        aria-labelledby="mobile-footer-contact"
-        className="dark:border-border dark:bg-surface border-border bg-background mt-7 rounded-[18px] border px-5 pb-6 pt-[22px] shadow-card dark:shadow-none"
-      >
-        <h2
-          id="mobile-footer-contact"
-          className="font-display text-foreground text-center text-base font-bold leading-5 tracking-tight"
-        >
+      <section aria-labelledby="mobile-footer-contact" className="border-border mt-7 border-t pt-6">
+        <h2 id="mobile-footer-contact" className="text-foreground text-sm font-semibold leading-5">
           Contact Us
         </h2>
-        <div
-          aria-hidden="true"
-          className="bg-primary mx-auto mt-1.5 h-[3px] w-[34px] rounded-full"
-        />
 
-        <address className="text-muted-foreground mt-[18px] flex flex-col gap-5 text-[13px] not-italic leading-[19px]">
+        <address className="text-muted-foreground mt-3 flex flex-col gap-3 text-sm not-italic leading-5">
           {addressLines.length > 0 ? (
-            <div className="flex gap-[17px]">
-              <span className="text-primary flex h-[19px] w-3.5 shrink-0 items-center">
+            <div className="flex gap-3">
+              <span className="text-muted-foreground flex h-5 w-3.5 shrink-0 items-center">
                 <PinMark className="h-3.5 w-[10px]" />
               </span>
               <span>
@@ -191,13 +153,13 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
           ) : null}
 
           {phone ? (
-            <div className="flex gap-[17px]">
-              <span className="text-primary flex h-[19px] w-3.5 shrink-0 items-center">
+            <div className="flex gap-3">
+              <span className="text-muted-foreground flex h-5 w-3.5 shrink-0 items-center">
                 <Phone className="size-[13px] fill-current" strokeWidth={0} aria-hidden="true" />
               </span>
               <a
                 href={`tel:${phone.href}`}
-                className="focus-visible:outline-ring hover:text-primary rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="hover:text-foreground rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
               >
                 {phone.display}
               </a>
@@ -205,8 +167,8 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
           ) : null}
 
           {email ? (
-            <div className="flex gap-[17px]">
-              <span className="text-primary flex h-[19px] w-3.5 shrink-0 items-center">
+            <div className="flex gap-3">
+              <span className="text-muted-foreground flex h-5 w-3.5 shrink-0 items-center">
                 <MailMark className="h-2.5 w-3.5" />
               </span>
               <a
@@ -222,7 +184,7 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
           {hasContact ? null : (
             <Link
               href="/contact"
-              className="hover:text-primary text-center underline underline-offset-4 transition-colors"
+              className="hover:text-primary underline underline-offset-4 transition-colors"
             >
               Send us a message
             </Link>
@@ -231,34 +193,22 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
       </section>
 
       {/*
-        The script line, centred, with Back to top beside it. The button was in
-        the copyright row; the owner's design for that row (2026-10-16) has
-        nothing but the centred text, so the button moved up here rather than
-        being dropped. The side columns are equal so the script stays centred;
-        below 360px the button is 36px so all three fit with air between.
+        The tagline, centred, with Back to top beside it (the copyright row
+        holds only the notice and the legal links, owner 2026-10-16). The side
+        columns are equal so the tagline stays centred; below 360px the button
+        is 36px so all three fit with air between.
       */}
       <div className="mt-6 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center">
-        <div className="col-start-2 flex items-center gap-1.5">
-          <ScriptAccent size="sm" className="text-muted-foreground leading-tight">
-            <span>People, Purpose, Possibilities</span>
-          </ScriptAccent>
-          <HeartDoodle className="text-primary size-6" />
-        </div>
+        <p className="text-caption text-muted-foreground col-start-2">
+          People · Purpose · Possibilities
+        </p>
         <BackToTop className="size-9 justify-self-end min-[360px]:size-11" />
       </div>
 
-      {/*
-        THE COPYRIGHT BAND (owner's design, 2026-10-16): full width, a #E8E8E8
-        rule above a #FEF8EF band, everything centred — the notice in #666666
-        (5.4:1 on the band) with the name semibold in #5F48A2 (6.8:1), and the
-        legal links under it, 14px apart, without separators. 13px on 20px
-        lines, sized from the design at its scale (≈1.67× a 390px phone).
-        12px side padding so the notice is one line at 390px, as in the design;
-        narrower, it breaks before "All Rights Reserved.", never inside it.
-      */}
-      <div className="dark:border-border dark:bg-surface-warm border-border bg-muted text-muted-foreground -mx-5 -mb-6 mt-6 border-t px-3 pb-[15px] pt-[13px] text-center text-[13px] leading-5">
+      <div className="border-border text-muted-foreground -mx-5 -mb-6 mt-6 border-t px-3 pb-[15px] pt-[13px] text-center text-[13px] leading-5">
         <p>
-          Copyright © {year} <span className="text-primary font-semibold">{siteConfig.name}</span>.{' '}
+          Copyright © {year}{' '}
+          <span className="text-foreground font-semibold">{siteConfig.name}</span>.{' '}
           <span className="whitespace-nowrap">All Rights Reserved.</span>
         </p>
 
@@ -267,7 +217,7 @@ export function MobileFooter({ organisation, year }: { organisation: Organisatio
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="focus-visible:outline-ring hover:text-primary rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="hover:text-foreground rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
               >
                 {item.label}
               </Link>

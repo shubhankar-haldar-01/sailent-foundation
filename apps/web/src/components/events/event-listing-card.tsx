@@ -201,7 +201,7 @@ function CardActionControl({
         <Button
           asChild
           size="sm"
-          className="group/register h-9 rounded-full px-4 text-xs font-bold sm:text-[0.8125rem]"
+          className="group/register h-9 px-4 text-xs font-bold sm:text-[0.8125rem]"
         >
           <Link href={href}>
             Register Now

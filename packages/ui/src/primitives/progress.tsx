@@ -34,7 +34,8 @@ export interface ProgressProps extends React.ComponentPropsWithoutRef<
  * `aria-valuenow` reports the TRUE value — an over-subscribed campaign is told
  * honestly to assistive tech rather than being silently capped.
  *
- * No count-up animation. It draws attention to the number rather than to what
+ * The fill eases to its value over 500ms (none with reduced motion), but there
+ * is no count-up animation. It draws attention to the number rather than to what
  * it means, and makes a real figure feel like a sales device.
  */
 export const Progress = React.forwardRef<
@@ -45,7 +46,7 @@ export const Progress = React.forwardRef<
   ref,
 ) {
   const clamped = Math.min(Math.max(value, 0), 100);
-  const heights = { sm: 'h-1.5', md: 'h-2.5', lg: 'h-3.5' } as const;
+  const heights = { sm: 'h-1.5', md: 'h-2', lg: 'h-3' } as const;
 
   return (
     <ProgressPrimitive.Root
@@ -64,7 +65,7 @@ export const Progress = React.forwardRef<
     >
       <ProgressPrimitive.Indicator
         className={cn(
-          'duration-(--duration-slow) ease-(--ease-out-soft) h-full w-full flex-1 rounded-full transition-transform',
+          'ease-(--ease-out-soft) h-full w-full flex-1 rounded-full transition-transform duration-500 motion-reduce:transition-none',
           indicatorClassName ?? (tone === 'success' ? 'bg-success' : 'bg-primary'),
         )}
         style={{ transform: `translateX(-${100 - clamped}%)` }}

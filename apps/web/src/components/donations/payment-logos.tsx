@@ -22,11 +22,14 @@ export function PaymentLogos({ className }: { className?: string }) {
     <ul
       aria-label="Accepted payment methods"
       className={cn(
-        'flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-1',
+        // One row of marks 20px high, centred on one line (visual polish
+        // Phase 3). Not dimmed: the word marks are text, and at reduced
+        // opacity RuPay's green fell to 4.14:1.
+        'flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-1 [&>li]:flex [&>li]:h-5 [&>li]:items-center',
         // Dark mode: the marks keep their brand colours, on a white chip, as
         // payment marks are shown on dark sites — recolouring them is not ours
         // to do, and on a dark ground they drop to 1.2–1.7:1.
-        'dark:rounded-lg dark:bg-white dark:px-3 dark:py-2',
+        'dark:rounded-lg dark:bg-white dark:px-3 dark:py-1.5',
         className,
       )}
     >

@@ -140,14 +140,14 @@ export function CampaignSectionNav({
                 onClick={() => setActive(section.id)}
                 aria-current={isActive ? 'true' : undefined}
                 className={cn(
-                  'text-body-sm focus-visible:outline-ring relative flex min-h-10 items-center rounded-t-md px-3 font-semibold transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2',
+                  'text-body-sm duration-(--duration-fast) relative flex min-h-11 items-center px-3 font-medium transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2',
                   // The underline is a pseudo-element, so it tracks the current
-                  // link without a second element to keep in sync.
-                  'after:bg-success after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:opacity-0',
+                  // link without a second element to keep in sync. Brand for
+                  // the current section, neutral on hover (the kit's Tabs style).
+                  'after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors',
                   isActive
-                    ? // `-ink-strong` on the mint wash: the ordinary ink measures 4.31:1.
-                      'bg-wash-mint/70 text-wash-mint-ink-strong after:opacity-100'
-                    : 'text-foreground/80 hover:text-foreground',
+                    ? 'text-primary after:bg-primary font-semibold'
+                    : 'text-muted-foreground hover:text-foreground hover:after:bg-border-strong after:bg-transparent',
                 )}
               >
                 {section.label}

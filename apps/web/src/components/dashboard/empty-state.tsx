@@ -37,7 +37,7 @@ export function EmptyState({
       </p>
       {action ? (
         <div className="mt-5 text-center">
-          <Button asChild size="md" className="h-11 rounded-full px-6">
+          <Button asChild size="md" className="h-11 px-6">
             <Link href={action.href}>
               {action.label}
               <ArrowRight className="size-4" aria-hidden="true" />

@@ -10,9 +10,9 @@ import { cn } from '@sailent/ui';
  *
  * ONE HEADER FOR EVERY SECTION, so a page's sections share a rhythm: the same
  * weight, the same space under the title, the same place for "View all". The
- * heading is extra-bold with tight tracking — the page's strongest type after
- * its title — and the lead is set at body size, readable rather than a grey
- * footnote.
+ * heading is semibold with the base layer's negative tracking, the eyebrow a
+ * small brand-coloured label, and the lead is set at body size, readable
+ * rather than a grey footnote. No decorative rules or highlighted words.
  *
  * The eyebrow is presentational — it repeats the section's subject in smaller
  * type — so it is NOT a heading element. Nesting an `h3` above an `h2` to get
@@ -55,14 +55,14 @@ export function SectionHeading({
     >
       <div className={cn('max-w-2xl', align === 'center' && 'mx-auto')}>
         {eyebrow ? (
-          <p className="text-overline tracking-(--text-overline--letter-spacing) text-muted-foreground uppercase">
+          <p className="text-overline tracking-(--text-overline--letter-spacing) text-primary uppercase">
             {eyebrow}
           </p>
         ) : null}
         <Heading
           id={id}
           className={cn(
-            'font-display text-balance font-bold tracking-tight',
+            'font-display text-balance font-semibold',
             size === 'lg' ? 'text-h1' : 'text-h2 leading-tight',
             eyebrow ? 'mt-2' : null,
           )}

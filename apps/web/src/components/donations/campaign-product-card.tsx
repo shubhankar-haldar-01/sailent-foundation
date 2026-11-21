@@ -77,7 +77,7 @@ export function CampaignProductCard({
         />
 
         {featured && !isFulfilled ? (
-          <span className="bg-primary text-caption text-primary-foreground absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 font-semibold shadow-sm">
+          <span className="bg-surface/95 text-foreground shadow-xs absolute left-1.5 top-1.5 inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium">
             Most Needed
           </span>
         ) : null}
@@ -98,7 +98,7 @@ export function CampaignProductCard({
               <span data-numeric="" className="text-body-sm text-muted-foreground font-semibold">
                 {formatNumber(provided)} / {formatNumber(target)} Donated
               </span>
-              <span data-numeric="" className="text-body-sm text-wash-violet-ink font-semibold">
+              <span data-numeric="" className="text-body-sm text-foreground font-semibold">
                 {percent}%
               </span>
             </div>
@@ -116,7 +116,7 @@ export function CampaignProductCard({
             >
               <span
                 aria-hidden="true"
-                className="bg-warning block h-full rounded-full"
+                className="bg-primary block h-full rounded-full"
                 style={{ width: `${Math.max(percent ?? 0, provided > 0 ? 2 : 0)}%` }}
               />
             </div>
@@ -183,7 +183,7 @@ function StepButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="text-wash-violet-ink hover:bg-muted focus-visible:outline-ring touch-target relative grid h-10 w-9 place-items-center transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40 sm:w-10"
+      className="text-primary hover:bg-muted focus-visible:outline-ring touch-target relative grid h-10 w-9 place-items-center transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40 sm:w-10"
     >
       <Icon className="size-4" strokeWidth={2.5} aria-hidden="true" />
     </button>

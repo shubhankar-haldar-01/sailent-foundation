@@ -336,13 +336,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
                   <p className="dark:text-muted-foreground text-muted-foreground mt-3 text-[0.9375rem] leading-relaxed">
                     Fund a specific item, or give any amount.
                   </p>
-                  <Button
-                    asChild
-                    fullWidth
-                    size="lg"
-                    variant="action"
-                    className="mt-5 rounded-full"
-                  >
+                  <Button asChild fullWidth size="lg" variant="action" className="mt-5">
                     <Link href="/donate">
                       Donate
                       <ArrowRight aria-hidden="true" className="ml-1.5 size-4" />
@@ -484,7 +478,7 @@ function RelatedCampaign({ campaign }: { campaign: Campaign }) {
         fullWidth
         size="lg"
         variant="action"
-        className="shadow-xs mt-5 rounded-full py-3 text-sm font-semibold transition-colors"
+        className="shadow-xs mt-5 py-3 text-sm font-semibold transition-colors"
       >
         <Link href={`${href}#give`} className="inline-flex items-center justify-center gap-1.5">
           Support this work

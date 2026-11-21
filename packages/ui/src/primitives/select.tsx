@@ -20,20 +20,25 @@ export const SelectTrigger = React.forwardRef<
       aria-invalid={hasError || undefined}
       className={cn(
         'bg-surface text-body flex h-11 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2',
-        'data-[placeholder]:text-muted-foreground',
-        // Form focus is the brand green (colour roles, 2026-11-21): the border
-        // and a 2px ring turn `primary`, 5.4:1 against the white field. An
-        // error keeps its red border while focused.
-        'focus-visible:outline-primary focus-visible:outline-2 focus-visible:outline-offset-0',
-        'disabled:cursor-not-allowed disabled:opacity-50',
-        hasError ? 'border-destructive' : 'border-input focus-visible:border-primary',
+        'data-[placeholder]:text-muted-foreground group',
+        'duration-(--duration-fast) hover:border-foreground/40 transition-[border-color,outline-color]',
+        // The same states as Input: brand focus ring; an error keeps its red
+        // border and rings red.
+        'focus-visible:outline-2 focus-visible:outline-offset-0',
+        'disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-70',
+        hasError
+          ? 'border-destructive hover:border-destructive focus-visible:outline-destructive'
+          : 'border-input focus-visible:border-primary focus-visible:outline-primary data-[state=open]:border-primary',
         className,
       )}
       {...props}
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDown className="size-4 opacity-60" aria-hidden="true" />
+        <ChevronDown
+          className="duration-(--duration-base) size-4 opacity-60 transition-transform group-data-[state=open]:rotate-180 motion-reduce:transition-none"
+          aria-hidden="true"
+        />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );

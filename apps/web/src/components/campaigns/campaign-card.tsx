@@ -5,8 +5,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button, Skeleton, cn, formatCurrency, formatNumber, percentOf } from '@sailent/ui';
 
 import { SaveCampaignHeart } from '@/components/dashboard/save-campaign-button';
-import { CategoryIcon, categoryTone } from '@/components/home/category-icon';
-import { CoinsSolid, PeopleSolid, TargetSolid } from '@/components/home/focus-icons';
+import { CategoryIcon } from '@/components/home/category-icon';
 import {
   CAMPAIGN_STATE_NAMES,
   STATUS_VISUALS,
@@ -23,7 +22,7 @@ import type { Campaign } from '@/lib/mock/types';
  */
 const CTA_MOTION = cn(
   'group/cta duration-(--duration-base) ease-(--ease-out-soft) transition-[translate,scale,box-shadow,background-color]',
-  'hover:shadow-md active:scale-[0.98] motion-safe:hover:-translate-y-px',
+  'active:scale-[0.98]',
 );
 const CTA_ARROW =
   'duration-(--duration-base) ease-(--ease-out-soft) transition-[translate] motion-safe:group-hover/cta:translate-x-1';
@@ -31,7 +30,12 @@ const CTA_ARROW =
 /**
  * Campaign card — the listing's card, on /campaigns, the homepage and programme pages.
  *
- * Image, category, title, 3 key figures (Donors / Raised / Goal), progress bar, and donate button.
+ * SIMPLIFIED (owner, 2026-11-21; `AGENTS.md` §11 item 2): the whole card is the
+ * link; one programme tag; the figures as a plain row (Raised, Goal, Donors);
+ * the progress bar in the brand; and one quiet "Donate Now" (a brand outline,
+ * not the orange — orange is for the page's own Donate). No coloured discs.
+ * A small status pill: always when the campaign is not active, and on every
+ * card where the listing asks for it (`showStatus`).
  */
 export function CampaignCard({
   campaign,
@@ -46,7 +50,6 @@ export function CampaignCard({
   className?: string;
 }) {
   const detailHref = `/campaigns/${campaign.slug}`;
-  const tone = categoryTone(campaign.category);
 
   const goal = campaign.progress?.goal ?? campaign.goalAmount;
   const raised = campaign.progress?.raised ?? campaign.amountRaised;
@@ -54,13 +57,16 @@ export function CampaignCard({
   const barWidth = Math.min(100, Math.max(percent, raised > 0 ? 2 : 0));
   const isOpen = acceptsDonationsNow(campaign);
   const state = campaignState(campaign.status, campaign.donation?.state);
+  // A campaign that is not active always says so; on /campaigns (`showStatus`)
+  // every card states its state, Active included (e2e "every card says which
+  // state it is in, in every view").
   const stateBadge = state && (showStatus || state !== 'active') ? STATUS_VISUALS[state] : null;
 
   return (
     <article
       className={cn(
         'card-interactive @container group relative flex flex-col',
-        'rounded-[22px] p-3.5 sm:p-4',
+        'rounded-2xl p-3 sm:p-3.5',
         className,
       )}
     >
@@ -71,31 +77,26 @@ export function CampaignCard({
           zoom stays inside the corners without clipping any focus ring.
           A soft shade rises from its foot on hover, for depth.
         */}
-        <div className="duration-(--duration-slow) relative overflow-hidden rounded-2xl after:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-t after:from-black/25 after:to-transparent after:opacity-0 after:transition-opacity group-hover:after:opacity-100">
+        <div className="relative overflow-hidden rounded-xl">
           <MediaFrame
             media={campaign.cover}
             aspect="video"
             rounded={false}
-            className="hover-zoom aspect-[2.25/1] group-hover:scale-[1.06] motion-reduce:scale-100"
+            className="hover-zoom aspect-[16/10] group-hover:scale-[1.03] motion-reduce:scale-100"
             sizes="(max-width: 767px) 92vw, (max-width: 1023px) 46vw, (max-width: 1279px) 31vw, 320px"
           />
         </div>
 
         {state && stateBadge ? (
           /*
-            A filled pill in the state's own wash and ink — the same mark and
-            colour as the matching choice in the "Show" menu. The wash is
-            opaque, so it reads over any photograph, and the word is always
-            there: the colour is never the only signal.
+            A neutral pill like the programme tag, opaque so it reads over any
+            photograph; the state's own colour is in its icon (the same mark
+            as the matching choice in the "Show" menu). The word is always
+            there: the colour is never the only signal. Neutral because the
+            state's wash and ink measured 4.41:1 for 12px text (2026-11-21).
           */
-          <p
-            className={cn(
-              'absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8125rem] font-bold leading-none shadow-sm',
-              stateBadge.wash,
-              stateBadge.ink,
-            )}
-          >
-            <stateBadge.icon className="size-4" aria-hidden="true" />
+          <p className="bg-surface/95 text-foreground shadow-xs absolute left-2.5 top-2.5 inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs font-medium">
+            <stateBadge.icon className={cn('size-3', stateBadge.ink)} aria-hidden="true" />
             <span className="sr-only">Status: </span>
             {CAMPAIGN_STATE_NAMES[state]}
           </p>
@@ -109,28 +110,16 @@ export function CampaignCard({
             signedIn={save.signedIn}
             saved={save.saved}
             returnTo={save.returnTo}
-            className="absolute right-3 top-3 z-10"
+            className="absolute right-2.5 top-2.5 z-10"
           />
         ) : null}
 
         {campaign.category ? (
-          /*
-            The category's icon and name in its own ink, on its wash over a
-            white backing, so the colours are known whatever the photograph
-            does underneath — the ink is measured against wash over white.
-          */
-          <span className="bg-surface absolute bottom-2.5 left-3 rounded-full shadow-sm">
-            <span
-              className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.75rem] font-bold leading-none sm:px-3 sm:py-1.5 sm:text-[0.8125rem]',
-                // The 60% wash over white, not the full wash: at full strength
-                // the blue and gold inks fall to 4.36:1 and 4.24:1.
-                tone.chip,
-              )}
-            >
-              <CategoryIcon category={campaign.category} className="size-3.5 sm:size-4" />
-              {campaign.category}
-            </span>
+          // The one programme tag: neutral, on an opaque surface so it reads
+          // over any photograph.
+          <span className="bg-surface/95 text-foreground shadow-xs absolute bottom-2.5 left-2.5 inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs font-medium">
+            <CategoryIcon category={campaign.category} className="text-muted-foreground size-3" />
+            {campaign.category}
           </span>
         ) : null}
       </div>
@@ -142,10 +131,11 @@ export function CampaignCard({
           out and leaves the right of the card empty), and anything past two
           lines ends in an ellipsis rather than pushing the figures down.
         */}
-        <h3 className="font-display text-wrap text-[1.0625rem] font-bold leading-snug tracking-[-0.01em] sm:text-[1.125rem] [&>a]:line-clamp-2">
+        <h3 className="font-display text-wrap text-[1.0625rem] font-semibold leading-snug [&>a]:line-clamp-2">
+          {/* The card-wide link: its overlay makes the whole card clickable. */}
           <Link
             href={detailHref}
-            className="hover:text-info-action focus-visible:outline-ring rounded-sm after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="group-hover:text-primary rounded-sm transition-colors after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {campaign.title}
           </Link>
@@ -158,43 +148,17 @@ export function CampaignCard({
           is what a reader compares ACROSS cards.
         */}
         <div className="mt-auto pt-2">
-          {/*
-              Equal columns, each figure centred in its own, with the dividers
-              between them (owner design, 2026-10-08): Donors, Raised, and Goal.
-            */}
-          <dl className="-mx-2 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch gap-x-1.5">
-            <Figure
-              label="Donors"
-              value={formatNumber(campaign.donorCount ?? 0)}
-              icon={PeopleSolid}
-              iconClassName="text-wash-coral-ink"
-              discClassName="bg-wash-coral"
-            />
-            <FigureDivider />
-            <Figure
-              label="Raised"
-              value={formatCurrency(raised)}
-              valueClassName="text-success"
-              icon={CoinsSolid}
-              iconClassName="text-success"
-              discClassName="bg-wash-mint"
-            />
-            <FigureDivider />
-            <Figure
-              label="Goal"
-              value={formatCurrency(goal)}
-              icon={TargetSolid}
-              iconClassName="text-wash-coral-ink"
-              discClassName="bg-wash-coral"
-            />
+          {/* The figures as a plain row: label over value, no discs. */}
+          <dl className="grid grid-cols-3 gap-2">
+            <Figure label="Raised" value={formatCurrency(raised)} />
+            <Figure label="Goal" value={formatCurrency(goal)} />
+            <Figure label="Donors" value={formatNumber(campaign.donorCount ?? 0)} />
           </dl>
 
           {goal > 0 ? (
             <>
-              {/*
-                  The brand orange, as the owner's card design draws it. The
-                  percentage beside it carries the meaning; the bar is the cue.
-                */}
+              {/* The brand, not orange (§11 item 12). The percentage beside it
+                  carries the meaning; the bar is the cue. */}
               <div
                 role="img"
                 aria-label={`${percent}% of the ${formatCurrency(goal)} goal raised`}
@@ -209,7 +173,7 @@ export function CampaignCard({
               </div>
               <p className="text-muted-foreground mt-1 flex items-baseline justify-between gap-3 text-[0.8125rem]">
                 <span data-numeric="">
-                  <span className="text-primary font-bold">{percent}%</span> Complete
+                  <span className="text-foreground font-semibold">{percent}%</span> Complete
                 </span>
                 <span data-numeric="">
                   {percent >= 100 ? 'Goal reached' : `${100 - percent}% to go`}
@@ -224,8 +188,9 @@ export function CampaignCard({
               <Button
                 asChild
                 fullWidth
-                variant="action"
-                className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}
+                size="sm"
+                variant="secondary"
+                className={cn('h-10', CTA_MOTION)}
               >
                 <Link href={`${detailHref}#give`}>
                   Donate Now
@@ -235,9 +200,10 @@ export function CampaignCard({
             ) : (
               <Button
                 asChild
-                variant="secondary"
+                variant="outline"
+                size="sm"
                 fullWidth
-                className={cn('h-9 text-[0.875rem] font-bold', CTA_MOTION)}
+                className={cn('h-10', CTA_MOTION)}
               >
                 <Link href={detailHref}>
                   {campaign.status === 'completed' ? 'See What Happened' : 'View Campaign'}
@@ -253,59 +219,21 @@ export function CampaignCard({
 }
 
 /**
- * One figure, stacked and centred: a tinted disc with the icon, the value,
- * then the label (owner's card design, 2026-10-08).
- *
- * The label comes FIRST in the DOM — `order` puts it last on screen — so a
- * screen reader says "Raised, ₹4,67,400" rather than a bare amount followed by
- * what it was. The icon is decorative: the label already names the figure.
+ * One figure: the label over its value. The label comes first, so a screen
+ * reader says "Raised, ₹4,67,400" rather than a bare amount.
  */
-function Figure({
-  label,
-  value,
-  valueClassName,
-  icon: Icon,
-  iconClassName,
-  discClassName,
-}: {
-  label: string;
-  value: string;
-  valueClassName?: string;
-  icon: typeof PeopleSolid;
-  iconClassName?: string;
-  discClassName?: string;
-}) {
+function Figure({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex min-w-0 flex-col items-center text-center">
-      <dt className="text-muted-foreground order-last text-[0.6875rem] leading-tight">{label}</dt>
-      <dd className="flex flex-col items-center">
-        {/* Each mark pops a little when the card is hovered. */}
-        <span
-          aria-hidden="true"
-          className={cn(
-            'hover-pop motion-safe:group-hover:scale-115 grid size-[1.375rem] place-items-center rounded-full',
-            discClassName,
-          )}
-        >
-          <Icon aria-hidden="true" className={cn('size-3', iconClassName)} />
-        </span>
-        <span
-          data-numeric=""
-          className={cn(
-            'text-foreground @[20rem]:text-[0.8125rem] mt-1 whitespace-nowrap text-[0.75rem] font-bold tabular-nums leading-snug',
-            valueClassName,
-          )}
-        >
-          {value}
-        </span>
+    <div className="min-w-0">
+      <dt className="text-muted-foreground text-xs leading-tight">{label}</dt>
+      <dd
+        data-numeric=""
+        className="text-foreground mt-0.5 truncate text-sm font-semibold tabular-nums leading-snug"
+      >
+        {value}
       </dd>
     </div>
   );
-}
-
-/** The rule between two figures — decoration, so hidden from assistive tech. */
-function FigureDivider() {
-  return <div role="none" aria-hidden="true" className="bg-border/80 my-1 w-px shrink-0" />;
 }
 
 /**
@@ -316,19 +244,18 @@ function FigureDivider() {
  */
 export function CampaignCardSkeleton() {
   return (
-    <div className="border-border/50 bg-surface flex w-full flex-col rounded-2xl border shadow-sm">
+    <div className="border-border bg-surface flex w-full flex-col rounded-2xl border p-3 sm:p-3.5">
       <div className="relative">
-        <Skeleton className="aspect-[2.25/1] w-full rounded-2xl" />
-        <Skeleton className="bg-surface absolute bottom-2.5 left-3 h-6 w-24 rounded-full" />
+        <Skeleton className="aspect-[16/10] w-full rounded-xl" />
+        <Skeleton className="bg-surface absolute bottom-2.5 left-2.5 h-6 w-24 rounded-full" />
       </div>
       <div className="flex flex-1 flex-col px-1 pb-1 pt-2.5">
         <Skeleton className="h-5 w-4/5" />
         <div className="mt-4 grid grid-cols-3 gap-2">
           {[0, 1, 2].map((key) => (
-            <div key={key} className="flex flex-col items-center gap-1">
-              <Skeleton className="size-[1.375rem] rounded-full" />
-              <Skeleton className="h-3.5 w-14" />
+            <div key={key} className="flex flex-col gap-1">
               <Skeleton className="h-2.5 w-10" />
+              <Skeleton className="h-3.5 w-14" />
             </div>
           ))}
         </div>
@@ -337,7 +264,7 @@ export function CampaignCardSkeleton() {
           <Skeleton className="h-3.5 w-24" />
           <Skeleton className="h-3.5 w-16" />
         </div>
-        <Skeleton className="mt-2.5 h-9 rounded-full" />
+        <Skeleton className="mt-2.5 h-10 rounded-lg" />
       </div>
     </div>
   );

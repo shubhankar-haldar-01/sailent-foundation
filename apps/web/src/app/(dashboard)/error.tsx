@@ -25,7 +25,7 @@ export default function DashboardError({
   return (
     <div
       role="alert"
-      className="border-border/60 bg-surface rounded-2xl border px-6 py-14 text-center shadow-elevated"
+      className="border-border/60 bg-surface shadow-elevated rounded-2xl border px-6 py-14 text-center"
     >
       <span className="bg-destructive-subtle text-destructive mx-auto grid size-12 place-items-center rounded-full">
         <CircleAlert className="size-6" aria-hidden="true" />
@@ -36,7 +36,7 @@ export default function DashboardError({
       <p className="text-body-sm text-muted-foreground mx-auto mt-2 max-w-sm">
         We couldn&rsquo;t load this information right now.
       </p>
-      <Button type="button" onClick={reset} className="mt-6 h-11 rounded-full px-6">
+      <Button type="button" onClick={reset} className="mt-6 h-11 px-6">
         Try Again
       </Button>
     </div>

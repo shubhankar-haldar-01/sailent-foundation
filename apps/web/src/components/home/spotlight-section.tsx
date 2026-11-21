@@ -31,7 +31,6 @@ export const DEFAULT_PUBLICATIONS: SpotlightItem[] = [
         <span className="text-foreground -mt-0.5 font-sans text-[8px] font-semibold uppercase tracking-[0.28em] sm:text-[9px]">
           POST
         </span>
-        <div className="bg-primary mx-auto mt-1 h-[2px] w-6 rounded-full" aria-hidden="true" />
       </div>
     ),
   },
@@ -44,7 +43,6 @@ export const DEFAULT_PUBLICATIONS: SpotlightItem[] = [
           Impact
         </span>
         <div className="mt-0.5 flex w-full items-center">
-          <div className="bg-primary h-[2px] w-8 rounded-full" aria-hidden="true" />
           <span className="text-muted-foreground -mt-0.5 ml-1 font-serif text-xs italic sm:text-sm lg:text-base">
             Journal
           </span>
@@ -101,7 +99,6 @@ export const DEFAULT_PUBLICATIONS: SpotlightItem[] = [
         <span className="text-foreground mt-0.5 font-serif text-sm font-bold leading-tight tracking-tight sm:text-base lg:text-lg">
           Changemakers
         </span>
-        <div className="bg-primary mx-auto mt-1 h-[1.5px] w-14 rounded-full" aria-hidden="true" />
       </div>
     ),
   },
@@ -230,7 +227,7 @@ export function SpotlightSection({
             id="spotlight-title"
             className="font-display text-foreground text-2xl font-bold tracking-tight sm:text-3xl lg:text-[34px]"
           >
-            <span>In The</span> <span className="text-primary">Spotlight</span>
+            <span>In The</span> <span>Spotlight</span>
           </h2>
 
           {/* Centered horizontal accent bar under "Spotlight" */}
@@ -247,7 +244,7 @@ export function SpotlightSection({
             ───────────────────────────────────────────────────────────────── */}
         <div className="relative mx-auto mt-6 w-full max-w-5xl px-3 sm:mt-8 sm:px-6">
           {/* Large White Rounded Container */}
-          <div className="border-border bg-surface dark:border-border dark:bg-surface relative w-full overflow-hidden rounded-[24px] border p-2.5 shadow-elevated sm:rounded-[28px] sm:p-3.5 md:p-4 lg:rounded-[32px]">
+          <div className="border-border bg-surface dark:border-border dark:bg-surface shadow-elevated relative w-full overflow-hidden rounded-[24px] border p-2.5 sm:rounded-[28px] sm:p-3.5 md:p-4 lg:rounded-[32px]">
             {/* Soft inner edge fades for seamless ingress/egress */}
             <div
               className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-white via-white/80 to-transparent sm:w-10"

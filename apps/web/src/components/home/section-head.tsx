@@ -5,23 +5,9 @@ import { ArrowRight } from 'lucide-react';
 import { cn } from '@sailent/ui';
 
 /**
- * The short orange rule that marks a heading in the approved design.
- *
- * INLINE, to the right of the title and vertically centred on it — not a
- * underline beneath it. Decorative, so it is hidden from assistive tech.
- */
-export function HeadingRule({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn('bg-accent-rule block h-[3px] w-8 shrink-0 rounded-full', className)}
-    />
-  );
-}
-
-/**
- * A homepage band heading: title, the orange rule beside it, and an optional
- * link to the full listing on the far right.
+ * A homepage band heading: the title, and an optional link to the full
+ * listing on the far right. (The orange rule beside the title was retired
+ * with the other heading flourishes, visual polish Phase 3, 2026-11-21.)
  *
  * The heading is a real `h2` so the document outline a screen-reader user
  * navigates by stays intact, and `actions` renders after the link so a
@@ -44,15 +30,12 @@ export function SectionHead({
 }) {
   return (
     <div className={cn('flex flex-wrap items-center justify-between gap-x-6 gap-y-2', className)}>
-      <div className="flex items-center gap-3">
-        <h2
-          id={id}
-          className="font-display text-section tracking-(--text-section--letter-spacing) font-bold"
-        >
-          {title}
-        </h2>
-        <HeadingRule />
-      </div>
+      <h2
+        id={id}
+        className="font-display text-section tracking-(--text-section--letter-spacing) font-semibold"
+      >
+        {title}
+      </h2>
 
       {viewAll || actions ? (
         <div className="flex items-center gap-3">

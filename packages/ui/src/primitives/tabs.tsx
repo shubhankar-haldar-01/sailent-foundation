@@ -5,7 +5,11 @@ import * as TabsPrimitive from '@radix-ui/react-tabs';
 
 import { cn } from '../lib/cn';
 
-/** Underline style, arrow-key navigable. Tab state belongs in the URL so a tab is linkable. */
+/**
+ * Underline style: the active tab in the brand with a 2px brand underline, a
+ * neutral underline on hover. Arrow-key navigable (Radix). Tab state belongs
+ * in the URL so a tab is linkable.
+ */
 export const Tabs = TabsPrimitive.Root;
 
 export const TabsList = React.forwardRef<
@@ -31,10 +35,10 @@ export const TabsTrigger = React.forwardRef<
       className={cn(
         'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap',
         'text-body-sm text-muted-foreground border-b-2 border-transparent px-4 py-3 font-medium',
-        'duration-(--duration-fast) hover:text-foreground transition-colors',
-        'focus-visible:outline-ring focus-visible:outline-2 focus-visible:-outline-offset-2',
+        'duration-(--duration-fast) hover:text-foreground hover:border-border-strong transition-colors',
+        'focus-visible:outline-2 focus-visible:-outline-offset-2',
         'disabled:pointer-events-none disabled:opacity-50',
-        'data-[state=active]:border-primary data-[state=active]:text-foreground',
+        'data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:font-semibold',
         className,
       )}
       {...props}

@@ -12,17 +12,15 @@ import { Spinner } from './spinner';
  * Colour roles (owner, 2026-11-21; `AGENTS.md` §11 item 12):
  *   action    — orange: Donate, and the page's one primary conversion button
  *   primary   — the brand green: the default, every other main action
- *   secondary — Become a Volunteer, secondary actions
- *   ghost     — tertiary, toolbars
- *   destructive — always confirmation-gated
- *   link      — inline navigation
+ *   secondary — brand outline;  outline — neutral outline (Login, Cancel)
+ *   ghost, destructive, link
  *
- * Minimum touch target is 44×44px on touch devices, reached through padding
- * rather than by shrinking the label.
+ * Shape (owner, 2026-11-21): 8px corners at every size. Sizes sm 36px (44px
+ * hit area on touch), md 44px, lg 48px. A press scales to 0.98.
  */
 const buttonVariants = cva(
   [
-    'inline-flex items-center justify-center gap-2.5 whitespace-nowrap cursor-pointer',
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer',
     'font-sans font-semibold transition-all duration-200 ease-out motion-reduce:transition-none',
     // One focus ring for every variant: the base layer's 2px brand outline.
     'focus-visible:outline-2 focus-visible:outline-offset-2',
@@ -37,10 +35,10 @@ const buttonVariants = cva(
       variant: {
         /**
          * PRIMARY: the brand green with its label (white in light mode, near-black
-         * in dark). The default. Darker on hover; a press settles it.
+         * in dark). The default for every main action that is not Donate.
          */
         primary:
-          'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-xs active:translate-y-px motion-reduce:transform-none',
+          'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active active:text-primary-active-foreground shadow-xs active:scale-[0.98] motion-reduce:active:scale-100',
 
         /**
          * ACTION: the orange #EB6A1F with a white label, for Donate and the page's
@@ -48,79 +46,71 @@ const buttonVariants = cva(
          * AA for text, by owner decision (2026-10-23, kept 2026-11-21).
          */
         action:
-          'bg-action text-action-foreground hover:bg-action-hover active:bg-action-active shadow-xs active:translate-y-px motion-reduce:transform-none',
+          'bg-action text-action-foreground hover:bg-action-hover active:bg-action-active shadow-xs active:scale-[0.98] motion-reduce:active:scale-100',
 
         /**
-         * SECONDARY: surface background with a brand border and brand text.
-         * For secondary actions, alternative pathways, filtering. (`info-action`
-         * is the brand since 2026-11-21; Phase 3 renames it.)
+         * SECONDARY: a brand outline — brand border and text on the surface.
+         * Second actions, alternative paths, filters.
          */
         secondary:
-          'border-2 border-info-action bg-surface text-info-action hover:bg-info-action/10 active:bg-info-action/20 active:translate-y-px motion-reduce:transform-none shadow-xs',
+          'border border-primary/60 bg-surface text-primary hover:border-primary hover:bg-accent active:bg-accent/80 active:scale-[0.98] motion-reduce:active:scale-100',
 
         /**
-         * TERTIARY / GHOST: Transparent background with navy or blue text; no unnecessary shadow.
-         * For quiet actions, toolbars, icon triggers.
+         * OUTLINE: a neutral outline for quiet actions (Login, Cancel, Back).
+         */
+        outline:
+          'border border-border-strong bg-surface text-foreground hover:border-input hover:bg-muted active:bg-muted/80 active:scale-[0.98] motion-reduce:active:scale-100',
+
+        /**
+         * GHOST: no fill until hovered. Toolbars, icon triggers, tertiary actions.
          */
         ghost:
-          'bg-transparent text-foreground hover:bg-muted active:bg-muted/80 active:translate-y-px motion-reduce:transform-none',
+          'bg-transparent text-foreground hover:bg-muted active:bg-muted/80 active:scale-[0.98] motion-reduce:active:scale-100',
+        /** @deprecated Same as `ghost`. */
         tertiary:
-          'bg-transparent text-foreground hover:bg-muted active:bg-muted/80 active:translate-y-px motion-reduce:transform-none',
+          'bg-transparent text-foreground hover:bg-muted active:bg-muted/80 active:scale-[0.98] motion-reduce:active:scale-100',
 
         /**
-         * DARK: near-black neutral background with white text.
-         * Selected contexts only.
-         */
-        dark: 'bg-surface-inverse text-surface-inverse-foreground hover:bg-surface-inverse/90 active:bg-surface-inverse/80 active:translate-y-px motion-reduce:transform-none shadow-sm',
-
-        /**
-         * DESTRUCTIVE: Semantic destructive token with white text.
-         * Never brand orange by default. Confirmation-gated actions.
+         * DESTRUCTIVE: always confirmation-gated (`ConfirmationDialog`).
          */
         destructive:
-          'bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/95 active:translate-y-px motion-reduce:transform-none shadow-sm',
+          'bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80 shadow-xs active:scale-[0.98] motion-reduce:active:scale-100',
 
         /**
-         * INFO: Existing trust-blue button (learn more, explore, read).
+         * LINK: inline navigation, brand text.
          */
-        info: 'bg-info-action text-info-action-foreground hover:bg-info-action-hover active:bg-primary-active active:translate-y-px motion-reduce:transform-none shadow-sm',
+        link: 'bg-transparent text-primary underline-offset-4 hover:underline h-auto px-0',
 
         /**
-         * LINK: Inline text navigation.
+         * DARK: on photographs and always-dark grounds.
          */
-        link: 'bg-transparent text-info-action underline underline-offset-4 hover:no-underline',
+        dark: 'bg-surface-inverse text-surface-inverse-foreground hover:bg-surface-inverse/90 active:bg-surface-inverse/80 shadow-xs active:scale-[0.98] motion-reduce:active:scale-100',
 
-        /**
-         * SUBTLE: Quiet neutral button.
-         */
+        /** @deprecated The old trust-blue button; the brand since 2026-11-21. Use `primary`. */
+        info: 'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active shadow-xs active:scale-[0.98] motion-reduce:active:scale-100',
+
+        /** @deprecated Use `outline`. */
         subtle:
-          'bg-secondary text-secondary-foreground hover:bg-muted active:translate-y-px motion-reduce:transform-none shadow-xs',
+          'bg-muted text-foreground hover:bg-border active:bg-border/80 active:scale-[0.98] motion-reduce:active:scale-100',
       },
       size: {
         /**
-         * Small: compact contexts (36px height, ~16px horizontal padding).
+         * Small: 36px, compact contexts. On a touch screen the hit area grows to
+         * 44px around it (`touch-target`) without moving the layout.
          */
-        sm: 'h-9 rounded-full px-4 text-xs font-semibold sm:text-sm',
+        sm: 'pointer-coarse:relative pointer-coarse:touch-target h-9 rounded-lg px-3.5 text-sm',
 
-        /**
-         * Medium: standard interface buttons (44px height, ~24px horizontal padding).
-         */
-        md: 'h-11 rounded-full px-6 text-sm font-semibold sm:text-[0.9375rem]',
+        /** Medium: 44px, the default. */
+        md: 'h-11 rounded-lg px-5 text-sm sm:text-[0.9375rem]',
 
-        /**
-         * Large: standard primary CTAs (48–52px height, 28–32px horizontal padding, ~16px desktop text).
-         */
-        lg: 'h-12 rounded-full px-7 text-[0.9375rem] font-semibold sm:h-12.5 sm:px-8 sm:text-base',
+        /** Large: 48px, the page's main action. */
+        lg: 'h-12 rounded-lg px-6 text-base',
 
-        /**
-         * Extra Large: prominent hero or landing CTAs (56px height, 36px horizontal padding).
-         */
-        xl: 'h-14 rounded-full px-9 text-base font-semibold sm:text-lg',
+        /** @deprecated Same as `lg` (one large size, 2026-11-21). */
+        xl: 'h-12 rounded-lg px-6 text-base',
 
-        /**
-         * Icon: balanced circular button meeting 44×44px touch target.
-         */
-        icon: 'size-11 rounded-full',
+        /** Icon only: 44×44px. Give it an `aria-label`. */
+        icon: 'size-11 rounded-lg',
       },
       fullWidth: {
         true: 'w-full',

@@ -32,10 +32,10 @@ export function VolunteerBand() {
               donate to make a real difference.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-full">
+              <Button asChild size="lg" className="">
                 <Link href="/volunteer">Become a Volunteer</Link>
               </Button>
-              <Button asChild size="lg" variant="secondary" className="rounded-full">
+              <Button asChild size="lg" variant="secondary" className="">
                 <Link href="/about">Learn More</Link>
               </Button>
             </div>
@@ -110,18 +110,14 @@ export function MissionBand() {
             {/* On a dark panel the filled primary button would disappear into
                 its own background, so the roles invert: white becomes the
                 filled action and the outline sits on the panel. */}
-            <Button
-              asChild
-              size="lg"
-              className="text-primary bg-surface hover:bg-surface/90 rounded-full"
-            >
+            <Button asChild size="lg" className="text-primary bg-surface hover:bg-surface/90">
               <Link href="/donate">Donate Now</Link>
             </Button>
             <Button
               asChild
               size="lg"
               variant="secondary"
-              className="hover:bg-surface/12 rounded-full border border-white/35 bg-transparent text-white"
+              className="hover:bg-surface/12 border border-white/35 bg-transparent text-white"
             >
               <Link href="/programs">Explore Our Programs</Link>
             </Button>

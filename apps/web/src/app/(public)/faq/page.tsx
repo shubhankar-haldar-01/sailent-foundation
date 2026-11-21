@@ -96,10 +96,12 @@ export default async function FaqPage() {
                       {category.description}
                     </p>
 
-                    <Accordion type="single" collapsible className="mt-4">
+                    <Accordion type="single" collapsible variant="list" className="mt-4">
                       {entries.map((faq) => (
                         <AccordionItem key={faq.id} value={faq.id}>
-                          <AccordionTrigger>{faq.question}</AccordionTrigger>
+                          <AccordionTrigger className="font-semibold">
+                            {faq.question}
+                          </AccordionTrigger>
                           <AccordionContent>{faq.answer}</AccordionContent>
                         </AccordionItem>
                       ))}

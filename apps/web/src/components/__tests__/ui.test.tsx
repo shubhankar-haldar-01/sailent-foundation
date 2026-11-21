@@ -32,33 +32,55 @@ describe('Button', () => {
     expect(screen.getByRole('button')).toHaveClass('bg-primary', 'text-primary-foreground');
 
     rerender(<Button variant="secondary">Secondary</Button>);
-    expect(screen.getByRole('button')).toHaveClass('border-info-action', 'text-info-action');
+    expect(screen.getByRole('button')).toHaveClass('border-primary/60', 'text-primary');
+
+    // The quiet outline for Login, Cancel, Back (visual polish Phase 3).
+    rerender(<Button variant="outline">Outline</Button>);
+    expect(screen.getByRole('button')).toHaveClass('border-border-strong', 'text-foreground');
 
     rerender(<Button variant="ghost">Ghost</Button>);
     expect(screen.getByRole('button')).toHaveClass('bg-transparent');
 
     rerender(<Button variant="dark">Dark</Button>);
-    expect(screen.getByRole('button')).toHaveClass('bg-surface-inverse', 'text-surface-inverse-foreground');
+    expect(screen.getByRole('button')).toHaveClass(
+      'bg-surface-inverse',
+      'text-surface-inverse-foreground',
+    );
 
     rerender(<Button variant="destructive">Destructive</Button>);
     expect(screen.getByRole('button')).toHaveClass('bg-destructive', 'text-destructive-foreground');
 
+    // The old trust-blue variant is now the brand (2026-11-21).
     rerender(<Button variant="info">Info</Button>);
-    expect(screen.getByRole('button')).toHaveClass('bg-info-action', 'text-info-action-foreground');
+    expect(screen.getByRole('button')).toHaveClass('bg-primary', 'text-primary-foreground');
   });
 
-  it('renders sizes with consistent pill proportions', () => {
+  it('renders 8px-cornered sizes: sm 36px, md 44px, lg 48px (owner, 2026-11-21)', () => {
     const { rerender } = render(<Button size="sm">Small</Button>);
-    expect(screen.getByRole('button')).toHaveClass('h-9', 'rounded-full');
+    expect(screen.getByRole('button')).toHaveClass('h-9', 'rounded-lg');
+    // A small button still gives a 44px hit area on a touch screen.
+    expect(screen.getByRole('button').className).toContain('pointer-coarse:touch-target');
 
     rerender(<Button size="md">Medium</Button>);
-    expect(screen.getByRole('button')).toHaveClass('h-11', 'rounded-full');
+    expect(screen.getByRole('button')).toHaveClass('h-11', 'rounded-lg');
 
     rerender(<Button size="lg">Large</Button>);
-    expect(screen.getByRole('button')).toHaveClass('h-12', 'rounded-full');
+    expect(screen.getByRole('button')).toHaveClass('h-12', 'rounded-lg');
 
+    // `xl` is kept as an alias of `lg`, so old call sites keep working.
     rerender(<Button size="xl">Extra Large</Button>);
-    expect(screen.getByRole('button')).toHaveClass('h-14', 'rounded-full');
+    expect(screen.getByRole('button')).toHaveClass('h-12', 'rounded-lg');
+    expect(screen.getByRole('button')).not.toHaveClass('rounded-full');
+  });
+
+  it('presses to 0.98 and has no pill shape at any variant', () => {
+    for (const variant of ['primary', 'action', 'secondary', 'outline', 'ghost'] as const) {
+      const { unmount } = render(<Button variant={variant}>{variant}</Button>);
+      const button = screen.getByRole('button');
+      expect(button.className).toContain('active:scale-[0.98]');
+      expect(button).not.toHaveClass('rounded-full');
+      unmount();
+    }
   });
 });
 

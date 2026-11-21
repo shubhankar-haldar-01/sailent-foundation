@@ -100,7 +100,7 @@ export function NewsletterSection() {
                   id="newsletter-title"
                   className="font-display text-foreground mt-0.5 text-2xl font-bold tracking-tight sm:text-3xl lg:text-[32px] lg:leading-tight"
                 >
-                  Join Our <span className="text-primary">Newsletter</span>
+                  Join Our Newsletter
                 </h2>
                 <p className="text-muted-foreground mt-1.5 max-w-[420px] text-xs leading-relaxed sm:text-sm">
                   Get the latest stories, updates and opportunities delivered directly to your

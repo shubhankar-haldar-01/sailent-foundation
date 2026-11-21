@@ -45,7 +45,7 @@ export function HomeHero({ metrics }: { metrics: ImpactMetric[] }) {
               Together, We Create{' '}
               {/* A colour change, not a meaning change — the sentence reads the
                   same without it, which is the test for decorative emphasis. */}
-              <span className="text-accent-emphasis">Real Change</span>
+              Real Change
             </h1>
 
             <p className="text-body-lg text-muted-foreground mt-5 max-w-xl leading-relaxed">
@@ -54,10 +54,10 @@ export function HomeHero({ metrics }: { metrics: ImpactMetric[] }) {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="action" className="rounded-full">
+              <Button asChild size="lg" variant="action" className="">
                 <Link href="/donate">Donate Now</Link>
               </Button>
-              <Button asChild size="lg" variant="secondary" className="group rounded-full">
+              <Button asChild size="lg" variant="secondary" className="group">
                 <Link href="/programs">
                   Explore Our Work
                   <ArrowRight

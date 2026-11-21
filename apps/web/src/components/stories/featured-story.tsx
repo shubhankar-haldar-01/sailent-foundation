@@ -39,7 +39,7 @@ export function FeaturedStory({ story }: { story: Story }) {
         />
 
         {storyCategory ? (
-          <span className="bg-primary text-primary-foreground absolute bottom-4 left-4 z-10 inline-flex h-9 items-center gap-2 rounded-full px-4 text-[0.8125rem] font-bold shadow-card sm:bottom-5 sm:left-5 sm:h-[2.375rem] sm:px-5">
+          <span className="bg-primary text-primary-foreground shadow-card absolute bottom-4 left-4 z-10 inline-flex h-9 items-center gap-2 rounded-full px-4 text-[0.8125rem] font-bold sm:bottom-5 sm:left-5 sm:h-[2.375rem] sm:px-5">
             <StoryCategoryIcon
               category={storyCategory}
               className="text-primary-foreground size-[1.125rem]"
@@ -84,7 +84,7 @@ export function FeaturedStory({ story }: { story: Story }) {
 
         <Button
           asChild
-          className="relative mt-6 h-12 rounded-full px-8 text-base font-bold sm:h-[3.375rem] sm:px-10 sm:text-[1.0625rem]"
+          className="relative mt-6 h-12 px-8 text-base font-bold sm:h-[3.375rem] sm:px-10 sm:text-[1.0625rem]"
         >
           <Link href={href}>
             Read Full Story

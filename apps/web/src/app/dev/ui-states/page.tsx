@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
+import { ComponentGallery } from '@/components/feedback/component-gallery';
 import { UiStatesShowcase } from '@/components/feedback/ui-states-showcase';
 
 export const metadata: Metadata = {
@@ -15,5 +16,12 @@ export const metadata: Metadata = {
  */
 export default function UiStatesPage() {
   if (process.env.APP_ENV === 'production') notFound();
-  return <UiStatesShowcase />;
+  return (
+    <>
+      <div className="container-page pt-10">
+        <ComponentGallery />
+      </div>
+      <UiStatesShowcase />
+    </>
+  );
 }

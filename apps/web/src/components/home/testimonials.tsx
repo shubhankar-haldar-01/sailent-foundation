@@ -78,7 +78,7 @@ export function Testimonials() {
             id="testimonials-title"
             className="font-display text-h1 sm:text-display-sm text-foreground mt-1.5 font-bold tracking-tight"
           >
-            Voices of <span className="text-primary">Hope and Change</span>
+            Voices of Hope and Change
           </h2>
           <div className="bg-primary mx-auto mt-2.5 h-1 w-10 rounded-full" aria-hidden="true" />
           <p className="text-body-sm sm:text-body text-muted-foreground mt-3 leading-relaxed">

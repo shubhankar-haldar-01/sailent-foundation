@@ -120,7 +120,7 @@ export function MediaFrame({
       className={cn(
         'bg-muted relative overflow-hidden',
         ASPECTS[aspect],
-        rounded && 'rounded-lg',
+        rounded && 'rounded-xl',
         className,
       )}
       {...(media.url ? {} : { 'data-media-placeholder': media.seed })}

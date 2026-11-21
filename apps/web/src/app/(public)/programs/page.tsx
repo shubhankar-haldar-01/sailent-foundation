@@ -75,7 +75,6 @@ export default async function ProgramsPage({ searchParams }: { searchParams: Sea
         <PageShell>
           {/* The listing's own introduction, as the owner's design draws it (2026-10-14). */}
           <p className="text-primary flex items-center gap-4 text-sm font-semibold uppercase leading-6 tracking-[0.24em]">
-            <span aria-hidden="true" className="bg-primary h-0.5 w-11 shrink-0 rounded-full" />
             Our programs
           </p>
           <h2

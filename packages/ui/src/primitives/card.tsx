@@ -8,12 +8,14 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Card — foundational surface container with elevation variants:
- *   • flat: visually quiet, no shadow
- *   • standard: default subtle shadow and delicate border
- *   • elevated: slightly deeper shadow for summary/featured containers
- *   • interactive: card shadow with restrained hover elevation (-2.5px)
- *   • featured: subtle warm ambient glow for genuinely featured content
+ * Card — a surface container, border-first (visual polish Phase 3,
+ * 2026-11-21):
+ *   • flat / standard: a hairline border, no shadow
+ *   • interactive: the same at rest; lifts 2px with a soft shadow on hover —
+ *     only for cards that ARE a link or button
+ *   • featured: a stronger border, still no shadow
+ *   • elevated: a shadow, for overlays and floating panels only
+ * Never nest a card inside a card.
  */
 export function Card({ className, variant = 'standard', interactive, ...props }: CardProps) {
   const effectiveVariant = interactive ? 'interactive' : variant;

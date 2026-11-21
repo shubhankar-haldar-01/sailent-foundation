@@ -165,8 +165,12 @@ export function SiteHeader({
           'print:hidden',
           // Pure white on the tinted page (owner decision, 2026-10-08), so the bar
           // stands apart from the content below it.
-          'bg-surface duration-(--duration-base) sticky top-0 z-50 border-b backdrop-blur-sm transition-shadow',
-          isScrolled ? 'border-border shadow-sm' : 'max-sm:border-border/60 border-transparent',
+          // Once the page scrolls under it, the bar turns slightly translucent
+          // with a blur and a hairline (visual polish Phase 3, 2026-11-21).
+          'duration-(--duration-base) sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow]',
+          isScrolled
+            ? 'bg-surface/90 supports-[backdrop-filter]:bg-surface/80 border-border shadow-xs backdrop-blur-md'
+            : 'bg-surface max-sm:border-border/60 border-transparent',
         )}
       >
         <div className="container-page md:h-18 flex h-16 items-center justify-between gap-2 md:gap-4 lg:max-xl:gap-2.5">
@@ -190,7 +194,7 @@ export function SiteHeader({
                           'whitespace-nowrap rounded-md px-1.5 py-2 text-[0.8125rem] font-medium transition-colors xl:px-3 xl:text-[0.875rem]',
                           'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
                           active
-                            ? 'text-primary font-semibold'
+                            ? 'text-primary decoration-primary font-semibold underline decoration-2 underline-offset-[0.6rem]'
                             : 'text-foreground hover:text-primary',
                         )}
                       >
@@ -222,7 +226,7 @@ export function SiteHeader({
                         'inline-flex items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-2 text-[0.8125rem] font-medium transition-colors xl:px-3 xl:text-[0.875rem]',
                         'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
                         active
-                          ? 'text-primary font-semibold'
+                          ? 'text-primary decoration-primary font-semibold underline decoration-2 underline-offset-[0.6rem]'
                           : 'text-foreground hover:text-primary',
                       )}
                     >
@@ -240,7 +244,7 @@ export function SiteHeader({
                       onMouseLeave={scheduleClose}
                       className="absolute left-0 top-full w-72 pt-2"
                     >
-                      <ul className="border-border bg-surface rounded-lg border p-1.5 shadow-md">
+                      <ul className="border-border bg-surface shadow-elevated rounded-lg border p-1.5">
                         {entry.children.map((child) => (
                           <li key={child.href}>
                             <Link
@@ -288,8 +292,11 @@ export function SiteHeader({
               <Button
                 asChild
                 size="md"
+                // A quiet button: the header's loudest element must not outweigh
+                // Donate (visual polish Phase 3, owner 2026-11-21).
+                variant="outline"
                 // Narrower beside the full nav at 1024–1279px, so the brand name keeps its room.
-                className="hidden rounded-full sm:inline-flex lg:max-xl:px-3.5"
+                className="hidden sm:inline-flex lg:max-xl:px-3.5"
               >
                 <Link href="/sign-in" aria-current={isActive('/sign-in') ? 'page' : undefined}>
                   <UserRound className="size-4 lg:max-xl:hidden" aria-hidden="true" />
@@ -446,7 +453,7 @@ export function SiteHeader({
           </ul>
 
           {/* Stretched by the column, 4px in from the gutter on each side. */}
-          <Button asChild size="lg" className="h-12.5 mx-1 mt-4 rounded-full">
+          <Button asChild size="lg" variant="action" className="mx-1 mt-4">
             <Link href={primaryCta.href} onClick={() => setIsOpen(false)}>
               {primaryCta.label}
               <ArrowRight className="size-4" aria-hidden="true" />

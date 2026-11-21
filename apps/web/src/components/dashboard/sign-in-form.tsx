@@ -193,7 +193,7 @@ export function DonorSignInForm({ next }: { next?: string }) {
             type="submit"
             size="lg"
             disabled={requesting}
-            className="mt-2.5 h-11 w-full rounded-full text-base"
+            className="mt-2.5 h-11 w-full text-base"
           >
             {requesting ? 'Sending…' : 'Send OTP'}
             <ArrowRight aria-hidden="true" />
@@ -260,7 +260,7 @@ export function DonorSignInForm({ next }: { next?: string }) {
               type="submit"
               size="lg"
               disabled={verifying}
-              className="mt-2.5 h-11 w-full rounded-full text-base"
+              className="mt-2.5 h-11 w-full text-base"
             >
               {verifying ? 'Checking…' : 'Login'}
               <ArrowRight aria-hidden="true" />

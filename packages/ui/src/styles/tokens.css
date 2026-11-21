@@ -281,9 +281,12 @@
   --border-card: var(--border);
   --transition-card: 200ms var(--ease-out-soft);
 
-  --shadow-card: 0 1px 2px oklch(0.21 0.032 264.7 / 0.04), 0 4px 12px oklch(0.21 0.032 264.7 / 0.04);
-  --shadow-card-hover: 0 2px 4px oklch(0.21 0.032 264.7 / 0.05), 0 8px 20px oklch(0.21 0.032 264.7 / 0.08);
-  --shadow-elevated: 0 4px 14px oklch(0.21 0.032 264.7 / 0.05), 0 12px 32px oklch(0.21 0.032 264.7 / 0.08);
+  --shadow-card:
+    0 1px 2px oklch(0.21 0.032 264.7 / 0.04), 0 4px 12px oklch(0.21 0.032 264.7 / 0.04);
+  --shadow-card-hover:
+    0 2px 4px oklch(0.21 0.032 264.7 / 0.05), 0 8px 20px oklch(0.21 0.032 264.7 / 0.08);
+  --shadow-elevated:
+    0 4px 14px oklch(0.21 0.032 264.7 / 0.05), 0 12px 32px oklch(0.21 0.032 264.7 / 0.08);
   --shadow-featured: var(--shadow-elevated);
 }
 
@@ -906,10 +909,13 @@
   box-shadow: none;
 }
 
+/* Cards are border-first (visual polish Phase 3, 2026-11-21): a hairline and
+   no shadow at rest. Only a CLICKABLE card (card-interactive) lifts on hover;
+   card-elevated is for overlays. Never put a card inside a card. */
 @utility card-standard {
   background-color: var(--surface);
   border: 1px solid var(--border-card);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
 }
 
 @utility card-elevated {
@@ -921,7 +927,7 @@
 @utility card-interactive {
   background-color: var(--surface);
   border: 1px solid var(--border-card);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
   transition:
     transform var(--transition-card),
     box-shadow var(--transition-card),
@@ -929,7 +935,8 @@
 
   @media (hover: hover) {
     &:hover {
-      transform: translateY(-2.5px);
+      transform: translateY(-2px);
+      border-color: var(--border-strong);
       box-shadow: var(--shadow-card-hover);
     }
   }
@@ -945,8 +952,8 @@
 
 @utility card-featured {
   background-color: var(--surface);
-  border: 1px solid var(--border-card);
-  box-shadow: var(--shadow-featured);
+  border: 1px solid var(--border-strong);
+  box-shadow: none;
 }
 
 /**
@@ -1152,6 +1159,45 @@
  * Stagger a group with `--rise-delay` on each item. Under reduced motion there
  * is no animation at all; the element is simply there.
  */
+/**
+ * Accordion open and close (visual polish Phase 3, 2026-11-21): 250ms
+ * ease-out on the height Radix measures. Off with reduced motion.
+ */
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@utility accordion-motion {
+  &[data-state='open'] {
+    animation: accordion-down 250ms var(--ease-out-soft);
+  }
+
+  &[data-state='closed'] {
+    animation: accordion-up 250ms var(--ease-out-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &[data-state='open'],
+    &[data-state='closed'] {
+      animation: none;
+    }
+  }
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;

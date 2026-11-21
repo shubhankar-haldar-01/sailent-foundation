@@ -112,11 +112,9 @@ export function FeaturedCampaigns({
         */}
         <div className="mx-auto mb-6 flex max-w-5xl flex-col items-center text-center sm:mb-8 md:mb-10">
           <div className="mb-2 flex items-center justify-center gap-2">
-            <span className="bg-primary h-0.5 w-6 rounded-full" aria-hidden="true" />
             <p className="text-primary text-xs font-extrabold uppercase tracking-[0.2em] sm:text-[13px]">
               Featured Campaigns
             </p>
-            <span className="bg-primary h-0.5 w-6 rounded-full" aria-hidden="true" />
           </div>
 
           <h2
@@ -228,7 +226,7 @@ export function FeaturedCampaigns({
             <Link
               href={viewAllHref}
               className={cn(
-                'bg-wash-mint text-wash-mint-ink-strong group inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-bold shadow-elevated transition-all hover:-translate-y-0.5 hover:shadow-card-hover hover:brightness-95 sm:text-base',
+                'bg-wash-mint text-wash-mint-ink-strong shadow-elevated hover:shadow-card-hover group inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:brightness-95 sm:text-base',
                 'focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2',
               )}
             >

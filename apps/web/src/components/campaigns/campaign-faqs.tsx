@@ -27,16 +27,10 @@ export function CampaignFaqs({ faqs }: { faqs: Campaign['faqs'] }) {
         viewAll={{ href: '/faq', label: 'View All FAQs' }}
       />
 
-      <Accordion type="single" collapsible className="mt-4 space-y-2">
+      <Accordion type="single" collapsible variant="list" className="mt-4">
         {faqs.map((faq, index) => (
-          <AccordionItem
-            key={faq.question}
-            value={`faq-${index}`}
-            className="border-border bg-surface data-[state=open]:border-success/50 rounded-xl border px-4 shadow-sm transition-colors"
-          >
-            <AccordionTrigger className="text-body py-3.5 font-semibold">
-              {faq.question}
-            </AccordionTrigger>
+          <AccordionItem key={faq.question} value={`faq-${index}`}>
+            <AccordionTrigger className="text-body font-semibold">{faq.question}</AccordionTrigger>
             <AccordionContent className="text-body text-muted-foreground-strong leading-relaxed">
               {faq.answer}
             </AccordionContent>

@@ -241,7 +241,7 @@ export function EventRegistrationFlow({
         <h2 className="font-display text-foreground mt-3 text-xl font-bold sm:text-2xl">{title}</h2>
         <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{body}</p>
         <div className="mt-6">
-          <Button asChild variant="secondary" className="rounded-full">
+          <Button asChild variant="secondary" className="">
             <Link href="/events">Explore other events</Link>
           </Button>
         </div>
@@ -339,12 +339,12 @@ export function EventRegistrationFlow({
           {isSignedIn ? (
             <Button
               asChild
-              className="border-border bg-surface text-foreground hover:bg-background rounded-full border text-xs font-bold sm:text-sm"
+              className="border-border bg-surface text-foreground hover:bg-background border text-xs font-bold sm:text-sm"
             >
               <Link href="/dashboard/events">View in Dashboard</Link>
             </Button>
           ) : null}
-          <Button asChild variant="secondary" className="rounded-full text-xs font-bold sm:text-sm">
+          <Button asChild variant="secondary" className="text-xs font-bold sm:text-sm">
             <Link href={`/events/${slug}`}>Event Details</Link>
           </Button>
           {isSignedIn ? <CancelRegistrationButton eventId={eventId} slug={slug} /> : null}
@@ -472,12 +472,12 @@ export function EventRegistrationFlow({
           {isSignedIn ? (
             <Button
               asChild
-              className="border-border bg-surface text-foreground hover:bg-background rounded-full border text-xs font-bold sm:text-sm"
+              className="border-border bg-surface text-foreground hover:bg-background border text-xs font-bold sm:text-sm"
             >
               <Link href="/dashboard/events">View in Dashboard</Link>
             </Button>
           ) : null}
-          <Button asChild variant="secondary" className="rounded-full text-xs font-bold sm:text-sm">
+          <Button asChild variant="secondary" className="text-xs font-bold sm:text-sm">
             <Link href="/events">Explore More Events</Link>
           </Button>
         </div>
@@ -993,7 +993,7 @@ export function EventRegistrationFlow({
                   variant="secondary"
                   disabled={isSendingOtp || !email.trim()}
                   onClick={handleSendOtp}
-                  className="border-primary/30 bg-accent/60 text-primary hover:bg-accent/70 h-11 shrink-0 rounded-xl border px-4 text-xs font-bold"
+                  className="border-primary/30 bg-accent/60 text-primary hover:bg-accent/70 h-11 shrink-0 border px-4 text-xs font-bold"
                 >
                   {isSendingOtp ? 'Sending…' : isOtpSent ? 'Resend OTP' : 'Send OTP'}
                 </Button>
@@ -1002,7 +1002,7 @@ export function EventRegistrationFlow({
                   type="button"
                   variant="ghost"
                   onClick={handleResetEmail}
-                  className="text-muted-foreground hover:text-foreground h-11 shrink-0 rounded-xl px-3 text-xs font-semibold"
+                  className="text-muted-foreground hover:text-foreground h-11 shrink-0 px-3 text-xs font-semibold"
                 >
                   Change
                 </Button>
@@ -1061,7 +1061,7 @@ export function EventRegistrationFlow({
                     type="button"
                     disabled={otpCode.length !== 6 || isVerifyingOtp}
                     onClick={handleVerifyOtp}
-                    className="shadow-2xs bg-primary text-primary-foreground hover:bg-primary-hover h-10 rounded-xl px-4 text-xs font-bold"
+                    className="shadow-2xs bg-primary text-primary-foreground hover:bg-primary-hover h-10 px-4 text-xs font-bold"
                   >
                     {isVerifyingOtp ? 'Verifying…' : 'Validate OTP'}
                   </Button>
@@ -1217,7 +1217,7 @@ export function EventRegistrationFlow({
             type="submit"
             disabled={isSubmitting || !isEmailVerified}
             className={cn(
-              'h-12 w-full rounded-full text-base font-bold shadow-sm transition-all',
+              'h-12 w-full text-base font-bold shadow-sm transition-all',
               isEmailVerified
                 ? 'bg-action text-action-foreground hover:bg-action-hover active:bg-action-active cursor-pointer'
                 : 'bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed',

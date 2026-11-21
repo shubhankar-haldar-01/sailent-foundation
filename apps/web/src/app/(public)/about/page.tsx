@@ -177,18 +177,16 @@ export default async function AboutPage() {
         <PageShell>
           <div className="mx-auto max-w-2xl text-center">
             <div className="flex items-center justify-center gap-2.5">
-              <span className="bg-primary h-[1.5px] w-6" aria-hidden="true" />
               <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                 WHERE WE FOCUS
               </span>
-              <span className="bg-primary h-[1.5px] w-6" aria-hidden="true" />
             </div>
 
             <h2
               id="focus-areas-heading"
               className="font-display text-foreground mt-2.5 text-balance text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[38px] lg:leading-[1.15]"
             >
-              Creating Change, <span className="text-primary">Together</span>
+              Creating Change, Together
             </h2>
 
             <p className="text-muted-foreground mt-2 text-balance text-sm sm:text-base">
@@ -270,7 +268,6 @@ export default async function AboutPage() {
               <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                 OUR STORY
               </span>
-              <span className="bg-primary h-[1.5px] w-8" aria-hidden="true" />
             </div>
 
             <h2
@@ -344,7 +341,6 @@ export default async function AboutPage() {
               <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                 OUR APPROACH
               </span>
-              <span className="bg-primary h-[1.5px] w-8" aria-hidden="true" />
             </div>
 
             <h2
@@ -401,7 +397,6 @@ export default async function AboutPage() {
               <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                 WHERE WE WORK
               </span>
-              <span className="bg-primary h-[1.5px] w-8" aria-hidden="true" />
             </div>
 
             <h2
@@ -462,7 +457,6 @@ export default async function AboutPage() {
                   <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                     OUR TEAM
                   </span>
-                  <span className="bg-primary h-[1.5px] w-8" aria-hidden="true" />
                 </div>
 
                 <h2
@@ -555,7 +549,6 @@ export default async function AboutPage() {
               <span className="text-primary text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
                 TRUST &amp; TRANSPARENCY
               </span>
-              <span className="bg-primary h-[1.5px] w-8" aria-hidden="true" />
             </div>
 
             <h2

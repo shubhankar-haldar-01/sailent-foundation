@@ -6,7 +6,7 @@
 >
 > Update this file after every meaningful piece of work (`AGENTS.md` §12).
 
-**Last updated:** 2026-11-21 for the visual polish brief, Phase 2 (§2, "Visual polish — Phase 2"). **Earlier:** Phases 0–1. **Earlier:** the removal of four default campaign FAQs. **Earlier:** related FAQs on every campaign. **Before that:** the upgrade to Next.js 16 (§2, "Next.js 16"), which fixes the save stuck on "Saving…". Earlier the same day: the investigation of it. **Before that:** 2026-11-20 for Phase 5 of the UI feedback system (§2, "UI feedback system — Phases 1–5 done"); earlier the same day, Phase 4. **Before that:** 2026-11-19 for the security audit (§2, "Security audit"). **Before that:** 2026-11-18 for the event pass and gate fixes and the move to Resend for email (§2, "Email through Resend" and "Event passes and gate check-in fixes"); the header table below was not re-audited and is still as of 2026-10-21. **Previously:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
+**Last updated:** 2026-11-21 for the visual polish brief, Phase 3 (§2, "Visual polish — Phase 3"). **Earlier:** Phase 2 (committed locally as `3bcb8c2`), Phases 0–1. **Earlier:** the removal of four default campaign FAQs. **Earlier:** related FAQs on every campaign. **Before that:** the upgrade to Next.js 16 (§2, "Next.js 16"), which fixes the save stuck on "Saving…". Earlier the same day: the investigation of it. **Before that:** 2026-11-20 for Phase 5 of the UI feedback system (§2, "UI feedback system — Phases 1–5 done"); earlier the same day, Phase 4. **Before that:** 2026-11-19 for the security audit (§2, "Security audit"). **Before that:** 2026-11-18 for the event pass and gate fixes and the move to Resend for email (§2, "Email through Resend" and "Event passes and gate check-in fixes"); the header table below was not re-audited and is still as of 2026-10-21. **Previously:** 2026-10-21 (the four unpushed commits and the uncommitted work rewritten into twelve local feature commits, then reviewed before push and corrected in place; not pushed). **Nothing is deployed.** Source: a read-only audit of the repository and the local databases, validation runs on 2026-10-21 (§2), and the git history.
 
 | | |
 |---|---|
@@ -457,6 +457,55 @@ The likely cause is WebKit keyboard behaviour; this was **not investigated**.
   6. Should every `size="sm"` button get the 44 px tap area (`touch-target`), or only where it matters on phones?
   7. ~~A save stuck on "Saving…" under server load~~: fixed by the upgrade to Next.js 16 (2026-11-21, next sections).
 - **Running e2e here** needs Chrome (`channel: 'chrome'`): Playwright's bundled Chromium and WebKit are not installed, and `e2e/global-setup.ts` launches Chromium for the image warm-up.
+
+### Visual polish — Phase 3 (components) — 2026-11-21 (committed locally, not pushed)
+
+- **Owner's answers (2026-11-21):**
+  - 8px buttons, inputs and chips;
+  - the footer simplified per the brief;
+  - Phase 2 committed first (`3bcb8c2`, local, not pushed);
+  - components changed in place, reviewed on `/dev/ui-states` and the real pages.
+- **Kit (`packages/ui`):**
+  - Button: sizes, the `outline` variant, 0.98 press, one focus ring;
+  - Input, Select, Textarea: states, the `₹` prefix, the teal valid state;
+  - Badge;
+  - Progress (8px, 500ms);
+  - Tabs;
+  - Accordion: the `list` variant and the 250ms `accordion-motion` keyframes in `tokens.css`;
+  - card utilities border-first.
+- **Site:**
+  - FAQ list;
+  - campaign section nav;
+  - header (outline Login, underline on the active link, scroll blur, phone-menu Donate in orange);
+  - both footers;
+  - section headers;
+  - campaign "About" cards;
+  - the simplified campaign card (status pill kept: /campaigns states every card's state);
+  - amount chips;
+  - figures and bars on the donation and product cards;
+  - payment marks (20px row, muted);
+  - images 12px corners;
+  - `rounded-full` overrides removed from 15 Button call sites.
+- **`/dev/ui-states`:** a component gallery (`components/feedback/component-gallery.tsx`), light and dark.
+- **`AGENTS.md` §11:**
+  - item 2: the card is simplified and built;
+  - item 7: 8px approved;
+  - item 11: the page ground `#F9FAFB`, and the header blur;
+  - item 13: the footer styling.
+- **Left for Phase 4 (pages):**
+  - the /campaigns banner, cause tiles, status menu and search (§11 item 1);
+  - the campaign hero's icon discs;
+  - the home sections' pastel discs and tiles;
+  - Title Case copy.
+- **Validation (2026-11-21):**
+  - web 581/581; typecheck and lint clean;
+  - isolated copy (re-created after a restart cleared the scratchpad): production build OK;
+  - `/dev/ui-states`, a campaign (light and dark), /campaigns and both footers at 390 and 1440: no sideways scroll;
+  - full e2e (desktop, mobile, 320 px): 406 passed, 52 failed (Phase 2: 393 passed, 61 failed). No new code failure:
+    - fixed during the run: the card's status pill had been dropped for active campaigns, which `journeys` "every card says which state it is in" requires (restored, now neutral); the RuPay mark fell to 4.14:1 under a new dimming (undone); the card's mint status pill was 4.41:1 at 12px (now neutral);
+    - order-dependent, not Phase 3: "homepage → campaign" failed in the second full run only, and passed 12/12 when repeated (another test changes the shared campaign data first, likely the already-failing admin campaign editor); one volunteers test whose browser never opened;
+    - the remaining contrast failures are white on the Donate orange (3.17:1, the owner's exception); one 4.48:1 node on the home rails was not reproducible (mid-animation).
+- **Next:** the owner reviews Phase 3. Then a commit, and the push of `3bcb8c2` plus Phase 3, each with approval. Then Phase 4.
 
 ### Visual polish — Phase 2 (foundation) — 2026-11-21 (committed locally, not pushed)
 
