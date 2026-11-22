@@ -102,7 +102,7 @@ function otherWays(): CampaignFaq {
   return {
     question: 'Besides donating, how else can I help?',
     answer:
-      'You can volunteer with us, share this campaign with people who may want to help, or come to one of our events. The Volunteer and Events pages have the details.',
+      'You can share this campaign with people who may want to help, or come to one of our events. The Events page has the details.',
   };
 }
 

@@ -41,7 +41,6 @@ function event(overrides: Partial<SailentEvent> = {}): SailentEvent {
     address: null,
     programSlug: null,
     campaignSlug: null,
-    requiresVolunteers: false,
     gallery: [],
     ...overrides,
   };

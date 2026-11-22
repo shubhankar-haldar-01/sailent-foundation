@@ -77,7 +77,7 @@ export interface Testimonial {
   role: string;
   /** Location displayed beneath role with a map pin icon. */
   location?: string;
-  kind: 'parent' | 'community' | 'volunteer' | 'donor' | 'partner';
+  kind: 'parent' | 'community' | 'donor' | 'partner';
   /** Seed for the deterministic portrait placeholder. */
   photoSeed: string;
   /**
@@ -114,10 +114,10 @@ export const testimonials: Testimonial[] = [
   {
     id: 't3',
     quote:
-      'Volunteering with Sailent Foundation has been one of the most meaningful experiences of my life.',
+      'Seeing exactly where my donation went made it one of the most meaningful gifts I have given.',
     name: 'Priya Nair',
-    role: 'Volunteer',
-    kind: 'volunteer',
+    role: 'Donor',
+    kind: 'donor',
     photoSeed: 'team-testimonial-3',
     photoUrl: '/images/team-testimonial-3.webp',
   },

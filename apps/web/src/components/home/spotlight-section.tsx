@@ -227,7 +227,7 @@ export function SpotlightSection({
             id="spotlight-title"
             className="font-display text-foreground text-2xl font-bold tracking-tight sm:text-3xl lg:text-[34px]"
           >
-            <span>In The</span> <span>Spotlight</span>
+            <span>In the</span> <span>spotlight</span>
           </h2>
 
           {/* Centered horizontal accent bar under "Spotlight" */}

@@ -49,7 +49,7 @@ describe('Events (integration)', () => {
   let server: Parameters<typeof request>[0];
   let staffToken: string;
   let contentToken: string;
-  let volunteersToken: string;
+  let otherStaffToken: string;
 
   /** Events created by this suite, torn down at the end. */
   const createdEvents: string[] = [];
@@ -198,10 +198,10 @@ describe('Events (integration)', () => {
       .send({ email: TEST_USERS.staff, password: TEST_PASSWORD, totpCode: devTotpCode() });
     contentToken = (content.body as Envelope<{ accessToken: string }>).data!.accessToken;
 
-    const volunteers = await request(server)
+    const otherStaff = await request(server)
       .post(`${PREFIX}/auth/staff/login`)
       .send({ email: TEST_USERS.staff, password: TEST_PASSWORD, totpCode: devTotpCode() });
-    volunteersToken = (volunteers.body as Envelope<{ accessToken: string }>).data!.accessToken;
+    otherStaffToken = (otherStaff.body as Envelope<{ accessToken: string }>).data!.accessToken;
   }, 60_000);
 
   afterAll(async () => {
@@ -805,7 +805,7 @@ describe('Events (integration)', () => {
 
       const response = await request(server)
         .post(`${PREFIX}/admin/events/${event.id}/attendance`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({
           entries: [{ registrationId: registration.rows![0]!.id, status: 'attended' }],
         });
@@ -820,7 +820,7 @@ describe('Events (integration)', () => {
 
       await request(server)
         .post(`${PREFIX}/admin/events/${event.id}/attendance`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({ entries: [{ registrationId, status: 'attended' }] })
         .expect(200);
 
@@ -834,7 +834,7 @@ describe('Events (integration)', () => {
       // contradict the status.
       await request(server)
         .post(`${PREFIX}/admin/events/${event.id}/attendance`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({ entries: [{ registrationId, status: 'no_show' }] })
         .expect(200);
 
@@ -850,7 +850,7 @@ describe('Events (integration)', () => {
 
       await request(server)
         .post(`${PREFIX}/admin/events/${event.id}/attendance`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({ entries: [{ registrationId, status: 'attended' }] })
         .expect(200);
 
@@ -868,7 +868,7 @@ describe('Events (integration)', () => {
 
       const response = await request(server)
         .post(`${PREFIX}/admin/events/${event.id}/attendance`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({
           entries: [
             { registrationId, status: 'attended' },
@@ -899,7 +899,7 @@ describe('Events (integration)', () => {
       // 1. Verify Pass via gate scanner
       const verifyRes = await request(server)
         .post(`${PREFIX}/admin/events/${event.id}/verify-pass`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({ code: passCode })
         .expect(200);
 
@@ -910,7 +910,7 @@ describe('Events (integration)', () => {
       // 2. Perform 1-click Gate Check-In
       const checkInRes = await request(server)
         .post(`${PREFIX}/admin/events/${event.id}/check-in`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({
           registrationId: regId,
           passNumber: passCode,
@@ -925,7 +925,7 @@ describe('Events (integration)', () => {
       // 3. Verifying the pass again now reports already attended
       const reVerifyRes = await request(server)
         .post(`${PREFIX}/admin/events/${event.id}/verify-pass`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({ code: passCode })
         .expect(200);
 
@@ -1334,13 +1334,13 @@ describe('Events (integration)', () => {
     const verify = (eventId: string, code: string) =>
       request(server)
         .post(`${PREFIX}/admin/events/${eventId}/verify-pass`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({ code });
 
     const checkIn = (eventId: string, registrationId: string, passNumber?: string) =>
       request(server)
         .post(`${PREFIX}/admin/events/${eventId}/check-in`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({ registrationId, passNumber });
 
     interface Pass {
@@ -1528,7 +1528,7 @@ describe('Events (integration)', () => {
 
       await request(server)
         .post(`${PREFIX}/admin/events/${event.id}/attendance`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({ entries: [{ registrationId, status: 'attended' }] })
         .expect(200);
       expect((await verify(event.id, registrationId)).body.data.status).toBe('already_attended');
@@ -1536,7 +1536,7 @@ describe('Events (integration)', () => {
       // Corrected to a no-show: the gate lets them in again.
       await request(server)
         .post(`${PREFIX}/admin/events/${event.id}/attendance`)
-        .set(auth(volunteersToken))
+        .set(auth(otherStaffToken))
         .send({ entries: [{ registrationId, status: 'no_show' }] })
         .expect(200);
       expect((await verify(event.id, registrationId)).body.data.status).toBe('valid');

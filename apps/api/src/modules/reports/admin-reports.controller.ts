@@ -78,16 +78,6 @@ export class AdminReportsController {
   }
 
   @RequirePermission('reports.read')
-  @Get('reports/volunteers')
-  @ApiOperation({ summary: 'Volunteers who applied in the range, and the standing picture' })
-  volunteers(
-    @Query(new ZodValidationPipe(reportRangeSchema))
-    query: ReturnType<typeof reportRangeSchema.parse>,
-  ) {
-    return this.reports.volunteers(query);
-  }
-
-  @RequirePermission('reports.read')
   @Get('reports/impact')
   @ApiOperation({ summary: 'Impact records in the range, by metric' })
   impact(

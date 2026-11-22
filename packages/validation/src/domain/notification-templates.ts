@@ -14,7 +14,7 @@ import { z } from 'zod';
  * INTERPOLATION ESCAPES, AND THAT IS NOT OPTIONAL.
  *
  * Every variable here is data somebody else supplied: a donor's name, a
- * campaign title, a volunteer's role. Substituting one into an HTML body
+ * campaign title, an event's location. Substituting one into an HTML body
  * without escaping is an injection into an email this organisation signs and
  * sends. The text body is not escaped, because it is not markup.
  * ══════════════════════════════════════════════════════════════════════════
@@ -51,7 +51,7 @@ export const NOTIFICATION_TEMPLATES = {
   },
   'donor.login_code': {
     name: 'Sign-in code',
-    description: 'The one-time code a donor or volunteer signs in with.',
+    description: 'The one-time code a donor signs in with.',
     variables: {
       code: 'The six-digit code',
       minutes: 'How many minutes it remains valid',
@@ -74,44 +74,6 @@ export const NOTIFICATION_TEMPLATES = {
       attendeeName: 'The attendee’s name',
       eventTitle: 'The event',
       eventDate: 'When it was to have started',
-    },
-  },
-  'volunteer.application.received': {
-    name: 'Volunteer application received',
-    description: 'Acknowledges an application. Promises a review, not an outcome.',
-    variables: { volunteerName: 'The applicant’s name' },
-  },
-  'volunteer.approved': {
-    name: 'Volunteer approved',
-    description: 'Sent on approval, carrying the volunteer ID.',
-    variables: {
-      volunteerName: 'The volunteer’s name',
-      volunteerId: 'The assigned volunteer ID, as VOL-2026-00001',
-    },
-  },
-  'volunteer.rejected': {
-    name: 'Volunteer application closed',
-    description:
-      'Sent when an application is not taken forward. Never carries the internal reason.',
-    variables: { volunteerName: 'The applicant’s name' },
-  },
-  'volunteer.assigned': {
-    name: 'Volunteer assignment',
-    description: 'Sent when a volunteer is assigned to an event or a role.',
-    variables: {
-      volunteerName: 'The volunteer’s name',
-      role: 'The role they have been given',
-      eventTitle: 'The event, when the assignment is to one',
-      startsAt: 'When it starts, already formatted',
-    },
-  },
-  'volunteer.certificate.issued': {
-    name: 'Volunteer certificate issued',
-    description: 'Sent when a certificate is issued, carrying its verification code.',
-    variables: {
-      volunteerName: 'The volunteer’s name',
-      certificateCode: 'The code the certificate is verified by',
-      hours: 'Verified hours, already rounded',
     },
   },
 } as const;

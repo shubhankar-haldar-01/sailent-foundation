@@ -17,21 +17,8 @@ export default function robots(): MetadataRoute.Robots {
         The same set `sitemap-segments.ts` excludes from the sitemap. The two
         must not disagree: a URL advertised in one and forbidden in the other
         is a contradiction a crawler resolves by trusting neither.
-
-        `/volunteer/portal/` is listed by docs/seo-strategy.md §6 and was
-        missing here. The route does not exist yet — disallowing it now costs
-        nothing and means the day it does exist it is not indexed before
-        anybody remembers this file.
       */
-      disallow: [
-        '/admin/',
-        '/account/',
-        '/volunteer/portal/',
-        '/api/',
-        '/donate/checkout',
-        '/donate/status/',
-        '/search',
-      ],
+      disallow: ['/admin/', '/account/', '/api/', '/donate/checkout', '/donate/status/', '/search'],
     },
     sitemap: `${siteConfig.url}/sitemap.xml`,
   };

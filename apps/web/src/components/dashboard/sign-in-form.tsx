@@ -21,8 +21,8 @@ const RESEND_SECONDS = 30;
  *
  * ══════════════════════════════════════════════════════════════════════════
  * NO PASSWORD EXISTS (decision A8). Donors authenticate with a six-digit code
- * emailed to an address the foundation already holds — from a donation or a
- * volunteer application. There is no separate sign-up; "Sign up" on the page
+ * emailed to an address the foundation already holds — from a donation.
+ * There is no separate sign-up; "Sign up" on the page
  * explains that rather than pretending otherwise.
  *
  * THE FIRST STEP ALWAYS ADVANCES. The API answers identically whether or not
@@ -181,8 +181,7 @@ export function DonorSignInForm({ next }: { next?: string }) {
             className="text-muted-foreground mt-1.5 text-[0.8125rem] leading-snug"
           >
             If <strong className="text-foreground font-semibold">{sentTo}</strong> matches a
-            donation or a volunteer application, a 6-digit code is on its way. It expires in 10
-            minutes.
+            donation, a 6-digit code is on its way. It expires in 10 minutes.
           </p>
         ) : null}
 

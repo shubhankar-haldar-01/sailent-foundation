@@ -40,8 +40,8 @@ export function clientForwardingHeaders(source: {
 /**
  * The same, for a server action: the incoming request's headers are read
  * through `next/headers`. Server actions call the API directly (not through
- * the BFF), so the rate-limited ones — sign-in, sign-in codes, the volunteer
- * application — add these themselves.
+ * the BFF), so the rate-limited ones — sign-in, sign-in codes, the contact
+ * form — add these themselves.
  */
 export async function actionForwardingHeaders(): Promise<Record<string, string>> {
   return clientForwardingHeaders(await headers());

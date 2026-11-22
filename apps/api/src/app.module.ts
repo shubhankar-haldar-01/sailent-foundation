@@ -36,7 +36,6 @@ import { ProductsModule } from './modules/products/products.module.js';
 import { DonationsModule } from './modules/donations/donations.module.js';
 import { EventsModule } from './modules/events/events.module.js';
 import { TeamModule } from './modules/team/team.module.js';
-import { VolunteersModule } from './modules/volunteers/volunteers.module.js';
 import { ImpactModule } from './modules/impact/impact.module.js';
 import { MeModule } from './modules/me/me.module.js';
 import { DonorsModule } from './modules/donors/donors.module.js';
@@ -176,7 +175,6 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware.j
     DonationsModule,
     EventsModule,
     TeamModule,
-    VolunteersModule,
     ImpactModule,
     MeModule,
     DonorsModule,

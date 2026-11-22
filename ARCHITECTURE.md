@@ -57,7 +57,7 @@ There are three deployables and one shared database. The packages are consumed a
 
 ## 3. Backend — `apps/api`
 
-- NestJS. The global prefix is `api/v1` (`packages/config` `API_PREFIX`). There are 31 modules (`src/app.module.ts`): Database, Redis, Queue, Audit, Security (field encryption, Phase 12), Auth, Content, Users, Catalog, Products, Donations, Events, Team, Volunteers, Impact, Me, Donors, Settings, Stories, Blog, Pages, Storage, Media, Documents, Notifications, Communications (contact + newsletter, Phase 13), Dashboard (Phase 13), Faqs (general FAQs, Phase 13), Search (Phase 13), Reports and Health.
+- NestJS. The global prefix is `api/v1` (`packages/config` `API_PREFIX`). There are 30 modules (Volunteers removed 2026-11-22) (`src/app.module.ts`): Database, Redis, Queue, Audit, Security (field encryption, Phase 12), Auth, Content, Users, Catalog, Products, Donations, Events, Team, Impact, Me, Donors, Settings, Stories, Blog, Pages, Storage, Media, Documents, Notifications, Communications (contact + newsletter, Phase 13), Dashboard (Phase 13), Faqs (general FAQs, Phase 13), Search (Phase 13), Reports and Health.
 - **Request pipeline:**
   1. `RequestIdMiddleware` sets the request ID.
   2. helmet; HSTS is enabled in production only.
@@ -99,7 +99,7 @@ sequenceDiagram
 
 - **Who signs in how (owner decision, Phase 12):**
   - **Staff:** email and password (Argon2id), lockout after 5 failures for 15 minutes, `@Sensitive` re-authentication. **Staff TOTP/2FA is not required and not implemented**, by owner decision; do not add it unless the owner asks.
-  - **Donors and volunteers:** a six-digit code by email. A code is sent to an address held by a donor account **or a live volunteer record**; the first sign-in opens the general (`donors`) account, which `/me/volunteering` links to the volunteer by email.
+  - **Donors:** a six-digit code by email, sent only to an address held by a donor account. (Until 2026-11-22 a live volunteer record also qualified; the volunteer programme was removed and its tables are kept, unused.)
   - Every email address is normalised with `normaliseEmail()` (`packages/validation`).
   - A donor's address changes only through a code sent to the new address (`POST /me/email/change`, `POST /me/email/verify`).
 - **Access JWT:** **HS256 only** — signed with an explicit algorithm and verified with `algorithms: ['HS256']` (`token.service.ts`). Per-audience key derived from `JWT_ACCESS_SECRET`. The session row is checked on every request, so logout and revocation take effect at once.
@@ -166,7 +166,7 @@ sequenceDiagram
 - **Producer:** the API's `QueueService` (BullMQ). Job IDs avoid colons (`jobKey()`).
 - **Worker** (`apps/worker/src/main.ts`) consumes:
   - `example`;
-  - `email`, dispatched by job name: donation confirmation, the donor login code (and email-change code), event registration and cancellation, the volunteer messages (application received, approved, rejected, assigned; certificate issued), and since Phase 13 `contact.received` (to the organisation's contact email), `newsletter.confirm`, `staff.invite` and `staff.password_reset` (`processors/communications.processor.ts`);
+  - `email`, dispatched by job name: donation confirmation, the donor login code (and email-change code), event registration and cancellation (the volunteer messages were removed on 2026-11-22), and since Phase 13 `contact.received` (to the organisation's contact email), `newsletter.confirm`, `staff.invite` and `staff.password_reset` (`processors/communications.processor.ts`);
   - `payments` (reconciliation schedule, Phase 11).
 - **Declared but unconsumed:** `notifications`, `reports`, `cleanup`. Nothing enqueues to them: since Phase 13 the admin "retry" enqueues to `email` under the original job name (it used to go to `notifications` and send nothing). Retry is offered for `contact.received` and the Phase 10.11 set; never for jobs whose link held a token (`newsletter.confirm`, `staff.*`, `donor.login_code`).
 - **Job defaults:** 3 attempts with exponential backoff; only `unreachable` provider errors throw (and retry), permanent ones are recorded `failed` and raise the in-app staff alert. Every attempt writes a `notifications` row (ids only — no token, link, address or message body). A contact message already recorded as sent is not emailed again.

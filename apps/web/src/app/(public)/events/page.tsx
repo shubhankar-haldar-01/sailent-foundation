@@ -32,8 +32,7 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 /** How many past events show before "View all past events" — the design's one row of three. */
 const PAST_PREVIEW = 3;
 
-const DESCRIPTION =
-  'Field days, distribution drives, medical camps, volunteer orientations and our open annual review.';
+const DESCRIPTION = 'Field days, distribution drives, medical camps and our open annual review.';
 
 /**
  * One canonical URL for every filtered view, so a month or a page count is

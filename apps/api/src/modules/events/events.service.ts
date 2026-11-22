@@ -652,8 +652,6 @@ export class EventsService {
       'organizer',
       'programId',
       'campaignId',
-      'requiresVolunteers',
-      'volunteerSlots',
       'isPaid',
       'feeAmount',
       'functions',

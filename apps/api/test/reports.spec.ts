@@ -194,18 +194,12 @@ describe('Reports (integration)', () => {
       expect(items.every((item) => item.inRangePaise === 0)).toBe(true);
     });
 
-    it('reports volunteers applied in range, and the standing picture', async () => {
+    it('no longer has a volunteers report (programme removed 2026-11-22)', async () => {
       const response = await request(server)
         .get(`${PREFIX}/admin/reports/volunteers`)
         .query(RANGE)
         .set(auth(staff));
-
-      expect(response.status).toBe(200);
-      const data = (
-        response.body as Envelope<{ standing: { activeVolunteers: number; verifiedHours: number } }>
-      ).data!;
-      expect(typeof data.standing.activeVolunteers).toBe('number');
-      expect(typeof data.standing.verifiedHours).toBe('number');
+      expect(response.status).toBe(404);
     });
 
     it('reports impact by metric', async () => {
@@ -449,9 +443,18 @@ describe('Reports (integration)', () => {
 
       expect(response.status).toBe(200);
       const keys = JSON.stringify(response.body);
-      for (const permission of ['donor.export', 'donation.export', 'volunteer.export']) {
+      for (const permission of ['donor.export', 'donation.export']) {
         expect(keys).toContain(permission);
       }
+    });
+
+    it('refuses the retired volunteers dataset (programme removed 2026-11-22)', async () => {
+      await reauth();
+      const response = await request(server)
+        .post(`${PREFIX}/admin/reports/export`)
+        .set(auth(staff))
+        .send({ dataset: 'volunteers', from: '2020-01-01', to: '2020-06-30' });
+      expect(response.status).toBe(422);
     });
 
     it('lets a dataset with no personal data through on `reports.export` alone', async () => {

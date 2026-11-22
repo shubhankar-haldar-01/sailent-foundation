@@ -227,28 +227,32 @@ test.describe('email templates', () => {
     test.skip(testInfo.project.name !== 'desktop', 'One project is enough.');
 
     await page.goto('/admin/notification-templates');
-    await expect(page.getByRole('heading', { level: 1, name: 'Email templates' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Email notification templates' }),
+    ).toBeVisible();
 
     // §4.21: "every transactional email has a template".
     for (const slug of [
       'donation.confirmation',
       'donor.login_code',
-      'volunteer.approved',
-      'volunteer.certificate.issued',
+      'event.registration.confirmed',
+      'event.cancelled',
     ]) {
       await expect(page.getByText(slug, { exact: true })).toBeVisible();
     }
+    // The volunteer emails went with the programme (2026-11-22).
+    await expect(page.getByText('volunteer.approved', { exact: true })).toHaveCount(0);
   });
 
   test('previews a draft with the SAME renderer the worker uses', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'One project is enough.');
 
     await page.goto('/admin/notification-templates');
-    await page.getByRole('link', { name: 'Volunteer approved' }).click();
+    await page.getByRole('link', { name: 'Event cancelled' }).click();
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Volunteer approved' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Event cancelled' })).toBeVisible();
     // The editor is told what the sender actually supplies.
-    await expect(page.getByText('{{volunteerName}}').first()).toBeVisible();
+    await expect(page.getByText('{{attendeeName}}').first()).toBeVisible();
 
     await Promise.all([
       page.waitForResponse(
@@ -267,16 +271,16 @@ test.describe('email templates', () => {
     test.skip(testInfo.project.name !== 'desktop', 'Writes rows — one project only.');
 
     await page.goto('/admin/notification-templates');
-    await page.getByRole('link', { name: 'Volunteer application received' }).click();
+    await page.getByRole('link', { name: 'Event registration confirmed' }).click();
 
     const before = await withDatabase(async (client) => {
       const rows = await client.query<{ version: number }>(
-        `SELECT version FROM notification_templates WHERE slug = 'volunteer.application.received'`,
+        `SELECT version FROM notification_templates WHERE slug = 'event.registration.confirmed'`,
       );
       return rows.rows[0]!.version;
     });
 
-    await page.locator('input[name="subject"]').fill(`We have your application ${STAMP}`);
+    await page.locator('input[name="subject"]').fill(`Your seat is held ${STAMP}`);
     await page.locator('input[name="note"]').fill('An end-to-end edit.');
 
     await Promise.all([
@@ -289,20 +293,20 @@ test.describe('email templates', () => {
 
     const after = await withDatabase(async (client) => {
       const rows = await client.query<{ version: number; subject: string }>(
-        `SELECT version, subject FROM notification_templates WHERE slug = 'volunteer.application.received'`,
+        `SELECT version, subject FROM notification_templates WHERE slug = 'event.registration.confirmed'`,
       );
       return rows.rows[0]!;
     });
 
     expect(after.version).toBe(before + 1);
-    expect(after.subject).toBe(`We have your application ${STAMP}`);
+    expect(after.subject).toBe(`Your seat is held ${STAMP}`);
 
     // And the previous wording is recoverable.
     const revisions = await withDatabase(async (client) => {
       const rows = await client.query<{ n: string }>(
         `SELECT count(*)::text AS n FROM notification_template_revisions r
          JOIN notification_templates t ON t.id = r.template_id
-         WHERE t.slug = 'volunteer.application.received'`,
+         WHERE t.slug = 'event.registration.confirmed'`,
       );
       return Number(rows.rows[0]!.n);
     });

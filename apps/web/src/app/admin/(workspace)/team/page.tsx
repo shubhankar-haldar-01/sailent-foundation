@@ -23,7 +23,7 @@ const STATUSES = [
 /**
  * Team directory.
  *
- * Distinct from Volunteers: team members represent public leadership, trustees
+ * Team members represent public leadership, trustees
  * and staff shown in the "Our Team" section of the public site.
  */
 export default async function AdminTeamPage({

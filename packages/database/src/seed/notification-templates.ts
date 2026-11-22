@@ -136,110 +136,12 @@ We are sorry. Your registration has been released and there is nothing you need 
 With thanks,
 Sailent Foundation`,
   },
-  {
-    slug: 'volunteer.application.received',
-    subject: 'We have your volunteer application',
-    bodyHtml: html(
-      '<p>Dear {{volunteerName}},</p>',
-      // Promises a review, not an outcome. An acknowledgement that sounds like
-      // an acceptance is a cruelty to write and a problem to answer for.
-      '<p>Thank you for offering your time. We have your application and somebody will read it.</p>',
-      '<p>We will write again when it has been reviewed.</p>',
-    ),
-    bodyText: `Dear {{volunteerName}},
-
-Thank you for offering your time. We have your application and somebody will read it.
-
-We will write again when it has been reviewed.
-
-With thanks,
-Sailent Foundation`,
-  },
-  {
-    slug: 'volunteer.approved',
-    subject: 'Welcome to the Sailent Foundation volunteer team',
-    bodyHtml: html(
-      '<p>Dear {{volunteerName}},</p>',
-      '<p>Your application has been approved. Welcome.</p>',
-      '<p style="margin:0"><strong>Your volunteer ID:</strong> {{volunteerId}}</p>',
-      '<p>Keep it — it identifies you on assignments, attendance registers and certificates.</p>',
-    ),
-    bodyText: `Dear {{volunteerName}},
-
-Your application has been approved. Welcome.
-
-Your volunteer ID: {{volunteerId}}
-
-Keep it — it identifies you on assignments, attendance registers and certificates.
-
-With thanks,
-Sailent Foundation`,
-  },
-  {
-    slug: 'volunteer.rejected',
-    subject: 'Your volunteer application',
-    bodyHtml: html(
-      '<p>Dear {{volunteerName}},</p>',
-      /*
-        THE INTERNAL REASON NEVER APPEARS HERE, and the template has no
-        variable for it. `volunteers.rejection_reason` is ADMIN-ONLY; it is
-        written for colleagues, and a note meant for colleagues arriving in the
-        applicant's inbox is the failure this omission prevents.
-      */
-      '<p>Thank you for your interest in volunteering with us. We are not able to take your ' +
-        'application forward at this time.</p>',
-      '<p>You are welcome to apply again in future.</p>',
-    ),
-    bodyText: `Dear {{volunteerName}},
-
-Thank you for your interest in volunteering with us. We are not able to take your
-application forward at this time.
-
-You are welcome to apply again in future.
-
-With thanks,
-Sailent Foundation`,
-  },
-  {
-    slug: 'volunteer.assigned',
-    subject: 'You have been assigned — {{role}}',
-    bodyHtml: html(
-      '<p>Dear {{volunteerName}},</p>',
-      '<p>You have been assigned as <strong>{{role}}</strong> for {{eventTitle}}.</p>',
-      '<p style="margin:0"><strong>Starts:</strong> {{startsAt}}</p>',
-      '<p>If you cannot make it, tell us as early as you can.</p>',
-    ),
-    bodyText: `Dear {{volunteerName}},
-
-You have been assigned as {{role}} for {{eventTitle}}.
-
-Starts: {{startsAt}}
-
-If you cannot make it, tell us as early as you can.
-
-With thanks,
-Sailent Foundation`,
-  },
-  {
-    slug: 'volunteer.certificate.issued',
-    subject: 'Your volunteer certificate',
-    bodyHtml: html(
-      '<p>Dear {{volunteerName}},</p>',
-      '<p>Your certificate has been issued for {{hours}} verified hours. Thank you.</p>',
-      '<p style="margin:0"><strong>Verification code:</strong> {{certificateCode}}</p>',
-      '<p>Anybody can check the certificate against that code on our website.</p>',
-    ),
-    bodyText: `Dear {{volunteerName}},
-
-Your certificate has been issued for {{hours}} verified hours. Thank you.
-
-Verification code: {{certificateCode}}
-
-Anybody can check the certificate against that code on our website.
-
-With thanks,
-Sailent Foundation`,
-  },
+  /*
+    The five volunteer templates (application received, approved, rejected,
+    assigned, certificate issued) were removed on 2026-11-22 with the volunteer
+    programme. A database seeded before then keeps its rows — the seed inserts
+    and updates, it never deletes — and the admin page no longer lists them.
+  */
 ];
 
 /**

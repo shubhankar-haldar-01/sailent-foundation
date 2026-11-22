@@ -26,7 +26,7 @@ export class DashboardController {
   @ApiOperation({
     summary: 'Headline counts and items needing attention',
     description:
-      'Sections: campaigns, programs, donations, payments, donors, volunteers, events, messages, newsletter, notifications, activity — each present only with its read permission.',
+      'Sections: campaigns, programs, donations, payments, donors, events, messages, newsletter, notifications, activity — each present only with its read permission.',
   })
   @ApiResponse({ status: 401, description: 'Not signed in as staff' })
   summary(@CurrentActor() actor: AuthenticatedActor) {

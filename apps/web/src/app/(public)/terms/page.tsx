@@ -20,7 +20,7 @@ export default function TermsPage() {
         {
           heading: 'Using this site',
           paragraphs: [
-            'You may use this website to learn about our work, donate, apply to volunteer and register for events. You may not attempt to disrupt the service, access accounts or data that are not yours, or use automated systems to extract content at scale.',
+            'You may use this website to learn about our work, donate and register for events. You may not attempt to disrupt the service, access accounts or data that are not yours, or use automated systems to extract content at scale.',
           ],
         },
         {
@@ -38,9 +38,9 @@ export default function TermsPage() {
           ],
         },
         {
-          heading: 'Volunteering and events',
+          heading: 'Events',
           paragraphs: [
-            'Applying to volunteer does not guarantee acceptance. Registering for an event does not guarantee a place if capacity is reached; waitlisted registrants are promoted in order.',
+            'Registering for an event does not guarantee a place if capacity is reached; waitlisted registrants are promoted in order.',
           ],
         },
         {

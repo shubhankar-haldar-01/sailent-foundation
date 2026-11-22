@@ -47,7 +47,7 @@ export default async function AdminTemplatesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Email notification templates"
-        description="Transactional email copy for receipts, event confirmations, volunteer updates, and auth notices. Modifying a template versions it dynamically."
+        description="Transactional email copy for receipts, event confirmations and auth notices. Modifying a template versions it dynamically."
         count={items.length}
       />
 

@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { CalendarDays, Download, FileText, MapPin, Users } from 'lucide-react';
+import { CalendarDays, Download, FileText, MapPin } from 'lucide-react';
 
 import { cn } from '../lib/cn';
-import { formatDate, formatNumber } from '../lib/format';
+import { formatDate } from '../lib/format';
 import { Badge } from '../primitives/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../primitives/card';
 import { Avatar, AvatarFallback, AvatarImage } from '../primitives/avatar';
@@ -14,7 +14,6 @@ import type {
   StoryCardModel,
   TeamMemberModel,
   TestimonialModel,
-  VolunteerCardModel,
 } from './types';
 
 type LinkLike = React.ComponentType<{
@@ -223,54 +222,6 @@ export function TeamMemberCard({
 
 // ---------------------------------------------------------------------------
 
-export function VolunteerCard({
-  volunteer,
-  className,
-}: {
-  volunteer: VolunteerCardModel;
-  className?: string;
-}) {
-  const initials = volunteer.name
-    .split(' ')
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
-  return (
-    <Card interactive className={cn('flex items-center gap-4 p-4', className)}>
-      <Avatar size="lg">
-        {volunteer.photo ? (
-          <AvatarImage src={volunteer.photo.url} alt={volunteer.photo.alt} />
-        ) : null}
-        <AvatarFallback>{initials}</AvatarFallback>
-      </Avatar>
-      <div className="min-w-0 flex-1">
-        <p className="text-body truncate font-medium">{volunteer.name}</p>
-        {/* The permanent identifier assigned at approval (decision A13). */}
-        <p data-numeric="" className="text-caption text-muted-foreground font-mono">
-          {volunteer.volunteerId}
-        </p>
-        {volunteer.role ? (
-          <p className="text-caption text-muted-foreground truncate">{volunteer.role}</p>
-        ) : null}
-      </div>
-      {/* Verified hours only. Unverified hours never appear on anything a volunteer can show an employer. */}
-      {volunteer.verifiedHours > 0 ? (
-        <div className="shrink-0 text-right">
-          <p data-numeric="" className="text-body font-semibold">
-            {formatNumber(volunteer.verifiedHours)}
-          </p>
-          <p className="text-caption text-muted-foreground">hours</p>
-        </div>
-      ) : null}
-    </Card>
-  );
-}
-
-// ---------------------------------------------------------------------------
-
 export function DocumentCard({
   document,
   onDownload,
@@ -387,4 +338,3 @@ export function MediaGallery({
   );
 }
 
-export { Users as VolunteerIcon };

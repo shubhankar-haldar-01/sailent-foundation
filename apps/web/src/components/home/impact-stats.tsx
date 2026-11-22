@@ -42,11 +42,6 @@ const ICONS = {
     wash: 'bg-accent text-primary',
     stroke: true,
   },
-  volunteers: {
-    icon: PeopleSolid,
-    wash: 'bg-accent text-primary',
-    stroke: false,
-  },
   years: {
     icon: Star,
     wash: 'bg-accent text-primary',

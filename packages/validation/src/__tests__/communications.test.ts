@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  CONTACT_SUBJECT_LABELS,
   contactSubmissionSchema,
   newsletterSubscribeSchema,
   organizationContactSchema,
@@ -28,6 +29,14 @@ describe('contactSubmissionSchema', () => {
     expect(contactSubmissionSchema.safeParse({ ...valid, subject: 'refund' }).success).toBe(false);
     expect(contactSubmissionSchema.safeParse({ ...valid, message: 'hi' }).success).toBe(false);
     expect(contactSubmissionSchema.safeParse({ ...valid, admin: true }).success).toBe(false);
+  });
+
+  it('no longer accepts "volunteering" (programme removed 2026-11-22), though it keeps its label', () => {
+    expect(contactSubmissionSchema.safeParse({ ...valid, subject: 'volunteering' }).success).toBe(
+      false,
+    );
+    // Older stored messages still read properly in the inbox.
+    expect(CONTACT_SUBJECT_LABELS.volunteering).toBe('Volunteering');
   });
 
   it('refuses a message over the limit', () => {

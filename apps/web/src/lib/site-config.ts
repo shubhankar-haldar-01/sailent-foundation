@@ -45,9 +45,9 @@ export const siteConfig = {
 /**
  * Primary navigation.
  *
- * Seven items, one of which (Get involved) groups its children into a menu.
- * Phase 0 caps the nav at seven because beyond that it stops being navigation
- * and becomes a menu nobody reads. Blog is a plain link: the Resources menu
+ * Eight plain links, no menus (see the Home and Team notes below). Phase 0
+ * capped the nav at seven because beyond that it stops being navigation and
+ * becomes a menu nobody reads. Blog is a plain link: the Resources menu
  * it sat in was taken off at the owner's request (2026-10-16), once FAQ had
  * left it and Blog was its only item.
  */
@@ -67,31 +67,26 @@ export const primaryNav: NavEntry[] = [
 
     The wordmark is a link home and always has been, which is why this slot was
     empty — but it is a convention people know rather than one they are told,
-    and the approved design spells it out. One extra item is well inside the
-    seven-item ceiling this comment sets.
+    and the approved design spells it out. With Team (2026-11-22) the bar has
+    eight items, one past the seven this comment used to set; the header's
+    1024–1279px tightening keeps them on one line.
   */
   { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
+  // Team (owner, 2026-11-22): its own top-level link to /team.
+  { label: 'Team', href: '/team' },
   { label: 'Programs', href: '/programs' },
   { label: 'Campaigns', href: '/campaigns' },
   /*
     No "Impact" item: removed from navigation and routes at the client's request.
   */
   { label: 'Stories', href: '/stories' },
-  {
-    label: 'Get involved',
-    href: '/volunteer',
-    children: [
-      { label: 'Volunteer', href: '/volunteer', description: 'Give time to a program' },
-      { label: 'Events', href: '/events', description: 'Field days and open sessions' },
-    ],
-    mobileChildren: [
-      { label: 'Donate', href: '/donate' },
-      { label: 'Volunteer with us', href: '/volunteer' },
-      // The same destination the footer's "Partner With Us" uses.
-      { label: 'Partner with us', href: '/contact' },
-    ],
-  },
+  /*
+    EVENTS, A PLAIN LINK. It was "Get involved" (Volunteer, Events); the
+    volunteer programme was removed on 2026-11-22 (owner: the field work is
+    done by staff), which left Events on its own.
+  */
+  { label: 'Events', href: '/events' },
   /*
     BLOG, NOT A "RESOURCES" MENU (owner, 2026-10-16). No FAQ item either, on
     a desktop or in the phone menu: /faq still exists and the footer's
@@ -134,7 +129,6 @@ export const footerNav: NavGroup[] = [
     label: 'Information',
     items: [
       { label: 'About us', href: '/about' },
-      { label: 'Volunteer', href: '/volunteer' },
       { label: 'FAQ', href: '/faq' },
       { label: 'Contact us', href: '/contact' },
     ],

@@ -633,7 +633,7 @@ function FooterStrip() {
     <footer className="border-(--d-border) grid grid-cols-2 gap-4 border-t pt-5 text-[14px] sm:grid-cols-3">
       {[
         ['Explore', ['Programmes', 'Campaigns', 'Stories']],
-        ['Information', ['About us', 'Volunteer', 'Contact us']],
+        ['Information', ['About us', 'FAQ', 'Contact us']],
         ['Legal', ['Privacy policy', 'Terms of use']],
       ].map(([heading, links]) => (
         <div key={heading as string} className="space-y-2">

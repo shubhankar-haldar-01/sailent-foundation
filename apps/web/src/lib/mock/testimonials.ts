@@ -17,14 +17,6 @@ export const testimonials: Testimonial[] = [
     authorRole: 'Donor since 2024',
   },
   {
-    id: 't2',
-    kind: 'volunteer',
-    quote:
-      'The orientation was blunt about what field days actually involve — long, hot and often administrative. I appreciated knowing that before I signed up rather than after.',
-    authorName: 'Karthik S.',
-    authorRole: 'Volunteer, education program',
-  },
-  {
     id: 't3',
     kind: 'donor',
     quote:
@@ -39,14 +31,6 @@ export const testimonials: Testimonial[] = [
       'They asked our school management committee what we needed before proposing anything. That is rarer than it should be.',
     authorName: 'Head teacher',
     authorRole: 'Partner school, Ranchi district',
-  },
-  {
-    id: 't5',
-    kind: 'volunteer',
-    quote:
-      'My certificate lists the hours I actually did, verified by the program manager. It meant something when I used it in a job application.',
-    authorName: 'Divya P.',
-    authorRole: 'Volunteer, healthcare program',
   },
 ];
 

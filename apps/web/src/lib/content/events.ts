@@ -38,7 +38,6 @@ interface ApiEventDetail extends ApiEventSummary {
   address: string | null;
   schedule: { time: string; activity: string }[] | null;
   gallery: { seed?: string; alt?: string; caption?: string }[] | null;
-  requiresVolunteers: boolean;
   programSlug?: string | null;
   campaignSlug?: string | null;
 }
@@ -93,7 +92,7 @@ function toEvent(row: ApiEventSummary | ApiEventDetail): SailentEvent {
     organizer: row.organizer ?? null,
     isPaid: row.isPaid ?? false,
     feeAmount: row.feeAmount ?? null,
-    functions: row.functions ?? (detail.functions ?? null),
+    functions: row.functions ?? detail.functions ?? null,
     cover: toMedia(row.coverImage, `event-${row.slug}`, row.title),
 
     description: paragraphs(detail.description ?? null),
@@ -101,7 +100,6 @@ function toEvent(row: ApiEventSummary | ApiEventDetail): SailentEvent {
     address: detail.address ?? null,
     programSlug: detail.programSlug ?? null,
     campaignSlug: detail.campaignSlug ?? null,
-    requiresVolunteers: detail.requiresVolunteers ?? false,
     gallery: (detail.gallery ?? []).map((item, index) => ({
       seed: item.seed ?? `event-${row.slug}-${index}`,
       alt: item.alt ?? `${row.title} photograph`,

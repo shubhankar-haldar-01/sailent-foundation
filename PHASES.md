@@ -33,7 +33,7 @@ See `DEVELOPMENT_STATUS.md`.
 | 5 | Product donation system | ✅ |
 | 6 | One-time donations & Razorpay | 🟡 |
 | 7 | Donor accounts & dashboard | 🟡 |
-| 8 | Volunteer management (built after 9) | 🟡 |
+| 8 | Volunteer management (built after 9; removed 2026-11-22) | ⚫ |
 | 9 | Team, events & impact | ✅ |
 | 10 | Umbrella number | — |
 | 10.1 | (no document) | — |
@@ -126,7 +126,9 @@ See `DEVELOPMENT_STATUS.md`.
 | **Remaining** | ~~PAN encryption; verification of email changes; guest-checkout overwriting of donor details~~ (all Phase 12) |
 | **Notes** | `/reports` and `/transparency` were removed here |
 
-## Phase 8 — Volunteer management (built after Phase 9)  🟡 PARTIAL
+## Phase 8 — Volunteer management (built after Phase 9)  ⚫ REMOVED 2026-11-22 (the security tooling stays)
+
+**Removed by the owner on 2026-11-22** ("that volunteer task should team staff also do"): the volunteer application, review, assignments, attendance, certificates and their pages, endpoints, emails and reports are gone; the tables are kept, unused (`AGENTS.md` §11 item 24). What follows is the historical record.
 
 | | |
 |---|---|
@@ -262,7 +264,7 @@ Documented as needed, or deferred:
 - **Monitoring:** GA4 and browser error tracking (both need a consent decision). (Server-side error tracking: Phase 14.)
 - **Staff accounts:** a session-management UI. (Invite and reset: Phase 13. Staff 2FA is not required, by owner decision.)
 - **Receipts and tax:** receipt PDF; Form 10BD export.
-- **Volunteers and events:** certificate PDF; event reminders.
+- **Events:** event reminders.
 - **Communication:** sending newsletters (Phase 13 records consent only); a testimonials CMS, if ever wanted.
 
 ## ⚫ REMOVED (by decision)
@@ -275,3 +277,4 @@ Documented as needed, or deferred:
 - Multiple staff roles (Phase 8, migration `0014`)
 - Staff TOTP requirement (Phase 8, owner decision)
 - The homepage focus-area strip and the Impact navigation link (post-10.12, owner request)
+- The volunteer programme — application, admin, dashboard, certificates, emails, reports (2026-11-22, owner: the work is done by staff; tables kept, unused)

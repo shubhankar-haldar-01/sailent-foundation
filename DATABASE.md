@@ -58,6 +58,9 @@ Verified on 2026-10-06 (updated for Phase 13 and Phase 14 on 2026-10-07, and for
   - `donor_id` and `campaign_id` (both CASCADE); unique per pair
 
 ### Volunteers
+
+> **KEPT, UNUSED (2026-11-22).** The owner removed the volunteer programme (the work is done by staff). No application code reads or writes these tables any more; they, their enums, the events' `requires_volunteers` / `volunteer_slots` columns, `event_registrations.volunteer_id`, the permission rows and existing `volunteer.*` template rows stay as they are, and the seed still inserts its demo volunteers. Dropping them is a separate owner decision, after an export, by a hand-written migration (`AGENTS.md` §5, §11 item 24).
+
 - **volunteers**
   - `volunteer_id` (`VOL-YYYY-NNNNN`, unique)
   - `status` (`volunteer_status`)
@@ -211,7 +214,7 @@ donations 1 ── 1 receipts
 ### User / Donor / Volunteer
 - **`users`** = staff only.
 - **Donors** authenticate through `sessions.donor_id` with audience `donor`; identity is the unique email. `donors.user_id` is vestigial.
-- **Volunteers** are linked to a donor by matching **email** (in `/me/volunteering`). `volunteers.user_id` and `donor_id` exist but are unused.
+- **Volunteers** were linked to a donor by matching **email** (in `/me/volunteering`, removed 2026-11-22). `volunteers.user_id` and `donor_id` exist but are unused; so, since 2026-11-22, is the whole table.
 - **`audit_logs.user_id`** stores either a user ID or a donor ID.
 
 ## 5. Migration history

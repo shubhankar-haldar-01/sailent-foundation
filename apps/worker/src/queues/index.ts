@@ -11,7 +11,6 @@
  *   email         Phase 4  Send via Resend (Brevo until 2026-11-18)
  *   notifications Phase 7  In-app notifications
  *   exports       Phase 7  CSV and Form 10BD generation
- *   certificates  Phase 6  Volunteer certificate PDFs
  *   media         Phase 4  Re-encode images, compute blurhash, strip EXIF
  */
 

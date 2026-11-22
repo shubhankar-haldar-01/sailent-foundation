@@ -209,7 +209,6 @@ export interface SailentEvent extends Omit<EventCardModel, 'coverImage'> {
   address: string | null;
   programSlug: string | null;
   campaignSlug: string | null;
-  requiresVolunteers: boolean;
   gallery: MediaRef[];
   /**
    * The event's OPERATIONAL state, kept alongside the collapsed `status`.
@@ -264,7 +263,7 @@ export interface FaqEntry {
   id: string;
   question: string;
   answer: string;
-  category: 'donations' | 'campaigns' | 'volunteering' | 'events' | 'transparency' | 'general';
+  category: 'donations' | 'campaigns' | 'events' | 'transparency' | 'general';
 }
 
 export interface Testimonial {
@@ -272,8 +271,8 @@ export interface Testimonial {
   quote: string;
   authorName: string;
   authorRole: string;
-  /** Donor, volunteer or partner — drives where it is shown. */
-  kind: 'donor' | 'volunteer' | 'partner';
+  /** Donor or partner — drives where it is shown. */
+  kind: 'donor' | 'partner';
 }
 
 /** A single searchable record across every content type. */

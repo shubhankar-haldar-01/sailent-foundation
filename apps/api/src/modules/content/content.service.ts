@@ -971,8 +971,6 @@ export class ContentService {
         // counted somebody who gave to four campaigns four times. A donation
         // with no donor cannot be matched to another, so it counts as one.
         donorCount: sql<number>`(SELECT (count(DISTINCT donor_id) + count(*) FILTER (WHERE donor_id IS NULL))::int FROM donations WHERE status = 'successful')`,
-        activeVolunteers: sql<number>`(SELECT count(*)::int FROM volunteers WHERE status = 'active')`,
-        verifiedVolunteerHours: sql<number>`(SELECT coalesce(sum(verified_hours),0)::int FROM volunteers)`,
       })
       .from(sql`(SELECT 1) AS _`);
 

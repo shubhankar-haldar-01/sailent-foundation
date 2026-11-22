@@ -228,7 +228,6 @@ test.describe('public shell', () => {
     for (const path of [
       '/admin/',
       '/account/',
-      '/volunteer/portal/',
       '/api/',
       '/donate/checkout',
       '/donate/status/',

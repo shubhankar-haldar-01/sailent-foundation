@@ -12,6 +12,11 @@ import { emailSchema } from '../schemas/primitives.js';
 
 // ── Contact form ────────────────────────────────────────────────────────────
 
+/**
+ * Every subject a stored message may carry — it matches the database check
+ * constraint, so older messages keep their label in the admin inbox and the
+ * notification email.
+ */
 export const CONTACT_SUBJECTS = [
   'general',
   'donation',
@@ -31,6 +36,19 @@ export const CONTACT_SUBJECT_LABELS: Record<ContactSubject, string> = {
   media: 'Media enquiry',
 };
 
+/**
+ * The subjects the public form accepts NOW. "volunteering" is a stored value
+ * only: the volunteer programme was removed on 2026-11-22 (the field work is
+ * done by staff), so a new message may no longer be filed under it.
+ */
+export const CONTACT_FORM_SUBJECTS = [
+  'general',
+  'donation',
+  'partnership',
+  'documents',
+  'media',
+] as const satisfies readonly ContactSubject[];
+
 export const CONTACT_MESSAGE_MIN = 10;
 export const CONTACT_MESSAGE_MAX = 5000;
 
@@ -38,7 +56,7 @@ export const contactSubmissionSchema = z
   .object({
     name: z.string().trim().min(1, 'Enter your name').max(120),
     email: emailSchema,
-    subject: z.enum(CONTACT_SUBJECTS),
+    subject: z.enum(CONTACT_FORM_SUBJECTS),
     message: z
       .string()
       .trim()
@@ -78,18 +96,19 @@ export type NewsletterStatus = (typeof NEWSLETTER_STATUSES)[number];
 
 // ── General FAQs ────────────────────────────────────────────────────────────
 
-/** The groups `/faq` shows, in order. Stored in `faqs.category`. */
+/**
+ * The groups `/faq` shows, in order. Stored in `faqs.category`.
+ *
+ * "volunteering" was removed on 2026-11-22 with the volunteer programme. A row
+ * still carrying it is not shown on /faq, and the admin FAQ page lists it
+ * under "Retired section" so it can be moved or deleted.
+ */
 export const FAQ_CATEGORIES = [
   { id: 'donations', label: 'Donations', description: 'Giving, receipts and tax' },
   {
     id: 'campaigns',
     label: 'Campaigns',
     description: 'How campaigns work and how progress is counted',
-  },
-  {
-    id: 'volunteering',
-    label: 'Volunteering',
-    description: 'Applying, commitment and certification',
   },
   { id: 'events', label: 'Events', description: 'Registration, capacity and attendance' },
   {

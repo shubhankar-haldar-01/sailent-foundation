@@ -11,7 +11,6 @@ export * from './domain/lifecycle.js';
 export * from './domain/progress.js';
 export * from './domain/donation.js';
 export * from './domain/event.js';
-export * from './domain/volunteer.js';
 export * from './domain/page-sections.js';
 export * from './domain/documents.js';
 export * from './domain/notification-templates.js';

@@ -15,7 +15,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/saved': 'Saved campaigns',
   '/dashboard/profile': 'Your profile',
   '/dashboard/events': 'Your events',
-  '/dashboard/volunteering': 'Your volunteering',
 };
 
 export function DashboardMobileHeader({

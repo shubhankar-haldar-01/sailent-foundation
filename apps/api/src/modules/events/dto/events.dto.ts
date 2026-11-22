@@ -105,8 +105,6 @@ const eventFields = {
 
   programId: z.string().uuid().nullish(),
   campaignId: z.string().uuid().nullish(),
-  requiresVolunteers: z.boolean().optional(),
-  volunteerSlots: z.number().int().min(0).max(100_000).nullish(),
 
   isPaid: z.boolean().optional(),
   feeAmount: z

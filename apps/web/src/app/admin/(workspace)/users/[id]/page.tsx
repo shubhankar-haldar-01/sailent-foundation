@@ -30,7 +30,7 @@ export const dynamic = 'force-dynamic';
  *
  * Reading a user is `@Sensitive()`, so a 403 `REAUTH_REQUIRED` here is an
  * EXPECTED outcome rather than an error — it renders the re-auth panel in
- * place of the record, the same way the volunteer detail screen does.
+ * place of the record, the same way the other sensitive screens do.
  */
 export default async function AdminUserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

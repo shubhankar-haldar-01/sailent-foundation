@@ -288,15 +288,17 @@ test.describe('the events listing', () => {
 test.describe('the events page around the listing', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test('invites the visitor to volunteer, and lists past events', async ({ page }) => {
+  test('points the visitor at the campaigns, and lists past events', async ({ page }) => {
     await page.goto('/events');
 
-    const involved = page.getByRole('region', { name: 'Want to get involved?' });
+    // It invited people to volunteer until the programme was removed (2026-11-22).
+    const involved = page.getByRole('region', { name: 'Want to do more?' });
     await expect(involved).toBeVisible();
-    await expect(involved.getByRole('link', { name: /Explore volunteering/ })).toHaveAttribute(
+    await expect(involved.getByRole('link', { name: /Explore campaigns/ })).toHaveAttribute(
       'href',
-      '/volunteer',
+      '/campaigns',
     );
+    await expect(page.getByRole('link', { name: /volunteer/i })).toHaveCount(0);
 
     await expect(page.getByRole('heading', { level: 2, name: 'Past events' })).toBeVisible();
     const past = page.getByRole('list', { name: 'Past events' }).getByRole('listitem');

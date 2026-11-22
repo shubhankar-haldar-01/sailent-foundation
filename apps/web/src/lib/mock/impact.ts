@@ -32,19 +32,6 @@ export const headlineMetrics: ImpactMetric[] = [
     value: 86,
     derivation: 'Count of campaigns and program projects marked complete.',
   },
-  {
-    id: 'volunteers',
-    label: 'Active volunteers',
-    value: 214,
-    derivation: 'Count of volunteers with status Active.',
-  },
-  {
-    id: 'volunteer-hours',
-    label: 'Volunteer hours',
-    value: 9_760,
-    unit: 'hrs',
-    derivation: 'Sum of verified attendance hours. Unverified hours are excluded.',
-  },
 ];
 
 export const reachMetrics: ImpactMetric[] = [
@@ -171,10 +158,6 @@ export const methodologyNotes = [
   {
     title: 'We count people, not distributions',
     body: 'A kit handed out is an activity, not an outcome. Where we report people reached, we mean individuals recorded by name in a program register, counted once.',
-  },
-  {
-    title: 'Volunteer hours are verified hours',
-    body: 'Only attendance confirmed by a program manager is counted. Self-reported hours are recorded separately and excluded from every public figure.',
   },
   {
     title: 'We publish results that disappointed us',

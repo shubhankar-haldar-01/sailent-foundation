@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bookmark, CalendarDays, CreditCard, HandHeart, LayoutDashboard, User } from 'lucide-react';
+import { Bookmark, CalendarDays, CreditCard, LayoutDashboard, User } from 'lucide-react';
 
 import { cn } from '@sailent/ui';
 
@@ -15,7 +15,7 @@ import { cn } from '@sailent/ui';
  * cannot separate the two shades.
  *
  * TWO GROUPS: the primary account links (Dashboard, Payments, Profile) and,
- * under a rule, the rest of the account (Saved, Events, Volunteering).
+ * under a rule, the rest of the account (Saved, Events).
  *
  * Horizontal and scrollable on a phone, a vertical rail from `lg`. Every
  * target clears 44px.
@@ -29,7 +29,6 @@ const PRIMARY = [
 const MORE = [
   { label: 'Saved', href: '/dashboard/saved', icon: Bookmark },
   { label: 'Events', href: '/dashboard/events', icon: CalendarDays },
-  { label: 'Volunteering', href: '/dashboard/volunteering', icon: HandHeart },
 ] as const;
 
 export function DashboardNav() {

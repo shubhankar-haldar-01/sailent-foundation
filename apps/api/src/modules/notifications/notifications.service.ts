@@ -330,7 +330,12 @@ export class NotificationsService {
       .from(notificationTemplates)
       .orderBy(notificationTemplates.slug);
 
-    return { items: rows };
+    /*
+      Only the templates this platform still sends. The volunteer templates
+      (programme removed 2026-11-22) stay in the table, unused, and are not
+      offered for editing.
+    */
+    return { items: rows.filter((row) => isKnownTemplateSlug(row.slug)) };
   }
 
   async getTemplate(id: string) {
@@ -572,21 +577,6 @@ const RETRYABLE_JOBS: Record<
         ? { registrationId: data.registrationId }
         : null,
   },
-  'volunteer.application.received': {
-    name: 'volunteer.application.received',
-    payload: (data) =>
-      data && typeof data.volunteerId === 'string' ? { volunteerId: data.volunteerId } : null,
-  },
-  'volunteer.assigned': {
-    name: 'volunteer.assigned',
-    payload: (data) =>
-      data && typeof data.assignmentId === 'string' ? { assignmentId: data.assignmentId } : null,
-  },
-  'volunteer.certificate.issued': {
-    name: 'volunteer.certificate.issued',
-    payload: (data) =>
-      data && typeof data.certificateId === 'string' ? { certificateId: data.certificateId } : null,
-  },
   // Phase 13. The worker skips a message already recorded as sent.
   'contact.received': {
     name: 'contact.received',
@@ -604,9 +594,6 @@ const RETRYABLE_JOBS: Record<
       reproduce it, and re-sending a sign-in code on an administrator's say-so
       is an account-takeover primitive, not a convenience. The donor asks
       again.
-    • `volunteer.approved` / `volunteer.rejected` — re-sending a decision is a
-      decision. It goes through the volunteer record, where the status
-      transition is checked and audited.
     • `event.cancelled` — a fan-out to everybody holding a seat. Retrying one
       row would mean re-notifying all of them.
     • `newsletter.confirm`, `staff.invite`, `staff.password_reset` (Phase 13)

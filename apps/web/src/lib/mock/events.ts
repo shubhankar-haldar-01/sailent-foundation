@@ -33,7 +33,6 @@ export const events: SailentEvent[] = [
     status: 'registration_open',
     programSlug: null,
     campaignSlug: null,
-    requiresVolunteers: false,
     description: [
       'Every volunteer who joins us attends an orientation before their first assignment. It is not a formality — most of what makes fieldwork go badly is avoidable with half a day of context.',
       'The session covers how our programs actually run, what is expected of you in a village setting, child protection and safeguarding, and the practical business of attendance, hours and certification.',
@@ -65,7 +64,6 @@ export const events: SailentEvent[] = [
     status: 'registration_open',
     programSlug: 'education',
     campaignSlug: 'school-kits-jharkhand',
-    requiresVolunteers: true,
     description: [
       'Distribution days are the visible end of the school kit campaign, and they need more hands than our field team has.',
       'Volunteers help with sorting kits by class level, checking uniform sizes, and keeping the distribution record that lets us track attendance afterwards. No prior experience is needed; the work is straightforward and the field team briefs everyone on arrival.',
@@ -96,7 +94,6 @@ export const events: SailentEvent[] = [
     status: 'registration_open',
     programSlug: 'healthcare',
     campaignSlug: 'mobile-health-clinic-bastar',
-    requiresVolunteers: true,
     description: [
       'Twice a year we run an extended camp with visiting specialists — ophthalmology, orthopaedics and paediatrics — for cases the monthly clinic can identify but not treat.',
       'We need volunteers for registration, queue management and translation. Medical qualifications are welcome but not required; most of the work is organizational.',
@@ -129,7 +126,6 @@ export const events: SailentEvent[] = [
     status: 'registration_open',
     programSlug: null,
     campaignSlug: null,
-    requiresVolunteers: false,
     description: [
       'Once a year we present the full picture publicly: program by program, what we set out to do, what happened, and where we fell short.',
       'The session is deliberately open to anyone — donors, volunteers, partner organizations, and people who simply want to check whether we are worth supporting. Questions are taken live and unfiltered.',
@@ -163,7 +159,6 @@ export const events: SailentEvent[] = [
     status: 'completed',
     programSlug: 'environment',
     campaignSlug: null,
-    requiresVolunteers: true,
     description: [
       'Fifty-two volunteers joined village committees to plant across common land ahead of the monsoon.',
       'Species were chosen by the committees for fodder, fruit and income value rather than for planting-day photographs — saplings that people have a reason to protect are the ones that survive their first year.',
@@ -195,7 +190,6 @@ export const events: SailentEvent[] = [
     status: 'completed',
     programSlug: 'education',
     campaignSlug: 'school-kits-jharkhand',
-    requiresVolunteers: false,
     description: [
       'We run small field visits a few times a year for supporters who would rather see the work than read about it.',
       'Groups are kept to twelve so that visits do not disrupt teaching. The day includes two partner schools, a learning centre session, and an unstructured conversation with the field team about what is not going well.',

@@ -8,7 +8,7 @@ import { actionForwardingHeaders } from '@/lib/api/forwarding';
  * The public contact form and newsletter sign-up (Phase 13).
  *
  * Server actions rather than browser fetches, for the same reason as the
- * volunteer application: the API's address never reaches the browser
+ * sign-in form: the API's address never reaches the browser
  * (decision A1). The real client address is forwarded so the API's per-client
  * limits apply per person (Phase 11), and the API validates everything again.
  */

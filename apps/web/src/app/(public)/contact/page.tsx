@@ -13,7 +13,7 @@ import { buildMetadata } from '@/lib/seo/metadata';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Contact us',
-  description: 'How to reach the team — for donations, volunteering, partnerships or documents.',
+  description: 'How to reach the team — for donations, partnerships or documents.',
   path: '/contact',
 });
 
@@ -159,14 +159,6 @@ export default async function ContactPage() {
                       className="text-primary focus-visible:outline-ring rounded-sm underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
                       Frequently asked questions
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/volunteer"
-                      className="text-primary focus-visible:outline-ring rounded-sm underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-                    >
-                      Volunteering with us
                     </Link>
                   </li>
                 </ul>

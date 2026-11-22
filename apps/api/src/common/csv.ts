@@ -12,7 +12,7 @@
  *
  * This is not theoretical for this platform specifically: almost every column
  * in these exports is free text somebody outside the organisation typed. A
- * donor name, a dedication, a campaign title, a volunteer's stated skills.
+ * donor name, a dedication, a campaign title, a contact message.
  *
  * So every value is quoted, and any value that STARTS with one of those
  * characters is prefixed with a single quote — the convention every

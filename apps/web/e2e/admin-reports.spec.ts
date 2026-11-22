@@ -69,13 +69,14 @@ test.describe('reports', () => {
     await expect(page).toHaveURL(/to=2021-06-30/);
   });
 
-  test('shows the volunteer and impact views too', async ({ page }, testInfo) => {
+  test('shows the impact and campaign views, and no volunteer view', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'One project is enough.');
 
     await page.goto(`/admin/reports?${QUERY}`);
-    await expect(page.getByRole('heading', { name: 'Volunteers' })).toBeVisible();
+    // The volunteer programme was removed on 2026-11-22.
+    await expect(page.getByRole('heading', { name: 'Volunteers' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Impact' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Campaigns' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Campaign performance' })).toBeVisible();
   });
 });
 
@@ -112,9 +113,10 @@ test.describe('the export', () => {
 
     // SUPER_ADMIN holds every permission, so every dataset is offered. The
     // filtering itself is enforced in the API and asserted there.
-    for (const label of ['Donations', 'Donors', 'Volunteers', 'Campaigns', 'Impact records']) {
+    for (const label of ['Donations', 'Donors', 'Campaigns', 'Impact records']) {
       await expect(exports.getByRole('link', { name: label })).toBeVisible();
     }
+    await expect(exports.getByRole('link', { name: 'Volunteers' })).toHaveCount(0);
   });
 
   test('the export endpoint refuses an unauthenticated caller', async ({ request }) => {

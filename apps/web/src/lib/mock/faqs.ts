@@ -85,41 +85,6 @@ export const faqs: FaqEntry[] = [
       'The amount raised reflects payments that have been confirmed by our payment provider, not payments that have been started. A donation appears in the total once it is verified server-side, which is usually within a minute.',
   },
   {
-    id: 'v1',
-    category: 'volunteering',
-    question: 'What is the minimum commitment?',
-    answer:
-      'One day a month for six months. We would rather have someone reliable once a month than someone enthusiastic for three weeks — the training we invest in each volunteer only pays back over time.',
-  },
-  {
-    id: 'v2',
-    category: 'volunteering',
-    question: 'Do I need specific skills or qualifications?',
-    answer:
-      'For most field work, no. Distribution days, registration support and event assistance need reliability rather than credentials. Some roles — medical camps, vocational training, accounting support — do call for specific skills, and those are listed as such.',
-  },
-  {
-    id: 'v3',
-    category: 'volunteering',
-    question: 'What happens after I apply?',
-    answer:
-      'Your application is reviewed, usually within two weeks. If approved you receive a permanent volunteer ID and an invitation to the next orientation session. Attendance at orientation is required before a first field assignment.',
-  },
-  {
-    id: 'v4',
-    category: 'volunteering',
-    question: 'Can I volunteer remotely?',
-    answer:
-      'Some roles yes — translation, design, data entry and research support. Field programs require being present in the districts where we work.',
-  },
-  {
-    id: 'v5',
-    category: 'volunteering',
-    question: 'Will I receive a certificate?',
-    answer:
-      'Yes, based on verified hours. Certificates state the hours actually recorded and confirmed by a program manager, which is why volunteers cannot edit their own attendance.',
-  },
-  {
     id: 'e1',
     category: 'events',
     question: 'What happens if an event is full?',
@@ -176,11 +141,6 @@ export const faqCategories: { id: FaqEntry['category']; label: string; descripti
     id: 'campaigns',
     label: 'Campaigns',
     description: 'How campaigns work and how progress is counted',
-  },
-  {
-    id: 'volunteering',
-    label: 'Volunteering',
-    description: 'Applying, commitment and certification',
   },
   { id: 'events', label: 'Events', description: 'Registration, capacity and attendance' },
   {

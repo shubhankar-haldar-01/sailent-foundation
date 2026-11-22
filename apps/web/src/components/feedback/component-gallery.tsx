@@ -262,7 +262,7 @@ function Gallery({ id }: { id: string }) {
             <AccordionTrigger className="font-semibold">
               Besides donating, how else can I help?
             </AccordionTrigger>
-            <AccordionContent>Volunteer with us, or share a campaign.</AccordionContent>
+            <AccordionContent>Share a campaign, or come to an event.</AccordionContent>
           </AccordionItem>
         </Accordion>
       </Block>

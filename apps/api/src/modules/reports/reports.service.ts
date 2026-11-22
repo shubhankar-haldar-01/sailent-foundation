@@ -6,7 +6,6 @@ import {
   donations,
   donors,
   impactUpdates,
-  volunteers,
   type DatabaseClient,
 } from '@sailent/database';
 import type { AuthenticatedActor } from '@sailent/types';
@@ -217,39 +216,6 @@ export class ReportsService {
         lifetimePaise: Number(row.lifetimePaise ?? 0),
         inRangePaise: Number(row.inRangePaise ?? 0),
       })),
-    };
-  }
-
-  /** Volunteers: who applied in the range, and what the standing picture is. */
-  async volunteers(range: ReportRange) {
-    const { start, end } = this.window(range);
-
-    const [appliedByStatus, hours] = await Promise.all([
-      this.db
-        .select({ status: volunteers.status, count: count() })
-        .from(volunteers)
-        .where(and(gte(volunteers.createdAt, start), lte(volunteers.createdAt, end)))
-        .groupBy(volunteers.status),
-
-      this.db
-        .select({
-          active: sql<number>`COUNT(*) FILTER (WHERE ${volunteers.status} = 'active')::int`,
-          total: count(),
-          // Hours are a running total on the record, recomputed from
-          // attendance — not summed from anything in this range.
-          totalHours: sql<number>`COALESCE(SUM(${volunteers.totalHours}), 0)::int`,
-        })
-        .from(volunteers),
-    ]);
-
-    return {
-      range,
-      appliedInRange: appliedByStatus.map((row) => ({ status: row.status, count: row.count })),
-      standing: {
-        activeVolunteers: hours[0]?.active ?? 0,
-        allVolunteers: hours[0]?.total ?? 0,
-        verifiedHours: hours[0]?.totalHours ?? 0,
-      },
     };
   }
 
@@ -606,44 +572,6 @@ export class ReportsService {
           row.city,
           row.state,
           row.hasTaxId,
-          row.createdAt,
-        ]),
-      };
-    }
-
-    if (dataset === 'volunteers') {
-      const rows = await this.db
-        .select({
-          volunteerId: volunteers.volunteerId,
-          firstName: volunteers.firstName,
-          lastName: volunteers.lastName,
-          email: volunteers.email,
-          status: volunteers.status,
-          totalHours: volunteers.totalHours,
-          createdAt: volunteers.createdAt,
-        })
-        .from(volunteers)
-        .where(and(gte(volunteers.createdAt, start), lte(volunteers.createdAt, end)))
-        .orderBy(volunteers.createdAt)
-        .limit(limit);
-
-      return {
-        headers: [
-          'volunteer_id',
-          'first_name',
-          'last_name',
-          'email',
-          'status',
-          'verified_hours',
-          'applied_at',
-        ],
-        rows: rows.map((row) => [
-          row.volunteerId,
-          row.firstName,
-          row.lastName,
-          row.email,
-          row.status,
-          row.totalHours,
           row.createdAt,
         ]),
       };

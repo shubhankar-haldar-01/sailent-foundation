@@ -89,6 +89,36 @@ Tests: web 574/574, including the new token contrast test (light and dark) and t
 
 Tests: web 538/538; isolated copy: no sideways scroll on `/dev/design` at 320–1440 px; the home e2e asserts the press and testimonial sections are gone.
 
+## 2026-11-22 — The volunteer programme removed; the data kept (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| Deleted `/volunteer`, `/verify/[code]`, `/dashboard/volunteering`, `/admin/volunteers` and `/admin/volunteers/[id]`, with their components and server actions | Owner: "that volunteer task should team staff also do" | Those addresses answer 404; nothing links to them (header "Get involved" became a plain Events link; footer Information is About us, FAQ, Contact us) |
+| API `volunteers` module deleted (apply, admin, my-volunteering, certificates); the dashboard's pending count, the volunteers report and CSV dataset, the public active-volunteer and hours figures, and the event DTO's `requiresVolunteers` / `volunteerSlots` removed | Same | `GET /admin/reports/volunteers` is 404; exporting `volunteers` is 422 |
+| **Sign-in codes only to donor addresses** (`auth.service.ts` `signInRecipient`) | The Phase 12 fallback to a live volunteer record existed only for volunteers | An address held only on a volunteer record gets no code and the same answer as a stranger (new integration test) |
+| Worker volunteer email processor deleted; the five `volunteer.*` templates dropped from the registry and the seed; the admin template list shows only templates still sent | Same | Existing template rows stay in the database, unlisted |
+| The contact form no longer offers "Volunteering" (`CONTACT_FORM_SUBJECTS`); stored messages keep the label | The database constraint and old messages still carry it | — |
+| FAQ section "Volunteering" retired: not shown on `/faq`; admin lists such rows under "Retired section" | Existing rows (the seed has one) stay editable and deletable | — |
+| Copy: home "Volunteers" figure, newsletter "Volunteer opportunities", who-we-are, events CTA ("Want to do more?" → `/campaigns`), sign-in and sign-up wording, privacy policy and terms, campaign FAQ default (§11 item 21), image alt texts | Same | Privacy-policy retention wording for past applicants needs a legal read (`DEVELOPMENT_STATUS.md`) |
+| `@sailent/ui` `VolunteerCard` and `@sailent/validation` `domain/volunteer.ts` deleted | Nothing used them any more | — |
+| **Kept:** the six volunteer tables and enums, the event volunteer columns, `event_registrations.volunteer_id`, the contact-subject constraint, permission rows, template rows, the seed's demo volunteers | Owner: keep the data, remove the code | No migration. Dropping the tables is a later owner decision (`AGENTS.md` §11 item 24) |
+
+Tests: validation 289/289, web 611/611, worker 91/91, API 937 passed / 9 skipped; typecheck, lint and Prettier clean. E2E (desktop, mobile, mobile-xs): the same 51 pre-existing failures as the previous run, none new; new 404 and no-link checks pass. Two stale e2e heading assertions corrected (`DEVELOPMENT_STATUS.md`).
+
+## 2026-11-22 — Team in the header navigation (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| "Team" (`/team`) added to the primary navigation after About | Owner | Desktop bar and phone menu; fits on one line at 1024 px (`AGENTS.md` §11 item 5) |
+
+## 2026-11-21 — "In the spotlight" and the testimonials back on the home page (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| `SHOW_PRESS_MENTIONS` and `SHOW_TESTIMONIALS` set to true; the sections show their placeholder press marks and quotes | Owner: dummy data for now, real data later | Must be replaced (or switched off) before launch (`AGENTS.md` §11 item 3) |
+| Testimonials rail without `scroll-smooth` | Same as the featured rail: smooth-scrolling snap stops Chrome recording the page's LCP | Home performance kept |
+
+
 ## 2026-11-21 — Four default campaign FAQs removed
 
 | Change | Reason | Impact |

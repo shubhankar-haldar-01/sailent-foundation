@@ -8,18 +8,12 @@ import {
   Alert,
   formatCurrency,
 } from '@sailent/ui';
-import { FileSpreadsheet, HeartHandshake, Flag, Users, Activity } from 'lucide-react';
+import { FileSpreadsheet, HeartHandshake, Flag, Activity } from 'lucide-react';
 import { EXPORT_DATASET_KEYS, datasetPermission, type ExportDataset } from '@sailent/validation';
 
 import { ExportLinks, RangePicker, Stat } from '@/components/admin/report-controls';
 import { ReauthPanel } from '@/components/admin/reauth-panel';
-import {
-  AdminApiError,
-  campaignReport,
-  donationReport,
-  impactReport,
-  volunteerReport,
-} from '@/lib/admin/api';
+import { AdminApiError, campaignReport, donationReport, impactReport } from '@/lib/admin/api';
 import { can, currentActor } from '@/lib/auth/session';
 
 export const dynamic = 'force-dynamic';
@@ -72,15 +66,13 @@ export default async function AdminReportsPage({
 
   let donations;
   let campaigns;
-  let volunteers;
   let impact;
   let failure: string | null = null;
 
   try {
-    [donations, campaigns, volunteers, impact] = await Promise.all([
+    [donations, campaigns, impact] = await Promise.all([
       donationReport(range),
       campaignReport(range),
-      volunteerReport(range),
       impactReport(range),
     ]);
   } catch (error) {
@@ -100,7 +92,7 @@ export default async function AdminReportsPage({
     <div className="space-y-8">
       <PageHeader
         title="Administrative reports"
-        description="Donations, campaigns, volunteers, and verified impact over selected date range. Figures represent administrative ledger states including pending and reconciling items."
+        description="Donations, campaigns and verified impact over selected date range. Figures represent administrative ledger states including pending and reconciling items."
       />
 
       <Card>
@@ -251,30 +243,6 @@ export default async function AdminReportsPage({
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {volunteers ? (
-          <section aria-labelledby="volunteers-report" className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Users className="text-primary h-5 w-5" />
-              <h2 id="volunteers-report" className="text-foreground text-lg font-bold">
-                Volunteer activity
-              </h2>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Stat label="Active volunteers" value={volunteers.standing.activeVolunteers} />
-              <Stat
-                label="Verified hours"
-                value={volunteers.standing.verifiedHours}
-                hint="From validated attendance"
-              />
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {volunteers.appliedInRange.reduce((total, row) => total + row.count, 0)} new volunteer
-              applications submitted in this period.
-            </p>
-          </section>
-        ) : null}
-
         {impact ? (
           <section aria-labelledby="impact-report" className="space-y-4">
             <div className="flex items-center gap-2">

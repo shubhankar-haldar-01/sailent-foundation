@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bookmark, CalendarDays, CreditCard, HandHeart, Home, LogOut, User, X } from 'lucide-react';
+import { Bookmark, CalendarDays, CreditCard, Home, LogOut, User, X } from 'lucide-react';
 
 import { cn } from '@sailent/ui';
 import { signOutDonor } from '@/lib/auth/donor-actions';
@@ -16,7 +16,6 @@ const DRAWER_ITEMS = [
   { label: 'Profile', href: '/dashboard/profile', icon: User },
   { label: 'Saved campaigns', href: '/dashboard/saved', icon: Bookmark },
   { label: 'Events', href: '/dashboard/events', icon: CalendarDays },
-  { label: 'Volunteering', href: '/dashboard/volunteering', icon: HandHeart },
 ] as const;
 
 export function DashboardMobileNav({

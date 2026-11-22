@@ -160,15 +160,16 @@ test.describe('featured campaigns rail', () => {
  * keyboard pause that keeps it stoppable (WCAG 2.2.2) — see this file's git
  * history before 2026-11-21.
  */
+/*
+  Shown with placeholder content at the owner's request (2026-11-21), to be
+  replaced with real coverage and consented quotes before launch
+  (lib/content/hidden-sections.ts).
+*/
 test.describe('homepage press and testimonials', () => {
-  test('are not shown while they are not records', async ({ page }) => {
+  test('are shown, while their content is placeholder', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: /In the spotlight/i })).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: /Voices of hope and change/i })).toHaveCount(0);
-    await expect(page.getByRole('list', { name: 'Testimonials, scrollable' })).toHaveCount(0);
-    for (const mark of ['Impact Journal', 'Anjali Sharma', 'Rohit Verma']) {
-      await expect(page.getByText(mark)).toHaveCount(0);
-    }
+    await expect(page.getByRole('heading', { name: /In the spotlight/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Voices of hope and change/i })).toBeVisible();
   });
 });
 
@@ -613,20 +614,29 @@ test.describe('journey: campaign → donation UI', () => {
   });
 });
 
-test.describe('journey: homepage → volunteer', () => {
-  test('the application form is reachable and validates', async ({ page }) => {
+/*
+  THE VOLUNTEER PROGRAMME WAS REMOVED on 2026-11-22 (owner: the field work is
+  done by staff). Its pages are gone, not hidden, and nothing links to them.
+*/
+test.describe('the volunteer programme is gone', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  // `/dashboard/volunteering` is checked signed in, in dashboard.spec.ts.
+  for (const path of ['/volunteer', '/verify/VC-TEST-0000']) {
+    test(`${path} is not found`, async ({ page }) => {
+      const response = await page.goto(path);
+      expect(response?.status(), path).toBe(404);
+    });
+  }
+
+  test('no header or footer link points at it', async ({ page }) => {
     await page.goto('/');
-    await page.goto('/volunteer');
-
-    await expect(page.getByRole('heading', { level: 1, name: /give time/i })).toBeVisible();
-
-    await page.getByRole('link', { name: 'Apply to volunteer' }).click();
-    await expect(page.getByRole('heading', { name: 'Personal details' })).toBeVisible();
-    await settle(page);
-
-    // Submitting empty must surface per-field errors, not a generic failure.
-    await page.getByRole('button', { name: 'Continue' }).click();
-    await expect(page.getByText('Enter your full name')).toBeVisible();
+    await expect(page.locator('a[href^="/volunteer"]')).toHaveCount(0);
+    await expect(page.locator('a[href^="/verify"]')).toHaveCount(0);
+    await expect(page.locator('a[href="/dashboard/volunteering"]')).toHaveCount(0);
+    await expect(
+      page.getByRole('contentinfo').getByRole('link', { name: /volunteer/i }),
+    ).toHaveCount(0);
   });
 });
 
@@ -908,7 +918,6 @@ test.describe('site-wide quality', () => {
     { path: '/programs/education', name: 'program detail' },
     { path: '/stories/sunita-finished-school', name: 'story detail' },
     { path: '/donate', name: 'donate' },
-    { path: '/volunteer', name: 'volunteer' },
     { path: '/faq', name: 'faq' },
     { path: '/contact', name: 'contact' },
     { path: '/blog', name: 'blog' },
@@ -1029,7 +1038,6 @@ test.describe('accessibility', () => {
     '/programs/education',
     '/stories/sunita-finished-school',
     '/donate',
-    '/volunteer',
     '/faq',
     '/contact',
     '/blog/why-we-publish-what-did-not-work',

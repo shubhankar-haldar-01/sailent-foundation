@@ -1013,16 +1013,13 @@ describe('CMS and communications (integration)', () => {
 
       /*
         The figures are whole-database counts, and other suites insert
-        volunteers and messages while this one runs. So the database is
+        messages while this one runs. So the database is
         counted just BEFORE and just AFTER the call, and the dashboard's
         figure must lie between the two — exact, without racing them.
       */
       const counts = async () => ({
         messages: (await one(
           sql`SELECT count(*)::int AS n FROM contact_messages WHERE status = 'new'`,
-        ))!.n as number,
-        pending: (await one(
-          sql`SELECT count(*)::int AS n FROM volunteers WHERE status IN ('applied', 'under_review')`,
         ))!.n as number,
       });
       const before = await counts();
@@ -1036,7 +1033,6 @@ describe('CMS and communications (integration)', () => {
         'donations',
         'payments',
         'donors',
-        'volunteers',
         'events',
         'messages',
         'newsletter',
@@ -1052,7 +1048,8 @@ describe('CMS and communications (integration)', () => {
         expect(value as number).toBeLessThanOrEqual(Math.max(low, high));
       };
       between(data.messages!.new, before.messages, after.messages);
-      between(data.volunteers!.pendingApplications, before.pending, after.pending);
+      // The volunteer programme was removed on 2026-11-22: no section for it.
+      expect(data.volunteers).toBeUndefined();
     });
 
     it('shows a staff member with no permissions no figures at all', async () => {

@@ -144,7 +144,6 @@ export function ContactForm() {
             <SelectContent>
               <SelectItem value="general">General enquiry</SelectItem>
               <SelectItem value="donation">A donation or receipt</SelectItem>
-              <SelectItem value="volunteering">Volunteering</SelectItem>
               <SelectItem value="partnership">Partnership or CSR</SelectItem>
               <SelectItem value="documents">Requesting a document</SelectItem>
               <SelectItem value="media">Press or media</SelectItem>

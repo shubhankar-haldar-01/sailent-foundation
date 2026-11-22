@@ -10,8 +10,8 @@ import { PageShell } from '@/components/layout/page-shell';
  * and the past ones, as the owner's design (2026-10-17) draws it: a calendar
  * mark on a peach disc, the line and its explanation, and the orange button.
  *
- * It goes to /volunteer, the existing volunteering page and its application
- * form — no new route and no second sign-up flow. No decoration beyond the
+ * It went to /volunteer until the volunteer programme was removed
+ * (2026-11-22); it now points at the campaigns page. No decoration beyond the
  * one mark.
  */
 export function EventsCta() {
@@ -31,17 +31,16 @@ export function EventsCta() {
               id="events-involved-title"
               className="font-display text-foreground text-[1.375rem] font-bold leading-tight tracking-[-0.01em] sm:text-2xl"
             >
-              Want to get involved?
+              Want to do more?
             </h2>
             <p className="text-muted-foreground mt-1.5 max-w-[36rem] text-[0.9375rem] leading-relaxed">
-              Join our events, volunteer with us, and be part of meaningful activities in your
-              community.
+              Come to our events, or give to a campaign that needs support in your community.
             </p>
           </div>
 
           <Button asChild size="lg" className="group/cta shrink-0">
-            <Link href="/volunteer">
-              Explore volunteering
+            <Link href="/campaigns">
+              Explore campaigns
               <ArrowRight
                 className="duration-(--duration-base) transition-transform motion-safe:group-hover/cta:translate-x-1"
                 aria-hidden="true"

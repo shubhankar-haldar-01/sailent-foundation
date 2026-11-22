@@ -89,17 +89,6 @@ export interface TeamMemberModel {
   socialLinks?: { label: string; url: string }[];
 }
 
-export interface VolunteerCardModel {
-  name: string;
-  /** Permanent, assigned at approval (decision A13). */
-  volunteerId: string;
-  role: string | null;
-  photo: { url: string; alt: string } | null;
-  /** Verified hours only — unverified hours never appear. */
-  verifiedHours: number;
-  status: 'active' | 'inactive' | 'suspended';
-}
-
 export interface DocumentCardModel {
   id: string;
   title: string;

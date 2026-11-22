@@ -13,8 +13,6 @@ const ICONS = {
   programmes: MapPin,
   campaigns: Megaphone,
   donors: HeartHandshake,
-  volunteers: Users,
-  'volunteer-hours': HeartHandshake,
 } as const;
 
 /**

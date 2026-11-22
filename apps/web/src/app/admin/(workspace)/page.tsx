@@ -13,7 +13,6 @@ import {
   Mail,
   Plus,
   ShieldAlert,
-  UserCheck,
   Users,
   Wallet,
 } from 'lucide-react';
@@ -56,12 +55,6 @@ function attentionItems(data: AdminDashboard) {
   };
 
   add(data.messages?.new, 'contact messages waiting for a reply', '/admin/messages', 'warning');
-  add(
-    data.volunteers?.pendingApplications,
-    'volunteer applications to review',
-    '/admin/volunteers',
-    'warning',
-  );
   add(data.payments?.needsReview, 'payments need review', '/admin/payments', 'destructive');
   add(
     data.payments?.failedWebhooks,
@@ -150,7 +143,7 @@ export default async function AdminDashboardPage() {
 
       {/* ──────── 1. Key Metrics Stat Cards ──────── */}
       <section aria-label="Key performance indicators">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* Donations this Month */}
           {data.donations ? (
             <Card variant="standard" className="shadow-xs p-5 transition-shadow hover:shadow-sm">
@@ -228,33 +221,6 @@ export default async function AdminDashboardPage() {
                   className="text-primary hover:text-primary-hover inline-flex items-center gap-0.5 font-semibold"
                 >
                   <span>View</span>
-                  <ArrowRight className="size-3" aria-hidden="true" />
-                </Link>
-              </div>
-            </Card>
-          ) : null}
-
-          {/* Volunteer applications */}
-          {data.volunteers ? (
-            <Card variant="standard" className="shadow-xs p-5 transition-shadow hover:shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-body-sm text-muted-foreground font-medium">
-                  Volunteer applications to review
-                </p>
-                <div className="bg-warning/10 text-warning-foreground flex size-9 shrink-0 items-center justify-center rounded-xl">
-                  <UserCheck className="size-4.5" aria-hidden="true" />
-                </div>
-              </div>
-              <p data-numeric="" className="font-display text-h2 mt-2 font-bold tabular-nums">
-                {data.volunteers.pendingApplications}
-              </p>
-              <div className="text-caption text-muted-foreground mt-2 flex items-center justify-between">
-                <span>Needs onboarding review</span>
-                <Link
-                  href="/admin/volunteers"
-                  className="text-primary hover:text-primary-hover inline-flex items-center gap-0.5 font-semibold"
-                >
-                  <span>Review</span>
                   <ArrowRight className="size-3" aria-hidden="true" />
                 </Link>
               </div>

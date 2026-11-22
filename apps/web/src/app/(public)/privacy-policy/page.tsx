@@ -22,7 +22,7 @@ export default function PrivacyPolicyPage() {
           heading: 'What we collect',
           paragraphs: [
             'When you donate we collect your name, email address and mobile number, because we need them to issue a receipt and to contact you about the donation. An address and a tax identification number are optional, and are only needed if you want an 80G certificate.',
-            'When you apply to volunteer we collect contact details, skills, availability and an emergency contact. Emergency contacts are used only in the event of an incident during field work.',
+            'We no longer take volunteer applications. If you applied to volunteer before, we still hold the contact details, skills, availability and emergency contact you gave us, as described under how long we keep it.',
             'We do not receive or store your card or bank details at any point. Payments are handled entirely by our payment provider.',
           ],
         },
@@ -31,7 +31,7 @@ export default function PrivacyPolicyPage() {
           list: [
             'To process a donation and issue the receipt you are entitled to',
             'To meet statutory record-keeping and tax-reporting obligations',
-            'To contact you about a donation, an application or an event you registered for',
+            'To contact you about a donation or an event you registered for',
             'To send updates, only where you have opted in',
           ],
         },
@@ -39,7 +39,7 @@ export default function PrivacyPolicyPage() {
           heading: 'How long we keep it',
           paragraphs: [
             'Financial records — donations, payments and receipts — are retained for eight years because tax law requires it. This applies even if you ask us to delete your data; we will tell you exactly what must be retained and why.',
-            'Volunteer records are kept for the duration of your engagement and three years after. Analytics data is retained for fourteen months.',
+            'Records from past volunteer applications are kept for three years after the engagement ended. Analytics data is retained for fourteen months.',
           ],
         },
         {

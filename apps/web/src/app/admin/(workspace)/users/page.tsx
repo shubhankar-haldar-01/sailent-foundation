@@ -69,7 +69,7 @@ export default async function AdminUsersPage({
     <div className="space-y-6">
       <PageHeader
         title="Staff accounts"
-        description="Everyone here holds SUPER_ADMIN — the only administrative role. Donors and volunteers are separate and do not appear on this screen."
+        description="Everyone here holds SUPER_ADMIN — the only administrative role. Donors are separate and do not appear on this screen."
         count={data ? data.pagination.total : undefined}
         actions={can(actor, 'user.invite') ? <InviteUserForm /> : undefined}
       />

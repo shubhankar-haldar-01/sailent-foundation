@@ -401,9 +401,9 @@ export class MeService {
    * THE NEW ADDRESS MUST BE PROVEN BEFORE IT COUNTS.
    *
    * The email is the account: sign-in codes go to it, guest donations attach
-   * to it, a volunteer record is found by it. It used to change on a plain
-   * PATCH, so a donor could claim any address — and with it the future
-   * donations, receipts and volunteering record of whoever owns it.
+   * to it. It used to change on a plain PATCH, so a donor could claim any
+   * address — and with it the future donations and receipts of whoever owns
+   * it.
    *
    * Now a six-digit code is sent to the NEW address and the change happens
    * only when that code comes back (`verifyEmailChange`). Nothing is said here

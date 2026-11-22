@@ -9,6 +9,15 @@ import { can, currentActor } from '@/lib/auth/session';
 
 export const dynamic = 'force-dynamic';
 
+const RETIRED = 'retired';
+const LIVE_SECTIONS = new Set<string>(FAQ_CATEGORIES.map((category) => category.id));
+
+/** The section a stored FAQ is listed under here: its own, or "retired". */
+function sectionOf(category: string | null | undefined): string {
+  const id = category ?? 'general';
+  return LIVE_SECTIONS.has(id) ? id : RETIRED;
+}
+
 /**
  * General FAQs — the questions on /faq (Phase 13).
  *
@@ -66,8 +75,20 @@ export default async function AdminFaqsPage() {
           </CardContent>
         </Card>
       ) : (
-        FAQ_CATEGORIES.map((category) => {
-          const items = faqs.filter((faq) => (faq.category ?? 'general') === category.id);
+        [
+          ...FAQ_CATEGORIES,
+          /*
+            Rows whose section no longer exists (the "volunteering" section,
+            removed on 2026-11-22). /faq does not show them; listing them here
+            is what lets an administrator move or delete them.
+          */
+          {
+            id: RETIRED,
+            label: 'Retired section',
+            description: 'Not shown on /faq. Move each question to a section, or delete it.',
+          },
+        ].map((category) => {
+          const items = faqs.filter((faq) => sectionOf(faq.category) === category.id);
           if (items.length === 0) return null;
           return (
             <Card key={category.id}>

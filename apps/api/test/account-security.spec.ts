@@ -30,9 +30,9 @@ const address = (key: string) => `${key}-${randomUUID().slice(0, 8)}@${DOMAIN}`;
 /**
  * Phase 12 — accounts, authentication and security hardening, end to end.
  *
- * Sign-in for volunteers who never donated, one spelling of an email address,
+ * Sign-in codes only for donor addresses, one spelling of an email address,
  * verified email changes, checkout that cannot rewrite somebody else's record,
- * the volunteer self-service allow-list, atomic refresh rotation, logout,
+ * atomic refresh rotation, logout,
  * authentication audit events, audit addresses that cannot be spoofed, and the
  * donor tax id encrypted at rest.
  */
@@ -59,9 +59,6 @@ describe('Account and authentication security (integration)', () => {
     );
     await db().execute(sql`DELETE FROM donations WHERE donor_id IN ${mine}`);
     await db().execute(sql`DELETE FROM donors WHERE email LIKE ${'%@' + DOMAIN}`);
-    await db().execute(
-      sql`DELETE FROM volunteer_applications WHERE volunteer_id IN (SELECT id FROM volunteers WHERE email LIKE ${'%@' + DOMAIN})`,
-    );
     await db().execute(sql`DELETE FROM volunteers WHERE email LIKE ${'%@' + DOMAIN}`);
     await db().execute(sql`DELETE FROM otp_codes WHERE identifier LIKE ${'%@' + DOMAIN}`);
     await app?.close();
@@ -115,45 +112,30 @@ describe('Account and authentication security (integration)', () => {
     ).rows[0];
 
   // =========================================================================
-  describe('sign-in for volunteers who never donated', () => {
-    it('sends a code to a volunteer address with no donor account, and signs them in', async () => {
-      const email = address('volunteer');
-      await request(server)
-        .post(`${PREFIX}/volunteers/apply`)
-        .send({
-          firstName: 'Vee',
-          lastName: 'Lunteer',
-          email,
-          phone: `98${String(Math.floor(Math.random() * 1e8)).padStart(8, '0')}`,
-          city: 'Pune',
-          skills: ['Teaching'],
-          emergencyContactName: 'Sibling',
-          emergencyContactPhone: '9876543210',
-          emergencyContactRelation: 'Sister',
-        })
-        .expect(201);
+  describe('sign-in codes go only to donor addresses', () => {
+    /*
+      DONORS ONLY (2026-11-22). Phase 12 sent codes to an address held only on
+      a live volunteer record. The volunteer programme was removed and its
+      tables kept, unused — so a row there must no longer be a way to receive
+      mail from this endpoint, and the answer must not differ from a stranger's.
+    */
+    it('sends no code to an address held only on a volunteer record — and says the same', async () => {
+      const email = address('volunteer-only');
+      // 'applied' is a live record: the old fallback sent a code to it.
+      await db().execute(sql`
+        INSERT INTO volunteers (first_name, last_name, email, phone, status)
+        VALUES ('Vee', 'Lunteer', ${email},
+                ${'98' + String(Math.floor(Math.random() * 1e8)).padStart(8, '0')}, 'applied')
+      `);
 
       const enqueue = vi.spyOn(app.get(QueueService), 'enqueue');
-      await request(server)
+      const response = await request(server)
         .post(`${PREFIX}/auth/donor/otp/request`)
         .send({ email: email.toUpperCase() })
         .expect(200);
-      const sent = enqueue.mock.calls.find(([, name]) => name === 'donor.login_code');
-      expect(sent?.[2]).toMatchObject({ email });
+      expect((response.body as Envelope<{ sent: boolean }>).data).toEqual({ sent: true });
+      expect(enqueue.mock.calls.some(([, name]) => name === 'donor.login_code')).toBe(false);
       enqueue.mockRestore();
-
-      // Entering the code opens the account, and the volunteer record is found.
-      const code = await plantCode(email, 'donor_login');
-      const verified = await request(server)
-        .post(`${PREFIX}/auth/donor/otp/verify`)
-        .send({ email, code })
-        .expect(200);
-      const token = (verified.body as Envelope<{ accessToken: string }>).data!.accessToken;
-      const mine = await request(server)
-        .get(`${PREFIX}/me/volunteering`)
-        .set(auth(token))
-        .expect(200);
-      expect((mine.body as Envelope<{ isVolunteer: boolean }>).data!.isVolunteer).toBe(true);
     });
 
     it('still sends nothing to an address it holds no record of — and says the same', async () => {
@@ -283,24 +265,6 @@ describe('Account and authentication security (integration)', () => {
         )
       ).rows[0]!;
       expect(row).toMatchObject({ first_name: 'Original', last_name: 'Name', phone: '9811199999' });
-    });
-  });
-
-  // =========================================================================
-  describe('volunteer self-service', () => {
-    it.each([
-      ['status', { status: 'active' }],
-      ['volunteer id', { volunteerId: 'VOL-2026-99999' }],
-      ['email', { email: 'someone@example.test' }],
-      ['verified hours', { verifiedHours: 500 }],
-      ['role', { role: 'admin' }],
-    ])('refuses to let a volunteer set their own %s', async (_label, body) => {
-      const donor = await donorAccount('self-service');
-      const response = await request(server)
-        .patch(`${PREFIX}/me/volunteering`)
-        .set(auth(donor.token))
-        .send(body);
-      expect(response.status).toBe(422);
     });
   });
 

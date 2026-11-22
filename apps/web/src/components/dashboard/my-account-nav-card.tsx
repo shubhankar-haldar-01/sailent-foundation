@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays, CreditCard, HandHeart, Heart, LayoutGrid, LogOut, User } from 'lucide-react';
+import { CalendarDays, CreditCard, Heart, LayoutGrid, LogOut, User } from 'lucide-react';
 
 import { cn } from '@sailent/ui';
 import { signOutDonor } from '@/lib/auth/donor-actions';
@@ -19,7 +19,6 @@ const ACCOUNT_LINKS = [
   { label: 'Saved campaigns', href: '/dashboard/saved', icon: Heart },
   { label: 'Profile', href: '/dashboard/profile', icon: User },
   { label: 'Events', href: '/dashboard/events', icon: CalendarDays },
-  { label: 'Volunteering', href: '/dashboard/volunteering', icon: HandHeart },
 ] as const;
 
 /**

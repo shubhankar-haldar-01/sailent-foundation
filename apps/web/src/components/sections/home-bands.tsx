@@ -2,63 +2,17 @@ import Link from 'next/link';
 
 import { Button } from '@sailent/ui';
 
-import { MediaFrame } from '@/components/media/media-frame';
 import { NewsletterForm } from '@/components/layout/newsletter-form';
 import { PageShell } from '@/components/layout/page-shell';
 import { ScriptAccent } from '@/components/sections/script-accent';
 
 /**
- * The closing bands of the homepage: volunteer, newsletter, mission, partners.
+ * The closing bands of the homepage: newsletter, mission, partners.
  *
- * Kept together because they are one rhythm — three calls to action of
- * descending weight, then the partner strip. Splitting them across four files
+ * Kept together because they are one rhythm — two calls to action of
+ * descending weight, then the partner strip. Splitting them across three files
  * would hide the fact that they have to be balanced against each other.
  */
-
-export function VolunteerBand() {
-  return (
-    <section className="border-border border-t">
-      <PageShell>
-        <div className="grid items-stretch gap-6 lg:grid-cols-2">
-          <div className="border-border bg-surface-sunken flex flex-col justify-center rounded-xl border p-8 lg:p-10">
-            <p className="text-overline tracking-(--text-overline--letter-spacing) text-primary uppercase">
-              Be the change
-            </p>
-            <h2 className="font-display text-h1 mt-2 text-balance font-bold tracking-tight">
-              Join Our Community of Change Makers
-            </h2>
-            <p className="text-body text-muted-foreground mt-4 max-w-md leading-relaxed">
-              Your time, skills and support can create brighter futures. Volunteer, partner or
-              donate to make a real difference.
-            </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="">
-                <Link href="/volunteer">Become a Volunteer</Link>
-              </Button>
-              <Button asChild size="lg" variant="secondary" className="">
-                <Link href="/about">Learn More</Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* `lg:aspect-auto` matters: with a fixed aspect ratio, a forced
-              height computes the WIDTH from it — `min-h-64` on a 4/3 frame
-              demanded 341px inside a 288px column and scrolled the whole page
-              sideways at 320px. Below lg the ratio drives height from width,
-              which is the way round that cannot overflow. */}
-          <MediaFrame
-            media={{
-              seed: 'volunteers-together',
-              alt: 'Volunteers in branded shirts standing together at a field event',
-            }}
-            aspect="photo"
-            className="w-full lg:aspect-auto lg:h-full"
-          />
-        </div>
-      </PageShell>
-    </section>
-  );
-}
 
 export function NewsletterBand() {
   return (

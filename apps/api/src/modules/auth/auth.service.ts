@@ -1,11 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
-import { and, eq, gt, isNull, notInArray, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 
 import {
   donors,
   otpCodes,
-  volunteers,
   permissions as permissionsTable,
   rolePermissions,
   roles,
@@ -382,19 +381,17 @@ export class AuthService {
    * Get the code to the account holder.
    *
    * ══════════════════════════════════════════════════════════════════════════
-   * SENDS ONLY TO AN ADDRESS WE ALREADY HOLD — ON A DONOR OR A VOLUNTEER RECORD.
+   * SENDS ONLY TO AN ADDRESS WE ALREADY HOLD — ON A DONOR RECORD.
    *
    * The caller supplies the address, so the obvious risk is using this endpoint
    * to mail a code — or just mail anything — to an arbitrary inbox. The lookup
    * below is what prevents it: an address we have no record of gets nothing.
    *
-   * VOLUNTEERS COUNT (Phase 12). This used to look at donors only, so somebody
-   * who applied to volunteer without ever donating was told a code was on its
-   * way and never received one — locked out of their own assignments, hours
-   * and certificates. A live volunteer record (anything but rejected or
-   * archived) now qualifies too. `verifyOtp` then opens the general account
-   * (`donors` is the public account table) on first sign-in, as it already
-   * did; the volunteer record is found from it by address.
+   * DONORS ONLY (2026-11-22). Phase 12 also sent codes to an address held
+   * only on a live volunteer record. The volunteer programme was removed (the
+   * field work is done by staff), and with it that fallback: the `volunteers`
+   * table is kept, unused, and an address found only there now gets nothing —
+   * with the same response as an address we have never seen.
    *
    * SILENT WHEN THERE IS NO DONOR, for the same reason `requestOtp` is: it
    * answers identically either way, and that is what stops this being a way to
@@ -438,9 +435,9 @@ export class AuthService {
   }
 
   /**
-   * Who a sign-in code may be sent to: a donor account at this address, or —
-   * failing that — a live volunteer record. Null when we hold neither, and the
-   * caller then sends nothing (and says nothing different).
+   * Who a sign-in code may be sent to: a donor account at this address. Null
+   * when we hold none, and the caller then sends nothing (and says nothing
+   * different).
    */
   private async signInRecipient(
     email: string,
@@ -455,28 +452,6 @@ export class AuthService {
       return {
         email: donor.email,
         name: [donor.firstName, donor.lastName].filter(Boolean).join(' ').trim() || null,
-      };
-    }
-
-    const [volunteer] = await this.database.db
-      .select({
-        email: volunteers.email,
-        firstName: volunteers.firstName,
-        lastName: volunteers.lastName,
-      })
-      .from(volunteers)
-      .where(
-        and(
-          sql`lower(btrim(${volunteers.email})) = ${email}`,
-          notInArray(volunteers.status, ['rejected', 'archived']),
-        ),
-      )
-      .limit(1);
-
-    if (volunteer?.email) {
-      return {
-        email: volunteer.email,
-        name: [volunteer.firstName, volunteer.lastName].filter(Boolean).join(' ').trim() || null,
       };
     }
 
@@ -587,6 +562,12 @@ export class AuthService {
      * that address has been received and entered correctly. Somebody who can
      * do that owns the mailbox, and a row keyed to a mailbox they own is not
      * an abuse vector — it is the definition of an account.
+     *
+     * SINCE 2026-11-22 THIS BRANCH IS NEARLY UNREACHABLE. The volunteer
+     * programme it was written for is gone, and `deliverOtp` now sends codes
+     * only to an address already on a donor row — which this lookup would
+     * have found. Restoring the pre-Phase-8 refusal is an owner decision
+     * (DEVELOPMENT_STATUS.md), so the branch is left as it is.
      * ══════════════════════════════════════════════════════════════════════
      *
      * `donorCode` is NOT NULL on the table and is generated the same way the

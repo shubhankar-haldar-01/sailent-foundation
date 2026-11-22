@@ -5,18 +5,11 @@ import { Button, cn } from '@sailent/ui';
 
 import { MediaFrame } from '@/components/media/media-frame';
 import { PageShell } from '@/components/layout/page-shell';
-import { FlagSolid, PartnerSolid, PeopleSolid } from '@/components/home/focus-icons';
+import { FlagSolid, PartnerSolid } from '@/components/home/focus-icons';
 import { localMedia } from '@/lib/media/public-asset';
 
 /** Solid marks, matching the focus strip rather than the outline set. */
 const ACTIONS = [
-  {
-    href: '/volunteer',
-    icon: PeopleSolid,
-    title: 'Volunteer',
-    blurb: 'Share your time and skills',
-    wash: 'bg-accent text-info-action',
-  },
   {
     /*
       "Fundraise — Start a campaign and inspire others" USED TO BE HERE, and it
@@ -114,7 +107,7 @@ export function CommunityCta() {
               Join our community
             </h2>
             <p className="text-body-sm mt-2 leading-relaxed text-white/85">
-              Your time, skills or support can create real, lasting impact.
+              Your support can create real, lasting impact.
             </p>
 
             <div className="mt-5 flex flex-wrap justify-center gap-3">
@@ -123,8 +116,8 @@ export function CommunityCta() {
                 size="md"
                 className="text-info-action ring-info-action/25 bg-surface hover:bg-surface/90 shadow-sm ring-1"
               >
-                <Link href="/volunteer">
-                  Become a volunteer
+                <Link href="/contact">
+                  Partner with us
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
               </Button>
@@ -141,7 +134,7 @@ export function CommunityCta() {
             </div>
           </div>
 
-          <ul className="bg-surface divide-border grid rounded-xl p-2 shadow-lg sm:grid-cols-3 sm:divide-x">
+          <ul className="bg-surface divide-border grid rounded-xl p-2 shadow-lg sm:grid-cols-2 sm:divide-x">
             {ACTIONS.map((action) => (
               <li key={action.title} className="px-1">
                 <Link

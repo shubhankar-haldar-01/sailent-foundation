@@ -97,7 +97,7 @@ export function CampaignDonationSummary({
   /** Custom preset rupee amounts. Defaults to PRESET_AMOUNTS. */
   presetAmounts?: readonly number[] | number[];
   /**
-   * The assurances (80G, secure payments, trusted), shown as a panel at the
+   * The assurances (80G, secure payments, email receipt), shown as a row at the
    * foot of the card, under the payment methods and Share campaign.
    */
   assurances?: React.ReactNode;
@@ -318,7 +318,7 @@ export function CampaignDonationSummary({
         <ShareButton />
       </div>
 
-      {assurances ? <div className="mt-2">{assurances}</div> : null}
+      {assurances ? <div className="mt-3">{assurances}</div> : null}
     </Card>
   );
 }

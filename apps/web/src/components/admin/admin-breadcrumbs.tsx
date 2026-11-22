@@ -26,7 +26,6 @@ const SEGMENT_LABELS: Record<string, string> = {
   tax: 'Tax compliance',
   reports: 'Reports',
   donors: 'Donors',
-  volunteers: 'Volunteers',
   team: 'Team / Staff',
   programs: 'Programs',
   categories: 'Categories',

@@ -510,7 +510,7 @@ describe('Notifications (integration)', () => {
         .set(auth(staff));
       const items = (response.body as Envelope<{ items: { id: string; slug: string }[] }>).data!
         .items;
-      return items.find((item) => item.slug === 'volunteer.approved') ?? items[0]!;
+      return items.find((item) => item.slug === 'event.cancelled') ?? items[0]!;
     }
 
     it('every transactional email has one', async () => {
@@ -529,14 +529,12 @@ describe('Notifications (integration)', () => {
         'donor.login_code',
         'event.registration.confirmed',
         'event.cancelled',
-        'volunteer.application.received',
-        'volunteer.approved',
-        'volunteer.rejected',
-        'volunteer.assigned',
-        'volunteer.certificate.issued',
       ]) {
         expect(slugs).toContain(slug);
       }
+      // The volunteer templates (programme removed 2026-11-22) stay in the
+      // table, unused, and are no longer offered for editing.
+      expect(slugs.some((slug) => slug.startsWith('volunteer.'))).toBe(false);
     });
 
     it('shows the variables the sender actually supplies', async () => {
@@ -596,7 +594,7 @@ describe('Notifications (integration)', () => {
         .send({
           // A one-character edit that would inject an unescaped, user-supplied
           // name into an email this organisation signs.
-          bodyHtml: '<p>Hello {{{volunteerName}}}, this is a long enough body to pass.</p>',
+          bodyHtml: '<p>Hello {{{attendeeName}}}, this is a long enough body to pass.</p>',
         });
 
       expect(response.status).toBe(422);
@@ -665,10 +663,10 @@ describe('Notifications (integration)', () => {
         .post(`${PREFIX}/admin/notification-templates/${template.id}/preview`)
         .set(auth(staff))
         .send({
-          subject: 'Hello {{volunteerName}}',
-          bodyHtml: '<p>Hello {{volunteerName}}, this body is long enough to pass.</p>',
-          bodyText: 'Hello {{volunteerName}}, long enough.',
-          values: { volunteerName: 'Meera & Co' },
+          subject: 'Hello {{attendeeName}}',
+          bodyHtml: '<p>Hello {{attendeeName}}, this body is long enough to pass.</p>',
+          bodyText: 'Hello {{attendeeName}}, long enough.',
+          values: { attendeeName: 'Meera & Co' },
         });
 
       expect(response.status).toBe(201);
@@ -688,9 +686,9 @@ describe('Notifications (integration)', () => {
         .post(`${PREFIX}/admin/notification-templates/${template.id}/preview`)
         .set(auth(staff))
         .send({
-          subject: 'Hello {{volunteerName}}',
-          bodyHtml: '<p>Hello {{volunteerName}}, this body is long enough to pass.</p>',
-          bodyText: 'Hello {{volunteerName}}, long enough.',
+          subject: 'Hello {{attendeeName}}',
+          bodyHtml: '<p>Hello {{attendeeName}}, this body is long enough to pass.</p>',
+          bodyText: 'Hello {{attendeeName}}, long enough.',
         });
 
       expect(response.status).toBe(201);

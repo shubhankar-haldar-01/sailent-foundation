@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, HandHeart, HeartHandshake, KeyRound, LogIn } from 'lucide-react';
+import { ArrowRight, HeartHandshake, KeyRound, LogIn } from 'lucide-react';
 
 import { Button, cn } from '@sailent/ui';
 
@@ -11,8 +11,7 @@ import { buildMetadata } from '@/lib/seo/metadata';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Sign up',
-  description:
-    'How a Sailent Foundation account is created: with your first donation, or when you apply to volunteer.',
+  description: 'How a Sailent Foundation account is created: with your first donation.',
   path: '/sign-up',
   noIndex: true,
 });
@@ -22,11 +21,6 @@ const WAYS = [
     icon: HeartHandshake,
     title: 'Make a donation',
     body: 'Your account is created with your first donation, under the email address you give with it.',
-  },
-  {
-    icon: HandHeart,
-    title: 'Apply to volunteer',
-    body: 'Sign in with the email address you applied with to follow your application and assignments.',
   },
   {
     icon: KeyRound,
@@ -40,11 +34,11 @@ const WAYS = [
  *
  * ══════════════════════════════════════════════════════════════════════════
  * THERE IS NO SEPARATE SIGN-UP, AND THIS PAGE SAYS SO. An account is opened by
- * a donation or a volunteer application (decision A8), and sign-in codes are
+ * a donation (decision A8; volunteering was removed on 2026-11-22), and sign-in codes are
  * only ever emailed to an address the foundation already holds — which is what
  * stops the form being used to send mail to strangers. A "create account" form
  * here would collect an address and then never send it anything. Instead the
- * page explains, and offers the two ways in.
+ * page explains, and offers the way in.
  * ══════════════════════════════════════════════════════════════════════════
  */
 export default async function SignUpPage() {
@@ -63,8 +57,7 @@ export default async function SignUpPage() {
         Create your account
       </h1>
       <p className="text-muted-foreground mt-1 max-w-[28rem] text-[0.875rem] leading-relaxed">
-        Your account starts with a donation or a volunteer application — there is no separate
-        sign-up form.
+        Your account starts with your first donation — there is no separate sign-up form.
       </p>
 
       <ul className="mt-5 space-y-3.5">
@@ -86,15 +79,12 @@ export default async function SignUpPage() {
         ))}
       </ul>
 
-      <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
+      <div className="mt-5 grid gap-2.5">
         <Button asChild size="lg" variant="action" className="h-11 text-base">
           <Link href="/donate">
             Donate now
             <ArrowRight aria-hidden="true" />
           </Link>
-        </Button>
-        <Button asChild variant="secondary" size="lg" className="h-11 text-base">
-          <Link href="/volunteer">Volunteer with us</Link>
         </Button>
       </div>
 

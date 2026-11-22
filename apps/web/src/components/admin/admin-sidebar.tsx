@@ -29,7 +29,6 @@ import {
   ShieldCheck,
   Sliders,
   Sparkles,
-  UserCheck,
   UserCog,
   type LucideIcon,
 } from 'lucide-react';
@@ -94,12 +93,6 @@ export const adminNav: AdminNavGroup[] = [
     label: 'People',
     items: [
       { label: 'Donors', href: '/admin/donors', icon: Heart, permission: 'donor.read' },
-      {
-        label: 'Volunteers',
-        href: '/admin/volunteers',
-        icon: UserCheck,
-        permission: 'volunteer.read',
-      },
       { label: 'Team / Staff', href: '/admin/team', icon: ShieldCheck, permission: 'team.read' },
     ],
   },

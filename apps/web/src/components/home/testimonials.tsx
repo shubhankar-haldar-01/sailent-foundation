@@ -100,7 +100,7 @@ export function Testimonials() {
            */
           tabIndex={0}
           aria-label="Testimonials, scrollable"
-          className="focus-visible:outline-ring rail flex min-w-0 snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth py-3 focus-visible:outline-2 focus-visible:outline-offset-2 sm:-mx-2 sm:gap-6 sm:px-2"
+          className="focus-visible:outline-ring rail flex min-w-0 snap-x snap-mandatory gap-5 overflow-x-auto py-3 focus-visible:outline-2 focus-visible:outline-offset-2 sm:-mx-2 sm:gap-6 sm:px-2"
         >
           {testimonials.map((testimonial, index) => (
             <li
@@ -169,7 +169,7 @@ export function Testimonials() {
           </div>
         </div>
 
-        <div className="mt-4 flex justify-center gap-2" aria-label="Testimonial pagination">
+        <div className="mt-4 flex justify-center gap-1" aria-label="Testimonial pagination">
           {testimonials.map((_, i) => (
             <button
               key={i}
@@ -187,13 +187,20 @@ export function Testimonials() {
                 rail.surrender();
               }}
               aria-label={`Slide ${i + 1}`}
-              className={cn(
-                'h-2.5 cursor-pointer rounded-full transition-all duration-500',
-                i === activeIndex
-                  ? 'bg-primary shadow-xs w-7'
-                  : 'bg-primary/25 hover:bg-primary/50 dark:bg-primary/30 w-2.5',
-              )}
-            />
+              aria-current={i === activeIndex ? 'true' : undefined}
+              // A 24px target (WCAG 2.5.8) around the small visible dot.
+              className="group grid h-6 min-w-6 cursor-pointer place-items-center rounded-full px-1 focus-visible:outline-2 focus-visible:outline-offset-1"
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'h-2.5 rounded-full transition-all duration-500',
+                  i === activeIndex
+                    ? 'bg-primary shadow-xs w-7'
+                    : 'bg-primary/25 group-hover:bg-primary/50 dark:bg-primary/30 w-2.5',
+                )}
+              />
+            </button>
           ))}
         </div>
       </PageShell>

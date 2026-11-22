@@ -84,9 +84,9 @@ export function WhoWeAre() {
               {/* Description */}
               <p className="text-foreground mt-4 text-sm font-normal leading-relaxed sm:text-[15px] lg:text-base">
                 Sailent Foundation is a non-profit organization working towards a kinder, fairer and
-                more inclusive society. We collaborate with communities, volunteers and partners to
-                create sustainable change in education, healthcare, food, disaster relief,
-                livelihoods and animal welfare.
+                more inclusive society. We collaborate with communities and partners to create
+                sustainable change in education, healthcare, food, disaster relief, livelihoods and
+                animal welfare.
               </p>
 
               {/* Blue Pill Action Button */}

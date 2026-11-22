@@ -45,7 +45,7 @@ export function AboutHero() {
         <div className="border-border bg-surface-inverse shadow-card relative overflow-hidden rounded-[24px] border sm:rounded-[32px]">
           <Image
             src={HERO_IMAGE}
-            alt="Sailent Foundation field team coordinator and volunteers smiling warmly with rural villagers and school children under a banyan tree"
+            alt="Sailent Foundation field team coordinator and field team smiling warmly with rural villagers and school children under a banyan tree"
             width={1671}
             height={752}
             priority

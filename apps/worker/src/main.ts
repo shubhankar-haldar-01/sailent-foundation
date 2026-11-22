@@ -36,16 +36,6 @@ import {
   type PaymentReconciliationJob,
 } from './processors/payment-reconciliation.processor.js';
 import {
-  processVolunteerApplication,
-  processVolunteerAssigned,
-  processVolunteerCertificate,
-  processVolunteerDecision,
-  type VolunteerApplicationJob,
-  type VolunteerAssignedJob,
-  type VolunteerCertificateJob,
-  type VolunteerDecisionJob,
-} from './processors/volunteer-notifications.processor.js';
-import {
   processContactReceived,
   processNewsletterConfirm,
   processStaffInvite,
@@ -207,10 +197,6 @@ const emailWorker = new Worker<
   | DonorLoginCodeJob
   | EventRegistrationConfirmedJob
   | EventCancelledJob
-  | VolunteerApplicationJob
-  | VolunteerDecisionJob
-  | VolunteerAssignedJob
-  | VolunteerCertificateJob
   | ContactReceivedJob
   | NewsletterConfirmJob
   | StaffTokenJob
@@ -247,43 +233,6 @@ const emailWorker = new Worker<
       case 'event.cancelled':
         return processEventCancelled(
           job as Job<EventCancelledJob>,
-          { database, mailer, appUrl: env.APP_PUBLIC_URL },
-          logger,
-        );
-      case 'volunteer.application.received':
-        return processVolunteerApplication(
-          job as Job<VolunteerApplicationJob>,
-          { database, mailer, appUrl: env.APP_PUBLIC_URL },
-          logger,
-        );
-      /*
-        Approval and rejection share a processor and differ by one argument.
-        The alternative — two near-identical functions — is two places for the
-        "re-read the state before sending" guard to drift out of step.
-      */
-      case 'volunteer.approved':
-        return processVolunteerDecision(
-          job as Job<VolunteerDecisionJob>,
-          { database, mailer, appUrl: env.APP_PUBLIC_URL },
-          logger,
-          'approved',
-        );
-      case 'volunteer.rejected':
-        return processVolunteerDecision(
-          job as Job<VolunteerDecisionJob>,
-          { database, mailer, appUrl: env.APP_PUBLIC_URL },
-          logger,
-          'rejected',
-        );
-      case 'volunteer.assigned':
-        return processVolunteerAssigned(
-          job as Job<VolunteerAssignedJob>,
-          { database, mailer, appUrl: env.APP_PUBLIC_URL },
-          logger,
-        );
-      case 'volunteer.certificate.issued':
-        return processVolunteerCertificate(
-          job as Job<VolunteerCertificateJob>,
           { database, mailer, appUrl: env.APP_PUBLIC_URL },
           logger,
         );

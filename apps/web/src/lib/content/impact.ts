@@ -29,8 +29,6 @@ export interface ImpactTotals {
   campaigns: number;
   beneficiariesReached: number;
   donorCount: number;
-  activeVolunteers: number;
-  verifiedVolunteerHours: number;
 }
 
 export interface ImpactUpdate {
@@ -121,8 +119,6 @@ const EMPTY: ImpactData = {
     campaigns: 0,
     beneficiariesReached: 0,
     donorCount: 0,
-    activeVolunteers: 0,
-    verifiedVolunteerHours: 0,
   },
   updates: [],
 };
@@ -177,7 +173,7 @@ export async function getImpactRecord(slug: string): Promise<ImpactRecord | null
 /**
  * The headline band, built from the live aggregates.
  *
- * A metric whose value is zero is DROPPED rather than shown as "0 volunteers"
+ * A metric whose value is zero is DROPPED rather than shown as "0 communities"
  * — an unbuilt module should read as absent, not as a failure.
  */
 export async function getHeadlineMetrics(): Promise<ImpactMetric[]> {
@@ -186,14 +182,13 @@ export async function getHeadlineMetrics(): Promise<ImpactMetric[]> {
   const registeredOnText = formatRegisteredOn(registeredOn);
 
   /**
-   * The four figures the approved homepage shows, in its order:
+   * The three figures the homepage shows, in its order:
    *
    * Every one is still an AGGREGATE (decision A14) — the labels match the
    * design, the numbers come from the database:
    *
    *   Lives Impacted    sum of beneficiaries across published work
    *   Communities       distinct districts we have a presence in
-   *   Volunteers        count of volunteers with status Active
    *   Years of Service  whole years since the registration date
    *
    * Anything that counts zero is dropped rather than shown as "0", so the
@@ -211,12 +206,6 @@ export async function getHeadlineMetrics(): Promise<ImpactMetric[]> {
       label: 'Communities',
       value: reach.districts,
       derivation: 'Distinct districts with a published program or campaign.',
-    },
-    {
-      id: 'volunteers',
-      label: 'Volunteers',
-      value: totals.activeVolunteers,
-      derivation: 'Count of volunteers with status Active.',
     },
     {
       id: 'years',
@@ -287,10 +276,6 @@ export const methodologyNotes = [
   {
     title: 'We count people, not distributions',
     body: 'A kit handed out is an activity, not an outcome. Where we report people reached, we mean individuals recorded by name in a program register, counted once.',
-  },
-  {
-    title: 'Volunteer hours are verified hours',
-    body: 'Only attendance confirmed by a program manager is counted. Self-reported hours are recorded separately and excluded from every public figure.',
   },
   {
     title: 'We publish results that disappointed us',

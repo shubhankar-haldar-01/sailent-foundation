@@ -22,13 +22,13 @@ describe('NewsletterSection', () => {
     expect(screen.getByRole('heading', { level: 2, name: /Join our newsletter/i })).toBeDefined();
     expect(
       screen.getByText(
-        /Get the latest stories, updates and opportunities delivered directly to your inbox/i,
+        /Get the latest stories, updates and events delivered directly to your inbox/i,
       ),
     ).toBeDefined();
 
     expect(screen.getByText('Latest stories & updates')).toBeDefined();
     expect(screen.getByText('Upcoming events')).toBeDefined();
-    expect(screen.getByText('Volunteer opportunities')).toBeDefined();
+    expect(screen.queryByText('Volunteer opportunities')).toBeNull();
 
     expect(screen.getByPlaceholderText('Enter your email address')).toBeDefined();
     expect(screen.getByRole('button', { name: /Subscribe/i })).toBeDefined();

@@ -18,7 +18,6 @@ import { deadlineCutoff } from '@sailent/validation';
 
 import { DATABASE } from '../database/database.module.js';
 import { PaymentExceptionsService } from '../donations/payment-exceptions.service.js';
-import { VolunteersService } from '../volunteers/volunteers.service.js';
 import { CommunicationsService } from '../communications/communications.service.js';
 
 /** Midnight at the start of this month, India time, as a UTC instant. */
@@ -54,7 +53,6 @@ export class DashboardService {
   constructor(
     @Inject(DATABASE) private readonly database: DatabaseClient,
     private readonly payments: PaymentExceptionsService,
-    private readonly volunteers: VolunteersService,
     private readonly communications: CommunicationsService,
   ) {}
 
@@ -169,14 +167,6 @@ export class DashboardService {
             })
             .from(donors);
           result.donors = row;
-        })(),
-      );
-    }
-
-    if (can('volunteer.read')) {
-      tasks.push(
-        (async () => {
-          result.volunteers = { pendingApplications: await this.volunteers.pendingCount() };
         })(),
       );
     }

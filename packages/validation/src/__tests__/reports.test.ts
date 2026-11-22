@@ -87,7 +87,6 @@ describe('export datasets', () => {
   it('names a permission for every dataset carrying personal data', () => {
     expect(datasetPermission('donations')).toBe('donation.export');
     expect(datasetPermission('donors')).toBe('donor.export');
-    expect(datasetPermission('volunteers')).toBe('volunteer.export');
   });
 
   it('requires nothing extra for figures that are already public', () => {

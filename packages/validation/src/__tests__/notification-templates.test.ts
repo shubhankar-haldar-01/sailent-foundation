@@ -112,13 +112,13 @@ describe('raw placeholders', () => {
   });
 
   it('refuses ANY raw placeholder on a slug with no raw allowance', () => {
-    expect(unsafeRawPlaceholders('volunteer.approved', '<p>{{{volunteerName}}}</p>')).toEqual([
-      'volunteerName',
+    expect(unsafeRawPlaceholders('event.cancelled', '<p>{{{attendeeName}}}</p>')).toEqual([
+      'attendeeName',
     ]);
   });
 
   it('is unaffected by ordinary escaped placeholders', () => {
-    expect(unsafeRawPlaceholders('volunteer.approved', '<p>{{volunteerName}}</p>')).toEqual([]);
+    expect(unsafeRawPlaceholders('event.cancelled', '<p>{{attendeeName}}</p>')).toEqual([]);
   });
 });
 
@@ -155,13 +155,20 @@ describe('the registry', () => {
       'donor.login_code',
       'event.registration.confirmed',
       'event.cancelled',
+    ]) {
+      expect(isKnownTemplateSlug(slug)).toBe(true);
+    }
+  });
+
+  it('no longer knows the volunteer emails (programme removed 2026-11-22)', () => {
+    for (const slug of [
       'volunteer.application.received',
       'volunteer.approved',
       'volunteer.rejected',
       'volunteer.assigned',
       'volunteer.certificate.issued',
     ]) {
-      expect(isKnownTemplateSlug(slug)).toBe(true);
+      expect(isKnownTemplateSlug(slug)).toBe(false);
     }
   });
 

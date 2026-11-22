@@ -202,6 +202,11 @@ test.describe('signed in as a donor', () => {
   /** Within a project the tests still mutate one donor, so they run in order. */
   test.describe.configure({ mode: 'serial' });
 
+  test('has no volunteering page (programme removed 2026-11-22)', async ({ page }) => {
+    const response = await page.goto('/dashboard/volunteering');
+    expect(response?.status()).toBe(404);
+  });
+
   test('the overview shows this donor’s own totals', async ({ page }, testInfo) => {
     const donor = donorFor(testInfo.project.name);
     await page.goto('/dashboard');
@@ -242,7 +247,6 @@ test.describe('signed in as a donor', () => {
       [wide ? 'Saved' : 'Saved campaigns', '/dashboard/saved'],
       ['Profile', '/dashboard/profile'],
       ['Events', '/dashboard/events'],
-      ['Volunteering', '/dashboard/volunteering'],
     ];
     for (const [name, href] of pages) {
       await expect(nav.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);

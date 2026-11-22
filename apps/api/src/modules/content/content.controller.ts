@@ -278,7 +278,7 @@ export class ContentController {
     summary: 'An event',
     description: 'The online joining link is withheld — it is released to registrants only.',
   })
-  @ApiParam({ name: 'slug', example: 'volunteer-orientation-october' })
+  @ApiParam({ name: 'slug', example: 'medical-camp-kondagaon' })
   getEvent(@Param(new ZodValidationPipe(slugParamSchema)) params: { slug: string }) {
     return this.content.getEventBySlug(params.slug);
   }

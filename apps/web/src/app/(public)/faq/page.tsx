@@ -11,8 +11,7 @@ import { getGeneralFaqs } from '@/lib/content/faqs';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Frequently asked questions',
-  description:
-    'Questions about donating, campaigns, volunteering, events and how we account for what we do.',
+  description: 'Questions about donating, campaigns, events and how we account for what we do.',
   path: '/faq',
 });
 

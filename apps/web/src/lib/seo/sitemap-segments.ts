@@ -55,7 +55,6 @@ const STATIC_ROUTES = [
   '/campaigns',
   '/stories',
   '/blog',
-  '/volunteer',
   '/events',
   '/contact',
   '/faq',

@@ -92,11 +92,6 @@ export const EXPORT_DATASETS = {
     permission: 'donor.export',
     description: 'One row per donor who gave in the range. Contains personal data.',
   },
-  volunteers: {
-    label: 'Volunteers',
-    permission: 'volunteer.export',
-    description: 'One row per volunteer who applied in the range.',
-  },
   campaigns: {
     label: 'Campaigns',
     /** No second permission: a campaign's totals are already public. */

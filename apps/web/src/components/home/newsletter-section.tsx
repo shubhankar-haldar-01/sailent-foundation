@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ArrowRight, Calendar, Check, FileText, Heart, Mail } from 'lucide-react';
+import { ArrowRight, Calendar, Check, FileText, Mail } from 'lucide-react';
 import { Button, Label } from '@sailent/ui';
 import { emailSchema } from '@sailent/validation';
 
@@ -18,8 +18,8 @@ import { useRevealResult } from '@/lib/ui/reveal-result';
  *   bold "Join our newsletter" heading with orange accent, and 2-line description.
  * - Center-Right: High-contrast white input pill with blue-grey mail icon, email input,
  *   and bold brand-orange Subscribe pill button.
- * - Beneath Form: 3 compact benefits with two-line labels separated by clean vertical dividers:
- *   "Latest stories & updates", "Upcoming events", "Volunteer opportunities".
+ * - Beneath Form: 2 compact benefits with two-line labels separated by a clean vertical divider:
+ *   "Latest stories & updates", "Upcoming events".
  * - Far-Right: Rich origami paper airplane with 3D faceted folds, 3 celebration ray bursts,
  *   and a smooth dashed loop flight trail.
  * - Bottom-Left: Subtle botanical leaf watermark.
@@ -103,8 +103,8 @@ export function NewsletterSection() {
                   Join our newsletter
                 </h2>
                 <p className="text-muted-foreground mt-1.5 max-w-[420px] text-xs leading-relaxed sm:text-sm">
-                  Get the latest stories, updates and opportunities delivered directly to your
-                  inbox. Be a part of the change.
+                  Get the latest stories, updates and events delivered directly to your inbox. Be a
+                  part of the change.
                 </p>
               </div>
             </div>
@@ -177,7 +177,7 @@ export function NewsletterSection() {
                 ) : null}
               </form>
 
-              {/* Three compact benefits beneath the form */}
+              {/* Two compact benefits beneath the form */}
               <div className="mt-4 flex flex-wrap items-center gap-y-3 sm:gap-x-4 lg:gap-x-5">
                 {/* Benefit 1 */}
                 <div className="flex items-center gap-2.5">
@@ -200,19 +200,6 @@ export function NewsletterSection() {
                   <span className="text-foreground text-xs font-semibold leading-tight">
                     Upcoming
                     <br className="hidden sm:inline" /> events
-                  </span>
-                </div>
-
-                <div className="bg-muted hidden h-7 w-px sm:block" aria-hidden="true" />
-
-                {/* Benefit 3 */}
-                <div className="flex items-center gap-2.5">
-                  <span className="size-7.5 text-primary bg-muted flex shrink-0 items-center justify-center rounded-full">
-                    <Heart className="size-4 stroke-[2.2]" aria-hidden="true" />
-                  </span>
-                  <span className="text-foreground text-xs font-semibold leading-tight">
-                    Volunteer
-                    <br className="hidden sm:inline" /> opportunities
                   </span>
                 </div>
               </div>

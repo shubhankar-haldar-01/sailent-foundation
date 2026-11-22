@@ -313,118 +313,6 @@ export interface EventTransitions {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 8 — volunteers
-// ---------------------------------------------------------------------------
-
-export interface AdminVolunteerSummary {
-  id: string;
-  /** NULL until approved — a row without one has not been approved (A13). */
-  volunteerId: string | null;
-  firstName: string;
-  lastName: string | null;
-  email: string | null;
-  city: string | null;
-  skills: string[] | null;
-  status:
-    | 'applied'
-    | 'under_review'
-    | 'approved'
-    | 'active'
-    | 'inactive'
-    | 'suspended'
-    | 'rejected'
-    | 'archived';
-  totalHours: number;
-  verifiedHours: number;
-  assignmentCount: number;
-  createdAt: string;
-  approvedAt: string | null;
-}
-
-/**
- * The full record — only from the detail route, which is `@Sensitive()`.
- *
- * The list deliberately omits phone, address, emergency contact and internal
- * notes: finding somebody is a different act from reading their record.
- */
-export interface AdminVolunteer extends AdminVolunteerSummary {
-  phone: string;
-  addressLine1: string | null;
-  state: string | null;
-  postalCode: string | null;
-  dateOfBirth: string | null;
-  education: string | null;
-  occupation: string | null;
-  experience: string | null;
-  languages: string[] | null;
-  interests: string[] | null;
-  availability: { days?: string; hours?: string; mode?: string } | null;
-  emergencyContactName: string | null;
-  emergencyContactPhone: string | null;
-  emergencyContactRelation: string | null;
-  /** ADMIN-ONLY, both of them. Never shown to the volunteer. */
-  statusReason: string | null;
-  internalNotes: string | null;
-  joiningDate: string | null;
-  applications: {
-    id: string;
-    formData: Record<string, unknown>;
-    submittedAt: string;
-    status: string;
-    reviewedAt: string | null;
-    reviewNotes: string | null;
-    rejectionReason: string | null;
-    coolingPeriodUntil: string | null;
-  }[];
-}
-
-export interface AdminVolunteerAssignment {
-  id: string;
-  volunteerId: string;
-  assignableType: string;
-  assignableId: string | null;
-  role: string;
-  description: string | null;
-  startsAt: string;
-  endsAt: string | null;
-  location: string | null;
-  expectedHours: number | null;
-  status: 'assigned' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
-  notes: string | null;
-}
-
-export interface AdminVolunteerAttendance {
-  id: string;
-  assignmentId: string;
-  date: string;
-  durationMinutes: number;
-  /** Only verified minutes reach `verifiedHours`, and only those a certificate. */
-  verifiedAt: string | null;
-  notes: string | null;
-}
-
-export interface AdminVolunteerCertificate {
-  id: string;
-  certificateNumber: string;
-  verificationCode: string;
-  certificateType: string;
-  title: string;
-  hoursCredited: number;
-  periodStart: string;
-  periodEnd: string;
-  issuedAt: string;
-  status: 'issued' | 'revoked';
-  revokedAt: string | null;
-  revokedReason: string | null;
-}
-
-/** Served by the API so the UI cannot offer a move the server will refuse. */
-export interface VolunteerTransitions {
-  volunteer: Record<string, string[]>;
-  assignment: Record<string, string[]>;
-}
-
-// ---------------------------------------------------------------------------
 // Staff administration — users, roles, audit
 // ---------------------------------------------------------------------------
 
@@ -1051,12 +939,6 @@ export interface CampaignReport {
   }[];
 }
 
-export interface VolunteerReport {
-  range: ReportRangeQuery;
-  appliedInRange: { status: string; count: number }[];
-  standing: { activeVolunteers: number; allVolunteers: number; verifiedHours: number };
-}
-
 export interface ImpactReport {
   range: ReportRangeQuery;
   items: { metricType: string; records: number; total: number; published: number }[];
@@ -1102,12 +984,6 @@ export function donationReport(range: ReportRangeQuery) {
 
 export function campaignReport(range: ReportRangeQuery) {
   return adminFetch<CampaignReport>('admin/reports/campaigns', {
-    query: { from: range.from, to: range.to },
-  });
-}
-
-export function volunteerReport(range: ReportRangeQuery) {
-  return adminFetch<VolunteerReport>('admin/reports/volunteers', {
     query: { from: range.from, to: range.to },
   });
 }
@@ -1215,7 +1091,6 @@ export interface AdminDashboard {
     cancelledLast7Days: number;
   };
   donors?: { total: number; withDonations: number };
-  volunteers?: { pendingApplications: number };
   events?: { upcoming: number };
   messages?: { new: number };
   newsletter?: { subscribed: number };
