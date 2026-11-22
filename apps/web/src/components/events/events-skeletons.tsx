@@ -10,13 +10,33 @@ import { Skeleton } from '@sailent/ui';
  * a navigation in a transition, which keeps the current cards on screen
  * (dimmed) until the new ones arrive, as on /campaigns.
  */
-export function UpcomingEventsSkeleton() {
+export function UpcomingEventsSkeleton({
+  withFeature = true,
+}: {
+  /** The next-event spotlight leads an unfiltered page (2026-11-22). */
+  withFeature?: boolean;
+} = {}) {
   return (
     <div aria-busy="true">
       {/* Said, not drawn: the shapes below are hidden from assistive technology. */}
       <p role="status" className="sr-only">
         Loading upcoming events…
       </p>
+      {withFeature ? (
+        <div
+          aria-hidden="true"
+          className="border-border/60 bg-surface mt-6 grid overflow-hidden rounded-3xl border lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]"
+        >
+          <Skeleton className="aspect-[16/10] w-full rounded-none lg:aspect-auto lg:min-h-[20rem]" />
+          <div className="flex flex-col justify-center gap-3 p-6 sm:p-8 lg:p-10">
+            <Skeleton className="h-6 w-28 rounded-full" />
+            <Skeleton className="h-8 w-4/5" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-2/5" />
+            <Skeleton className="mt-3 h-11 w-48 rounded-lg" />
+          </div>
+        </div>
+      ) : null}
       <div className="mt-6 grid gap-3 md:grid-cols-[minmax(0,1fr)_15rem] lg:gap-4">
         <Skeleton className="h-12 rounded-xl" />
         <Skeleton className="h-12 rounded-xl" />

@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 
-import { PageShell } from '@/components/layout/page-shell';
-import { TeamHero } from '@/components/team/team-hero';
 import { TeamDirectory } from '@/components/team/team-directory';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { getTeam } from '@/lib/content';
@@ -20,14 +18,11 @@ export default async function TeamPage() {
   const members = await getTeam();
 
   return (
-    <div className="bg-background/50 pb-20 pt-2">
-      <PageShell>
-        {/* Hero Section */}
-        <TeamHero />
-
-        {/* Interactive Directory: Toolbar, Leadership, and Our team Grid */}
-        <TeamDirectory initialMembers={members} />
-      </PageShell>
+    // No banner (owner, 2026-11-22): the directory's header panel is the page
+    // header — the breadcrumb, the h1, the team's faces and the search
+    // (`AGENTS.md` §11 item 25).
+    <div className="pb-20">
+      <TeamDirectory initialMembers={members} />
     </div>
   );
 }

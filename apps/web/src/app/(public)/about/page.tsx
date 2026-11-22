@@ -17,14 +17,19 @@ import {
   UsersRound,
   type LucideIcon,
 } from 'lucide-react';
-import { cn } from '@sailent/ui';
+import { Button, cn } from '@sailent/ui';
 
 import { PageShell } from '@/components/layout/page-shell';
-import { AboutHero } from '@/components/about/about-hero';
 import { IndiaPresenceMap } from '@/components/about/india-presence-map';
+import { InteriorHero } from '@/components/sections/interior-hero';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { getImpact, getTeam } from '@/lib/content';
-import { formatRegisteredOn, getOrganisation, type Organisation } from '@/lib/content/organisation';
+import {
+  formatRegisteredOn,
+  getOrganisation,
+  getOrganisationRecords,
+  type Organisation,
+} from '@/lib/content/organisation';
 
 /**
  * The statutory identifiers, verifiable against the public registers.
@@ -153,12 +158,27 @@ const approach: ApproachItem[] = [
 ];
 
 export default async function AboutPage() {
-  const [team, impact, organisation] = await Promise.all([
+  const [team, impact, organisation, records] = await Promise.all([
     getTeam(),
     getImpact(),
     getOrganisation(),
+    getOrganisationRecords(),
   ]);
   const registration = registrationFields(organisation);
+
+  /*
+    The hero's facts: RECORDS ONLY (`getOrganisationRecords`, never the demo
+    fallback the identifiers list below may show in development). Each appears
+    when Admin → Settings holds it, in the home page trust section's words;
+    with none entered the row is simply absent.
+  */
+  const heroFacts = [
+    records.registration.section12A ? '12A registration' : null,
+    records.registration.section80G ? '80G registration' : null,
+    records.registration.registeredOn
+      ? `Registered ${formatRegisteredOn(records.registration.registeredOn)}`
+      : null,
+  ].filter((fact): fact is string => Boolean(fact));
 
   // Every leader, however many there are — the grid wraps.
   const leadership = team.filter((member) => member.department === 'Leadership');
@@ -166,8 +186,34 @@ export default async function AboutPage() {
 
   return (
     <>
-      {/* Hero ---------------------------------------------------------------- */}
-      <AboutHero />
+      {/* Hero (owner, 2026-11-22: the split hero — words beside the photograph,
+          no title baked into the image; AGENTS.md §11 item 25) ---------------- */}
+      <InteriorHero
+        variant="split"
+        id="about-title"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'About us', path: '/about' },
+        ]}
+        eyebrow="About us"
+        eyebrowIcon={Info}
+        title="Real people. Lasting change."
+        lead="We work with communities to remove real and practical obstacles in education, health, livelihoods, and social welfare. We focus on what is possible, work with existing systems, and stay accountable for what we create."
+        image={{
+          src: '/images/about-hero-photo.webp',
+          alt: 'A Sailent Foundation coordinator greeting an elderly woman, with villagers and school children around them under a banyan tree',
+          position: '62% 35%',
+        }}
+        actions={
+          <Button asChild variant="outline">
+            <Link href="/programs">
+              See our programs
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          </Button>
+        }
+        facts={heroFacts}
+      />
 
       {/* Where We Focus -------------------------------------------------------- */}
       <section

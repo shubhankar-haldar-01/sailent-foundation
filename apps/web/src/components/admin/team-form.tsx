@@ -40,6 +40,14 @@ import {
 
 import { createTeamMember, updateTeamMember, type ActionState } from '@/lib/admin/actions';
 import type { AdminTeamMember } from '@/lib/admin/api';
+import {
+  isGenericRole,
+  isStaffDepartment,
+  RESPONSIBILITIES_MAX,
+  ROLE_MAX,
+  responsibilitiesOf,
+  STAFF_DEPARTMENTS,
+} from '@/lib/team/roles';
 import { useRevealResult } from '@/lib/ui/reveal-result';
 
 /**
@@ -94,14 +102,17 @@ export function validateAddress(address: string): string | null {
 /**
  * Team member creation & edit form built with shadcn UI.
  *
- * All 8 fields are mandatory with in-box validation:
+ * Every field is mandatory, with in-box validation:
  * 1. Full name *
  * 2. Email *
  * 3. Contact number *
  * 4. Adhar number *
  * 5. Address *
  * 6. Type dropdown * ('Team' / 'Trustee')
- * 7. Designation * (automatically set to 'Team' when Type is 'Team')
+ * 7. Designation * (automatically "Team" for staff — every staff member has
+ *    the same role and /team shows only names, owner 2026-11-22; typed for
+ *    trustees), Department (optional, staff only) and Responsibilities
+ *    (optional) — neither is shown on the public page
  * 8. Image * (live preview & upload / URL)
  */
 export function TeamForm({
@@ -176,14 +187,20 @@ export function TeamForm({
   const initialType: 'staff' | 'trustee' = member?.memberType === 'trustee' ? 'trustee' : 'staff';
   const [memberType, setMemberType] = React.useState<'staff' | 'trustee'>(initialType);
 
-  // Designation state for Trustee
-  const initialDesignation =
-    member?.memberType === 'trustee'
-      ? member?.designation && member.designation !== 'Team'
-        ? member.designation
-        : 'Trustee'
-      : 'Trustee';
-  const [trusteeDesignation, setTrusteeDesignation] = React.useState<string>(initialDesignation);
+  // Designation, typed for trustees only; staff are always "Team".
+  const [designation, setDesignation] = React.useState<string>(
+    member?.memberType === 'trustee' && member.designation && !isGenericRole(member.designation)
+      ? member.designation
+      : 'Trustee',
+  );
+  const [department, setDepartment] = React.useState<string>(
+    isStaffDepartment(member?.department) ? member.department : '',
+  );
+  // Responsibilities (bio). The sentence the form used to generate is not
+  // shown as if it were real.
+  const [responsibilities, setResponsibilities] = React.useState<string>(
+    responsibilitiesOf(member?.bio) ?? '',
+  );
 
   // Photo URL & direct upload state
   const [photoUrl, setPhotoUrl] = React.useState<string>(member?.photoUrl || '');
@@ -210,8 +227,21 @@ export function TeamForm({
       case 'address':
         return validateAddress(val);
       case 'designation':
-        if (memberType === 'trustee' && !val.trim()) {
-          return 'Designation is mandatory for trustees.';
+        if (memberType !== 'trustee') return null;
+        if (!val.trim()) return 'Designation is mandatory for trustees.';
+        if (val.trim().length > ROLE_MAX) {
+          return `Designation must be at most ${ROLE_MAX} characters.`;
+        }
+        return null;
+      case 'department':
+        // Optional; only a value the list offers is accepted.
+        if (memberType === 'staff' && val && !isStaffDepartment(val)) {
+          return 'Choose one of the departments in the list.';
+        }
+        return null;
+      case 'bio':
+        if (val.trim().length > RESPONSIBILITIES_MAX) {
+          return `Responsibilities must be at most ${RESPONSIBILITIES_MAX} characters.`;
         }
         return null;
       case 'photoUrl':
@@ -251,10 +281,14 @@ export function TeamForm({
     const addressErr = validateField('address', address);
     if (addressErr) errors.address = addressErr;
 
-    if (memberType === 'trustee') {
-      const desErr = validateField('designation', trusteeDesignation);
-      if (desErr) errors.designation = desErr;
-    }
+    const desErr = validateField('designation', designation);
+    if (desErr) errors.designation = desErr;
+
+    const deptErr = validateField('department', department);
+    if (deptErr) errors.department = deptErr;
+
+    const bioErr = validateField('bio', responsibilities);
+    if (bioErr) errors.bio = bioErr;
 
     const photoErr = validateField('photoUrl', photoUrl);
     if (photoErr) errors.photoUrl = photoErr;
@@ -274,6 +308,8 @@ export function TeamForm({
         aadharNumber: true,
         address: true,
         designation: true,
+        department: true,
+        bio: true,
         photoUrl: true,
       });
 
@@ -296,14 +332,11 @@ export function TeamForm({
   const handleTypeChange = (value: string) => {
     if (value === 'trustee') {
       setMemberType('trustee');
-      if (!trusteeDesignation || trusteeDesignation.toLowerCase() === 'team') {
-        setTrusteeDesignation('Trustee');
-      }
-      setClientErrors((prev) => ({ ...prev, designation: '' }));
+      if (!designation.trim()) setDesignation('Trustee');
     } else {
       setMemberType('staff');
-      setClientErrors((prev) => ({ ...prev, designation: '' }));
     }
+    setClientErrors((prev) => ({ ...prev, designation: '', department: '' }));
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -391,16 +424,10 @@ export function TeamForm({
           {member ? <input type="hidden" name="id" value={member.id} /> : null}
           {member?.slug ? <input type="hidden" name="slug" value={member.slug} /> : null}
           <input type="hidden" name="memberType" value={memberType} />
-          {memberType === 'staff' ? <input type="hidden" name="designation" value="Team" /> : null}
+          {memberType === 'staff' ? (
+            <input type="hidden" name="department" value={department} />
+          ) : null}
           <input type="hidden" name="photoUrl" value={photoUrl} />
-          <input
-            type="hidden"
-            name="bio"
-            value={
-              member?.bio ||
-              `${name || 'Team member'} is a dedicated team member at Sailent Foundation.`
-            }
-          />
 
           {/* Prominent server error status banner */}
           {state.error ? (
@@ -603,7 +630,7 @@ export function TeamForm({
             </p>
           </div>
 
-          {/* 7. Designation */}
+          {/* 7. Designation, department and responsibilities */}
           <div className="space-y-1.5">
             <Label
               htmlFor="designation"
@@ -632,9 +659,10 @@ export function TeamForm({
                 <Input
                   id="designation"
                   name="designation"
-                  value={trusteeDesignation}
+                  value={designation}
+                  maxLength={ROLE_MAX}
                   onChange={(e) => {
-                    setTrusteeDesignation(e.target.value);
+                    setDesignation(e.target.value);
                     if (touched.designation) handleBlur('designation', e.target.value);
                   }}
                   onBlur={(e) => handleBlur('designation', e.target.value)}
@@ -655,6 +683,103 @@ export function TeamForm({
                 )}
               </div>
             )}
+          </div>
+
+          {memberType === 'staff' ? (
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="department"
+                className="text-foreground flex items-center gap-1.5 text-sm font-semibold"
+              >
+                <Users className="text-primary size-4" aria-hidden="true" />
+                <span>Department</span>
+                <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+              </Label>
+              <Select
+                value={department}
+                onValueChange={(value) => {
+                  setDepartment(value);
+                  handleBlur('department', value);
+                }}
+              >
+                <SelectTrigger
+                  id="department"
+                  aria-invalid={Boolean(getFieldError('department')) || undefined}
+                  className={`bg-surface h-11 w-full ${
+                    getFieldError('department') ? 'border-destructive' : ''
+                  }`}
+                >
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+                <SelectContent position="popper" side="bottom" align="start">
+                  {STAFF_DEPARTMENTS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {getFieldError('department') ? (
+                <p className="text-destructive flex items-center gap-1.5 text-xs font-medium">
+                  <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
+                  <span>{getFieldError('department')}</span>
+                </p>
+              ) : (
+                <p className="text-muted-foreground text-xs">
+                  For the team&apos;s own records — not shown on the public Team page.
+                </p>
+              )}
+            </div>
+          ) : null}
+
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="bio"
+              className="text-foreground flex items-center gap-1.5 text-sm font-semibold"
+            >
+              <CheckCircle2 className="text-primary size-4" aria-hidden="true" />
+              <span>Responsibilities</span>
+              <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+            </Label>
+            <Textarea
+              id="bio"
+              name="bio"
+              rows={3}
+              value={responsibilities}
+              maxLength={RESPONSIBILITIES_MAX}
+              onChange={(e) => {
+                setResponsibilities(e.target.value);
+                if (touched.bio) handleBlur('bio', e.target.value);
+              }}
+              onBlur={(e) => handleBlur('bio', e.target.value)}
+              placeholder="e.g. Runs the school kit distributions in Ranchi and keeps the beneficiary records."
+              hasError={Boolean(getFieldError('bio'))}
+              aria-describedby="bio-hint"
+              className="resize-none"
+            />
+            <div className="flex items-start justify-between gap-3">
+              {getFieldError('bio') ? (
+                <p
+                  id="bio-hint"
+                  className="text-destructive flex items-center gap-1.5 text-xs font-medium"
+                >
+                  <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
+                  <span>{getFieldError('bio')}</span>
+                </p>
+              ) : (
+                <p id="bio-hint" className="text-muted-foreground text-xs">
+                  What this person is responsible for. For the team&apos;s own records — not shown
+                  on the public Team page.
+                </p>
+              )}
+              <span
+                data-numeric=""
+                className="text-muted-foreground shrink-0 text-xs tabular-nums"
+                aria-hidden="true"
+              >
+                {responsibilities.trim().length}/{RESPONSIBILITIES_MAX}
+              </span>
+            </div>
           </div>
 
           {/* 8. Image */}

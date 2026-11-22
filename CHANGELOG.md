@@ -89,7 +89,52 @@ Tests: web 574/574, including the new token contrast test (light and dark) and t
 
 Tests: web 538/538; isolated copy: no sideways scroll on `/dev/design` at 320–1440 px; the home e2e asserts the press and testimonial sections are gone.
 
-## 2026-11-22 — The volunteer programme removed; the data kept (uncommitted)
+## 2026-11-22 — Team page: editorial, typography-led hero (not pushed)
+
+| Change | Reason | Impact |
+|---|---|---|
+| `InteriorHero` `editorial` variant on /team: "Our people", "The people behind every possibility.", the brief's lead, "Meet our team" to the grid, the live head count | Owner's brief: premium, editorial, human | Typography carries the hero; no panel, gradient or glass |
+| No portraits in the hero | The brief allows only genuine team photographs | Add them when real photos are in Admin → Team |
+| Cards: the name in plain type under the portrait; no label, no glass | Brief: no glassmorphism; owner: name only | Calmer grid |
+| Entrance: CSS word-by-word rise, off under reduced motion; Motion not installed | Text visible from first paint; no new dependency | — |
+
+Kept: the approved brand (green, Inter), search only. Tests: web 632/632; `phase-9` 8/8. Lighthouse (production build): Team 96 / 100 / 100 / 100, LCP 2.18 s, CLS 0 — and About 98, Programs 96, Stories 98, Events 98, every LCP under 2.5 s, CLS 0.
+
+## 2026-11-22 — Inside-page heroes: live text, no titles baked into images (not pushed)
+
+| Change | Reason | Impact |
+|---|---|---|
+| About and Programs: `split` hero (words beside a photograph) | Owner: baked titles fail screen readers, translation and phone crops; photos will change often, so words stay off the photo | Real h1 and breadcrumb; About facts only from Admin → Settings |
+| Stories and Events: compact header with a live count; the newest story / next event leads | The hero is the content, and updates itself | Events: "Register" only while registration is open; the listing is unchanged |
+| Team: banner removed; the team panel is the page header | The faces already say "team" | h1 "Our team" |
+| `InteriorHero`, `HeroStat`, `NextEventFeature`; old hero components and the `/dev/heroes` preview removed | One hero system for the inside pages | `AGENTS.md` §11 items 14 and 25 |
+| "Featured story" pill colours | 4.37:1 contrast (AA needs 4.5:1) | Passes |
+
+Tests: web 630/630; full e2e (desktop, mobile, mobile-xs) 411 passed / 48 failed — no new failures, three fixed (the corrected Team test).
+
+## 2026-11-22 — /team: compact name-only cards, search kept, no filters; admin department optional (not pushed)
+
+| Change | Reason | Impact |
+|---|---|---|
+| `/team` card: portrait with the name on a frosted label; 2–6 across, about 210px wide at 1440 | Owner: every staff member has the same role ("Team"); a modern card, not that big | Compact, level rows |
+| `/team` header redesigned as one panel: "Meet the team" badge, heading, intro, a row of team faces with the head count, and the search under a hairline | Owner: the section did not say it was the team | Clear at a glance |
+| `/team` department filters removed; search kept, names only | Owner: filters sorted by something the page never showed; keep the search bar | Empty search says so, with "Clear search"; "Show more people" beyond twelve |
+| Admin team form: optional **Department** and **Responsibilities** (not public); staff designation stays "Team" | The form had no department field and overwrote it with "Team" on every save, and wrote a generated bio | No migration |
+
+Tests: web 620/620.
+
+## 2026-11-22 — The /team directory redesigned (not pushed)
+
+| Change | Reason | Impact |
+|---|---|---|
+| Member card: portrait, name, and role (designation + department; generic "Team" replaced by the department) — no boxed frame, no "Team" pill | Owner: more elegant and modern | Each card says what the person does |
+| Grid 2 / 3 / 4 across, 8 at a time, "Show more people (n)" | Six tiny cards across at 1440; one full-screen card per row on a phone | Larger portraits on a laptop; a phone shows two across |
+| Filters with counts, sentence case, 8px, empty departments hidden; labelled search; live result count | Filters could lead to an empty page; the search had no label | WCAG: axe clean at 390, 1024 (dark) and 1440 |
+| Initials when a member has no photograph | The card showed another member's portrait instead | — |
+
+Tests: web 614/614.
+
+## 2026-11-22 — The volunteer programme removed; the data kept (`eca6a0a`)
 
 | Change | Reason | Impact |
 |---|---|---|
@@ -105,13 +150,13 @@ Tests: web 538/538; isolated copy: no sideways scroll on `/dev/design` at 320–
 
 Tests: validation 289/289, web 611/611, worker 91/91, API 937 passed / 9 skipped; typecheck, lint and Prettier clean. E2E (desktop, mobile, mobile-xs): the same 51 pre-existing failures as the previous run, none new; new 404 and no-link checks pass. Two stale e2e heading assertions corrected (`DEVELOPMENT_STATUS.md`).
 
-## 2026-11-22 — Team in the header navigation (uncommitted)
+## 2026-11-22 — Team in the header navigation (`eca6a0a`)
 
 | Change | Reason | Impact |
 |---|---|---|
 | "Team" (`/team`) added to the primary navigation after About | Owner | Desktop bar and phone menu; fits on one line at 1024 px (`AGENTS.md` §11 item 5) |
 
-## 2026-11-21 — "In the spotlight" and the testimonials back on the home page (uncommitted)
+## 2026-11-21 — "In the spotlight" and the testimonials back on the home page (`eca6a0a`)
 
 | Change | Reason | Impact |
 |---|---|---|

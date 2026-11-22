@@ -1,7 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { ArrowRight, BookOpen, Search, Settings, Users, UsersRound } from 'lucide-react';
+import { useId, useMemo, useState } from 'react';
+import { ArrowDown, ChevronDown, Search } from 'lucide-react';
+
+import { Button } from '@sailent/ui';
+
+import { PageShell } from '@/components/layout/page-shell';
+import { InteriorHero } from '@/components/sections/interior-hero';
 import type { TeamMember } from '@/lib/mock/types';
 import { MemberCard } from './member-card';
 
@@ -9,149 +14,172 @@ interface TeamDirectoryProps {
   initialMembers: TeamMember[];
 }
 
-type DepartmentFilter = 'all' | 'Programmes' | 'Community Outreach' | 'Operations';
+/** People per page: two rows of six on a wide screen, three of four on a tablet. */
+const PAGE = 12;
 
-const departments: { key: DepartmentFilter; label: string; icon: typeof Users }[] = [
-  { key: 'all', label: 'All Team Members', icon: Users },
-  { key: 'Programmes', label: 'Programmes', icon: BookOpen },
-  { key: 'Community Outreach', label: 'Community Outreach', icon: UsersRound },
-  { key: 'Operations', label: 'Operations', icon: Settings },
-];
+/** Where "Meet our team" lands. */
+const GRID_ID = 'team-members';
 
+/**
+ * The /team page below the site header: an editorial hero, then the people.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * THE HERO (owner brief, 2026-11-22): typography-led and open — the `editorial`
+ * variant of the shared `InteriorHero` (`AGENTS.md` §11 item 25), in the
+ * brand's green and Inter. "Our people", the heading, one line, "Meet our team"
+ * (a plain in-page link: the site's smooth scroll, off under reduced motion,
+ * and it works without JavaScript), and the live head count beside it.
+ *
+ * NO PORTRAITS IN THE HERO until genuine photographs of the team exist: the
+ * brief allows only real team photographs, and the current portraits are not
+ * known to be. The cards below show whatever Admin → Team holds.
+ *
+ * NO DEPARTMENT FILTERS (owner, 2026-11-22): everyone has the same role and a
+ * card shows only a portrait and a name. The SEARCH stays and matches names
+ * only — the one thing a card shows. "Show more people" appears only beyond
+ * two rows. Leadership is not listed here (it is on About).
+ * ══════════════════════════════════════════════════════════════════════════
+ */
 export function TeamDirectory({ initialMembers }: TeamDirectoryProps) {
-  const [activeDepartment, setActiveDepartment] = useState<DepartmentFilter>('all');
+  const searchId = useId();
   const [searchQuery, setSearchQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [visibleCount, setVisibleCount] = useState(PAGE);
 
-  // Filter members based on department and search query (excluding leadership)
-  const filteredMembers = useMemo(() => {
-    return initialMembers.filter((m) => {
-      // Exclude leadership section members from public staff directory
-      if (m.department === 'Leadership') return false;
+  const staff = useMemo(
+    () => initialMembers.filter((m) => m.department !== 'Leadership'),
+    [initialMembers],
+  );
 
-      // Department filter
-      if (activeDepartment !== 'all') {
-        if (activeDepartment === 'Programmes') {
-          if (m.department !== 'Programmes' && m.department !== 'Programs') return false;
-        } else if (m.department !== activeDepartment) {
-          return false;
-        }
-      }
+  const query = searchQuery.toLowerCase().trim();
+  const matches = useMemo(
+    () => (query ? staff.filter((m) => m.name.toLowerCase().includes(query)) : staff),
+    [staff, query],
+  );
 
-      // Search query filter
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        const matchesName = m.name.toLowerCase().includes(query);
-        const matchesRole = m.designation.toLowerCase().includes(query);
-        const matchesDept = m.department?.toLowerCase().includes(query) ?? false;
-        const matchesBio = m.bio?.toLowerCase().includes(query) ?? false;
-        return matchesName || matchesRole || matchesDept || matchesBio;
-      }
+  const shown = matches.slice(0, visibleCount);
+  const remaining = matches.length - shown.length;
 
-      return true;
-    });
-  }, [initialMembers, activeDepartment, searchQuery]);
+  if (staff.length === 0) return null;
 
   return (
-    <div className="mt-8 space-y-8 sm:mt-10 sm:space-y-10">
-      <section aria-labelledby="our-team-heading" className="space-y-6">
-        {/* ── Section Header & Integrated Search ─────────────────────────────── */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+    <>
+      <InteriorHero
+        variant="editorial"
+        id="team-title"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Team', path: '/team' },
+        ]}
+        eyebrow="Our people"
+        title="The people behind every possibility."
+        lead="Meet the people who share a vision of creating meaningful change through community, compassion and action."
+        actions={
+          <Button asChild size="lg">
+            <a href={`#${GRID_ID}`}>
+              Meet our team
+              <ArrowDown aria-hidden="true" className="size-4" />
+            </a>
+          </Button>
+        }
+        aside={
+          // The head count, from the records: set large, said once.
+          <p className="flex items-end gap-4 lg:flex-col lg:items-start lg:gap-2">
+            <span
+              aria-hidden="true"
+              className="font-display text-primary text-[clamp(3rem,2.2rem+2.6vw,4.5rem)] font-light tabular-nums leading-none tracking-[-0.04em]"
+            >
+              {String(staff.length).padStart(2, '0')}
+            </span>
+            <span className="text-muted-foreground pb-1 text-sm leading-snug lg:pb-0">
+              <span className="sr-only">{staff.length} </span>
+              {staff.length === 1 ? 'team member' : 'team members'}
+            </span>
+          </p>
+        }
+      />
+
+      <PageShell>
+        <section id={GRID_ID} aria-labelledby="our-team-heading">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <h2
               id="our-team-heading"
-              className="text-foreground text-2xl font-extrabold tracking-tight sm:text-[28px]"
+              className="font-display text-h2 text-foreground font-semibold tracking-tight"
             >
               Our team
             </h2>
-            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-              A diverse and dedicated team working on the ground to support our programs and create
-              meaningful change in communities.
-            </p>
-          </div>
-
-          {/* Search Input */}
-          <div className="relative w-full sm:w-64 sm:shrink-0">
-            <Search className="text-muted-foreground pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search team members..."
-              className="shadow-xs border-border/80 bg-surface text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 w-full rounded-full border py-2.5 pl-9 pr-4 text-xs focus:outline-none focus:ring-2 sm:text-sm"
-            />
-          </div>
-        </div>
-
-        {/* ── Department Filter Tabs ─────────────────────────────────────────── */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          {departments.map(({ key, label, icon: Icon }) => {
-            const isActive = activeDepartment === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => {
-                  setActiveDepartment(key);
-                  setVisibleCount(6);
+            <div className="relative w-full sm:w-72">
+              <label htmlFor={searchId} className="sr-only">
+                Search team members
+              </label>
+              <Search
+                aria-hidden="true"
+                className="text-muted-foreground pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2"
+              />
+              <input
+                id={searchId}
+                type="search"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setVisibleCount(PAGE);
                 }}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all sm:text-sm ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'border-border/80 bg-surface text-foreground hover:border-border-strong border'
-                }`}
-                aria-pressed={isActive}
+                placeholder="Search by name..."
+                className="border-border bg-surface text-foreground placeholder:text-muted-foreground hover:border-border-strong focus-visible:border-primary focus-visible:ring-primary/20 h-11 w-full rounded-lg border pl-10 pr-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2"
+              />
+            </div>
+          </div>
+
+          {/* Announced to screen readers as the search narrows the list. */}
+          <p aria-live="polite" className="sr-only">
+            {query
+              ? `${matches.length} ${matches.length === 1 ? 'person matches' : 'people match'}`
+              : ''}
+          </p>
+
+          {shown.length > 0 ? (
+            <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 md:grid-cols-4 lg:grid-cols-5 lg:gap-x-6 lg:gap-y-10 xl:grid-cols-6">
+              {shown.map((member) => (
+                <li key={member.slug}>
+                  <MemberCard member={member} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="border-border mt-8 border-y px-6 py-12 text-center">
+              <p className="text-foreground text-base font-semibold">
+                No one on the team is called &ldquo;{searchQuery.trim()}&rdquo;
+              </p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Check the spelling, or try a first name.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-5"
+                onClick={() => setSearchQuery('')}
               >
-                <Icon className={`size-4 ${isActive ? 'text-white' : 'text-muted-foreground'}`} />
-                {label}
-              </button>
-            );
-          })}
-        </div>
+                Clear search
+              </Button>
+            </div>
+          )}
 
-        {/* ── 6-Column Responsive Grid ───────────────────────────────────────── */}
-        {filteredMembers.length > 0 && (
-          <div className="grid grid-cols-1 gap-3.5 pt-2 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
-            {filteredMembers.slice(0, visibleCount).map((member) => (
-              <MemberCard key={member.slug} member={member} />
-            ))}
-          </div>
-        )}
-
-        {/* ── View More Button ───────────────────────────────────────────────── */}
-        {filteredMembers.length > visibleCount && (
-          <div className="pt-4 text-center sm:pt-6">
-            <button
-              type="button"
-              onClick={() => setVisibleCount((prev) => prev + 6)}
-              className="bg-primary text-primary-foreground hover:bg-primary-hover inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold shadow-sm transition-all duration-200 hover:shadow-md sm:text-base"
-            >
-              View more team members
-              <ArrowRight className="size-4" />
-            </button>
-          </div>
-        )}
-
-        {/* ── Empty State ────────────────────────────────────────────────────── */}
-        {filteredMembers.length === 0 && (
-          <div className="border-border bg-surface rounded-[20px] border border-dashed p-12 text-center">
-            <p className="text-foreground text-base font-semibold">No team members found</p>
-            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-              Try adjusting your search query or selecting a different department filter.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveDepartment('all');
-                setSearchQuery('');
-              }}
-              className="bg-muted text-foreground hover:bg-border mt-4 rounded-full px-5 py-2 text-xs font-semibold transition-colors"
-            >
-              Clear Filters
-            </button>
-          </div>
-        )}
-      </section>
-    </div>
+          {remaining > 0 ? (
+            <div className="mt-12 flex justify-center">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setVisibleCount((prev) => prev + PAGE)}
+              >
+                Show more people
+                <span className="text-muted-foreground font-normal tabular-nums">
+                  ({remaining})
+                </span>
+                <ChevronDown aria-hidden="true" className="size-4" />
+              </Button>
+            </div>
+          ) : null}
+        </section>
+      </PageShell>
+    </>
   );
 }

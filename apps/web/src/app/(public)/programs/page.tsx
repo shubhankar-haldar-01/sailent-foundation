@@ -1,14 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { LayoutGrid } from 'lucide-react';
-
-import { cn } from '@sailent/ui';
+import { BookOpen, LayoutGrid } from 'lucide-react';
 
 import { PageShell } from '@/components/layout/page-shell';
-import { Breadcrumbs } from '@/components/sections/breadcrumbs';
 import { ProgramCard } from '@/components/programs/program-card';
 import { ProgramToolbar } from '@/components/programs/program-toolbar';
-import { ProgramsHero } from '@/components/programs/programs-hero';
 import {
   parseProgramsQuery,
   programAreaOptions,
@@ -16,6 +12,7 @@ import {
   programsView,
 } from '@/components/programs/programs-query';
 import { ViewMorePrograms } from '@/components/programs/view-more-programs';
+import { InteriorHero } from '@/components/sections/interior-hero';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { getPrograms } from '@/lib/content';
 
@@ -29,9 +26,9 @@ export const metadata: Metadata = buildMetadata({
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 /**
- * The programs listing, matched to the owner's design (2026-10-14): hero,
- * breadcrumb band, the listing's introduction (eyebrow, two-tone heading and
- * a line of text), the toolbar (category menu, search and count), a grid of
+ * The programs listing, matched to the owner's design (2026-10-14), with the
+ * split hero since 2026-11-22 (words and breadcrumb beside the photograph):
+ * the listing's introduction (a two-tone heading and a line of text), the toolbar (category menu, search and count), a grid of
  * compact programme cards
  * with "View more programs". The global footer follows. (The closing "Support
  * our programs" panel was removed at the owner's request, 2026-10-14.)
@@ -56,38 +53,45 @@ export default async function ProgramsPage({ searchParams }: { searchParams: Sea
 
   return (
     <>
-      <ProgramsHero />
-
-      <div className="sr-only">
-        <Breadcrumbs
-          entries={[
-            { name: 'Home', path: '/' },
-            { name: 'Programs', path: '/programs' },
-          ]}
-        />
-      </div>
+      {/* Owner, 2026-11-22: the split hero — words beside the photograph, the
+          breadcrumb visible, no title baked into the image (AGENTS.md §11 item 25). */}
+      <InteriorHero
+        variant="split"
+        id="programs-title"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Programs', path: '/programs' },
+        ]}
+        eyebrow="Programs"
+        eyebrowIcon={BookOpen}
+        title="Long-term work, lasting impact"
+        lead="Our programs run for years and are measured over time. Campaigns fund specific pieces of them, which is why a campaign always belongs to a program."
+        image={{
+          src: '/images/programs-hero.webp',
+          alt: 'A teacher with children studying outdoors beside a mobile health clinic, while volunteers water saplings',
+          position: '40% 50%',
+        }}
+      />
 
       <section
         id="programs-list"
         aria-labelledby="programs-list-title"
-        className="scroll-mt-6 pb-16 pt-10 md:pb-20 lg:pb-24 lg:pt-12"
+        className="scroll-mt-6 pb-16 pt-2 md:pb-20 lg:pb-24"
       >
         <PageShell>
-          {/* The listing's own introduction, as the owner's design draws it (2026-10-14). */}
-          <p className="text-primary flex items-center gap-4 text-sm font-semibold uppercase leading-6 tracking-[0.24em]">
-            Our programs
-          </p>
+          {/*
+            The listing's own introduction (owner's design, 2026-10-14), in the
+            owner's words — set as a SECTION heading since the split hero above
+            carries the page's h1 (2026-11-22). At its old display size it
+            out-shouted the page title.
+          */}
           <h2
             id="programs-list-title"
-            className={cn(
-              'font-display font-semibold',
-              'text-foreground mt-1.5 text-[clamp(2rem,0.6rem+3.3vw,3.625rem)] leading-[1.12] tracking-[-0.025em]',
-            )}
+            className="font-display text-h2 text-foreground font-semibold tracking-tight"
           >
-            {/* Display size only: the bright orange is for large text (`--cta-bright`). */}
             Explore <span className="text-primary">our programs</span>
           </h2>
-          <p className="text-foreground/80 mt-3 max-w-[44rem] text-[1.0625rem] leading-[1.4] sm:text-lg xl:text-xl">
+          <p className="text-muted-foreground mt-2 max-w-[44rem] text-base sm:text-[1.0625rem]">
             Focused initiatives that create real and lasting change in communities.
           </p>
 

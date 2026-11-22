@@ -60,7 +60,7 @@ export function FeaturedStory({ story }: { story: Story }) {
         />
         <OutlineLeaves className="text-primary/30 min-[88rem]:block absolute -bottom-[6%] right-0 hidden h-[64%] w-auto" />
 
-        <p className="bg-primary/8 text-primary relative inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-[0.8125rem] font-semibold">
+        <p className="bg-accent text-primary relative inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-[0.8125rem] font-semibold">
           <Star className="fill-primary text-primary size-4" aria-hidden="true" />
           Featured story
         </p>

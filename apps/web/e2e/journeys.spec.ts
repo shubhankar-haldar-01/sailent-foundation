@@ -785,13 +785,19 @@ test.describe('journey: homepage → stories', () => {
 test.describe('journey: homepage → events', () => {
   test('an event shows its details and a registration form', async ({ page }) => {
     await page.goto('/events');
-    // The panoramic events banner (2026-10-17) carries its title in the
-    // artwork; the page's h1 is the screen-reader "Events" beside it.
+    // The page header (owner, 2026-11-22): live text, no banner. The page
+    // names itself in the breadcrumb, and its h1 is the visible heading.
     await expect(
-      page.getByRole('heading', { level: 1, name: 'Events', exact: true }),
+      page.getByRole('heading', { level: 1, name: 'Come together. Make a difference.' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('navigation', { name: /breadcrumb/i }).getByText('Events', { exact: true }),
     ).toBeVisible();
 
+    // From the LISTING: the next-event spotlight above it has its own
+    // "Register" and "View details" links for the same event.
     await page
+      .getByRole('list', { name: 'Upcoming events' })
       .getByRole('link', { name: /Community Clean-up Drive/i })
       .first()
       .click();

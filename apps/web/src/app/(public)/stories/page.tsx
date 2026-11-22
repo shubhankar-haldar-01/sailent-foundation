@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, BookOpen } from 'lucide-react';
 
 import { PageShell } from '@/components/layout/page-shell';
+import { HeroStat, InteriorHero } from '@/components/sections/interior-hero';
 import { FeaturedStory } from '@/components/stories/featured-story';
 import { LeafFan } from '@/components/stories/stories-decor';
-import { StoriesHero } from '@/components/stories/stories-hero';
 import { StoryCard } from '@/components/stories/story-card';
 import { StoryFilters } from '@/components/stories/story-filters';
 import { buildMetadata } from '@/lib/seo/metadata';
@@ -66,9 +66,34 @@ export default async function StoriesPage({
 
   return (
     <>
-      <StoriesHero />
+      {/*
+        Owner, 2026-11-22: a compact header, then the newest story leads the
+        page (AGENTS.md §11 item 25) — the hero is the content, not a banner.
+        The count is shown only for the whole collection, so the number always
+        means the same thing; a category filter has its own chips below.
+      */}
+      <InteriorHero
+        variant="compact"
+        id="stories-title"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Stories', path: '/stories' },
+        ]}
+        eyebrow="Stories"
+        eyebrowIcon={BookOpen}
+        title="Real voices, real change"
+        lead="Stories from children, families, and communities whose lives are changing through our sustained work and community programs."
+        aside={
+          !category && result.total > 0 ? (
+            <HeroStat
+              value={result.total}
+              label={result.total === 1 ? 'story published' : 'stories published'}
+              icon={BookOpen}
+            />
+          ) : null
+        }
+      />
 
-      {/* The breadcrumb is in the hero's card (owner's design, 2026-10-14). */}
       <PageShell className="pb-16 pt-8 lg:pb-20 lg:pt-10">
         {/* A little inside the page width, as the design sets the listing. */}
         <div className="lg:px-2.5">

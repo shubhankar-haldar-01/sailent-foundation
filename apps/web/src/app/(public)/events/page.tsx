@@ -2,15 +2,15 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { unstable_rethrow } from 'next/navigation';
-import { AlertCircle, ArrowRight, SearchX } from 'lucide-react';
+import { AlertCircle, ArrowRight, CalendarDays, SearchX } from 'lucide-react';
 
 import { Button, EmptyState } from '@sailent/ui';
 
 import { PageShell } from '@/components/layout/page-shell';
+import { HeroStat, HeroStatSkeleton, InteriorHero } from '@/components/sections/interior-hero';
 import { EventListingCard, type EventProgramme } from '@/components/events/event-listing-card';
 import { EventToolbar } from '@/components/events/event-toolbar';
 import { EventsCta } from '@/components/events/events-cta';
-import { EventsHero } from '@/components/events/events-hero';
 import {
   eventMonthOptions,
   eventsHref,
@@ -21,6 +21,8 @@ import {
   type EventsView,
 } from '@/components/events/events-query';
 import { UpcomingEventsSkeleton } from '@/components/events/events-skeletons';
+import { EVENTS_LEAD, EVENTS_TITLE } from '@/components/events/events-copy';
+import { NextEventFeature } from '@/components/events/next-event-feature';
 import { PastEventCard } from '@/components/events/past-event-card';
 import { ViewMoreEvents } from '@/components/events/view-more-events';
 import { buildMetadata } from '@/lib/seo/metadata';
@@ -54,9 +56,15 @@ export async function generateMetadata({
 }
 
 /**
- * The events page (the owner's design, 2026-10-17, with the panoramic banner):
- * "Upcoming events" with its search, date menu, cards and "View more events",
- * the "Want to get involved?" panel, and the latest past events.
+ * The events page (the owner's design, 2026-10-17): "Upcoming events" with its
+ * search, date menu, cards and "View more events", the panel after it, and the
+ * latest past events.
+ *
+ * SINCE 2026-11-22 (owner): no banner. A compact header with live text and the
+ * count of upcoming events, and the NEXT EVENT leads the listing — its date,
+ * place and Register — while nobody is searching or choosing a month
+ * (`AGENTS.md` §11 items 14 and 25). The listing itself is unchanged and still
+ * lists every upcoming event, the next one included.
  *
  * ══════════════════════════════════════════════════════════════════════════
  * EVERYTHING ON IT IS LIVE DATA. The events, their dates, places, places left
@@ -81,7 +89,23 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
 
   return (
     <div className="pb-14 md:pb-20">
-      <EventsHero />
+      <InteriorHero
+        variant="compact"
+        id="events-title"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Events', path: '/events' },
+        ]}
+        eyebrow="Events"
+        eyebrowIcon={CalendarDays}
+        title={EVENTS_TITLE}
+        lead={EVENTS_LEAD}
+        aside={
+          <Suspense fallback={<HeroStatSkeleton />}>
+            <UpcomingCount />
+          </Suspense>
+        }
+      />
 
       <section aria-labelledby="upcoming-events-title" className="pt-10 md:pt-12 lg:pt-14">
         <PageShell>
@@ -97,7 +121,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
             navigation in a transition, and an unkeyed boundary that is already
             showing keeps its content until the new results arrive.
           */}
-          <Suspense fallback={<UpcomingEventsSkeleton />}>
+          <Suspense fallback={<UpcomingEventsSkeleton withFeature={!query.q && !query.date} />}>
             <UpcomingEvents query={query} />
           </Suspense>
         </PageShell>
@@ -136,6 +160,19 @@ function programmeLookup(programmes: Program[]) {
     event.programSlug ? (bySlug.get(event.programSlug) ?? null) : null;
 }
 
+/** The header's count of upcoming events; nothing when there are none or the API is down. */
+async function UpcomingCount() {
+  const upcoming = await getEvents('upcoming').catch(failSoft<SailentEvent[] | null>(null));
+  if (!upcoming || upcoming.length === 0) return null;
+  return (
+    <HeroStat
+      value={upcoming.length}
+      label={upcoming.length === 1 ? 'upcoming event' : 'upcoming events'}
+      icon={CalendarDays}
+    />
+  );
+}
+
 async function UpcomingEvents({ query }: { query: EventsQuery }) {
   const [upcoming, programmes] = await Promise.all([
     getEvents('upcoming').catch(failSoft<SailentEvent[] | null>(null)),
@@ -163,6 +200,13 @@ async function UpcomingEvents({ query }: { query: EventsQuery }) {
   return (
     // `group/events`: while the toolbar's or "View More"'s navigation is pending, the cards dim.
     <div className="group/events">
+      {/* The next event leads — unless somebody is searching or has chosen a month. */}
+      {!query.q && !query.date && upcoming[0] ? (
+        <div className="mt-6">
+          <NextEventFeature event={upcoming[0]} />
+        </div>
+      ) : null}
+
       <EventToolbar
         query={query}
         activeDate={view.activeDate}

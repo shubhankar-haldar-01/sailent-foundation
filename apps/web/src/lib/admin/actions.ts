@@ -18,6 +18,7 @@ import {
   requestDocumentLink,
   staffHolds,
 } from './api';
+import { isStaffDepartment, RESPONSIBILITIES_MAX, ROLE_MAX } from '@/lib/team/roles';
 
 /**
  * Server actions for program and campaign administration.
@@ -867,10 +868,30 @@ function validateTeamMemberFormData(form: FormData): Record<string, string> | nu
     errors.address = 'Address is mandatory (minimum 10 characters).';
   }
 
-  const memberType = text(form, 'memberType') || 'staff';
-  const designation = memberType === 'staff' ? 'Team' : text(form, 'designation');
-  if (!designation || designation.trim().length === 0) {
-    errors.designation = 'Designation is mandatory.';
+  /*
+    STAFF ARE "Team"; TRUSTEES TYPE A DESIGNATION (owner, 2026-11-22: every
+    staff member has the same role, and /team shows only their names, with no
+    filters). Department and responsibilities are optional records, saved as
+    entered — the form used to have no department field and overwrote it with
+    "Team" on every save, and wrote a generated bio when none was given.
+  */
+  const memberType = text(form, 'memberType') === 'trustee' ? 'trustee' : 'staff';
+  if (memberType === 'trustee') {
+    const designation = text(form, 'designation')?.trim() ?? '';
+    if (!designation) errors.designation = 'Designation is mandatory for trustees.';
+    else if (designation.length > ROLE_MAX) {
+      errors.designation = `Designation must be at most ${ROLE_MAX} characters.`;
+    }
+  }
+
+  const department = text(form, 'department');
+  if (memberType === 'staff' && department && !isStaffDepartment(department)) {
+    errors.department = 'Choose one of the departments in the list.';
+  }
+
+  const bio = text(form, 'bio')?.trim() ?? '';
+  if (bio.length > RESPONSIBILITIES_MAX) {
+    errors.bio = `Responsibilities must be at most ${RESPONSIBILITIES_MAX} characters.`;
   }
 
   const photoUrl = text(form, 'photoUrl');
@@ -893,9 +914,7 @@ export async function createTeamMember(_prev: ActionState, form: FormData): Prom
 
   let created: { id: string };
   try {
-    const rawType = text(form, 'memberType');
-    const memberType = rawType === 'trustee' ? 'trustee' : 'staff';
-    const designation = memberType === 'staff' ? 'Team' : text(form, 'designation') || 'Trustee';
+    const memberType = text(form, 'memberType') === 'trustee' ? 'trustee' : 'staff';
     const name = text(form, 'name') || '';
 
     created = await adminFetch<{ id: string }>('admin/team', {
@@ -903,13 +922,13 @@ export async function createTeamMember(_prev: ActionState, form: FormData): Prom
       body: {
         name,
         slug: text(form, 'slug'),
-        designation,
-        department: text(form, 'department') || (memberType === 'trustee' ? 'Trustees' : 'Team'),
+        designation: memberType === 'staff' ? 'Team' : text(form, 'designation')?.trim(),
+        department: memberType === 'trustee' ? 'Trustees' : (text(form, 'department') ?? null),
         memberType,
         contactNumber: text(form, 'contactNumber'),
         aadharNumber: text(form, 'aadharNumber'),
         address: text(form, 'address'),
-        bio: text(form, 'bio') || `${name} is a dedicated team member at Sailent Foundation.`,
+        bio: text(form, 'bio')?.trim() || null,
         experience: text(form, 'experience'),
         photoUrl: text(form, 'photoUrl'),
         emailPublic: text(form, 'emailPublic') || text(form, 'email'),
@@ -937,12 +956,12 @@ export async function updateTeamMember(_prev: ActionState, form: FormData): Prom
 
   const id = String(form.get('id'));
   try {
-    const rawType = text(form, 'memberType');
-    const memberType = rawType === 'trustee' ? 'trustee' : 'staff';
-    const designation = memberType === 'staff' ? 'Team' : text(form, 'designation') || 'Trustee';
-    const name = text(form, 'name') || 'Team member';
-    const bio = text(form, 'bio') || `${name} is a dedicated team member at Sailent Foundation.`;
-    const department = text(form, 'department') || (memberType === 'trustee' ? 'Trustees' : 'Team');
+    const memberType = text(form, 'memberType') === 'trustee' ? 'trustee' : 'staff';
+    // Validated above. Staff are "Team"; an emptied responsibilities field
+    // clears the stored text rather than inventing a sentence.
+    const designation = memberType === 'staff' ? 'Team' : text(form, 'designation')?.trim();
+    const bio = text(form, 'bio')?.trim() || null;
+    const department = memberType === 'trustee' ? 'Trustees' : (text(form, 'department') ?? null);
 
     await adminFetch(`admin/team/${id}`, {
       method: 'PATCH',

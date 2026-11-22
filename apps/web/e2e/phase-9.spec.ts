@@ -44,9 +44,21 @@ test.describe('the public pages', () => {
     await expect(team.getByRole('heading', { level: 3 }).first()).toBeVisible();
 
     await page.goto('/team');
-    await expect(page.getByRole('heading', { level: 1, name: /Meet Our team/i })).toBeVisible();
-    await expect(page.getByRole('heading', { level: 2, name: 'Leadership Team' })).toBeVisible();
+    // The editorial hero (owner, 2026-11-22): a visible h1 and breadcrumb,
+    // "Meet our team" down to the grid, then "Our team" with its search.
+    // Leadership is on About, not here (the /team directory leaves it out).
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'The people behind every possibility.' }),
+    ).toBeVisible();
     await expect(page.getByRole('heading', { level: 2, name: 'Our team' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Meet our team/ })).toHaveAttribute(
+      'href',
+      '#team-members',
+    );
+    await expect(page.getByRole('navigation', { name: /breadcrumb/i })).toBeVisible();
+    await expect(page.getByRole('searchbox', { name: 'Search team members' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Leadership Team' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible();
   });
 
   test('a full event says so instead of offering a form', async ({ page }) => {
