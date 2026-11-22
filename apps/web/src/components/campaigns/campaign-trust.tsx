@@ -1,43 +1,50 @@
-import { BadgeCheck, Gift, ShieldCheck } from 'lucide-react';
+import { Gift, ReceiptText, ShieldCheck } from 'lucide-react';
 
 import { cn } from '@sailent/ui';
 
 /**
- * The three assurances at the foot of the donation card, side by side.
+ * The three assurances at the foot of the donation card.
  *
  * ══════════════════════════════════════════════════════════════════════════
- * THE APPROVED PANEL: one pale green band, three columns, a rule between each.
+ * MINIMAL, ON THE OWNER'S REQUEST (2026-11-21).
  *
- * Each column is an icon on its own tinted tile, a bold title and a short
- * line under it, all centred — so the three read as one row of reassurance
- * rather than a list to work through. The wording is the approved design's,
- * except the 80G tile: the owner replaced "Get tax deduction on your donation"
- * (a promise no page could keep for every donor) with how relief is actually
- * claimed (2026-11-19, Phase 4 of the UI feedback system; AGENTS.md §10).
+ * The earlier panel (a tinted band, three titles, three sentences) read as a
+ * wall of text under the Donate button. Now: one row, three equal columns,
+ * each a small tinted icon over a short label, divided by hairlines. No
+ * sentences.
  *
- * The icons are decoration (`aria-hidden`); the titles carry the meaning.
+ * Every label is a fact the site can stand behind (AGENTS.md §10):
+ * - "Tax relief (80G)": the approved title. Its sentence ("Relief is claimed
+ *   through Form 10BE, issued after our annual Form 10BD filing.") now lives
+ *   in every campaign's FAQ, "Do I get a tax benefit on my donation?".
+ * - "Secure payments": payments are taken by Razorpay, never by this site.
+ * - "Email receipt": every donation gets a receipt by email, with a PDF.
+ *   It replaced "Trusted NGO / Verified and transparent organization", a
+ *   claim with no record behind it.
+ *
+ * The icons are decoration (`aria-hidden`); the labels carry the meaning.
  * ══════════════════════════════════════════════════════════════════════════
  */
 export function CampaignAssurances() {
   return (
-    <ul className="from-wash-mint/60 to-surface-tint divide-border/80 grid grid-cols-3 divide-x rounded-xl bg-gradient-to-br py-2">
+    <ul
+      aria-label="Why give here"
+      className="border-border/70 divide-border/70 grid grid-cols-3 divide-x border-t pt-3"
+    >
       <Assurance
         icon={Gift}
         tone="bg-wash-mint text-wash-mint-ink-strong"
-        title="Tax relief (80G)"
-        body="Relief is claimed through Form 10BE, issued after our annual Form 10BD filing."
+        label="Tax relief (80G)"
       />
       <Assurance
         icon={ShieldCheck}
         tone="bg-wash-blue text-wash-blue-ink"
-        title="Secure Payments"
-        body="Your payment information is safe."
+        label="Secure payments"
       />
       <Assurance
-        icon={BadgeCheck}
+        icon={ReceiptText}
         tone="bg-wash-amber text-wash-amber-ink"
-        title="Trusted NGO"
-        body="Verified and transparent organization."
+        label="Email receipt"
       />
     </ul>
   );
@@ -46,26 +53,21 @@ export function CampaignAssurances() {
 function Assurance({
   icon: Icon,
   tone,
-  title,
-  body,
+  label,
 }: {
   icon: typeof Gift;
   tone: string;
-  title: string;
-  body: string;
+  label: string;
 }) {
   return (
-    <li className="flex flex-col items-center px-1 text-center">
+    <li className="flex flex-col items-center gap-1.5 px-1 text-center">
       <span
         aria-hidden="true"
-        className={cn('grid size-8 shrink-0 place-items-center rounded-lg', tone)}
+        className={cn('grid size-7 shrink-0 place-items-center rounded-full', tone)}
       >
-        <Icon className="size-[1.125rem]" />
+        <Icon className="size-3.5" />
       </span>
-      <span className="mt-1.5 block whitespace-nowrap text-[0.8125rem] font-bold leading-tight tracking-tight">
-        {title}
-      </span>
-      <span className="text-muted-foreground mt-0.5 block text-[0.75rem] leading-snug">{body}</span>
+      <span className="text-foreground/85 text-[0.75rem] font-semibold leading-tight">{label}</span>
     </li>
   );
 }

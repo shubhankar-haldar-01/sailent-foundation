@@ -57,6 +57,9 @@ export function AdminHeader({
   // Global Cmd+K / Ctrl+K shortcut listener
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // A control that uses ⌘K itself (the blog editor's "add a link") has
+      // already handled it.
+      if (e.defaultPrevented) return;
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setSearchOpen((prev) => !prev);

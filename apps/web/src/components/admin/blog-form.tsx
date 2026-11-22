@@ -3,8 +3,9 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Alert, Button, Input } from '@sailent/ui';
+import { Alert, Button, Input, Label } from '@sailent/ui';
 
+import { ArticleEditor } from '@/components/admin/article-editor';
 import { Field, FormStatus, SubmitButton, TextArea } from '@/components/admin/form-shell';
 import { MediaPicker } from '@/components/admin/media-picker';
 import { useEditorGuard } from '@/lib/feedback/use-unsaved-changes-guard';
@@ -20,22 +21,21 @@ import type { AdminBlogPost, AdminMedia } from '@/lib/admin/api';
  * The blog editor.
  *
  * ══════════════════════════════════════════════════════════════════════════
- * A TEXTAREA AND MARKDOWN, NOT A RICH-TEXT EDITOR.
+ * A RICH-TEXT EDITOR OVER MARKDOWN (owner, 2026-11-22: "the latest modern,
+ * market-standard editor, easy to use").
  *
- * The repository had no editor dependency and no markdown renderer — success
- * stories render plain text in fixed sections. Rather than introduce a
- * WYSIWYG, the body is markdown in a textarea with a small toolbar that
- * inserts the markers.
+ * The article is written in `ArticleEditor` (Tiptap): formatted as readers will
+ * see it, with a toolbar, a menu on selected text and the usual shortcuts. It
+ * is STILL STORED AS MARKDOWN — the editor writes it to the `content` field on
+ * every change — so the server action, the API and the database are as they
+ * were, and existing posts open unchanged.
  *
- * That choice is mostly about SAFETY. A rich-text editor produces HTML, and
- * storing HTML means either trusting it or sanitising it on the way out — a
- * denylist that has to stay ahead of every parser quirk forever. Markdown is
- * rendered to React ELEMENTS by `lib/blog/markdown.tsx`, which never produces
- * markup from stored text at all, so there is no injection point to defend.
- *
- * It is also about scope: the brief asks for headings, bold, italic, links,
- * lists, quotes and images, and explicitly not a page builder. This is exactly
- * that list and nothing else.
+ * The SAFETY reasoning that chose Markdown in the first place stands: storing
+ * HTML would mean sanitising it forever, while `lib/blog/markdown.tsx` turns
+ * Markdown into React ELEMENTS and never into markup. The editor only makes
+ * that Markdown easier to write; its schema holds exactly what the renderer
+ * draws (`lib/blog/article-editor-schema.ts`) — headings, bold, italic, links,
+ * lists, quotes, inline code and images, and not a page builder.
  * ══════════════════════════════════════════════════════════════════════════
  */
 export function BlogForm({
@@ -55,7 +55,6 @@ export function BlogForm({
   const [slug, setSlug] = React.useState(post?.slug ?? '');
   const [slugTouched, setSlugTouched] = React.useState(Boolean(post));
   const [featured, setFeatured] = React.useState<string | null>(post?.featuredMediaId ?? null);
-  const bodyRef = React.useRef<HTMLTextAreaElement>(null);
 
   React.useEffect(() => {
     if (state.redirectTo) router.push(state.redirectTo);
@@ -84,31 +83,6 @@ export function BlogForm({
 
   const isPublished = post?.status === 'published';
   const blockers = post?.publishBlockers ?? [];
-
-  /** Wrap or insert a marker at the cursor. */
-  const applyMarker = (before: string, after = before, placeholder = 'text') => {
-    const field = bodyRef.current;
-    if (!field) return;
-
-    const { selectionStart: start, selectionEnd: end, value } = field;
-    const selected = value.slice(start, end) || placeholder;
-    const next = `${value.slice(0, start)}${before}${selected}${after}${value.slice(end)}`;
-
-    field.value = next;
-    field.focus();
-    // Leave the inserted text selected, so typing replaces the placeholder.
-    field.setSelectionRange(start + before.length, start + before.length + selected.length);
-  };
-
-  const TOOLBAR: { label: string; title: string; apply: () => void }[] = [
-    { label: 'H2', title: 'Heading', apply: () => applyMarker('\n## ', '', 'Heading') },
-    { label: 'B', title: 'Bold', apply: () => applyMarker('**', '**', 'bold text') },
-    { label: 'I', title: 'Italic', apply: () => applyMarker('*', '*', 'italic text') },
-    { label: 'Link', title: 'Link', apply: () => applyMarker('[', '](https://)', 'link text') },
-    { label: 'List', title: 'Bulleted list', apply: () => applyMarker('\n- ', '', 'item') },
-    { label: '1.', title: 'Numbered list', apply: () => applyMarker('\n1. ', '', 'item') },
-    { label: '❝', title: 'Quotation', apply: () => applyMarker('\n> ', '', 'quotation') },
-  ];
 
   return (
     <form action={formAction} onChange={guard.markDirty} className="space-y-8">
@@ -181,37 +155,21 @@ export function BlogForm({
             <TextArea name="excerpt" rows={3} maxLength={500} defaultValue={post?.excerpt ?? ''} />
           </Field>
 
-          <div>
-            <div className="mb-2 flex flex-wrap items-center gap-1">
-              {TOOLBAR.map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={item.apply}
-                  title={item.title}
-                  aria-label={item.title}
-                  className="border-border text-caption hover:bg-muted min-w-9 rounded-md border px-2 py-1 font-medium"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-
-            <Field
-              label="Article"
+          <div className="space-y-1.5">
+            <Label id="article-label">Article</Label>
+            <ArticleEditor
               name="content"
-              hint="Markdown: ## heading, **bold**, *italic*, [link](url), - list, > quote."
-              errors={state.fieldErrors}
-            >
-              <TextArea
-                ref={bodyRef}
-                name="content"
-                rows={20}
-                maxLength={100_000}
-                defaultValue={post?.content ?? ''}
-                className="font-mono"
-              />
-            </Field>
+              labelId="article-label"
+              describedBy={state.fieldErrors?.content ? 'content-error' : undefined}
+              initialMarkdown={post?.content ?? ''}
+              media={mediaOptions}
+              onDirty={guard.markDirty}
+            />
+            {state.fieldErrors?.content ? (
+              <p id="content-error" role="alert" className="text-destructive text-xs font-medium">
+                {state.fieldErrors.content}
+              </p>
+            ) : null}
           </div>
         </div>
 

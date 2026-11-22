@@ -89,6 +89,18 @@ Tests: web 574/574, including the new token contrast test (light and dark) and t
 
 Tests: web 538/538; isolated copy: no sideways scroll on `/dev/design` at 320–1440 px; the home e2e asserts the press and testimonial sections are gone.
 
+## 2026-11-22 — Blog editor: Tiptap over Markdown (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| The admin blog article is written in a rich-text editor (Tiptap 3.33.0): toolbar, selection menu, shortcuts, Markdown as you type, link and Media-library image dialogs, word count | Owner: a modern, easy editor | Posts look while writing as they will when published |
+| Still stored as Markdown; the public renderer unchanged | The renderer (React elements, never HTML) is the XSS boundary | No database, API or server-action change; existing posts open as they are |
+| Editor schema = the renderer's dialect; hand-written Markdown writer; posts loaded from the renderer's own elements | An edit-and-save must not change what readers see | Round-trip test; tables, code blocks, nested lists and unsafe URLs cannot enter |
+| Enter leaves a quote at its end (splits it in the middle, unquotes an empty one); Shift+Enter starts a new paragraph or list item | A quote is one paragraph on the page, and the page has no line breaks; the browser check found Enter did nothing in a quote | The writer is never stuck in a quote |
+| The toolbar sticks under the admin header and is solid; the editor uses the public page's own spacing, list, quote and link styles; ⌘K opens the link dialog without also opening Quick jump | Found in the browser check (390px: the header covered the toolbar) | What you see while writing is the page |
+
+Tests: web 663/663; new `e2e/admin-blog-editor.spec.ts` 7 passed, 2 skipped (desktop, mobile, mobile-xs); typecheck, lint and Prettier clean. Browser, production build (desktop and Pixel 5): write → save → reopen identical → publish → the public page shows the same; paste from Word; an existing post down to 320px. Known limitation: on Chrome for Android, Shift+Enter from a hardware keyboard types a space. **Found, not changed:** a protected action such as publishing says "Confirm your password to continue" with no password field; the only prompt is on Admin → Reports after a refused export (`DEVELOPMENT_STATUS.md` §5.0).
+
 ## 2026-11-22 — Team page: editorial, typography-led hero (not pushed)
 
 | Change | Reason | Impact |
@@ -163,6 +175,13 @@ Tests: validation 289/289, web 611/611, worker 91/91, API 937 passed / 9 skipped
 | `SHOW_PRESS_MENTIONS` and `SHOW_TESTIMONIALS` set to true; the sections show their placeholder press marks and quotes | Owner: dummy data for now, real data later | Must be replaced (or switched off) before launch (`AGENTS.md` §11 item 3) |
 | Testimonials rail without `scroll-smooth` | Same as the featured rail: smooth-scrolling snap stops Chrome recording the page's LCP | Home performance kept |
 
+## 2026-11-21 — Minimal assurance strip on the donation card (uncommitted)
+
+| Change | Reason | Impact |
+|---|---|---|
+| The strip under the donation card is one row of three small tinted icons with short labels: "Tax relief (80G)", "Secure payments", "Email receipt"; no sentences, no panel band | Owner: it looked messy with too much text | About half the height. The 80G sentence stays in every campaign's FAQ; "Trusted NGO / Verified and transparent" replaced by a fact (`AGENTS.md` §11 item 20) |
+
+Checked in the isolated copy at 390, 1024 and 1440: the card still fits a laptop screen whole (`campaign.spec`), no sideways scroll at 320–1280. Web 530/530.
 
 ## 2026-11-21 — Four default campaign FAQs removed
 
